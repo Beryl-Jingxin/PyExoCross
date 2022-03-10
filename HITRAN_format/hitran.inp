@@ -1,0 +1,15 @@
+Database HITRAN
+
+Molecule NO
+iso 81
+
+Temperature  500
+Range 2000 10000
+Npoints 80001
+    
+Profile Lorentzian
+Transitions ../data/HITRAN/NO.par
+SavePlots ../data/plots/ 
+SaveXsecs ../data/xsecs/
+
+Choose line profile from: Gaussian, Lorentzian, scipy_Voigt, scipy_wofz_Voigt, width_Voigt, pseudo_Voigt, pseudo_FWHM_Voigt

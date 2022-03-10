@@ -1,0 +1,16 @@
+Database ExoMol
+
+Molecule NO
+Isotopologue 14N-16O
+Dataset NOname
+mol_iso_id 81
+
+Temperature  500
+Range 2000 10000
+Npoints 80001
+    
+Profile Lorentzian
+SavePlots ../data/plots/ 
+SaveXsecs ../data/xsecs/
+
+Profile choose from: Gaussian, Lorentzian, scipy_Voigt, scipy_wofz_Voigt, width_Voigt, pseudo_Voigt, pseudo_FWHM_Voigt
