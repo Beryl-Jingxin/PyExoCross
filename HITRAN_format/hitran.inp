@@ -8,8 +8,9 @@ Range 2000 10000
 Npoints 80001
     
 Profile Lorentzian
-Transitions ../data/HITRAN/NO.par
-SavePlots ../data/plots/ 
-SaveXsecs ../data/xsecs/
+Wavenumber(wn)/wavelength(wl) wn
+Transitions ~/data/HITRAN/NO__81__2000-10000.par
+SavePlots /home/jingxin/data/plots/ 
+SaveXsecs /home/jingxin/data/xsecs/
 
 Choose line profile from: Gaussian, Lorentzian, scipy_Voigt, scipy_wofz_Voigt, width_Voigt, pseudo_Voigt, pseudo_FWHM_Voigt
