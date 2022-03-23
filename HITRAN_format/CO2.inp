@@ -1,15 +1,15 @@
 Database HITRAN
 
-Molecule NO
-iso 81
+Molecule CO2
+iso 21
 
 Temperature  500
 Range 2000 10000
-Npoints 80001
+Npoints 1610
     
-Profile Lorentzian
+Profile scipy_Voigt
 Wavenumber(wn)/wavelength(wl) wn
-Transitions ~/data/HITRAN/NO__81__2000-10000.par
+Transitions ~/data/HITRAN/CO2.par
 SavePlots /home/jingxin/data/plots/ 
 SaveXsecs /home/jingxin/data/xsecs/
 
