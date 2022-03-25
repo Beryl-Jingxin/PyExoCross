@@ -5,9 +5,9 @@ iso 21
 
 Temperature  500
 Range 2000 10000
-Npoints 1610
+Npoints 1609
     
-Profile scipy_Voigt
+Profile pseudo_FWHM_Voigt
 Wavenumber(wn)/wavelength(wl) wn
 Transitions ~/data/HITRAN/CO2.par
 SavePlots /home/jingxin/data/plots/ 
