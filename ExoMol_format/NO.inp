@@ -1,15 +1,16 @@
-Database HITRAN
-
-Molecule CO2
-iso 21
+Database ExoMol
+Molecule NO
+Isotopologue 14N-16O
+Dataset NOname
+mol_iso_id 81
+mass 4.98128312e-23
 
 Temperature  500
 Range 2000 10000
 Npoints 1609
     
-Profile SciPyVoigt
+Profile Lorentzian
 Wavenumber(wn)/wavelength(wl) wn
-Transitions ~/data/HITRAN/CO2.par
 SavePlots /home/jingxin/data/plots/ 
 SaveXsecs /home/jingxin/data/xsecs/
 
