@@ -1,19 +1,16 @@
-Database ExoMol
-Molecule NO
-Isotopologue 14N-16O
-Dataset NOname
-mol_iso_id 81
-mass 4.98128312e-23
+Database HITRAN
+
+Molecule H2S
+iso 311
 
 Temperature  500
-Range 0 5000
+Range 0 7000
 Npoints 10001
-       
-AbsorptionOREmission Emission
+    
 Profile Lorentzian
 Wavenumber(wn)/wavelength(wl) wn
+Transitions ~/data/HITRAN/H2S.par
 SavePlots /home/jingxin/data/plots/ 
 SaveXsecs /home/jingxin/data/xsecs/
 
-Choose absorption or emission: Absorption, Emission
 Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt

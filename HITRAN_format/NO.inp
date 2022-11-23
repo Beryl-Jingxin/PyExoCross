@@ -4,8 +4,8 @@ Molecule NO
 iso 81
 
 Temperature  500
-Range 2000 10000
-Npoints 1609
+Range 0 5000
+Npoints 10001
     
 Profile Lorentzian
 Wavenumber(wn)/wavelength(wl) wn
