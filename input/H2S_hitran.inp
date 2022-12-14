@@ -1,0 +1,16 @@
+Database HITRAN
+
+Molecule H2S
+mol_iso_id 311
+
+Temperature  500
+Range 0 7000
+Npoints 10001
+    
+Profile Lorentzian
+Wavenumber(wn)/wavelength(wl) wn
+Transitions ~/data/HITRAN/H2S.par
+SavePlots /home/jingxin/data/plots/ 
+SaveXsecs /home/jingxin/data/xsecs/
+
+Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt

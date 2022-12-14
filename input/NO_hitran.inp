@@ -1,0 +1,21 @@
+Database                                HITRAN
+
+Molecule                                NO
+mol_iso_id                              81
+
+Temperature                             200
+Pressure                                1
+Range                                   1750 2000
+Npoints                                 10001
+
+AbsorptionOREmission                    Absorption
+Profile                                 SciPyVoigt
+Wavenumber(wn)/wavelength(wl)           wn
+
+Transitions                             /home/jingxin/data/HITRAN/NO.par
+SavePlots                               /home/jingxin/data/pyexocross/xsecs/plots/
+SaveXsecs                               /home/jingxin/data/pyexocross/xsecs/files/
+Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt
+
+
+

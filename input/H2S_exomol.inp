@@ -1,0 +1,22 @@
+Database                                ExoMol
+
+Molecule                                H2S
+Isotopologue                            1H2-32S
+Dataset                                 AYT2
+mol_iso_id                              311
+mass                                    5.64379778e-26
+
+Temperature                             200
+Pressure                                1
+Range                                   900 1500
+Npoints                                 10001
+    
+AbsorptionOREmission                    Absorption
+Profile                                 Lorentzian
+Wavenumber(wn)/wavelength(wl)           wn
+ 
+SavePlots                               /home/jingxin/data/pyexocross/xsecs/plots/H2S_exomol/
+SaveXsecs                               /home/jingxin/data/pyexocross/xsecs/files/H2S_exomol/
+
+Choose absorption or emission: Absorption, Emission
+Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt

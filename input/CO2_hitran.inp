@@ -1,0 +1,19 @@
+Database                                HITRAN
+
+Molecule                                CO2
+mol_iso_id                              21
+
+Temperature                             200
+Pressure                                1
+Range                                   2300 2400
+Npoints                                 10001
+
+AbsorptionOREmission                    Emission
+Profile                                 SciPyVoigt
+Wavenumber(wn)/wavelength(wl)           wn
+
+Transitions                             ~/data/HITRAN/CO2.par
+SavePlots                               /home/jingxin/data/pyexocross/xsecs/plots/CO2_hitran/
+SaveXsecs                               /home/jingxin/data/pyexocross/xsecs/files/CO2_hitran/
+
+Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt
