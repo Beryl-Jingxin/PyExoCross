@@ -1,16 +1,60 @@
-Database HITRAN
+Database                                HITRAN
 
-Molecule H2S
-mol_iso_id 311
 
-Temperature  500
-Range 0 7000
-Npoints 10001
-    
-Profile Lorentzian
-Wavenumber(wn)/wavelength(wl) wn
-Transitions ~/data/HITRAN/H2S.par
-SavePlots /home/jingxin/data/plots/ 
-SaveXsecs /home/jingxin/data/xsecs/
+# Basic information #
+Molecule                                H2S
+Isotopologue                            none
+Dataset                                 none
+mol_iso_id                              311
 
-Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt
+
+# File path #
+ReadPath                                /home/jingxin/data/HITRAN/H2S.par
+SavePath                                /home/jingxin/data/pyexocross/
+
+
+# Functions #
+PartitionFunctions                      0
+CoolingFunctions                        0
+Lifetimes                               0
+SpecificHeats                           0
+CrossSections                           1
+
+
+# Calculate partition, cooling functions or specific heats #
+Ntemp                                   1       # The number of temperature steps
+Tmax                                    5000    # Maximal temperature in K (minimal T = 1 K )
+
+
+# Calculate lifetimes #
+None
+
+
+# Calculate cross-sections #
+Broadeners                              Default    Air    Self    H2    He
+Ratios                                  0.0        0.7    0.3     0.0   0.0
+
+Temperature                             200
+Pressure                                1
+Range                                   1740 2000
+Npoints                                 10001
+
+Cutoff                                  25.0
+Threshold                               1e-30
+
+Absorption/Emission                     Absorption          # 'Absorption' or 'Emission'
+Profile                                 SciPyVoigt          
+Wavenumber(wn)/wavelength(wl)           wn                  # 'wn' or 'wl'
+
+
+Note:
+1. Functions part: (calculate the functions or not) 0 means no, 1 means yes. 
+   Just change the information which you will use, please do not delete other information.
+2. Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt.
+3. If the database is ExoMol: mol_iso_id   0
+   If the database is HITRAN: mol_iso_id   moleculeIDisotopologueID          # e.g. 81 (NO), 261(C2H2)
+4. The broadening types and ratio values are corresponding, please do not change the place or delete elements. 
+5. If the database is ExoMol: ReadPath  /mnt/data/exomol/exomol3_data/       # folder path
+   (when file path is /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AlHambra/27Al-1H__AlHambra.def)
+   If the database is HITRAN: ReadPath  /home/username/data/hitran/AlH.par   # .par file path
+   (when file path is /home/username/data/hitran/AlH.par)
