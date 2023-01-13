@@ -14,10 +14,10 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-PartitionFunctions                      1
-CoolingFunctions                        1
-Lifetimes                               1
-SpecificHeats                           1
+PartitionFunctions                      0
+CoolingFunctions                        0
+Lifetimes                               0
+SpecificHeats                           0
 CrossSections                           1
 
 
@@ -36,7 +36,7 @@ Ratios                                  0.0        1.0    0.0     0.0   0.0
 
 Temperature                             200
 Pressure                                1
-Range                                   1700 2000
+Range                                   1750 2000
 Npoints                                 10001
 
 Cutoff                                  25.0

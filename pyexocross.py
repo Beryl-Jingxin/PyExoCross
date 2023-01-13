@@ -101,8 +101,8 @@ def inp_para(inp_filepath, N_A):
         deffile_path = (read_path+'/'+molecule+'/'+isotopologue+'/'+dataset+'/'+isotopologue+'__'+dataset+'.def')
         def_df = pd.read_csv(deffile_path[0],sep='\\s+',usecols=[0,1,2,3,4],names=['0','1','2','3','4'],header=None)
         abundance = 1
-        mass_exomol = def_df[def_df['4'].isin(['mass'])]['1'].values[0]     # ExoMol mass (kg)
-        mass = float(mass_exomol)
+        mass_exomol = def_df[def_df['4'].isin(['mass'])]['0'].values[0]     # ExoMol mass (Da)
+        mass = float(mass_exomol / N_A)
         check_uncertainty = int(def_df[def_df['2'].isin(['Uncertainty'])]['0'].values[0])
         check_lifetime = int(def_df[def_df['2'].isin(['Lifetime'])]['0'].values[0])
     elif database == 'HITRAN':
@@ -110,7 +110,7 @@ def inp_para(inp_filepath, N_A):
         iso_meta_table = pd.read_html(isometa_url)[molecule_id - 1]
         iso_meta_row = iso_meta_table[iso_meta_table['local ID'].isin([isotopologue_id])]
         abundance = float(iso_meta_row['Abundance'][0].replace('\xa0×\xa010','E'))
-        mass_hitran = float(iso_meta_row['Molar Mass /g·mol-1'])            # HITRAN molar mass (kg/mol)
+        mass_hitran = float(iso_meta_row['Molar Mass /g·mol-1'])            # HITRAN molar mass (g/mol)
         mass = float(mass_hitran / N_A)
         check_uncertainty = 0
         check_lifetime = 0
@@ -581,7 +581,7 @@ def read_part_trans(read_path):
 def extract_broad(broad_df, states_l_df):
     J_df = pd.DataFrame()
     max_broad_J = max(broad_df['Jpp'])
-    J_df['Jpp'] = states_l_df[3].values
+    J_df['Jpp'] = states_l_df[3].values.astype('float')
     J_df['Jpp'][J_df.Jpp > max_broad_J] = max_broad_J
     id_broad = J_df['Jpp'] - 0.5
     
@@ -631,13 +631,17 @@ def linelist_exomol_abs(broad,ratio,states_df,trans_df,default_broad_df,
             gamma_L[i] = np.full((1,rows),default_broad_df['gamma_L'][0])[0] * ratio[i]
             n_air[i] = np.full((1,rows),default_broad_df['n_air'][0])[0] * ratio[i]
         if broad[i] == 'Air':
-            gamma_L[i], n_air[i] = extract_broad(air_broad_df,states_l_df) * ratio[i]
+            gamma_L[i] = extract_broad(air_broad_df,states_l_df)[0] * ratio[i]
+            n_air[i] = extract_broad(air_broad_df,states_l_df)[1] * ratio[i]
         if broad[i] == 'Self':
-            gamma_L[i], n_air[i] = extract_broad(self_broad_df,states_l_df) * ratio[i]
+            gamma_L[i] = extract_broad(self_broad_df,states_l_df)[0] * ratio[i]
+            n_air[i] = extract_broad(self_broad_df,states_l_df)[1] * ratio[i]
         if broad[i] == 'H2':
-            gamma_L[i], n_air[i] = extract_broad(H2_broad_df,states_l_df) * ratio[i]
+            gamma_L[i] = extract_broad(H2_broad_df,states_l_df)[0] * ratio[i]
+            n_air[i] = extract_broad(H2_broad_df,states_l_df)[1] * ratio[i]
         if broad[i] == 'He':
-            gamma_L[i], n_air[i] = extract_broad(He_broad_df,states_l_df)  * ratio[i] 
+            gamma_L[i] = extract_broad(He_broad_df,states_l_df)[0]  * ratio[i] 
+            n_air[i] = extract_broad(He_broad_df,states_l_df)[1]  * ratio[i] 
     
     return (wn_grid, A, v, Epp, gp, gamma_L, n_air)
 
@@ -683,13 +687,17 @@ def linelist_exomol_emi(broad,ratio,states_df,trans_df,default_broad_df,
             gamma_L[i] = np.full((1,rows),default_broad_df['gamma_L'][0])[0] * ratio[i]
             n_air[i] = np.full((1,rows),default_broad_df['n_air'][0])[0] * ratio[i]
         if broad[i] == 'Air':
-            gamma_L[i], n_air[i] = extract_broad(air_broad_df,states_l_df) * ratio[i]
+            gamma_L[i] = extract_broad(air_broad_df,states_l_df)[0] * ratio[i]
+            n_air[i] = extract_broad(air_broad_df,states_l_df)[1] * ratio[i]
         if broad[i] == 'Self':
-            gamma_L[i], n_air[i] = extract_broad(self_broad_df,states_l_df) * ratio[i]
+            gamma_L[i] = extract_broad(self_broad_df,states_l_df)[0] * ratio[i]
+            n_air[i] = extract_broad(self_broad_df,states_l_df)[1] * ratio[i]
         if broad[i] == 'H2':
-            gamma_L[i], n_air[i] = extract_broad(H2_broad_df,states_l_df) * ratio[i]
+            gamma_L[i] = extract_broad(H2_broad_df,states_l_df)[0] * ratio[i]
+            n_air[i] = extract_broad(H2_broad_df,states_l_df)[1] * ratio[i]
         if broad[i] == 'He':
-            gamma_L[i], n_air[i] = extract_broad(He_broad_df,states_l_df)  * ratio[i] 
+            gamma_L[i] = extract_broad(He_broad_df,states_l_df)[0]  * ratio[i] 
+            n_air[i] = extract_broad(He_broad_df,states_l_df)[1]  * ratio[i]  
     
     return (wn_grid, A, v, Ep, gp, gamma_L, n_air)
 
