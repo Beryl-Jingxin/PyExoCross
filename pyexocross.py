@@ -102,7 +102,7 @@ def inp_para(inp_filepath, N_A):
         def_df = pd.read_csv(deffile_path[0],sep='\\s+',usecols=[0,1,2,3,4],names=['0','1','2','3','4'],header=None)
         abundance = 1
         mass_exomol = def_df[def_df['4'].isin(['mass'])]['0'].values[0]     # ExoMol mass (Da)
-        mass = float(mass_exomol / N_A)
+        mass = float(mass_exomol) / N_A
         check_uncertainty = int(def_df[def_df['2'].isin(['Uncertainty'])]['0'].values[0])
         check_lifetime = int(def_df[def_df['2'].isin(['Lifetime'])]['0'].values[0])
     elif database == 'HITRAN':
