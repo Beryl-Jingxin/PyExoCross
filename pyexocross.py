@@ -127,13 +127,12 @@ def inp_para(inp_filepath, N_A):
 # Constants and parameters
 # Parameters for calculating
 import astropy.constants as ac
-T_ref = 296.0                       # Reference temperature is 296 K
-P_ref = 1.0                         # Reference pressure is 1 atm
+Tref = 296.0                        # Reference temperature is 296 K
+Pref = 1.0                          # Reference pressure is 1 atm
 N_A = ac.N_A.value                  # Avogadro number (1/mol)
-h = ac.h.to('J s').value            # Planck's const (J s)
+h = ac.h.to('erg s').value          # Planck's const (erg s)
 c = ac.c.to('cm/s').value           # Velocity of light (cm/s)
-kB = ac.k_B.to('J/K').value         # Boltzmann's const (J/K)
-R = ac.R.to('J / (K mol)').value    # Gas constant (J/(K mol))
+kB = ac.k_B.to('erg/K').value       # Boltzmann's const (erg/K)
 c2 = h * c / kB                     # Second radiation constant (cm K)
 
 inp_filepath = parse_args()
@@ -143,9 +142,17 @@ inp_filepath = parse_args()
  abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
  check_uncertainty, check_lifetime) = inp_para(inp_filepath, N_A)
 
-c2_T = c2 / T                       # c2 / T (cm)
-c2_T_ref = c2 / T_ref               # c2 / T_ref (cm)
-pi_c_8 = 1 / (8 * np.pi * c)        # 8 * pi * c (s/cm)
+c2InvT = c2 / T                       # c2 / T (cm)
+c2InvTref = c2 / Tref                 # c2 / T_ref (cm)
+Inv8Pic = 1 / (8 * np.pi * c)         # 8 * pi * c (s/cm)
+Inv4Pi = 1 / (4 * np.pi)
+InvSqrt2 = 1 / np.sqrt(2)
+InvSqrt2Pi = 1 / np.sqrt(2 * np.pi)
+InvSqrt2ln2 = 1 / np.sqrt(2 * np.log(2))
+TwoSqrt2ln2 = 2 * np.sqrt(2 * np.log(2))
+Sqrt2kBTln2mInvc = np.sqrt(2 * kB * T * np.log(2) / mass) / c
+TrefInvT = Tref / T
+PInvPref = P / Pref
 
 # Read input files
 ''' Read the parameters of the linelist in ExoMol or HITRAN format text file. 
@@ -174,7 +181,7 @@ def get_transfiles(read_path):
     for i in range(num_transfiles_all):
         split_version = trans_filepaths_all[i].split('__')[-1].split('.')[0].split('_')    # Split the filenames.
         num = len(split_version)
-        # There are three format filenames.
+        # There are four format filenames.
         # The lastest transitions files named in two formats:
         # 1. Filenames are named with the name of isotopologue and dataset. 
         #    End with .trans.bz2.
@@ -185,13 +192,19 @@ def get_transfiles(read_path):
         #    e.g. 1H2-16O__POKAZATEL__00000-00100.trans.bz2
         # 3. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
         #    e.g. 14N-16O__XABC_v2.trans.bz2
+        # 4. The older version transitions files are named with updated date (yyyymmdd).
+        #    e.g. 1H3_p__MiZATeP__20170330.trans.bz2
         # After split the filenames:
         # The first format filenames only leave the dataset name, e.g. XABC.
         # The second format filenames only leave the range of the wavenumber, e.g. 00000-00100.
         # The third format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
+        # The fourth format filenames only leave the updated date, e.g. 20170330.
         # This program only process the lastest data, so extract the filenames named by the first two format.
-        if num == 1:        
-            trans_filepaths.append(trans_filepaths_all[i])
+        if num == 1:     
+            if split_version[0] == dataset:        
+                trans_filepaths.append(trans_filepaths_all[i])
+            if len(split_version[0].split('-')) == 2:
+                trans_filepaths.append(trans_filepaths_all[i])
     return(trans_filepaths)   
 
 def read_all_trans(read_path):
@@ -531,7 +544,7 @@ def get_part_transfiles(read_path):
     for i in range(num_transfiles_all):
         split_version = trans_filepaths_all[i].split('__')[-1].split('.')[0].split('_')    # Split the filenames.
         num = len(split_version)
-        # There are three format filenames.
+        # There are four format filenames.
         # The lastest transitions files named in two formats:
         # 1. Filenames are named with the name of isotopologue and dataset. 
         #    End with .trans.bz2.
@@ -542,13 +555,19 @@ def get_part_transfiles(read_path):
         #    e.g. 1H2-16O__POKAZATEL__00000-00100.trans.bz2
         # 3. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
         #    e.g. 14N-16O__XABC_v2.trans.bz2
+        # 4. The older version transitions files are named with updated date (yyyymmdd).
+        #    e.g. 1H3_p__MiZATeP__20170330.trans.bz2
         # After split the filenames:
         # The first format filenames only leave the dataset name, e.g. XABC.
         # The second format filenames only leave the range of the wavenumber, e.g. 00000-00100.
         # The third format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
+        # The fourth format filenames only leave the updated date, e.g. 20170330.
         # This program only process the lastest data, so extract the filenames named by the first two format.
-        if num == 1:        
-            trans_filepaths.append(trans_filepaths_all[i])
+        if num == 1:     
+            if split_version[0] == dataset:        
+                trans_filepaths.append(trans_filepaths_all[i])
+            if len(split_version[0].split('-')) == 2:
+                trans_filepaths.append(trans_filepaths_all[i])
         
     if len(trans_filepaths) == 1:
         filenames = trans_filepaths
@@ -725,31 +744,35 @@ def linelist_hitran_abs(hitran_df):
 
 # Line profile
 @njit(parallel=True, fastmath=True)
-def Doppler_HWHM (v, mass, T):
+def Doppler_HWHM(v):
     '''Return the Doppler half-width at half-maximum (HWHM) -- alpha.'''
-    alpha = np.sqrt(2 * kB * T * np.log(2) / mass) * v / c
+    # alpha = np.sqrt(2 * kB * T * np.log(2) / mass) * v / c
+    alpha = Sqrt2kBTln2mInvc * v
     return alpha
 
 @njit(parallel=True, fastmath=True)
-def Lorentzian_HWHM (T, P, n_air, gamma_L):
+def Lorentzian_HWHM(gamma_L, n_air):
     '''Return the Lorentzian half-width at half-maximum (HWHM) -- gamma.'''
-    gamma = gamma_L * (T_ref / T)**n_air * (P / P_ref)
+    # gamma = gamma_L * (Tref / T)**n_air * (P / Pref)
+    gamma = gamma_L * TrefInvT**n_air * PInvPref
     return gamma
 
 @njit(parallel=True, fastmath=True)
-def Gaussian_FWHM (alpha):
-    f_G = 2 * alpha * np.sqrt(2 * np.log(2))
+def Gaussian_FWHM(alpha):
+    # f_G = 2 * alpha * np.sqrt(2 * np.log(2))
+    f_G = alpha * TwoSqrt2ln2
     return(f_G)
 
 @njit(parallel=True, fastmath=True)
-def Lorentzian_FWHM (gamma):
+def Lorentzian_FWHM(gamma):
     f_L = 2 * gamma
     return(f_L)
 
 @njit(parallel=True, fastmath=True)
 def Gaussian_profile(dv, alpha):
     '''Return Gaussian line profile at dv with HWHM alpha.'''
-    Gaussian_profile = np.sqrt(np.log(2) / np.pi) / alpha * np.exp(-np.log(2) * (dv / alpha)**2)
+    # Gaussian_profile = np.exp(-(dv / alpha)**2 / 2) / (alpha * np.sqrt(2 * np.pi))
+    Gaussian_profile = InvSqrt2Pi * np.exp(-(dv / alpha)**2 * 0.5) / alpha
     return Gaussian_profile
 
 @njit(parallel=True, fastmath=True)
@@ -766,8 +789,10 @@ def scipy_Voigt_profile(dv, alpha, gamma):
 def scipy_wofz_Voigt_profile(dv, alpha, gamma):
     '''Return the Voigt line profile with Lorentzian component HWHM gamma and Gaussian component HWHM alpha.'''
     from scipy.special import wofz
-    sigma = alpha / np.sqrt(2 * np.log(2))
-    scipy_wofz_Voigt_profile = np.real(wofz((dv + 1j*gamma)/sigma/np.sqrt(2))) / sigma / np.sqrt(2*np.pi)
+    # sigma = alpha / np.sqrt(2 * np.log(2))
+    sigma = alpha * InvSqrt2ln2
+    # scipy_wofz_Voigt_profile = np.real(wofz((dv + 1j*gamma)/sigma/np.sqrt(2))) / sigma / np.sqrt(2 * np.pi)
+    scipy_wofz_Voigt_profile = np.real(wofz((dv + 1j*gamma)/sigma*InvSqrt2)) / sigma * InvSqrt2Pi
     return scipy_wofz_Voigt_profile
 
 @njit(parallel=True, fastmath=True)
@@ -802,12 +827,14 @@ def pseudo_Voigt_FWHM_profile(dv, f_G, f_L):
 # Calculate Cross Sections
 @njit(parallel=True, fastmath=True)
 def cal_abscoefs(v, gp, A, Epp, Q, abundance):
-    abscoef = gp * A * np.exp(- c2_T * Epp) * (1 - np.exp(- c2_T * v)) * pi_c_8 / (v ** 2) / Q * abundance   
+    # abscoef = gp * A * np.exp(- c2 * Epp / T) * (1 - np.exp(- c2 * v / T)) / (8 * np.pi * c * v**2) / Q * abundance   
+    abscoef = gp * A * np.exp(- c2InvT * Epp) * (1 - np.exp(- c2InvT * v)) * Inv8Pic / (v ** 2) / Q * abundance   
     return (abscoef)
 
 @njit(parallel=True, fastmath=True)
 def cal_emicoefs(v, gp, A, Ep, Q, abundance):
-    emicoef = gp * A * v * np.exp(- c2_T * Ep) / (4 * np.pi * Q) * abundance   
+    # emicoef = gp * A * v * np.exp(- c2 * Ep / T) / (4 * np.pi) / Q * abundance   
+    emicoef = gp * A * v * np.exp(- c2InvT * Ep) * Inv4Pi / Q * abundance   
     return (emicoef)
 
 def cross_section_Gaussian(wn_grid, v, alpha, coef):
@@ -816,18 +843,15 @@ def cross_section_Gaussian(wn_grid, v, alpha, coef):
     Return the wavennumbers and cross sections with Gaussian profile.
     
     '''
-    xsec_g = np.zeros_like(wn_grid)
-    _xsec_g = np.zeros_like(wn_grid)
-    
+    xsec_g = []
     for i in range(N_point):
         dv = wn_grid[i] - v
         filter_cutoff = np.abs(dv) <=cutoff
         _dv = np.array(dv[filter_cutoff])
         _alpha = np.array(alpha[filter_cutoff])
         _coef = coef[filter_cutoff]
-        _xsec_g[i] = np.sum(_coef * Gaussian_profile(_dv, _alpha))        
-
-    xsec_g[0:N_point] += _xsec_g
+        _xsec_g = np.sum(_coef * Gaussian_profile(_dv, _alpha))        
+        xsec_g.append(_xsec_g)
     return (xsec_g)
 
 def cross_section_Lorentzian(wn_grid, v, gamma, coef):
@@ -836,18 +860,15 @@ def cross_section_Lorentzian(wn_grid, v, gamma, coef):
     Return the wavennumbers and cross sections with Lorentzian profile.
     
     '''
-    xsec_l = np.zeros_like(wn_grid)
-    _xsec_l = np.zeros_like(wn_grid)
-    
+    xsec_l = []
     for i in range(N_point):
         dv = wn_grid[i] - v
         filter_cutoff = np.abs(dv) <=cutoff
         _dv = np.array(dv[filter_cutoff])
         _gamma = np.array(gamma[filter_cutoff])
         _coef = coef[filter_cutoff]
-        _xsec_l[i] = np.sum(_coef * Lorentzian_profile(_dv, _gamma))        
-
-    xsec_l[0:N_point] += _xsec_l
+        _xsec_l = np.sum(_coef * Lorentzian_profile(_dv, _gamma))        
+        xsec_l.append(_xsec_l)
     return (xsec_l)
 
 def cross_section_scipy_Voigt(wn_grid, v, alpha, gamma, coef):
@@ -856,9 +877,7 @@ def cross_section_scipy_Voigt(wn_grid, v, alpha, gamma, coef):
     Return the wavennumbers and cross sections with scipy Voigt profile.
     
     '''
-    xsec_sv = np.zeros_like(wn_grid)
-    _xsec_sv = np.zeros_like(wn_grid)
-
+    xsec_sv = []
     for i in range(N_point):
         dv = wn_grid[i] - v
         filter_cutoff = np.abs(dv) <=cutoff
@@ -866,9 +885,8 @@ def cross_section_scipy_Voigt(wn_grid, v, alpha, gamma, coef):
         _alpha = alpha[filter_cutoff]
         _gamma = gamma[filter_cutoff]
         _coef = coef[filter_cutoff]
-        _xsec_sv[i] = np.sum(_coef * scipy_Voigt_profile(_dv, _alpha, _gamma))
-
-    xsec_sv[0:N_point] += _xsec_sv
+        _xsec_sv = np.sum(_coef * scipy_Voigt_profile(_dv, _alpha, _gamma))
+        xsec_sv.append(_xsec_sv)
     return (xsec_sv)
 
 def cross_section_scipy_wofz_Voigt(wn_grid, v, alpha, gamma, coef):
@@ -877,9 +895,7 @@ def cross_section_scipy_wofz_Voigt(wn_grid, v, alpha, gamma, coef):
     Return the wavennumbers and cross sections with wofz Voigt profile.
 
     '''
-    xsec_swv = np.zeros_like(wn_grid)
-    _xsec_swv = np.zeros_like(wn_grid)
-
+    xsec_swv = []
     for i in range(N_point):
         dv = wn_grid[i] - v
         filter_cutoff = np.abs(dv) <=cutoff
@@ -887,9 +903,8 @@ def cross_section_scipy_wofz_Voigt(wn_grid, v, alpha, gamma, coef):
         _alpha = alpha[filter_cutoff]
         _gamma = gamma[filter_cutoff]
         _coef = coef[filter_cutoff]
-        _xsec_swv[i] = np.sum(_coef * scipy_wofz_Voigt_profile(_dv, _alpha, _gamma))
-
-    xsec_swv[0:N_point] += _xsec_swv
+        _xsec_swv = np.sum(_coef * scipy_wofz_Voigt_profile(_dv, _alpha, _gamma))
+        xsec_swv.append(_xsec_swv)
     return (xsec_swv)
 
 def cross_section_width_Voigt(wn_grid, v, alpha, gamma, coef):
@@ -898,9 +913,7 @@ def cross_section_width_Voigt(wn_grid, v, alpha, gamma, coef):
     Return the wavennumbers and cross sections with width Voigt profile.
 
     '''
-    xsec_wv = np.zeros_like(wn_grid)
-    _xsec_wv = np.zeros_like(wn_grid)
-
+    xsec_wv = []
     for i in range(N_point):
         dv = wn_grid[i] - v
         filter_cutoff = np.abs(dv) <=cutoff
@@ -910,9 +923,8 @@ def cross_section_width_Voigt(wn_grid, v, alpha, gamma, coef):
         f_G = Gaussian_profile(_dv, _alpha)
         f_L = Lorentzian_profile(_dv, _gamma)
         _coef = coef[filter_cutoff]
-        _xsec_wv[i] = np.sum(_coef * width_Voigt_profile(f_G, f_L))
-
-    xsec_wv[0:N_point] += _xsec_wv
+        _xsec_wv = np.sum(_coef * width_Voigt_profile(f_G, f_L))
+        xsec_wv.append(_xsec_wv)
     return (xsec_wv)
 
 def cross_section_pseudo_Voigt(wn_grid, v, alpha, gamma, coef):
@@ -921,9 +933,7 @@ def cross_section_pseudo_Voigt(wn_grid, v, alpha, gamma, coef):
     Return the wavennumbers and cross sections with width Voigt profile.
 
     '''
-    xsec_pv = np.zeros_like(wn_grid)
-    _xsec_pv = np.zeros_like(wn_grid)
-
+    xsec_pv = []
     for i in range(N_point):
         dv = wn_grid[i] - v
         filter_cutoff = np.abs(dv) <=cutoff
@@ -933,9 +943,8 @@ def cross_section_pseudo_Voigt(wn_grid, v, alpha, gamma, coef):
         f_G = Gaussian_profile(_dv, _alpha)
         f_L = Lorentzian_profile(_dv, _gamma)
         _coef = coef[filter_cutoff]
-        _xsec_pv[i] = np.sum(_coef * pseudo_Voigt_profile(f_G, f_L))
-
-    xsec_pv[0:N_point] += _xsec_pv
+        _xsec_pv = np.sum(_coef * pseudo_Voigt_profile(f_G, f_L))
+        xsec_pv.append(_xsec_pv)
     return (xsec_pv)
 
 def cross_section_pseudo_FWHM_Voigt(wn_grid, v, alpha, gamma, coef):
@@ -944,9 +953,7 @@ def cross_section_pseudo_FWHM_Voigt(wn_grid, v, alpha, gamma, coef):
     Return the wavennumbers and cross sections with width Voigt profile.
 
     '''
-    xsec_pfv = np.zeros_like(wn_grid)
-    _xsec_pfv = np.zeros_like(wn_grid)
-
+    xsec_pfv = []
     for i in range(N_point):
         dv = wn_grid[i] - v
         filter_cutoff = np.abs(dv) <=cutoff
@@ -956,9 +963,8 @@ def cross_section_pseudo_FWHM_Voigt(wn_grid, v, alpha, gamma, coef):
         f_G = Gaussian_FWHM(_alpha)
         f_L = Lorentzian_FWHM(_gamma)
         _coef = coef[filter_cutoff]
-        _xsec_pfv[i] = np.sum(_coef * pseudo_Voigt_FWHM_profile(_dv, f_G, f_L))
-
-    xsec_pfv[0:N_point] += _xsec_pfv
+        _xsec_pfv = np.sum(_coef * pseudo_Voigt_FWHM_profile(_dv, f_G, f_L))
+        xsec_pfv.append(_xsec_pfv)
     return (xsec_pfv)
 
 # Plot and Save Results
@@ -987,7 +993,10 @@ def plot_xsec(wn, xsec, database, profile):
         print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
         
         # Plot cross sections and save it as .png.
+        plt.figure(figsize=(12, 6))
+        plt.ylim([1e-30, max(xsec)])
         plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile)
+        plt.semilogy()
         #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile) 
         plt.xlabel('Wavenumber, cm$^{-1}$')
         plt.ylabel('Cross-section, cm$^{2}$/molecule')
@@ -1015,7 +1024,10 @@ def plot_xsec(wn, xsec, database, profile):
         print('{:25s} : {} {} {} {}'.format('Wavelength range selected',min_wl,u'\xb5m -',max_wl,u'\xb5m'))
 
         # Plot cross sections and save it as .png.
+        plt.figure(figsize=(12, 6))
+        plt.ylim([1e-30, max(xsec)])
         plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile)
+        plt.semilogy()
         #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile) 
         plt.xlabel(u'Wavelength, \xb5m')
         plt.ylabel(u'Cross-section, \xb5m\u207B\u00B2/molecule')
@@ -1070,17 +1082,17 @@ def get_crosssection(read_path, states_df, hitran_df):
         
         # Line profile: Gaussion, Lorentzian or Voigt
         if profile == 'Gaussian':
-            alpha = Doppler_HWHM (v, mass, T)
+            alpha = Doppler_HWHM(v)
         elif profile == 'Lorentzian':
             gamma = pd.DataFrame()
             for i in range(len(broad)):
-                gamma[i] = Lorentzian_HWHM (T, P, n_air[i].values, gamma_L[i].values)
+                gamma[i] = Lorentzian_HWHM(gamma_L[i].values, n_air[i].values)
             gamma = gamma.sum(axis=1).values
         else:
-            alpha = Doppler_HWHM (v, mass, T)
+            alpha = Doppler_HWHM(v)
             gamma = pd.DataFrame()
             for i in range(len(broad)):
-                gamma[i] = Lorentzian_HWHM (T, P, n_air[i].values, gamma_L[i].values)
+                gamma[i] = Lorentzian_HWHM(gamma_L[i].values, n_air[i].values)
             gamma = gamma.sum(axis=1).values    
 
 
@@ -1101,14 +1113,14 @@ def get_crosssection(read_path, states_df, hitran_df):
 
         # Line profile: Gaussion, Lorentzian or Voigt
         if profile == 'Gaussian':
-            alpha = Doppler_HWHM (v, mass, T)
+            alpha = Doppler_HWHM(v)
         elif profile == 'Lorentzian':
             gamma_L = gamma_air*ratios[1]+ gamma_self*ratios[2]
-            gamma = Lorentzian_HWHM (T, P, n_air, gamma_L)
+            gamma = Lorentzian_HWHM(gamma_L, n_air)
         else:
-            alpha = Doppler_HWHM (v, mass, T)
+            alpha = Doppler_HWHM(v)
             gamma_L = gamma_air*ratios[1]+ gamma_self*ratios[2]
-            gamma = Lorentzian_HWHM (T, P, n_air, gamma_L)
+            gamma = Lorentzian_HWHM(gamma_L, n_air)
 
     else:
         raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")
@@ -1176,7 +1188,7 @@ def get_results(read_path):
             if SpecificHeats == 1:
                 exomol_specificheat(states_df, Ntemp, Tmax)
             if CrossSections ==1:
-                get_crosssection(read_path, states_df)
+                get_crosssection(read_path, states_df, hitran_df)
         else:   
             raise ImportError("Please choose functions which you want to calculate.")
 

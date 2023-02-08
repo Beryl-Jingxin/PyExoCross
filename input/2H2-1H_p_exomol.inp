@@ -1,0 +1,60 @@
+Database                                ExoMol
+
+
+# Basic information #
+Molecule                                H3_p
+Isotopologue                            2H2-1H_p
+Dataset                                 MiZo
+mol_iso_id                              0
+
+
+# File path #
+ReadPath                                /mnt/data/exomol/exomol3_data/
+SavePath                                /home/jingxin/data/pyexocross/
+
+
+# Functions #
+PartitionFunctions                      1
+CoolingFunctions                        0
+Lifetimes                               0
+SpecificHeats                           0
+CrossSections                           0
+
+
+# Calculate partition, cooling functions or specific heats #
+Ntemp                                   1       # The number of temperature steps
+Tmax                                    2000    # Maximal temperature in K (minimal T = 1 K )
+
+
+# Calculate lifetimes #
+None
+
+
+# Calculate cross-sections #
+Broadeners                              Default    Air    Self    H2    He
+Ratios                                  1.0        0.0    0.0     0.0   0.0
+
+Temperature                             300
+Pressure                                1
+Range                                   5000 7000
+Npoints                                 80001
+
+Cutoff                                  25.0
+Threshold                               1e-30
+
+Absorption/Emission                     Absorption          # 'Absorption' or 'Emission'
+Profile                                 SciPyVoigt          
+Wavenumber(wn)/wavelength(wl)           wn                  # 'wn' or 'wl'
+
+
+Note:
+1. If the database is ExoMol: mol_iso_id   0
+   If the database is HITRAN: mol_iso_id   moleculeIDisotopologueID          # e.g. 81 (NO), 261(C2H2)
+2. If the database is ExoMol: ReadPath  /mnt/data/exomol/exomol3_data/       # folder path
+   (when file path is /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AlHambra/27Al-1H__AlHambra.def)
+   If the database is HITRAN: ReadPath  /home/username/data/hitran/AlH.par   # .par file path
+   (when file path is /home/username/data/hitran/AlH.par)
+3. Functions part: (calculate the functions or not) 0 means no, 1 means yes. 
+   Just change the information which you will use, please do not delete other information.
+4. The broadening types and ratio values are corresponding, please do not change the place or delete elements. 
+5. Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt.
