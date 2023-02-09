@@ -130,9 +130,10 @@ import astropy.constants as ac
 Tref = 296.0                        # Reference temperature is 296 K
 Pref = 1.0                          # Reference pressure is 1 atm
 N_A = ac.N_A.value                  # Avogadro number (1/mol)
-h = ac.h.to('erg s').value          # Planck's const (erg s)
+h = ac.h.to('erg s').value          # Planck constant (erg s)
 c = ac.c.to('cm/s').value           # Velocity of light (cm/s)
-kB = ac.k_B.to('erg/K').value       # Boltzmann's const (erg/K)
+kB = ac.k_B.to('erg/K').value       # Boltzmann constant (erg/K)
+R = ac.R.to('J / (K mol)').value    # Molar gas constant (J/(K mol))
 c2 = h * c / kB                     # Second radiation constant (cm K)
 
 inp_filepath = parse_args()
