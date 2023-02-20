@@ -986,6 +986,13 @@ def plot_xsec(wn, xsec, database, profile):
     print('{:25s} : {:<6}'.format('Temperature selected', T), 'K')
     print('{:25s} : {:<6}'.format('Pressure selected', P), 'bar')
 
+    wn_xsec = pd.DataFrame()
+    wn_xsec['v'] = wn
+    wn_xsec['xsec'] = xsec
+    wn_xsec = wn_xsec[wn_xsec.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)]
+    wn = wn_xsec['v'].values
+    xsec = wn_xsec['xsec'].values
+
     #plt.legend(fancybox=True, framealpha=0.0)
     
     if (wn_wl == 'wn'):
