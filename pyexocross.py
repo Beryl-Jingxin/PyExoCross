@@ -481,7 +481,7 @@ def exomol_lifetime(states_df, all_trans_df):
             new_rows.append(s_df[0][i][:41]+lifetime_list[i]+s_df[0][i][53:]+'\n')
     if check_uncertainty == 1:
         for i in range(nrows):
-            new_rows.append(s_df[0][i][:55]+lifetime_list[i]+s_df[0][i][67:]+'\n')
+            new_rows.append(s_df[0][i][:53]+lifetime_list[i]+s_df[0][i][65:]+'\n')
 
     lf_folder = save_path + '/lifetime/'
     if os.path.exists(lf_folder):
