@@ -2,9 +2,9 @@ Database                                ExoMol
 
 
 # Basic information #
-Molecule                                AlO
-Isotopologue                            27Al-16O
-Dataset                                 ATP
+Molecule                                CaH
+Isotopologue                            40Ca-1H
+Dataset                                 XAB
 mol_iso_id                              0
 
 
@@ -23,7 +23,7 @@ CrossSections                           1
 
 # Calculate partition, cooling functions or specific heats #
 Ntemp                                   1       # The number of temperature steps
-Tmax                                    9000    # Maximal temperature in K (minimal T = 1 K )
+Tmax                                    5000    # Maximal temperature in K (minimal T = 1 K )
 
 
 # Calculate lifetimes #
@@ -36,14 +36,17 @@ Ratios                                  1.0        0.0    0.0     0.0   0.0
 
 Temperature                             300
 Pressure                                1
-Range                                   0 1000
-Npoints                                 10001
+Range                                   14500 14550
+Npoints                                 80001
 
 Cutoff                                  25.0
 Threshold                               1e-30
 
+UncFilter                               0.001
+QNsFilter
+
 Absorption/Emission                     Absorption          # 'Absorption' or 'Emission'
-Profile                                 SciPyVoigt          
+Profile                                 Gaussian        
 Wavenumber(wn)/wavelength(wl)           wn                  # 'wn' or 'wl'
 
 
@@ -58,3 +61,4 @@ Note:
    Just change the information which you will use, please do not delete other information.
 4. The broadening types and ratio values are corresponding, please do not change the place or delete elements. 
 5. Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt.
+
