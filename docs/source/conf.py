@@ -41,6 +41,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'recommonmark',
+    'sphinx_markdown_tables',
 ]
 
 intersphinx_mapping = {
@@ -92,8 +94,8 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = 'bizstyle'
-html_theme = 'alabaster'
+html_theme = 'bizstyle'
+# html_theme = 'alabaster'
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
