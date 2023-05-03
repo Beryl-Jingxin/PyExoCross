@@ -52,3 +52,6 @@ sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 urllib3==1.26.13
     # via requests
+recommonmark==0.7.1
+sphinx-markdown-tables==0.0.17
+commonmark==0.9.1
