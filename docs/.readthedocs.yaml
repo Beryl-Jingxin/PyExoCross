@@ -33,7 +33,7 @@ markdown_extensions:
   - mdx_math:
       enable_dollar_delimiter: True
   - fenced_code
-  - admonition
+  - admonitionz
   - codehilite
 
 extra_javascript:
