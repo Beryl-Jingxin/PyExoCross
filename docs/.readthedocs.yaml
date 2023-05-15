@@ -24,17 +24,7 @@ sphinx:
 #    - pdf
 
 # Build documentation in the docs/ directory with MKDocs
-markdown_extensions:
-  - pymdownx.superfences
-  - pymdownx.arithmatex:
-      generic: true
-  - extra
-  - tables
-  - mdx_math:
-      enable_dollar_delimiter: true
-  - fenced_code
-  - admonition
-  - codehilite
+
 
 extra_javascript:
   - https://polyfill.io/v3/polyfill.min.js?features=es6
