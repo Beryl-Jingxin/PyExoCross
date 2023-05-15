@@ -23,6 +23,24 @@ sphinx:
 # formats:
 #    - pdf
 
+# Build documentation in the docs/ directory with MKDocs
+markdown_extensions:
+  - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
+  - extra
+  - tables
+  - mdx_math:
+      enable_dollar_delimiter: True
+  - fenced_code
+  - admonition
+  - codehilite
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
+
 # Optionally declare the Python requirements required to build your docs
 python:
    install:
