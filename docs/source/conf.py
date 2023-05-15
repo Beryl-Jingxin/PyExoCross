@@ -97,6 +97,8 @@ pygments_style = None
 #
 # html_sidebars = {}
 
+# import markdown
+# md = markdown.Markdown(extensions=['pymdownx.arithmatex'])
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -105,6 +107,7 @@ pygments_style = None
 #
 html_theme = 'bizstyle'
 # html_theme = 'alabaster'
+
 
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
@@ -159,7 +162,7 @@ latex_elements = {
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
+#  author, documentclass [how to, manual, or own class]).
 latex_documents = [
     (master_doc, 'PyExoCross.tex', 'PyExoCross Documentation',
      'Jingxin Zhang', 'manual'),
@@ -207,7 +210,5 @@ epub_exclude_files = ['search.html']
 
 # favicon
 html_favicon = 'favicon.ico'
-
-
 
 # -- Extension configuration -------------------------------------------------
