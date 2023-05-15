@@ -30,7 +30,7 @@ CrossSections                           0
 
 # Quantum numbers #
 QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %1d      %7s      %7s
+QNsformat                               %1s  %1s   %13s  %3d   %1d      %7.1f    %7.1f
 
 
 # Conversion #
@@ -109,9 +109,7 @@ Note:
    (4). QNsFilter(Y/N): e.g. 'Y          +/-[+]   e/f[e]   v[0,1,2,3]  ' or 'N';
 9. Quantum number filter
    (1). QNslabel                         +/-  e/f   eS    v     Lambda   Sigma    Omega
-   (2). QNsformat                        %1s  %1s   %13s  %3d   %1d      %7s      %7s
-   If QNs have negative: e.g. '-0.5', the format is '%7.1f' in def file, write it as '%7s'.
-   If QNs have integer : e.g. '24'  , the format is '%3d'   in def file, write it as '%3s'.
+   (2). QNsformat                        %1s  %1s   %13s  %3d   %1d      %7.1f    %7.1f
    Note: you can define the QN column name by yourself, but please make sure it has letters without any spaces.
    e.g. 'c1'  'c2'  'v1'  'v2'  'electronicState'  'electronic_state'  '1v'  '2v'  'M/E/C'.
    Wrong format of the QN column nams: '1'   '2'   'electronic state'.
@@ -150,7 +148,7 @@ CrossSections                           0
 
 # Quantum numbers #
 QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %1d      %7s      %7s
+QNsformat                               %1s  %1s   %13s  %3d   %1d      %7.1f    %7.1f
 
 
 # Conversion #
@@ -229,9 +227,7 @@ Note:
    (4). QNsFilter(Y/N): e.g. 'Y          +/-[+]   e/f[e]   v[0,1,2,3]  ' or 'N';
 9. Quantum number filter
    (1). QNslabel                         +/-  e/f   eS    v     Lambda   Sigma    Omega
-   (2). QNsformat                        %1s  %1s   %13s  %3d   %1d      %7s      %7s
-   If QNs have negative: e.g. '-0.5', the format is '%7.1f' in def file, write it as '%7s'.
-   If QNs have integer : e.g. '24'  , the format is '%3d'   in def file, write it as '%3s'.
+   (2). QNsformat                        %1s  %1s   %13s  %3d   %1d      %7.1f    %7.1f
    Note: you can define the QN column name by yourself, but please make sure it has letters without any spaces.
    e.g. 'c1'  'c2'  'v1'  'v2'  'electronicState'  'electronic_state'  '1v'  '2v'  'M/E/C'.
    Wrong format of the QN column nams: '1'   '2'   'electronic state'.
