@@ -115,7 +115,7 @@ Note:
    Wrong format of the QN column nams: '1'   '2'   'electronic state'.
 10. Profile
    Choose line profile from: 
-   Doppler, Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, 
+   Doppler, Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, HumlicekVoigt, 
    PseudoVoigt, PseudoKielkopfVoigt, PseudoOliveroVoigt, PseudoLiuLinVoigt, PseudoRoccoVoigt,
    BinnedDoppler, BinnedGaussian, BinnedLorentzian, BinnedVoigt.
 ```
@@ -233,7 +233,7 @@ Note:
    Wrong format of the QN column nams: '1'   '2'   'electronic state'.
 10. Profile
    Choose line profile from: 
-   Doppler, Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, 
+   Doppler, Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, HumlicekVoigt, 
    PseudoVoigt, PseudoKielkopfVoigt, PseudoOliveroVoigt, PseudoLiuLinVoigt, PseudoRoccoVoigt,
    BinnedDoppler, BinnedGaussian, BinnedLorentzian, BinnedVoigt.
 ```

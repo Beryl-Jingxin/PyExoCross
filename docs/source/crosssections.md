@@ -77,7 +77,7 @@ Ratios                                  0.0        0.0    0.0     0.9   0.1   0.
 
 Choose line profile from:
 
-`Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `PseudoVoigt`, `PseudoKielkopfVoigt`, `PseudoOliveroVoigt`, `PseudoLiuLinVoigt`, `PseudoRoccoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`.
+`Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `HumlicekVoigt`, `PseudoVoigt`, `PseudoKielkopfVoigt`, `PseudoOliveroVoigt`, `PseudoLiuLinVoigt`, `PseudoRoccoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`.
 
 *Example*
 
