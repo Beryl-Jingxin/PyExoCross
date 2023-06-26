@@ -1,11 +1,9 @@
+# Data source #
 Database                                ExoMol
-
-
-# Basic information #
 Molecule                                CO2
 Isotopologue                            12C-16O2
 Dataset                                 UCL-4000
-mol_iso_id                              21
+MolIsoID                                21
 
 
 # File path #
@@ -14,47 +12,36 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-PartitionFunctions                      1
-CoolingFunctions                        1
-Lifetimes                               1
-SpecificHeats                           1
-CrossSections                           1
+Conversion                              0
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+StickSpectra                            1
+CrossSections                           0
 
 
-# Calculate partition, cooling functions or specific heats #
-Ntemp                                   1       # The number of temperature steps
-Tmax                                    9000    # Maximal temperature in K (minimal T = 1 K )
+# Quantum numbers #
+QNslabel
+QNsformat
 
 
-# Calculate lifetimes #
-None
-
-
-# Calculate cross-sections #
-Broadeners                              Default    Air    Self    H2    He
-Ratios                                  0.0        0.7    0.3     0.0   0.0
-
-Temperature                             200
+# Calculate stick spectra or cross-sections #
+Temperature                             296
 Pressure                                1
-Range                                   1990 2010
-Npoints                                 10001
+Range                                   2000       2500
+Npoints/BinSize                         Npoints    10001
 
-Cutoff                                  25.0
-Threshold                               1e-30
+Cutoff(Y/N)                             Y          25             # Default value 25
+Threshold(Y/N)                          N          1e-30          # Default value 1e-30
+UncFilter(Y/N)                          N          0.001
+QNsFilter(Y/N)                          N
+DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
+LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
 
-Absorption/Emission                     Absorption          # 'Absorption' or 'Emission'
-Profile                                 SciPyVoigt          
-Wavenumber(wn)/wavelength(wl)           wn                  # 'wn' or 'wl'
+Broadeners                              Air        Self
+Ratios                                  0.7        0.3
 
-
-Note:
-1. If the database is ExoMol: mol_iso_id   0
-   If the database is HITRAN: mol_iso_id   moleculeIDisotopologueID          # e.g. 81 (NO), 261(C2H2)
-2. If the database is ExoMol: ReadPath  /mnt/data/exomol/exomol3_data/       # folder path
-   (when file path is /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AlHambra/27Al-1H__AlHambra.def)
-   If the database is HITRAN: ReadPath  /home/username/data/hitran/AlH.par   # .par file path
-   (when file path is /home/username/data/hitran/AlH.par)
-3. Functions part: (calculate the functions or not) 0 means no, 1 means yes. 
-   Just change the information which you will use, please do not delete other information.
-4. The broadening types and ratio values are corresponding, please do not change the place or delete elements. 
-5. Choose line profile from: Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, WidthVoigt, PseudoVoigt, PseudoFWHMVoigt.
+Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
+Profile                                 Gaussian
+Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'

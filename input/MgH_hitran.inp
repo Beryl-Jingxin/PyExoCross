@@ -1,13 +1,13 @@
 # Basic information #
 Database                                HITRAN
-Molecule                                NO
-Isotopologue                            14N-16O
-Dataset                                 XABC
-MolIsoID                                81
+Molecule                                MgH
+Isotopologue                            24Mg-1H
+Dataset                                 XAB
+MolIsoID                                501
 
 
 # File path #
-ReadPath                                /home/jingxin/data/HITRAN/NO.par
+ReadPath                                /home/jingxin/data/pyexocross/conversion/24Mg-1H__XAB.par
 SavePath                                /home/jingxin/data/pyexocross/
 
 
@@ -22,22 +22,21 @@ CrossSections                           0
 
 
 # Quantum numbers #
-QNslabel                                X     Omega   v1      m      Br    Sym    F
-QNsformat                               %2s   %3s     %2d     %1s    %2s   %1s    %5s
+QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
+QNsformat                               %1s  %1s   %13s  %3d   %1d      %7s      %7s
 
 
 # Conversion #
 ConversionFormat                        2  
 ConversionUncertainty                   0.005
-ConversionFrequncyRange                 0                 63000   
-NumberQN                                9   
-GlobalQNLabel                           X       Omega    v1   
-GlobalQNFormat                          %2s     %3s      %2d  
-LocalQNLabel                            m       Br       Sym     F    
-LocalQNFormat                           %1s     %2s      %1s     %5s     
-      
+ConversionFrequncyRange                 0                 30000      
+GlobalQNLabel                           eS       v        Omega
+GlobalQNFormat                          %10s     %1d      %4s
+LocalQNLabel                            J        e/f
+LocalQNFormat                           %5.1f    %2s
+                           
 
-# Calculate partition, cooling functions or specific heats #
+# Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
 Tmax                                    5000                      # Maximal temperature in K 
 
@@ -46,21 +45,21 @@ Tmax                                    5000                      # Maximal temp
 None
 
 
-# Calculate cross-sections #
-Temperature                             200
+# Calculate stick spectra or cross-sections #
+Temperature                             300
 Pressure                                1
-Range                                   1750       2000
-Npoints/BinSize                         Npoints    10001
+Range                                   0          30000
+Npoints/BinSize                         Npoints    30001
 
 Cutoff(Y/N)                             N          25             # Default value 25
 Threshold(Y/N)                          N          1e-30          # Default value 1e-30
 UncFilter(Y/N)                          N          0.001
-QNsFilter(Y/N)                          N          +/-[+]   e/f[e]   v[0,1,2,3]   
+QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
 DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     Y          0.7            # Set Lorentzian HWHM as a constant  
+LorentzianHWHM(Y/N)                     Y          0.7            # Set Lorentzian HWHM as a constant
 
-Broadeners                              Default    Air    Self    H2    He
-Ratios                                  0.0        1.0    0.0     0.0   0.0
+Broadeners                              Default    Air    Self    H2    He    CO2
+Ratios                                  1.0        0.0    0.0     0.0   0.0   0.0
 
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 Profile                                 SciPyVoigt        
@@ -92,7 +91,7 @@ Note:
 5. Broadeners; Ratios
    The broadening types and ratio values are corresponding, please do not change the place or delete elements. 
 6. Range
-   Give two values as the minimum and maximum of the wavenumber range. No ',' or ';' between these two numbers, just leave spaces here.
+   Give two values as the minimum and maximum of the wavenumber range. No ',' or ';' between these two numbers, just leave blank here.
 7. Npoints/BinSize
    e.g. 'Npoints      100001' or 'BinSize    1'.
 8. Cutoff(Y/N); Threshold(Y/N); UncFilter(Y/N); QNsFilter(Y/N)
@@ -111,6 +110,7 @@ Note:
    Wrong format of the QN column nams: '1'   '2'   'electronic state'.
 10. Profile
    Choose line profile from: 
-   Doppler, Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, Humlicek,
-   PseudoVoigt, PseudoKielkopfVoigt, PseudoOliveroVoigt, PseudoLiuLinVoigt, PseudoRoccoVoigt, 
+   Doppler, Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, HumlicekVoigt, 
+   PseudoVoigt, PseudoKielkopfVoigt, PseudoOliveroVoigt, PseudoLiuLinVoigt, PseudoRoccoVoigt,
    BinnedDoppler, BinnedGaussian, BinnedLorentzian, BinnedVoigt.
+
