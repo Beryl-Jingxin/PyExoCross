@@ -146,7 +146,6 @@ def inp_para(inp_filepath):
         min_wn = float(inp_df[col0.isin(['Range'])][1])
         max_wn = float(inp_df[col0.isin(['Range'])][2])
         abs_emi = inp_df[col0.isin(['Absorption/Emission'])][1].values[0].upper()[0]
-        
         UncFilterYN = inp_df[col0.isin(['UncFilter(Y/N)'])][1].values[0].upper()[0]
         if UncFilterYN == 'Y':
             UncFilter = float(inp_df[col0.isin(['UncFilter(Y/N)'])][2])
@@ -154,7 +153,6 @@ def inp_para(inp_filepath):
             UncFilter = 'None'
         else:
             raise ImportError("Please type the correct uncertainty filter choice 'Y' or 'N' into the input file.")  
-        
         thresholdYN = inp_df[col0.isin(['Threshold(Y/N)'])][1].values[0].upper()[0]
         if thresholdYN == 'Y':
             threshold = float(inp_df[col0.isin(['Threshold(Y/N)'])][2])
@@ -162,7 +160,6 @@ def inp_para(inp_filepath):
             threshold = 'None'
         else:
             raise ImportError("Please type the correct threshold choice 'Y' or 'N' into the input file.") 
-         
     else:
         T = 0
         min_wn = 0
@@ -1526,7 +1523,6 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, T):
     else:
         J_format = '%7.1f'
     QNs_format = str(QNsformat_list).replace("', '"," ").replace("['","").replace("']","").replace('d','s').replace('.1f','s')
-    
     ss_folder = save_path + '/stick_spectra/stick/'
     if os.path.exists(ss_folder):
         pass

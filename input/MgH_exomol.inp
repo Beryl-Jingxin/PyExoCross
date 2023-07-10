@@ -7,7 +7,7 @@ MolIsoID                                501
 
 
 # File path #
-ReadPath                                /home/jingxin/data/exomol/
+ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
 
 
@@ -21,19 +21,20 @@ StickSpectra                            0
 CrossSections                           1
 
 
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
 QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
 
 
 # Conversion #
 ConversionFormat                        1  
-ConversionUncertainty                   0.01
 ConversionFrequncyRange                 0                 30000      
 GlobalQNLabel                           eS       v        Omega
-GlobalQNFormat                          %10s     %1d      %4s
+GlobalQNFormat                          %9s     %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.001
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
                            
 
 # Calculate partition, specific heats or cooling functions #
@@ -45,24 +46,30 @@ Tmax                                    5000                      # Maximal temp
 None
 
 
-# Calculate stick spectra or cross-sections #
+# Calculate stick spectra or cross sections #
 Temperature                             300
-Pressure                                1
-Range                                   9975       10025
-Npoints/BinSize                         BinSize    0.01
-
-Cutoff(Y/N)                             Y          25             # Default value 25
-Threshold(Y/N)                          N          1e-30          # Default value 1e-30
-UncFilter(Y/N)                          N          0.001
-QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
-DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
-
-Broadeners                              Default   0.0    0.0     0.0   0.0   0.0
-
+Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+
+
+# Calculate stick spectra #
+PlotStickSpectra(Y/N)                   N
+
+
+# Calculate cross sections #
+Pressure                                1
+Npoints/BinSize                         Npoints    10001
+Broadeners                              Default    
+Ratios                                  1.0        
 Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
+Cutoff(Y/N)                             Y          100            # If Y, default value 25
+QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
+DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   N
 
 
 Note:
@@ -112,4 +119,3 @@ Note:
    Doppler, Gaussian, Lorentzian, SciPyVoigt, SciPyWofzVoigt, HumlicekVoigt, 
    PseudoVoigt, PseudoKielkopfVoigt, PseudoOliveroVoigt, PseudoLiuLinVoigt, PseudoRoccoVoigt,
    BinnedDoppler, BinnedGaussian, BinnedLorentzian, BinnedVoigt.
-

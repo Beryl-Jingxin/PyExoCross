@@ -32,5 +32,7 @@ If you want to run program in conda environment, please use command:
 
 ## Notes for input file
 
-1. All information can be written in the input file. Just change the information you will use, please do not change the first column strings or delete the other unnecessary information.
+1. All information can be written in the input file. Just change the information you will use.
+   You don't need to change any other unnecessary information.
+   Please do not change the first column strings.
 2. If you met problems, jupyter notebook `.ipynb` code is stored for checking and testing.

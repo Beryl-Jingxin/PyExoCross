@@ -1,9 +1,10 @@
 Stick spectra
 =============
 
-Please provide the line lists, ``Temperature``, ``Pressure``, 
-wavenumber ``Range`` and uncertainty filter ``UncFilter``.
+Please provide the line lists, ``Temperature``, wavenumber ``Range``, 
+uncertainty filter ``UncFilter`` and ``PlotStickSpectra(Y/N)``.
 
+If you need a stick spectra figure, please write ``Y`` after ``PlotStickSpectra(Y/N)``.
 If you don't use the uncertainty filter ``UncFilter``, write ``N`` here. 
 You don't need to change the number behind it.
 
@@ -19,22 +20,27 @@ The intensity equation is:
 
 .. code:: bash
 
-    # Calculate stick spectra or cross-sections #
+    # Calculate stick spectra or cross sections #
     Temperature                             300
-    Pressure                                1
     Range                                   0          30000
+    Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+    UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.001
+    Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
 
-    UncFilter(Y/N)                          Y          0.001
+    # Calculate stick spectra #
+    PlotStickSpectra(Y/N)                   Y
 
 .. code:: bash
     
-    # Calculate stick spectra or cross-sections #
+    # Calculate stick spectra or cross sections #
     Temperature                             1000
-    Pressure                                1.5
     Range                                   1000       5000
+    Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
+    UncFilter(Y/N)                          N          0.005          # If Y, default value 0.001
+    Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 
-    UncFilter(Y/N)                          N          0.005
-
+    # Calculate stick spectra #
+    PlotStickSpectra(Y/N)                   N
 
 **Note**
 

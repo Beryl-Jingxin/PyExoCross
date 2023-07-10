@@ -26,22 +26,15 @@ QNslabel
 QNsformat
 
 
-# Calculate stick spectra or cross-sections #
+# Calculate stick spectra or cross sections #
 Temperature                             296
-Pressure                                1
 Range                                   2000       2500
-Npoints/BinSize                         Npoints    10001
-
-Cutoff(Y/N)                             Y          25             # Default value 25
-Threshold(Y/N)                          N          1e-30          # Default value 1e-30
-UncFilter(Y/N)                          N          0.001
-QNsFilter(Y/N)                          N
-DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
-
-Broadeners                              Air        Self
-Ratios                                  0.7        0.3
-
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
-Profile                                 Gaussian
-Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
+UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.001
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+
+
+# Calculate stick spectra #
+PlotStickSpectra(Y/N)                   N
+
+

@@ -16,7 +16,6 @@ Temperature                             300
 Pressure                                1
 Range                                   0          30000
 Npoints/BinSize                         Npoints    30001
-
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 ```
@@ -37,12 +36,13 @@ Wrong format of the quantum number column nams: '1', '2', 'electronic state'.
 *Example*
 
 ```bash
-Cutoff(Y/N)                             Y          25             # Default value 25
-Threshold(Y/N)                          Y          1e-30          # Default value 1e-30
-UncFilter(Y/N)                          Y          0.001
-QNsFilter(Y/N)                          YES        par[+]   e/f[e]   v[0,1,2,3]
-DopplerHWHM(Y/N)                        Yes        3              # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     yes        0.7            # Set Lorentzian HWHM as a constant
+UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+Cutoff(Y/N)                             Y          100            # If Y, default value 25
+QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
+DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   N
 ```
 
 ## Broadeners
@@ -54,23 +54,23 @@ LorentzianHWHM(Y/N)                     yes        0.7            # Set Lorentzi
 
 If you want to use the default values of the broadeners, please set the `Ratios` of `Broadeners` under `Default` as `1.0`.
 
-The broadening types and ratio values are corresponding, please do not change the place or delete elements.
+The broadening types and ratio values are corresponding, please write them in order.
 
 *Example*
 
 ```bash
-Broadeners                              Default    Air    Self    H2    He    CO2
-Ratios                                  1.0        0.0    0.0     0.0   0.0   0.0
+Broadeners                              Default   
+Ratios                                  1.0      
 ```
 
 ```bash
-Broadeners                              Default    Air    Self    H2    He    CO2
-Ratios                                  0.0        0.7    0.3     0.0   0.0   0.0
+Broadeners                              Air    Self    
+Ratios                                  0.7    0.3    
 ```
 
 ```bash
-Broadeners                              Default    Air    Self    H2    He    CO2
-Ratios                                  0.0        0.0    0.0     0.9   0.1   0.0
+Broadeners                              H2    He   
+Ratios                                  0.9   0.1   
 ```
 
 ## Line profiles
@@ -82,47 +82,55 @@ Choose line profile from:
 *Example*
 
 ```bash
-# Calculate stick spectra or cross-sections #
+# Quantum numbers for conversion, stick spectra and cross sections #
+QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
+QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+
+# Calculate stick spectra or cross sections #
 Temperature                             300
-Pressure                                1
 Range                                   0          30000
-Npoints/BinSize                         Npoints    30001
-
-Cutoff(Y/N)                             Y          25             # Default value 25
-Threshold(Y/N)                          Y          1e-30          # Default value 1e-30
-UncFilter(Y/N)                          Y          0.001
-QNsFilter(Y/N)                          YES        par[+]   e/f[e]   v[0,1,2,3]
-DopplerHWHM(Y/N)                        Yes        3              # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     yes        0.7            # Set Lorentzian HWHM as a constant
-
-Broadeners                              Default    Air    Self    H2    He    CO2
-Ratios                                  1.0        0.0    0.0     0.0   0.0   0.0
-
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-Profile                                 Gaussian
+UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.001
+Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
+
+# Calculate cross sections #
+Pressure                                1
+Npoints/BinSize                         Npoints    10001
+Broadeners                              Default    
+Ratios                                  1.0        
+Profile                                 Gaussian        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
+Cutoff(Y/N)                             Y          100            # If Y, default value 25
+QNsFilter(Y/N)                          Y          par[+]   e/f[e]   v[0,1,2,3]  
+DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   Y
 ```
 
 ```bash
-# Calculate stick spectra or cross-sections #
+# Quantum numbers for conversion, stick spectra and cross sections #
+QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
+QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+
+# Calculate stick spectra or cross sections #
 Temperature                             1000
-Pressure                                1.2
 Range                                   1000       5000
-Npoints/BinSize                         BinSize    0.1
-
-Cutoff(Y/N)                             N          25             # Default value 25
-Threshold(Y/N)                          N          1e-30          # Default value 1e-30
-UncFilter(Y/N)                          N          0.001
-QNsFilter(Y/N)                          NO         par[+]   e/f[e]   v[0,1,2,3]
-DopplerHWHM(Y/N)                        No         3              # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     no         0.7            # Set Lorentzian HWHM as a constant
-
-Broadeners                              Default    Air    Self    H2    He    CO2
-Ratios                                  0.0        0.7    0.3     0.0   0.0   0.0
-
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
-Profile                                 SciPyVoigt
+UncFilter(Y/N)                          No          0.001         # If Y, default value 0.001
+Threshold(Y/N)                          NO          1e-30         # If Y, default value 1e-30
+
+# Calculate cross sections #
+Pressure                                0.1
+Npoints/BinSize                         BinSize    0.1
+Broadeners                              Air    Self    
+Ratios                                  0.7    0.3     
+Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wl                        # 'wn' or 'wl'
+Cutoff(Y/N)                             N          100            # If Y, default value 25
+QNsFilter(Y/N)                          N          
+DopplerHWHM(Y/N)                        n          0.1            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     n          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   n
 ```
 
 **Note**

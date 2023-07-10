@@ -5,12 +5,12 @@ The examples of the whole input files for the ExoMol and HITRAN databases.
 ## Example for the ExoMol database
 
 ```bash
-# Basic information #
+# Data source #
 Database                                ExoMol
 Molecule                                MgH
 Isotopologue                            24Mg-1H
 Dataset                                 XAB
-mol_iso_id                              501
+MolIsoID                                501
 
 
 # File path #
@@ -21,29 +21,30 @@ SavePath                                /home/jingxin/data/pyexocross/
 # Functions #
 Conversion                              0
 PartitionFunctions                      0
+SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
-SpecificHeats                           0
-StickSpectra                            1
-CrossSections                           0
+StickSpectra                            0
+CrossSections                           1
 
 
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %1d      %7.1f    %7.1f
+QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
 
 
 # Conversion #
 ConversionFormat                        1  
-ConversionUncertainty                   0.01
-ConversionFrequncyRange                 0                 30000  
+ConversionFrequncyRange                 0                 30000      
 GlobalQNLabel                           eS       v        Omega
-GlobalQNFormat                          %10s     %1d      %4s
+GlobalQNFormat                          %9s     %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
-   
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.001
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
+                           
 
-# Calculate partition, cooling functions or specific heats #
+# Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
 Tmax                                    5000                      # Maximal temperature in K 
 
@@ -52,25 +53,30 @@ Tmax                                    5000                      # Maximal temp
 None
 
 
-# Calculate stick spectra or cross-sections #
+# Calculate stick spectra or cross sections #
 Temperature                             300
-Pressure                                1
 Range                                   0          30000
-Npoints/BinSize                         Npoints    30001
-
-Cutoff(Y/N)                             N          25             # Default value 25
-Threshold(Y/N)                          N          1e-30          # Default value 1e-30
-UncFilter(Y/N)                          N          0.001
-QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
-DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     N          0.7            # Set Lorentzian HWHM as a constant
-
-Broadeners                              Default    Air    Self    H2    He    CO2
-Ratios                                  1.0        0.0    0.0     0.0   0.0   0.0
-
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-Profile                                 Gaussian  
+UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+
+
+# Calculate stick spectra #
+PlotStickSpectra(Y/N)                   N
+
+
+# Calculate cross sections #
+Pressure                                1
+Npoints/BinSize                         Npoints    10001
+Broadeners                              Default    
+Ratios                                  1.0        
+Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
+Cutoff(Y/N)                             Y          100            # If Y, default value 25
+QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
+DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   N
 
 
 Note:
@@ -86,7 +92,7 @@ Note:
    Functions part: (calculate the functions or not) 0 means no, 1 means yes. 
    Just change the information which you will use, please do not delete other information.
    (Cooling function's minimal T = 200 K, others (partition function, specific heat and lifetime) minimal T = 1 K )
-4. ConversionFormat
+4. Conversion
    0: no conversion
    1: from ExoMol to HITRAN
    2: from HITRAN to ExoMol
@@ -98,7 +104,7 @@ Note:
 5. Broadeners; Ratios
    The broadening types and ratio values are corresponding, please do not change the place or delete elements. 
 6. Range
-   Give two values as the minimum and maximum of the wavenumber range. No ',' or ';' between these two numbers, just leave spaces here.
+   Give two values as the minimum and maximum of the wavenumber range. No ',' or ';' between these two numbers, just leave blank here.
 7. Npoints/BinSize
    e.g. 'Npoints      100001' or 'BinSize    1'.
 8. Cutoff(Y/N); Threshold(Y/N); UncFilter(Y/N); QNsFilter(Y/N)
@@ -109,7 +115,9 @@ Note:
    (4). QNsFilter(Y/N): e.g. 'Y          +/-[+]   e/f[e]   v[0,1,2,3]  ' or 'N';
 9. Quantum number filter
    (1). QNslabel                         +/-  e/f   eS    v     Lambda   Sigma    Omega
-   (2). QNsformat                        %1s  %1s   %13s  %3d   %1d      %7.1f    %7.1f
+   (2). QNsformat                        %1s  %1s   %13s  %3d   %1d      %7s      %7s
+   If QNs have negative: e.g. '-0.5', the format is '%7.1f' in def file, write it as '%7s'.
+   If QNs have integer : e.g. '24'  , the format is '%3d'   in def file, write it as '%3s'.
    Note: you can define the QN column name by yourself, but please make sure it has letters without any spaces.
    e.g. 'c1'  'c2'  'v1'  'v2'  'electronicState'  'electronic_state'  '1v'  '2v'  'M/E/C'.
    Wrong format of the QN column nams: '1'   '2'   'electronic state'.
@@ -128,7 +136,7 @@ Database                                HITRAN
 Molecule                                MgH
 Isotopologue                            24Mg-1H
 Dataset                                 XAB
-mol_iso_id                              501
+MolIsoID                                501
 
 
 # File path #
@@ -139,29 +147,29 @@ SavePath                                /home/jingxin/data/pyexocross/
 # Functions #
 Conversion                              1
 PartitionFunctions                      0
+SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
-SpecificHeats                           0
 StickSpectra                            0
 CrossSections                           0
 
 
 # Quantum numbers #
 QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %1d      %7.1f    %7.1f
+QNsformat                               %1s  %1s   %13s  %3d   %1d      %7s      %7s
 
 
 # Conversion #
 ConversionFormat                        2  
 ConversionUncertainty                   0.005
-ConversionFrequncyRange                 0                 30000  
+ConversionFrequncyRange                 0                 30000      
 GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %10s     %1d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
-   
+                           
 
-# Calculate partition, cooling functions or specific heats #
+# Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
 Tmax                                    5000                      # Maximal temperature in K 
 
@@ -170,25 +178,30 @@ Tmax                                    5000                      # Maximal temp
 None
 
 
-# Calculate stick spectra or cross-sections #
+# Calculate stick spectra or cross sections #
 Temperature                             300
-Pressure                                1
 Range                                   0          30000
-Npoints/BinSize                         Npoints    30001
-
-Cutoff(Y/N)                             N          25             # Default value 25
-Threshold(Y/N)                          N          1e-30          # Default value 1e-30
-UncFilter(Y/N)                          N          0.001
-QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
-DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     Y          0.7            # Set Lorentzian HWHM as a constant
-
-Broadeners                              Default    Air    Self    H2    He    CO2
-Ratios                                  1.0        0.0    0.0     0.0   0.0   0.0
-
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-Profile                                 SciPyVoigt  
+UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+
+
+# Calculate stick spectra #
+PlotStickSpectra(Y/N)                   N
+
+
+# Calculate cross sections #
+Pressure                                1
+Npoints/BinSize                         Npoints    10001
+Broadeners                              Default    
+Ratios                                  1.0        
+Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
+Cutoff(Y/N)                             Y          100            # If Y, default value 25
+QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
+DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   N
 
 
 Note:
@@ -204,7 +217,7 @@ Note:
    Functions part: (calculate the functions or not) 0 means no, 1 means yes. 
    Just change the information which you will use, please do not delete other information.
    (Cooling function's minimal T = 200 K, others (partition function, specific heat and lifetime) minimal T = 1 K )
-4. ConversionFormat
+4. Conversion
    0: no conversion
    1: from ExoMol to HITRAN
    2: from HITRAN to ExoMol
@@ -216,7 +229,7 @@ Note:
 5. Broadeners; Ratios
    The broadening types and ratio values are corresponding, please do not change the place or delete elements. 
 6. Range
-   Give two values as the minimum and maximum of the wavenumber range. No ',' or ';' between these two numbers, just leave spaces here.
+   Give two values as the minimum and maximum of the wavenumber range. No ',' or ';' between these two numbers, just leave blank here.
 7. Npoints/BinSize
    e.g. 'Npoints      100001' or 'BinSize    1'.
 8. Cutoff(Y/N); Threshold(Y/N); UncFilter(Y/N); QNsFilter(Y/N)
@@ -227,7 +240,9 @@ Note:
    (4). QNsFilter(Y/N): e.g. 'Y          +/-[+]   e/f[e]   v[0,1,2,3]  ' or 'N';
 9. Quantum number filter
    (1). QNslabel                         +/-  e/f   eS    v     Lambda   Sigma    Omega
-   (2). QNsformat                        %1s  %1s   %13s  %3d   %1d      %7.1f    %7.1f
+   (2). QNsformat                        %1s  %1s   %13s  %3d   %1d      %7s      %7s
+   If QNs have negative: e.g. '-0.5', the format is '%7.1f' in def file, write it as '%7s'.
+   If QNs have integer : e.g. '24'  , the format is '%3d'   in def file, write it as '%3s'.
    Note: you can define the QN column name by yourself, but please make sure it has letters without any spaces.
    e.g. 'c1'  'c2'  'v1'  'v2'  'electronicState'  'electronic_state'  '1v'  '2v'  'M/E/C'.
    Wrong format of the QN column nams: '1'   '2'   'electronic state'.

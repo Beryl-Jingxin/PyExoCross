@@ -137,8 +137,7 @@ Use this function or not:
 
 `1` means yes.
 
-If the value of a function's second column is `0`, then there is no need to do any changes in this function's own section, the program won't process data with this function. Although this function won't be used by users, please don't delete this function's own section, otherwise, the program cannot run.
-
+If the value of a function's second column is `0`, then there is no need to do any changes in this function's own section, the program won't process data with this function.
 *Example*
 
 ```bash
