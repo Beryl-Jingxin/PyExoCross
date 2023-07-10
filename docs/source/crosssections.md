@@ -24,6 +24,16 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 
 `Y/N`: `Y`, `YES`, `Yes`, `yes` and `N`, `NO`, `No`, `no` all can work. If you don't use it, write `N` here. You don't need to change the content behind it.
 
+If `UncFilter(Y/N)` is yes, the value is the maximum uncertainty you require.
+
+If `Threshold(Y/N)` is yes, the value is the minimum intensity you require.
+
+If `QNsFilter(Y/N)` is yes, the spelling of the quantum number labels must be the same as `QNslabel`.
+
+Doppler profile uses Doppler HWHM calculated by program, if you want to use Doppler profile, set `N` after `DopplerHWHM(Y/N)`. If you use Gaussian profile, please set `Y` after `DopplerHWHM(Y/N)`, your Doppler HWHM value will be used for calculateing Gaussian profile.
+
+If you want a figure of corss sections, please set `Y` for `PlotCrossSection(Y/N)`.
+
 * The definition file `.def` of ExoMol database (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
 * HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
 

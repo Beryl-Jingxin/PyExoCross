@@ -4,9 +4,16 @@ Stick spectra
 Please provide the line lists, ``Temperature``, wavenumber ``Range``, 
 uncertainty filter ``UncFilter`` and ``PlotStickSpectra(Y/N)``.
 
+## Filters
+
+``Y/N``: ``Y``, ``YES``, ``Yes``, ``yes`` and ``N``, ``NO``, ``No``, ``no`` all can work. 
+If you don't use it, write ``N`` here. You don't need to change the content behind it.
+
+If ``UncFilter(Y/N)`` is ``Y``, the value is the maximum uncertainty you require. 
+
+If ``Threshold(Y/N)``` is ``Y``, the value is the minimum intensity you require.
+
 If you need a stick spectra figure, please write ``Y`` after ``PlotStickSpectra(Y/N)``.
-If you don't use the uncertainty filter ``UncFilter``, write ``N`` here. 
-You don't need to change the number behind it.
 
 The intensity equation is:
 
