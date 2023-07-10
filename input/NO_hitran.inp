@@ -59,8 +59,8 @@ QNsFilter(Y/N)                          N          +/-[+]   e/f[e]   v[0,1,2,3]
 DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant
 LorentzianHWHM(Y/N)                     Y          0.7            # Set Lorentzian HWHM as a constant  
 
-Broadeners                              Default    Air    Self    H2    He
-Ratios                                  0.0        1.0    0.0     0.0   0.0
+Broadeners                              Air    
+Ratios                                  1.0   
 
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 Profile                                 SciPyVoigt        
