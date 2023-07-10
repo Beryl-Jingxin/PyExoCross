@@ -3,19 +3,17 @@
 # encoding: utf-8
 import os
 import bz2
-import csv
 import glob
 import time
 import requests
+import argparse
 import numpy as np
 import pandas as pd
 import numexpr as ne
 from tqdm import tqdm
-from numba import njit
 from io import StringIO
 import astropy.units as au
 import matplotlib.pyplot as plt
-import threading, multiprocessing
 from scipy.special import voigt_profile, wofz, erf, roots_hermite
 import warnings
 warnings.simplefilter("ignore", np.ComplexWarning)
@@ -169,7 +167,10 @@ def inp_para(inp_filepath):
         threshold = 'None'
         
     # Stick spectra
-    PlotStickSpectraYN = inp_df[col0.isin(['PlotStickSpectra(Y/N)'])][1].values[0].upper()[0]
+    if StickSpectra != 0:
+        PlotStickSpectraYN = inp_df[col0.isin(['PlotStickSpectra(Y/N)'])][1].values[0].upper()[0]
+    else:
+        PlotStickSpectraYN = 'None'
 
     # Cross sections
     if CrossSections != 0:
@@ -247,8 +248,8 @@ def inp_para(inp_filepath):
         PlotCrossSectionYN = inp_df[col0.isin(['PlotCrossSection(Y/N)'])][1].values[0].upper()[0]
         
     else:
-        bin_size = 0
-        N_point = 0
+        bin_size = 'None'
+        N_point = 'None'
         cutoff = 'None'
         QNsFilter = []
         QNs_label = []
@@ -261,6 +262,7 @@ def inp_para(inp_filepath):
         wn_grid = np.linspace(0,1,1)
         profile = 'None'
         wn_wl = 'None'
+        PlotCrossSectionYN = 'None'
                    
     molecule_id = int(mol_iso_id/10)
     isotopologue_id = mol_iso_id - molecule_id * 10
@@ -313,6 +315,7 @@ kB = ac.k_B.to('erg/K').value       # Boltzmann's const (erg/K)
 R = ac.R.to('J / (K mol)').value    # Molar gas constant (J/(K mol))
 c2 = h * c / kB                     # Second radiation constant (cm K)
 
+inp_filepath = parse_args()
 (database, molecule, isotopologue, dataset, read_path, save_path, 
  Conversion, PartitionFunctions, CoolingFunctions, Lifetimes, SpecificHeats, StickSpectra, CrossSections,
  ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
@@ -342,10 +345,11 @@ InvSqrt2ln2 = 1 / np.sqrt(2 * np.log(2))
 TwoSqrt2ln2 = 2 * np.sqrt(2 * np.log(2))
 Sqrtln2InvPi = np.sqrt(np.log(2) / np.pi)
 Sqrt2NAkBln2mInvc = np.sqrt(2 * N_A * kB * np.log(2) / mass) / c
-binSize2 = bin_size * 2
-binSizePI = bin_size * np.pi
-binSizeHalf = bin_size / 2 
-InvbinSizePIhalf = 1 / (bin_size * np.pi**0.5)
+if bin_size != 'None':
+    binSize2 = bin_size * 2
+    binSizePI = bin_size * np.pi
+    binSizeHalf = bin_size / 2 
+    InvbinSizePIhalf = 1 / (bin_size * np.pi**0.5)
 
 # Read input files
 # Read ExoMol database files
@@ -410,15 +414,20 @@ def get_transfiles(read_path):
 def read_all_trans(read_path):
     t_df = dict()
     trans_df = pd.DataFrame()
-    trans_col_name = ['u', 'l', 'A', 'v']
     trans_filepaths = get_transfiles(read_path)
     print('Reading the transitions ...')
     for trans_filename in tqdm(trans_filepaths, position=0, leave=True, ascii=True):
         t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
-                                           names=trans_col_name, chunksize=100000, iterator=True, low_memory=False)
+                                           chunksize=100000, iterator=True, low_memory=False)
         for chunk in t_df[trans_filename]:
-            trans_df = pd.concat([trans_df,chunk])                          
-    return(trans_df)
+            trans_df = pd.concat([trans_df,chunk])
+    ncolumn = len(trans_df.columns)
+    if ncolumn == 3: 
+        trans_col_name={0:'u', 1:'l', 2:'A'}
+    else:
+        trans_col_name={0:'u', 1:'l', 2:'A', 3:'v'}
+    trans_df = trans_df.rename(columns=trans_col_name)                         
+    return(trans_df, ncolumn)
     
 # Convert among the frequency, upper and lower state energy 
 # Calculate frequency
@@ -667,7 +676,7 @@ def exomol_lifetime(read_path, states_df, all_trans_df):
     print('Lifetimes has been saved!\n')   
 
 # Calculate cooling function
-def linelist_coolingfunc(states_df, all_trans_df):
+def linelist_coolingfunc(states_df, all_trans_df, ncolumn):
     id_u = all_trans_df['u'].values
     id_l = all_trans_df['l'].values
     states_df['id'] = pd.to_numeric(states_df['id'])
@@ -687,7 +696,7 @@ def linelist_coolingfunc(states_df, all_trans_df):
     Ep = states_u_df['E'].values.astype('float')
     gp = states_u_df['g'].values.astype('int')
     A = trans_s_df['A'].values.astype('float')
-    if pd.isna(all_trans_df['v']).iloc[0] == False:
+    if ncolumn == 4:
         v = trans_s_df['v'].values.astype('float')
     else:
         Epp = states_l_df['E'].astype('float') # Upper state energy
@@ -701,14 +710,14 @@ def calculate_cooling(A, v, Ep, gp, T, Q):
     return(cooling_func)
 
 # Cooling function
-def exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax):
+def exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn):
     print('Calculate cooling functions.')  
     t = Timer()
     t.start()
-    A, v, Ep, gp = linelist_coolingfunc(states_df, all_trans_df)
+    A, v, Ep, gp = linelist_coolingfunc(states_df, all_trans_df, ncolumn)
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     Qs = [read_exomol_pf(read_path, T) for T in Ts]
-    cooling_func = [calculate_cooling(A, v, Ep, gp, T, Q) for T,Q in zip(Ts,Qs)]  
+    cooling_func = [calculate_cooling(A, v, Ep, gp, T, Q) for T,Q in zip(Ts,Qs)]
     cooling_func_df = pd.DataFrame()
     cooling_func_df['T'] = Ts
     cooling_func_df['cooling function'] = cooling_func
@@ -806,13 +815,18 @@ def read_part_trans(read_path):
     t_df = dict()
     trans_part_df = pd.DataFrame()
     # Initialise the iterator object.
-    trans_col_name = ['u', 'l', 'A', 'v']
     for trans_filename in tqdm(trans_filenames, position=0, leave=True, ascii=True):
         t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None, 
-                                           names=trans_col_name, chunksize=10000, iterator=True, encoding='utf-8')
+                                           chunksize=10000, iterator=True, encoding='utf-8')
         for chunk in t_df[trans_filename]:
             trans_part_df = pd.concat([trans_part_df, chunk])
-    return(trans_part_df)
+    ncolumn = len(trans_part_df.columns)
+    if ncolumn == 3: 
+        trans_col_name={0:'u', 1:'l', 2:'A'}
+    else:
+        trans_col_name={0:'u', 1:'l', 2:'A', 3:'v'}
+    trans_part_df = trans_part_df.rename(columns=trans_col_name)
+    return(trans_part_df, ncolumn)
 
 def extract_broad(broad_df, states_l_df):
     J_df = pd.DataFrame()
@@ -955,8 +969,8 @@ def convert_QNFormat_exomol2hitran(states_u_df, states_l_df, GlobalQNLabel_list,
     QN_df.columns = ["V'", 'V"', "Q'", 'Q"']
     return(QN_df)
 
-def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
-    if pd.isna(trans_part_df['v']).values[0] == False:
+def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df, ncolumn):
+    if ncolumn == 4:
         trans_part_df = trans_part_df[trans_part_df['v'].between(ConversionMinFreq,ConversionMaxFreq)] 
         id_u = trans_part_df['u'].values
         id_s = states_unc_df['id'].values
@@ -986,7 +1000,7 @@ def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
         Epp = states_l_df['E'].values.astype('float')
         trans_s_df['v'] = cal_v(Ep, Epp)
         trans_s_df = trans_s_df[trans_s_df['v'].between(ConversionMinFreq,ConversionMaxFreq)] 
-        trans_s_df.sort_values(by=['v'], inplace=True)        
+        trans_s_df.sort_values(by=['v'], inplace=True)  
     id_su = trans_s_df['u'].values
     id_sl = trans_s_df['l'].values
     states_u_df = states_unc_df.loc[id_su]
@@ -999,7 +1013,7 @@ def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
     v = trans_s_df['v'].values.astype('float')
     unc_u = states_u_df['unc'].values.astype('float')
     unc_l = states_l_df['unc'].values.astype('float')
-    unc = cal_uncertainty(unc_u, unc_l)   
+    unc = cal_uncertainty(unc_u, unc_l)
     broad_col_name = ['code', 'gamma_L', 'n_air', 'Jpp']
     default_broad_df = pd.DataFrame(columns=broad_col_name)
     default_gamma_L = 0.07
@@ -1022,7 +1036,7 @@ def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
             self_broad_df = pd.read_csv(fname_self, sep='\s+', names=broad_col_name, header=None, engine='python')
             gamma_self = extract_broad(self_broad_df,states_l_df)[0]
     else:
-        gamma_self= np.full((1,rows),default_broad_df['gamma_L'][0])[0]     
+        gamma_self= np.full((1,rows),default_broad_df['gamma_L'][0])[0]    
     QN_df = convert_QNFormat_exomol2hitran(states_u_df, states_l_df, GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list)
     return (A, v, Ep, Epp, gp, gpp, unc, gamma_air, gamma_self, n_air, QN_df)
 
@@ -1040,9 +1054,9 @@ def error_code(unc):
     unc = unc.astype(int)
     return(unc)
 
-def convert_exomol2hitran(read_path, states_df, trans_part_df):
+def convert_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
     states_unc_df = read_unc_states(states_df)
-    A, v, Ep, Epp, gp, gpp, unc, gamma_air, gamma_self, n_air, QN_df = linelist_ExoMol2HITRAN(states_unc_df,trans_part_df)
+    A, v, Ep, Epp, gp, gpp, unc, gamma_air, gamma_self, n_air, QN_df = linelist_ExoMol2HITRAN(states_unc_df,trans_part_df, ncolumn)
     Q = read_exomol_pf(read_path, T)
     I = cal_abscoefs(v, gp, A, Epp, Q, abundance)
     unc = error_code(unc)
@@ -1066,11 +1080,11 @@ def convert_exomol2hitran(read_path, states_df, trans_part_df):
     hitran_res_df = hitran_res_df.sort_values('v')
     return(hitran_res_df)
 
-def conversion_exomol2hitran(read_path, states_df, trans_part_df):
+def conversion_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
     print('Convert data from the ExoMol format to the HITRAN format.')  
     t = Timer()
-    t.start() 
-    hitran_res_df = convert_exomol2hitran(read_path, states_df, trans_part_df)       
+    t.start()
+    hitran_res_df = convert_exomol2hitran(read_path, states_df, trans_part_df, ncolumn)
     conversion_folder = save_path + '/conversion/'
     if os.path.exists(conversion_folder):
         pass
@@ -1080,7 +1094,7 @@ def conversion_exomol2hitran(read_path, states_df, trans_part_df):
     hitran_format = "%2s%1s%12.6f%10.3E%10.3E%5.3f%5.3f%10.4f%4.2f%8s%15s%15s%15s%15s%6s%12s%1s%7.1f%7.1f"
     np.savetxt(conversion_path, hitran_res_df, fmt=hitran_format)
     t.end()
-    print('Converted par file has been saved!\n')  
+    print('Converted par file has been saved!\n')   
     
 # HITRAN to ExoMol
 def globalQNclasses(molecule,isotopologue):
@@ -1446,8 +1460,8 @@ def conversion_hitran2exomol(hitran_df):
     conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df)
     
 ## Calculate stick Spectra
-def linelist(states_part_df,trans_part_df):
-    if pd.isna(trans_part_df['v']).values[0] == False:
+def linelist_StickSpectra(states_part_df,trans_part_df, ncolumn):
+    if ncolumn == 4:
         trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn, max_wn)] 
         id_u = trans_part_df['u'].values
         id_s = states_part_df['id'].values
@@ -1493,23 +1507,37 @@ def linelist(states_part_df,trans_part_df):
         trans_s_df['Ep'] = states_u_df['E'].values.astype('float')
         trans_s_df['Epp'] = states_l_df['E'].values.astype('float')
         trans_s_df['gp'] = states_u_df['g'].values.astype('int')
+        trans_s_df['Jp'] = states_u_df['J'].values.astype('float')
+        trans_s_df['Jpp'] = states_l_df['J'].values.astype('float')
+        trans_s_df['A'] = trans_s_df['A'].values.astype('float')
         trans_s_df['v'] = cal_v(trans_s_df['Ep'].values, trans_s_df['Epp'].values)
         trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn, max_wn)]
-        trans_s_df.sort_values(by=['v'], inplace=True)
+        trans_s_df.sort_values(by=['v'], inplace=True) 
+        Ep = trans_s_df['Ep'].values
         Epp = trans_s_df['Epp'].values
         gp = trans_s_df['gp'].values
+        Jp = trans_s_df['Jp'].values.astype('float')
+        Jpp = trans_s_df['Jpp'].values.astype('float')
         A = trans_s_df['A'].values
         v = trans_s_df['v'].values
+        id_su = trans_s_df['u'].values
+        states_u_df = states_part_df.loc[id_su]        
         id_sl = trans_s_df['l'].values
         states_l_df = states_part_df.loc[id_sl]
+        QNp = pd.DataFrame()
+        QNpp = pd.DataFrame()
+        for i in range(len(QNslabel_list)):
+            QNp[QNslabel_list[i]+"'"] = states_u_df[QNslabel_list[i]].values
+            QNpp[QNslabel_list[i]+'"'] = states_l_df[QNslabel_list[i]].values
+        stick_qn_df = pd.concat([QNp,QNpp],axis='columns')
     return (A, v, Ep, Epp, gp, Jp, Jpp, stick_qn_df)
 
 # Stick spectra
-def exomol_stick_spectra(read_path, states_part_df, trans_part_df, T):
+def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     print('Calculate stick spectra.')  
     t = Timer()
     t.start()
-    A, v, Ep, Epp, gp, Jp, Jpp, stick_qn_df = linelist(states_part_df,trans_part_df)
+    A, v, Ep, Epp, gp, Jp, Jpp, stick_qn_df = linelist_StickSpectra(states_part_df,trans_part_df, ncolumn)
     Q = read_exomol_pf(read_path, T)
     I = cal_abscoefs(v, gp, A, Epp, Q, abundance)
     stick_st_dic = {'v':v, 'I':I, "J'":Jp, "E'":Ep, 'J"':Jpp, 'E"':Epp}
@@ -1517,7 +1545,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, T):
     stick_spectra_df = pd.concat([stick_st_df, stick_qn_df], axis='columns')
     if threshold != 'None':
         stick_spectra_df = stick_spectra_df[stick_spectra_df['I'] >= threshold]
-    stick_spectra_df = stick_spectra_df.sort_values('v')
+    stick_spectra_df = stick_spectra_df.sort_values('v')   
     if isinstance(stick_spectra_df['J"'][0],int) == 'True':
         J_format = '%7s'
     else:
@@ -1565,8 +1593,8 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, T):
     print('Stick spectra has been saved!\n')  
     
 ## Cross Section
-def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df):
-    if pd.isna(trans_part_df['v'])[0] == False:
+def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn): 
+    if ncolumn == 4:
         if cutoff == 'None':
             trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn, max_wn)] 
         else:
@@ -1630,8 +1658,8 @@ def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
             n_air[i] = extract_broad(broad_dfs[i],states_l_df)[1] * ratio[i]
     return (A, v, Epp, gp, gamma_L, n_air)
 
-def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df):
-    if pd.isna(trans_part_df['v'])[0] == False:
+def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn):
+    if ncolumn == 4:
         if cutoff == 'None':
             trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn, max_wn)] 
         else:
@@ -2673,7 +2701,7 @@ def plot_xsec(wn, xsec, database, profile):
     else:
         print('Please type in correct format: wn or wl.')
 
-def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df):
+def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolumn):
     print('Calculate cross-sections.')
     t = Timer()
     t.start()
@@ -2686,11 +2714,11 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df):
         # Absorption or emission cross section
         if abs_emi == 'A': 
             print('Absorption cross section')
-            A, v, Epp, gp, gamma_L, n_air = linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df)
+            A, v, Epp, gp, gamma_L, n_air = linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
             coef = cal_abscoefs(v, gp, A, Epp, Q, abundance)
         elif abs_emi == 'E': 
             print('Emission cross section')
-            A, v, Ep, gp, gamma_L, n_air = linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df)
+            A, v, Ep, gp, gamma_L, n_air = linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
             coef = cal_emicoefs(v, gp, A, Ep, Q, abundance)
         else:
             raise ImportError("Please choose one from: 'Absoption' or 'Emission'.")         
@@ -2707,7 +2735,7 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df):
             Ep = cal_Ep(Epp, v)
             coef = cal_emicoefs(v, gp, A, Ep, Q, abundance)
         else:
-            raise ImportError("Please choose one from: 'Absoption' or 'Emission'.")   
+            raise ImportError("Please choose one from: 'Absoption' or 'Emission'.") 
     else:
         raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")
     # Line profile: Gaussion, Lorentzian or Voigt
@@ -2773,15 +2801,16 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df):
         xsec = cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)           
     else:
         raise ImportError('Please choose line profile from the list.')
+    
     if PlotCrossSectionYN == 'Y':
-        plot_xsec(wn_grid, xsec, database, profile)     
+        plot_xsec(wn_grid, xsec, database, profile)    
     t.end()
     pass
 
 # Get Results
-def get_results(read_path):
+def get_results(read_path): 
     t_tot = Timer()
-    t_tot.start()
+    t_tot.start()  
     states_part_df = pd.DataFrame()
     trans_part_df = pd.DataFrame() 
     hitran_df = pd.DataFrame()
@@ -2801,7 +2830,7 @@ def get_results(read_path):
         # Conversion and calculating stick spectra and cross sections need part of transitions.
         NeedPartTrans = Conversion + StickSpectra + CrossSections
         if NeedPartTrans != 0:
-            trans_part_df = read_part_trans(read_path)
+            (trans_part_df, ncolumn) = read_part_trans(read_path) 
         # Functions
         Nfunctions = (PartitionFunctions + SpecificHeats + Lifetimes + CoolingFunctions 
                       + Conversion + StickSpectra  + CrossSections)
@@ -2815,11 +2844,11 @@ def get_results(read_path):
             if CoolingFunctions == 1:
                 exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax)
             if (Conversion==1 & ConversionFormat==1):
-                conversion_exomol2hitran(read_path, states_df, trans_part_df)
+                conversion_exomol2hitran(read_path, states_df, trans_part_df, ncolumn)
             if StickSpectra == 1:
-                exomol_stick_spectra(read_path, states_part_df, trans_part_df, T)
+                exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T)
             if CrossSections ==1:
-                get_crosssection(read_path, states_part_df, trans_part_df, hitran_df) 
+                get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolumn) 
         else:   
             raise ImportError("Please choose functions which you want to calculate.")
     elif database == 'HITRAN':
@@ -2829,9 +2858,10 @@ def get_results(read_path):
         if (Conversion==1 & ConversionFormat==2):
             conversion_hitran2exomol(hitran_df)
         if CrossSections ==1:
-            get_crosssection(read_path, states_part_df, trans_part_df, hitran_df)
+            ncolumn = 0
+            get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolumn)
     else:
-        raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")
+        raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")     
     print('\nThe program total running time:')    
     t_tot.end()
     print('\nFinished!')

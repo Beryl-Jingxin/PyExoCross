@@ -36,5 +36,3 @@ Threshold(Y/N)                          N          1e-30          # If Y, defaul
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   N
-
-
