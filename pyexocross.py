@@ -1550,7 +1550,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         J_format = '%7s'
     else:
         J_format = '%7.1f'
-    QNs_format = str(QNsformat_list).replace("', '"," ").replace("['","").replace("']","").replace('d','s').replace('.1f','s')
+    QNs_format = str(QNsformat_list).replace("'","").replace(",","").replace("[","").replace("]","").replace('d','s').replace('.1f','s')
     ss_folder = save_path + '/stick_spectra/stick/'
     if os.path.exists(ss_folder):
         pass
