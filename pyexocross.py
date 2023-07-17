@@ -1546,7 +1546,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     if threshold != 'None':
         stick_spectra_df = stick_spectra_df[stick_spectra_df['I'] >= threshold]
     stick_spectra_df = stick_spectra_df.sort_values('v')   
-    if isinstance(pd.to_numeric(stick_spectra_df['J"'][0]), np.int64) == True:
+    if isinstance(pd.to_numeric(stick_spectra_df['J"'].values[0]), np.int64) == True:
         J_format = '%7s'
     else:
         J_format = '%7.1f'
