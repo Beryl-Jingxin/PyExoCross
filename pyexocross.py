@@ -18,6 +18,8 @@ from scipy.special import voigt_profile, wofz, erf, roots_hermite
 import warnings
 warnings.simplefilter("ignore", np.ComplexWarning)
 pd.options.mode.chained_assignment = None
+import gc
+gc.set_threshold(0)
 
 # The input file path
 def parse_args():
@@ -817,9 +819,9 @@ def read_part_trans(read_path):
     # Initialise the iterator object.
     for trans_filename in tqdm(trans_filenames, position=0, leave=True, ascii=True):
         t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None, 
-                                           chunksize=10000, iterator=True, encoding='utf-8')
+                                            chunksize=100000, iterator=True, encoding='utf-8')
         for chunk in t_df[trans_filename]:
-            trans_part_df = pd.concat([trans_part_df, chunk])
+            trans_part_df = pd.concat([trans_part_df, chunk])  
     ncolumn = len(trans_part_df.columns)
     if ncolumn == 3: 
         trans_col_name={0:'u', 1:'l', 2:'A'}
