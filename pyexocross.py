@@ -1546,10 +1546,6 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     if threshold != 'None':
         stick_spectra_df = stick_spectra_df[stick_spectra_df['I'] >= threshold]
     stick_spectra_df = stick_spectra_df.sort_values('v')   
-    if isinstance(pd.to_numeric(stick_spectra_df['J"'].values[0]), np.int64) == True:
-        J_format = '%7s'
-    else:
-        J_format = '%7.1f'
     QNs_format = str(QNsformat_list).replace("'","").replace(",","").replace("[","").replace("]","").replace('d','s').replace('.1f','s')
     ss_folder = save_path + '/stick_spectra/stick/'
     if os.path.exists(ss_folder):
@@ -1558,7 +1554,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         os.makedirs(ss_folder, exist_ok=True)
     ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
     ss_colname = stick_spectra_df.columns
-    fmt = '%12.8E  %12.8E '+J_format+' %12.4f '+J_format+' %12.4f '+QNs_format+' '+QNs_format
+    fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f '+QNs_format+' '+QNs_format
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
     
     # Plot cross sections and save it as .png.
