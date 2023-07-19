@@ -3,6 +3,7 @@
 # encoding: utf-8
 import os
 import bz2
+import csv
 import glob
 import time
 import requests
