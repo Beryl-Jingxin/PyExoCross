@@ -15,13 +15,15 @@ git clone https://github.com/Beryl-Jingxin/PyExoCross.git
 In the terminal, use the following commands to run PyExoCross:
 
 ```bash
-python pyexocross.py -p input_filepath
+python3 pyexocross.py -p input_filepath
 ```
 
 If the input filepath is `/home/username/PyExoCross/input/MgH_exomol.inp`
 
 ```bash
-python pyexocross.py -p /home/username/PyExoCross/input/MgH_exomol.inp
+python3 pyexocross.py -p ./input/MgH_exomol.inp
+# OR 
+python3 pyexocross.py -p /home/username/PyExoCross/input/MgH_exomol.inp
 ```
 
 If you want to run program in conda environment, please use command:
@@ -33,10 +35,8 @@ If you want to run program in conda environment, please use command:
 If you need to run program in background, please use command:
 
 ```bash
-nohup python -u pyexocross.py -p /home/username/PyExoCross/input/MgH_exomol.inp > MgH_exomol.log 2>&1 &
-```
-
-```bash
+nohup python3 -u pyexocross.py -p ./input/MgH_exomol.inp > MgH_exomol.log 2>&1 &
+# OR 
 nohup /home/username/anaconda3/envs/exomol/bin/python -u pyexocross.py -p /home/username/PyExoCross/input/MgH_exomol.inp > MgH_exomol.log 2>&1 &
 ```
 

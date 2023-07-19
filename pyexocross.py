@@ -146,6 +146,7 @@ def inp_para(inp_filepath):
         min_wn = float(inp_df[col0.isin(['Range'])][1])
         max_wn = float(inp_df[col0.isin(['Range'])][2])
         abs_emi = inp_df[col0.isin(['Absorption/Emission'])][1].values[0].upper()[0]
+        
         UncFilterYN = inp_df[col0.isin(['UncFilter(Y/N)'])][1].values[0].upper()[0]
         if UncFilterYN == 'Y':
             UncFilter = float(inp_df[col0.isin(['UncFilter(Y/N)'])][2])
@@ -153,6 +154,7 @@ def inp_para(inp_filepath):
             UncFilter = 'None'
         else:
             raise ImportError("Please type the correct uncertainty filter choice 'Y' or 'N' into the input file.")  
+        
         thresholdYN = inp_df[col0.isin(['Threshold(Y/N)'])][1].values[0].upper()[0]
         if thresholdYN == 'Y':
             threshold = float(inp_df[col0.isin(['Threshold(Y/N)'])][2])
@@ -160,6 +162,23 @@ def inp_para(inp_filepath):
             threshold = 'None'
         else:
             raise ImportError("Please type the correct threshold choice 'Y' or 'N' into the input file.") 
+        
+        QNsFilterYN = inp_df[col0.isin(['QNsFilter(Y/N)'])][1].values[0].upper()[0]
+        if QNsFilterYN == 'Y':
+            QNsFilter = list(inp_df[col0.isin(['QNsFilter(Y/N)'])].iloc[0].dropna())[2:]
+            QNs_label = []
+            QNs_value = []
+            for i in range(len(QNsFilter)):
+                QNs_label.append(QNsFilter[i].split('[')[0])
+                QNs_value.append(QNsFilter[i].split('[')[1].split(']')[0].split(','))
+            QNs_format = [QNsformat_list[j] for j in [QNslabel_list.index(i) for i in QNs_label]]
+        elif QNsFilterYN == 'N':
+            QNsFilter = []
+            QNs_label = []
+            QNs_value = []
+            QNs_format = []
+        else:
+            raise ImportError("Please type the correct quantum number filter choice 'Y' or 'N' into the input file.")
     else:
         T = 0
         min_wn = 0
@@ -167,6 +186,10 @@ def inp_para(inp_filepath):
         abs_emi = 'None'
         UncFilter = 'None'
         threshold = 'None'
+        QNsFilter = []
+        QNs_label = []
+        QNs_value = []  
+        QNs_format = []
         
     # Stick spectra
     if StickSpectra != 0:
@@ -194,21 +217,6 @@ def inp_para(inp_filepath):
         else:
             raise ImportError("Please type the correct cutoff choice 'Y' or 'N' into the input file.")
 
-        QNsFilterYN = inp_df[col0.isin(['QNsFilter(Y/N)'])][1].values[0].upper()[0]
-        if QNsFilterYN == 'Y':
-            QNsFilter = list(inp_df[col0.isin(['QNsFilter(Y/N)'])].iloc[0].dropna())[2:]
-            QNs_label = []
-            QNs_value = []
-            for i in range(len(QNsFilter)):
-                QNs_label.append(QNsFilter[i].split('[')[0])
-                QNs_value.append(QNsFilter[i].split('[')[1].split(']')[0].split(','))
-        elif QNsFilterYN == 'N':
-            QNsFilter = []
-            QNs_label = []
-            QNs_value = []
-        else:
-            raise ImportError("Please type the correct quantum number filter choice 'Y' or 'N' into the input file.")
-          
         P = float(inp_df[col0.isin(['Pressure'])][1])
         broadeners = list(inp_df[col0.isin(['Broadeners'])].iloc[0])[1:]
         broadeners = [i for i in broadeners if i is not np.nan]
@@ -252,10 +260,7 @@ def inp_para(inp_filepath):
     else:
         bin_size = 'None'
         N_point = 'None'
-        cutoff = 'None'
-        QNsFilter = []
-        QNs_label = []
-        QNs_value = []           
+        cutoff = 'None'       
         alpha_HWHM = 'None'        
         gamma_HWHM = 'None'
         broadeners = []
@@ -299,7 +304,7 @@ def inp_para(inp_filepath):
             ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
             Ntemp, Tmax, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
-            cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNsFilter, 
+            cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
             check_uncertainty, check_lifetime, check_gfactor, PlotStickSpectraYN, PlotCrossSectionYN)
 
@@ -323,7 +328,7 @@ inp_filepath = parse_args()
  ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
  Ntemp, Tmax, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
- cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNsFilter, 
+ cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
  check_uncertainty, check_lifetime, check_gfactor, PlotStickSpectraYN, PlotCrossSectionYN) = inp_para(inp_filepath)
 
@@ -367,7 +372,7 @@ def read_all_states(read_path):
                                  + '/' + isotopologue + '__' + dataset + '.states.bz2')
     for states_filename in states_filenames:
         s_df[states_filename] = pd.read_csv(states_filename, compression='bz2', sep='\s+', header=None,
-                                            chunksize=100000, iterator=True, low_memory=False, dtype=object)
+                                            chunksize=1_000_000, iterator=True, low_memory=False, dtype=object)
         for chunk in s_df[states_filename]:
             states_df = pd.concat([states_df, chunk])
     if check_uncertainty == 1:
@@ -411,7 +416,7 @@ def get_transfiles(read_path):
                 trans_filepaths.append(trans_filepaths_all[i])
             if len(split_version[0].split('-')) == 2:
                 trans_filepaths.append(trans_filepaths_all[i])
-    return(trans_filepaths)      
+    return(list(set(trans_filepaths)))    
 
 def read_all_trans(read_path):
     t_df = dict()
@@ -420,7 +425,7 @@ def read_all_trans(read_path):
     print('Reading the transitions ...')
     for trans_filename in tqdm(trans_filepaths, position=0, leave=True, ascii=True):
         t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
-                                           chunksize=100000, iterator=True, low_memory=False)
+                                           chunksize=1_000_000, iterator=True, low_memory=False)
         for chunk in t_df[trans_filename]:
             trans_df = pd.concat([trans_df,chunk])
     ncolumn = len(trans_df.columns)
@@ -758,9 +763,12 @@ def read_part_states(states_df):
     colname = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNslabel_list
     states_part_df.drop(states_part_df.columns[len(colname):], axis=1, inplace=True)
     states_part_df.columns = colname
+    QNcolumns = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNs_label
+    states_part_df = states_part_df[QNcolumns]
     if QNsFilter !=[]:    
         for i in range(len(QNs_label)):
-            states_part_df = states_part_df[states_part_df[QNs_label[i]].isin(QNs_value[i])] 
+            if QNs_value[i] != ['']:
+                states_part_df = states_part_df[states_part_df[QNs_label[i]].isin(QNs_value[i])]
     return(states_part_df)
  
 def get_part_transfiles(read_path):
@@ -771,27 +779,25 @@ def get_part_transfiles(read_path):
     for i in range(num_transfiles_all):
         split_version = trans_filepaths_all[i].split('__')[-1].split('.')[0].split('_')    # Split the filenames.
         num = len(split_version)
-        '''
-        There are four format filenames.
-        The lastest transitions files named in two formats:
-        1. Filenames are named with the name of isotopologue and dataset. 
-           End with .trans.bz2.
-           e.g. 14N-16O__XABC.trans.bz2'
-        2. Filenames are named with the name of isotopologue and dataset. 
-           Also have the range of wavenumbers xxxxx-yyyyy.
-           End with .trans.bz2.
-           e.g. 1H2-16O__POKAZATEL__00000-00100.trans.bz2
-        3. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
-           e.g. 14N-16O__XABC_v2.trans.bz2
-        4. The older version transitions files are named with updated date (yyyymmdd).
-           e.g. 1H3_p__MiZATeP__20170330.trans.bz2
-        After split the filenames:
-        The first format filenames only leave the dataset name, e.g. XABC.
-        The second format filenames only leave the range of the wavenumber, e.g. 00000-00100.
-        The third format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
-        The fourth format filenames only leave the updated date, e.g. 20170330.
-        This program only process the lastest data, so extract the filenames named by the first two format.
-        '''
+        # There are four format filenames.
+        # The lastest transitions files named in two formats:
+        # 1. Filenames are named with the name of isotopologue and dataset. 
+        #    End with .trans.bz2.
+        #    e.g. 14N-16O__XABC.trans.bz2'
+        # 2. Filenames are named with the name of isotopologue and dataset. 
+        #    Also have the range of wavenumbers xxxxx-yyyyy.
+        #    End with .trans.bz2.
+        #    e.g. 1H2-16O__POKAZATEL__00000-00100.trans.bz2
+        # 3. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
+        #    e.g. 14N-16O__XABC_v2.trans.bz2
+        # 4. The older version transitions files are named with updated date (yyyymmdd).
+        #    e.g. 1H3_p__MiZATeP__20170330.trans.bz2
+        # After split the filenames:
+        # The first format filenames only leave the dataset name, e.g. XABC.
+        # The second format filenames only leave the range of the wavenumber, e.g. 00000-00100.
+        # The third format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
+        # The fourth format filenames only leave the updated date, e.g. 20170330.
+        # This program only process the lastest data, so extract the filenames named by the first two format.
         if num == 1:     
             if split_version[0] == dataset:        
                 trans_filepaths.append(trans_filepaths_all[i])
@@ -804,13 +810,13 @@ def get_part_transfiles(read_path):
         for trans_filename in tqdm(trans_filepaths, position=0, leave=True, ascii=True):
             lower = int(trans_filename.split('__')[2].split('.')[0].split('-')[0])
             upper = int(trans_filename.split('__')[2].split('.')[0].split('-')[1]) 
-            if (lower <= int(min_wn) <= upper):
+            if (lower <= int(min_wn) < upper):
                 filenames.append(trans_filename)
             if (lower >= int(min_wn) and upper <= int(max_wn)):
                 filenames.append(trans_filename)
-            if (lower <= int(max_wn) <= upper):
-                filenames.append(trans_filename)   
-    return(filenames)         
+            if (lower <= int(max_wn) < upper):
+                filenames.append(trans_filename)    
+    return(list(set(filenames)))      
     
 def read_part_trans(read_path):
     trans_filenames = get_part_transfiles(read_path)
@@ -819,9 +825,9 @@ def read_part_trans(read_path):
     # Initialise the iterator object.
     for trans_filename in tqdm(trans_filenames, position=0, leave=True, ascii=True):
         t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None, 
-                                            chunksize=100000, iterator=True, encoding='utf-8')
+                                           chunksize=1_000_000, iterator=True, encoding='utf-8')
         for chunk in t_df[trans_filename]:
-            trans_part_df = pd.concat([trans_part_df, chunk])  
+            trans_part_df = pd.concat([trans_part_df, chunk])
     ncolumn = len(trans_part_df.columns)
     if ncolumn == 3: 
         trans_col_name={0:'u', 1:'l', 2:'A'}
@@ -1472,26 +1478,29 @@ def linelist_StickSpectra(states_part_df,trans_part_df, ncolumn):
         trans_us_df = trans_part_df.loc[id_us]
         id_l = trans_us_df['l'].values
         id_ls = list(set(id_l).intersection(set(id_s)))
-        trans_us_df.set_index(['l'], inplace=True, drop=False)
-        trans_s_df = trans_us_df.loc[id_ls]
-        trans_s_df.sort_values(by=['v'], inplace=True)
-        id_su = trans_s_df['u'].values
-        id_sl = trans_s_df['l'].values
-        states_u_df = states_part_df.loc[id_su]
-        states_l_df = states_part_df.loc[id_sl]
-        Ep = states_u_df['E'].values.astype('float')
-        Epp = states_l_df['E'].values.astype('float')
-        gp = states_u_df['g'].values.astype('int')
-        Jp = states_u_df['J'].values.astype('float')
-        Jpp = states_l_df['J'].values.astype('float')
-        A = trans_s_df['A'].values.astype('float')
-        v = trans_s_df['v'].values.astype('float')
-        QNp = pd.DataFrame()
-        QNpp = pd.DataFrame()
-        for i in range(len(QNslabel_list)):
-            QNp[QNslabel_list[i]+"'"] = states_u_df[QNslabel_list[i]].values
-            QNpp[QNslabel_list[i]+'"'] = states_l_df[QNslabel_list[i]].values
-        stick_qn_df = pd.concat([QNp,QNpp],axis='columns')
+        if id_ls != []:
+            trans_us_df.set_index(['l'], inplace=True, drop=False)
+            trans_s_df = trans_us_df.loc[id_ls]
+            trans_s_df.sort_values(by=['v'], inplace=True)
+            id_su = trans_s_df['u'].values
+            id_sl = trans_s_df['l'].values
+            states_u_df = states_part_df.loc[id_su]
+            states_l_df = states_part_df.loc[id_sl]
+            Ep = states_u_df['E'].values.astype('float')
+            Epp = states_l_df['E'].values.astype('float')
+            gp = states_u_df['g'].values.astype('int')
+            Jp = pd.to_numeric(states_u_df['J']).values
+            Jpp = pd.to_numeric(states_l_df['J']).values
+            A = trans_s_df['A'].values.astype('float')
+            v = trans_s_df['v'].values.astype('float')
+            QNp = pd.DataFrame()
+            QNpp = pd.DataFrame()
+            for i in range(len(QNs_label)):
+                QNp[QNs_label[i]+"'"] = states_u_df[QNs_label[i]].values
+                QNpp[QNs_label[i]+'"'] = states_l_df[QNs_label[i]].values
+            stick_qn_df = pd.concat([QNp,QNpp],axis='columns')
+        else:
+            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     else:
         id_u = trans_part_df['u'].values
         id_s = states_part_df['id'].values
@@ -1509,29 +1518,32 @@ def linelist_StickSpectra(states_part_df,trans_part_df, ncolumn):
         trans_s_df['Ep'] = states_u_df['E'].values.astype('float')
         trans_s_df['Epp'] = states_l_df['E'].values.astype('float')
         trans_s_df['gp'] = states_u_df['g'].values.astype('int')
-        trans_s_df['Jp'] = states_u_df['J'].values.astype('float')
-        trans_s_df['Jpp'] = states_l_df['J'].values.astype('float')
+        trans_s_df['Jp'] = pd.to_numeric(states_u_df['J']).values
+        trans_s_df['Jpp'] = pd.to_numeric(states_l_df['J']).values
         trans_s_df['A'] = trans_s_df['A'].values.astype('float')
         trans_s_df['v'] = cal_v(trans_s_df['Ep'].values, trans_s_df['Epp'].values)
         trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn, max_wn)]
-        trans_s_df.sort_values(by=['v'], inplace=True) 
-        Ep = trans_s_df['Ep'].values
-        Epp = trans_s_df['Epp'].values
-        gp = trans_s_df['gp'].values
-        Jp = trans_s_df['Jp'].values.astype('float')
-        Jpp = trans_s_df['Jpp'].values.astype('float')
-        A = trans_s_df['A'].values
-        v = trans_s_df['v'].values
-        id_su = trans_s_df['u'].values
-        states_u_df = states_part_df.loc[id_su]        
-        id_sl = trans_s_df['l'].values
-        states_l_df = states_part_df.loc[id_sl]
-        QNp = pd.DataFrame()
-        QNpp = pd.DataFrame()
-        for i in range(len(QNslabel_list)):
-            QNp[QNslabel_list[i]+"'"] = states_u_df[QNslabel_list[i]].values
-            QNpp[QNslabel_list[i]+'"'] = states_l_df[QNslabel_list[i]].values
-        stick_qn_df = pd.concat([QNp,QNpp],axis='columns')
+        if len(trans_s_df) != 0:
+            trans_s_df.sort_values(by=['v'], inplace=True) 
+            Ep = trans_s_df['Ep'].values
+            Epp = trans_s_df['Epp'].values
+            gp = trans_s_df['gp'].values
+            Jp = trans_s_df['Jp'].values
+            Jpp = trans_s_df['Jpp'].values
+            A = trans_s_df['A'].values
+            v = trans_s_df['v'].values
+            id_su = trans_s_df['u'].values
+            states_u_df = states_part_df.loc[id_su]        
+            id_sl = trans_s_df['l'].values
+            states_l_df = states_part_df.loc[id_sl]
+            QNp = pd.DataFrame()
+            QNpp = pd.DataFrame()
+            for i in range(len(QNs_label)):
+                QNp[QNs_label[i]+"'"] = states_u_df[QNs_label[i]].values
+                QNpp[QNs_label[i]+'"'] = states_l_df[QNs_label[i]].values
+            stick_qn_df = pd.concat([QNp,QNpp],axis='columns')
+        else:
+            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     return (A, v, Ep, Epp, gp, Jp, Jpp, stick_qn_df)
 
 # Stick spectra
@@ -1547,8 +1559,9 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     stick_spectra_df = pd.concat([stick_st_df, stick_qn_df], axis='columns')
     if threshold != 'None':
         stick_spectra_df = stick_spectra_df[stick_spectra_df['I'] >= threshold]
-    stick_spectra_df = stick_spectra_df.sort_values('v')   
-    QNs_format = str(QNsformat_list).replace("'","").replace(",","").replace("[","").replace("]","").replace('d','s').replace('.1f','s')
+    stick_spectra_df = stick_spectra_df.sort_values('v')  
+    QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")
+              .replace('d','s').replace('i','s').replace('.1f','s'))
     ss_folder = save_path + '/stick_spectra/stick/'
     if os.path.exists(ss_folder):
         pass
@@ -1556,7 +1569,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         os.makedirs(ss_folder, exist_ok=True)
     ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
     ss_colname = stick_spectra_df.columns
-    fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f '+QNs_format+' '+QNs_format
+    fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f '+QNsfmf+' '+QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
     
     # Plot cross sections and save it as .png.
@@ -1573,7 +1586,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         else:
             os.makedirs(ss_plot_folder, exist_ok=True)
         plt.figure(figsize=(8, 6))
-        #plt.ylim([1e-30, 10*max(I)])
+        plt.ylim([1e-30, 10*max(I)])
         plt.plot(v, I, label='T = '+str(T)+' K', linewidth=0.4)
         plt.semilogy()
         #plt.title(database+' '+molecule+' intensity') 
@@ -1604,17 +1617,20 @@ def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
         trans_us_df = trans_part_df.loc[id_us]
         id_l = trans_us_df['l'].values
         id_ls = list(set(id_l).intersection(set(id_s)))
-        trans_us_df.set_index(['l'], inplace=True, drop=False)
-        trans_s_df = trans_us_df.loc[id_ls]
-        trans_s_df.sort_values(by=['v'], inplace=True)
-        id_su = trans_s_df['u'].values
-        id_sl = trans_s_df['l'].values
-        states_u_df = states_part_df.loc[id_su]
-        states_l_df = states_part_df.loc[id_sl]
-        Epp = states_l_df['E'].values.astype('float')
-        gp = states_u_df['g'].values.astype('int')
-        A = trans_s_df['A'].values.astype('float')
-        v = trans_s_df['v'].values.astype('float')
+        if id_ls != []:
+            trans_us_df.set_index(['l'], inplace=True, drop=False)
+            trans_s_df = trans_us_df.loc[id_ls]
+            trans_s_df.sort_values(by=['v'], inplace=True)
+            id_su = trans_s_df['u'].values
+            id_sl = trans_s_df['l'].values
+            states_u_df = states_part_df.loc[id_su]
+            states_l_df = states_part_df.loc[id_sl]
+            Epp = states_l_df['E'].values.astype('float')
+            gp = states_u_df['g'].values.astype('int')
+            A = trans_s_df['A'].values.astype('float')
+            v = trans_s_df['v'].values.astype('float')
+        else:
+            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     else:
         id_u = trans_part_df['u'].values
         id_s = states_part_df['id'].values
@@ -1637,13 +1653,16 @@ def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
             trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn, max_wn)]
         else:
             trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn - cutoff, max_wn + cutoff)]
-        trans_s_df.sort_values(by=['v'], inplace=True)
-        Epp = trans_s_df['Epp'].values
-        gp = trans_s_df['gp'].values
-        A = trans_s_df['A'].values
-        v = trans_s_df['v'].values
-        id_sl = trans_s_df['l'].values
-        states_l_df = states_part_df.loc[id_sl]
+        if len(trans_s_df) != 0:
+            trans_s_df.sort_values(by=['v'], inplace=True)
+            Epp = trans_s_df['Epp'].values
+            gp = trans_s_df['gp'].values
+            A = trans_s_df['A'].values
+            v = trans_s_df['v'].values
+            id_sl = trans_s_df['l'].values
+            states_l_df = states_part_df.loc[id_sl]
+        else:
+            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     gamma_L = pd.DataFrame()
     n_air = pd.DataFrame()
     rows = len(id_sl)
@@ -1669,17 +1688,20 @@ def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
         trans_us_df = trans_part_df.loc[id_us]
         id_l = trans_us_df['l'].values
         id_ls = list(set(id_l).intersection(set(id_s)))
-        trans_us_df.set_index(['l'], inplace=True, drop=False)
-        trans_s_df = trans_us_df.loc[id_ls]
-        trans_s_df.sort_values(by=['v'], inplace=True)
-        id_su = trans_s_df['u'].values
-        id_sl = trans_s_df['l'].values
-        states_u_df = states_part_df.loc[id_su]
-        states_l_df = states_part_df.loc[id_sl]
-        Ep = states_u_df['E'].values.astype('float')
-        gp = states_u_df['g'].values.astype('int')
-        A = trans_s_df['A'].values.astype('float')
-        v = trans_s_df['v'].values.astype('float')
+        if id_ls != []:
+            trans_us_df.set_index(['l'], inplace=True, drop=False)
+            trans_s_df = trans_us_df.loc[id_ls]
+            trans_s_df.sort_values(by=['v'], inplace=True)
+            id_su = trans_s_df['u'].values
+            id_sl = trans_s_df['l'].values
+            states_u_df = states_part_df.loc[id_su]
+            states_l_df = states_part_df.loc[id_sl]
+            Ep = states_u_df['E'].values.astype('float')
+            gp = states_u_df['g'].values.astype('int')
+            A = trans_s_df['A'].values.astype('float')
+            v = trans_s_df['v'].values.astype('float')
+        else:
+            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     else:
         id_u = trans_part_df['u'].values
         id_s = states_part_df['id'].values
@@ -1702,13 +1724,16 @@ def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
             trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn, max_wn)]
         else:
             trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn - cutoff, max_wn + cutoff)]
-        trans_s_df.sort_values(by=['v'], inplace=True)
-        Ep = trans_s_df['Ep'].values
-        gp = trans_s_df['gp'].values
-        A = trans_s_df['A'].values
-        v = trans_s_df['v'].values
-        id_sl = trans_s_df['l'].values
-        states_l_df = states_part_df.loc[id_sl]
+        if len(trans_s_df) != 0:
+            trans_s_df.sort_values(by=['v'], inplace=True)
+            Ep = trans_s_df['Ep'].values
+            gp = trans_s_df['gp'].values
+            A = trans_s_df['A'].values
+            v = trans_s_df['v'].values
+            id_sl = trans_s_df['l'].values
+            states_l_df = states_part_df.loc[id_sl]
+        else:
+            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     gamma_L = pd.DataFrame()
     n_air = pd.DataFrame()
     rows = len(id_sl)
