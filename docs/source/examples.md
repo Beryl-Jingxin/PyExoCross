@@ -59,6 +59,7 @@ Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+QNsFilter(Y/N)                          Y          par[+]   e/f[e]   v[0,1,2,3]  
 
 
 # Calculate stick spectra #
@@ -73,7 +74,6 @@ Ratios                                  1.0
 Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
-QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   N
@@ -135,7 +135,7 @@ Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-
+QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   N
@@ -149,7 +149,6 @@ Ratios                                  1.0
 Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
-QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   N

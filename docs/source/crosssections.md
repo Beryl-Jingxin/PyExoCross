@@ -22,13 +22,20 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 
 ## Filters
 
-`Y/N`: `Y`, `YES`, `Yes`, `yes` and `N`, `NO`, `No`, `no` all can work. If you don't use it, write `N` here. You don't need to change the content behind it.
+`Y/N`: `Y`, `YES`, `Yes`, `yes` and `N`, `NO`, `No`, `no` all can work. If you don't use it, write `N` here. You don't need to change the content behind it. \
+If after using filters, the program gets an empty result, then you will receive an warning to ask you write new filter values.
 
 If `UncFilter(Y/N)` is yes, the value is the maximum uncertainty you require.
 
 If `Threshold(Y/N)` is yes, the value is the minimum intensity you require.
 
-If `QNsFilter(Y/N)` is yes, the spelling of the quantum number labels must be the same as `QNslabel`.
+If `QNsFilter(Y/N)` is yes, program will do filter on quantum numbers. \
+Write the quantum number labels required here, the spelling of the quantum number labels must be the same as `QNslabel`. \
+The other quantum number labels which are in `QNslabel` but not in `QNsFilter(Y/N)` will not be stored in the result file. \
+Write the quantum number values required after each label in `[]` and seperated by `,`, don't leave blank between different values inside the `[]`. \
+Leave blank between different quantum number labels, don't write `,`.\
+If you need all values of a quantum number label, write this label and wirte nothing inside the `[]`. Note, don't write any blank inside `[]`, you should write `[]`, not `[ ]`.\
+Inside `[]` use `,`, don't write any blank inside the `[]`. Outside `[]`, use blank ` `, don't write any `,` outside `[]`.
 
 Doppler profile uses Doppler HWHM calculated by program, if you want to use Doppler profile, set `N` after `DopplerHWHM(Y/N)`. If you use Gaussian profile, please set `Y` after `DopplerHWHM(Y/N)`, your Doppler HWHM value will be used for calculating Gaussian profile.
 
@@ -49,7 +56,7 @@ Wrong format of the quantum number column nams: '1', '2', 'electronic state'.
 UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
-QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
+QNsFilter(Y/N)                          N          par[]   e/f[e]   v[0,1,2,3]  
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   N
@@ -74,20 +81,20 @@ Ratios                                  1.0
 ```
 
 ```bash
-Broadeners                              Air    Self    
-Ratios                                  0.7    0.3    
+Broadeners                              Air      Self    
+Ratios                                  0.7      0.3    
 ```
 
 ```bash
-Broadeners                              H2    He   
-Ratios                                  0.9   0.1   
+Broadeners                              H2       He   
+Ratios                                  0.9      0.1   
 ```
 
 ## Line profiles
 
 Choose line profile from:
 
-`Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `HumlicekVoigt`, `PseudoVoigt`, `PseudoKielkopfVoigt`, `PseudoOliveroVoigt`, `PseudoLiuLinVoigt`, `PseudoRoccoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`.
+`Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `HumlicekVoigt`, `ThompsonPseudoVoigt`, `KielkopfPseudoVoigt`, `OliveroPseudoVoigt`, `LiuLinPseudoVoigt`, `PRoccoseudoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`.
 
 *Example*
 
@@ -102,6 +109,7 @@ Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.001
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
+QNsFilter(Y/N)                          Y          par[]   e/f[e]   v[0,1,2,3]  
 
 # Calculate cross sections #
 Pressure                                1
@@ -111,7 +119,6 @@ Ratios                                  1.0
 Profile                                 Gaussian        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
-QNsFilter(Y/N)                          Y          par[+]   e/f[e]   v[0,1,2,3]  
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y
@@ -126,18 +133,18 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 Temperature                             1000
 Range                                   1000       5000
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          No          0.001         # If Y, default value 0.001
-Threshold(Y/N)                          NO          1e-30         # If Y, default value 1e-30
+UncFilter(Y/N)                          No         0.001         # If Y, default value 0.001
+Threshold(Y/N)                          NO         1e-30         # If Y, default value 1e-30
+QNsFilter(Y/N)                          N          par[]   e/f[e]   v[0,1,2,3]  
 
 # Calculate cross sections #
 Pressure                                0.1
 Npoints/BinSize                         BinSize    0.1
-Broadeners                              Air    Self    
-Ratios                                  0.7    0.3     
+Broadeners                              Air        Self    
+Ratios                                  0.7        0.3     
 Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wl                        # 'wn' or 'wl'
 Cutoff(Y/N)                             N          100            # If Y, default value 25
-QNsFilter(Y/N)                          N          
 DopplerHWHM(Y/N)                        n          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     n          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   n
