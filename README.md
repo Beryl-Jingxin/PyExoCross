@@ -40,4 +40,9 @@ nohup python3 -u pyexocross.py -p ./input/MgH_exomol.inp > MgH_exomol.log 2>&1 &
 nohup /home/username/anaconda3/envs/exomol/bin/python -u pyexocross.py -p /home/username/PyExoCross/input/MgH_exomol.inp > MgH_exomol.log 2>&1 &
 ```
 
-All information could be written in the input file. Just change the information you will use, please do not change the other unnecessary information.
+## Notes for input file
+
+1. All information can be written in the input file. Just change the information you will use.\
+You don't need to change any other unnecessary information.\
+Please do not change the first column strings.
+2. If you met problems, jupyter notebook `.ipynb` code is stored for checking and testing.
