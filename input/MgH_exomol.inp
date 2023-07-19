@@ -12,13 +12,13 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-Conversion                              0
-PartitionFunctions                      0
-SpecificHeats                           0
-CoolingFunctions                        0
-Lifetimes                               0
+Conversion                              1
+PartitionFunctions                      1
+SpecificHeats                           1
+CoolingFunctions                        1
+Lifetimes                               1
 StickSpectra                            1
-CrossSections                           0
+CrossSections                           1
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #

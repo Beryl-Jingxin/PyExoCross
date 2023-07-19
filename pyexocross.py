@@ -421,21 +421,21 @@ def get_transfiles(read_path):
 
 def read_all_trans(read_path):
     t_df = dict()
-    trans_df = pd.DataFrame()
+    all_trans_df = pd.DataFrame()
     trans_filepaths = get_transfiles(read_path)
     print('Reading the transitions ...')
     for trans_filename in tqdm(trans_filepaths, position=0, leave=True, ascii=True):
         t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
                                            chunksize=1_000_000, iterator=True, low_memory=False)
         for chunk in t_df[trans_filename]:
-            trans_df = pd.concat([trans_df,chunk])
-    ncolumn = len(trans_df.columns)
+            all_trans_df = pd.concat([all_trans_df,chunk])
+    ncolumn = len(all_trans_df.columns)
     if ncolumn == 3: 
         trans_col_name={0:'u', 1:'l', 2:'A'}
     else:
         trans_col_name={0:'u', 1:'l', 2:'A', 3:'v'}
-    trans_df = trans_df.rename(columns=trans_col_name)                         
-    return(trans_df, ncolumn)
+    all_trans_df = all_trans_df.rename(columns=trans_col_name)                         
+    return(all_trans_df, ncolumn)
     
 # Convert among the frequency, upper and lower state energy 
 # Calculate frequency
@@ -2846,7 +2846,7 @@ def get_results(read_path):
         # Only calculating lifetimes and cooling functions need whole transitions.
         NeedAllTrans = Lifetimes + CoolingFunctions
         if NeedAllTrans != 0: 
-            all_trans_df = read_all_trans(read_path)
+            (all_trans_df, ncolumn) = read_all_trans(read_path)
         # Only calculating stick spectra and cross sections need part of states.
         NeedPartStates = StickSpectra + CrossSections
         if NeedPartStates != 0:
@@ -2866,7 +2866,7 @@ def get_results(read_path):
             if Lifetimes == 1:
                 exomol_lifetime(read_path, states_df, all_trans_df)
             if CoolingFunctions == 1:
-                exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax)
+                exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn)
             if (Conversion==1 & ConversionFormat==1):
                 conversion_exomol2hitran(read_path, states_df, trans_part_df, ncolumn)
             if StickSpectra == 1:
