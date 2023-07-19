@@ -1573,7 +1573,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         else:
             os.makedirs(ss_plot_folder, exist_ok=True)
         plt.figure(figsize=(8, 6))
-        plt.ylim([1e-30, 10*max(I)])
+        #plt.ylim([1e-30, 10*max(I)])
         plt.plot(v, I, label='T = '+str(T)+' K', linewidth=0.4)
         plt.semilogy()
         #plt.title(database+' '+molecule+' intensity') 
