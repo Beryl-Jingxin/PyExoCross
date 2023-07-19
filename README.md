@@ -29,15 +29,15 @@ python3 pyexocross.py -p /home/username/PyExoCross/input/MgH_exomol.inp
 If you want to run program in conda environment, please use command:
 
 ```bash
-/home/username/anaconda3/envs/exomol/bin/python pyexocross.py -p /home/username/PyExoCross/input/MgH_exomol.inp
+/home/username/anaconda3/envs/exomol/bin/python pyexocross.py -p ./input/MgH_exomol.inp
 ```
 
 If you need to run program in background, please use command:
 
 ```bash
-nohup python3 -u pyexocross.py -p ./input/MgH_exomol.inp > MgH_exomol.log 2>&1 &
+nohup python3 -u pyexocross.py -p ./input/MgH_exomol.inp > ./output/MgH_exomol.out 2>&1 &
 # OR 
-nohup /home/username/anaconda3/envs/exomol/bin/python -u pyexocross.py -p /home/username/PyExoCross/input/MgH_exomol.inp > MgH_exomol.log 2>&1 &
+nohup /home/username/anaconda3/envs/exomol/bin/python -u pyexocross.py -p ./input/MgH_exomol.inp > ./output/MgH_exomol.out 2>&1 &
 ```
 
 ## Notes for input file

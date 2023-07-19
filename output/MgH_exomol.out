@@ -1,0 +1,73 @@
+nohup: ignoring input
+ExoMol database
+Reading states ...
+Running time on CPU       : 0.022027048999999965 s
+Running time on system    : 0.022229433059692383 s
+Finished reading states!
+
+Reading all transitions ...
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  5.59it/s]100%|##########| 1/1 [00:00<00:00,  5.58it/s]
+Running time on CPU       : 0.183021212 s
+Running time on system    : 0.1840064525604248 s
+Finished reading all transitions!
+
+Reading part transitions ...
+  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  5.60it/s]100%|##########| 1/1 [00:00<00:00,  5.59it/s]
+Running time on CPU       : 0.17893655900000005 s
+Running time on system    : 0.17981362342834473 s
+Finished reading part transitions!
+
+Calculate partition functions.
+Running time on CPU       : 0.321727428 s
+Running time on system    : 0.32341456413269043 s
+Partition functions has been saved!
+
+Calculate specific heats.
+Running time on CPU       : 1.02573432 s
+Running time on system    : 1.030320644378662 s
+Specific heats has been saved!
+
+Calculate lifetimes.
+Running time on CPU       : 0.08263875200000026 s
+Running time on system    : 0.08194708824157715 s
+Lifetimes has been saved!
+
+Calculate cooling functions.
+Running time on CPU       : 16.864867895 s
+Running time on system    : 16.955190658569336 s
+Cooling functions has been saved!
+
+Convert data from the ExoMol format to the HITRAN format.
+INFO: Pandarallel will run on 8 workers.
+INFO: Pandarallel will use Memory file system to transfer data between the main process and workers.
+Running time on CPU       : 1.9778946750000017 s
+Running time on system    : 2.379634380340576 s
+Converted par file has been saved!
+
+Calculate stick spectra.
+Absorption stick spectra
+Stick spectra plot saved.
+Running time on CPU       : 3.7454165060000015 s
+Running time on system    : 4.04482364654541 s
+Stick spectra has been saved!
+
+Calculate cross-sections.
+Broadeners 								: Default
+Ratios 										: 1.0
+Absorption cross section
+SciPy Voigt profile
+Temperature selected      : 300    K
+Pressure selected         : 1.0    bar
+Cutoff is                 : 100.0  cm⁻¹
+Threshold is              : None   cm⁻¹/(molecule cm⁻²)
+Wavenumber range selected : 0.0 cm⁻¹ - 30000.0 cm⁻¹
+Cross sections file saved.
+Cross sections plot saved.
+Running time on CPU       : 5.641185960000001 s
+Running time on system    : 3.4208598136901855 s
+
+The program total running time:
+Running time on CPU       : 30.057411822 s
+Running time on system    : 28.636732578277588 s
+
+Finished!
