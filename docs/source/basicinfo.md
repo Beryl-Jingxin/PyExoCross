@@ -28,7 +28,7 @@ MolIsoID                                501
 
 **For HITRAN**
 
-The `Database` name, `Molecule` name and the molecule and isotopologue ID `MolIsoID` are necessary. The first two digits of `MolIsoID` are molcule ID and the third digit is isotopologue ID and there is no blank between molecule ID and isotopologue ID.
+The `Database` name, `Molecule` name and the molecule and isotopologue ID `MolIsoID` are necessary. The first two digits of `MolIsoID` are molcule ID and the third digit is isotopologue ID and there is no blank between molecule ID and isotopologue ID. `MolIsoID` can be found from [HITRANOnline Isotopologue Metadata](https://hitran.org/docs/iso-meta/).
 
 The name of `Isotopologue` and `Dataset` can be set as 'none' or any other strings.
 
