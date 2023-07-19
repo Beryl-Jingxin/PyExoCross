@@ -3,7 +3,6 @@
 # encoding: utf-8
 import os
 import bz2
-import csv
 import glob
 import time
 import requests
@@ -57,7 +56,7 @@ def inp_para(inp_filepath):
     col0 = inp_df[0]
     
     # Database
-    database = inp_df[col0.isin(['Database'])][1].values[0].upper()
+    database = inp_df[col0.isin(['Database'])][1].values[0].upper().replace('EXOMOL','ExoMol')
     
     # Basic information
     molecule = inp_df[col0.isin(['Molecule'])][1].values[0]
@@ -146,7 +145,7 @@ def inp_para(inp_filepath):
         T = int(inp_df[col0.isin(['Temperature'])][1])
         min_wn = float(inp_df[col0.isin(['Range'])][1])
         max_wn = float(inp_df[col0.isin(['Range'])][2])
-        abs_emi = inp_df[col0.isin(['Absorption/Emission'])][1].values[0].upper()[0]
+        abs_emi = inp_df[col0.isin(['Absorption/Emission'])][1].values[0].upper()[0].replace('A','Ab').replace('E','Em')
         
         UncFilterYN = inp_df[col0.isin(['UncFilter(Y/N)'])][1].values[0].upper()[0]
         if UncFilterYN == 'Y':
@@ -275,7 +274,7 @@ def inp_para(inp_filepath):
     molecule_id = int(mol_iso_id/10)
     isotopologue_id = mol_iso_id - molecule_id * 10
         
-    if database == 'EXOMOL':
+    if database == 'ExoMol':
         # Read ExoMol definition file (.def) to get the mass.
         deffile_path = (read_path+'/'+molecule+'/'+isotopologue+'/'+dataset+'/'+isotopologue+'__'+dataset+'.def')
         def_df = pd.read_csv(deffile_path,sep='\\s+',usecols=[0,1,2,3,4],names=['0','1','2','3','4'],header=None)
@@ -367,6 +366,9 @@ def read_all_states(read_path):
     Read the parameters of the linelist in ExoMol or HITRAN format text file. 
     Return the dataframe of the data for the following calculations.
     '''
+    t = Timer()
+    t.start()
+    print('Reading states ...')
     s_df = dict()
     states_df = pd.DataFrame()
     states_filenames = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset 
@@ -379,7 +381,9 @@ def read_all_states(read_path):
     if check_uncertainty == 1:
         states_df = states_df.rename(columns={0:'id',1:'E',2:'g',3:'J',4:'unc'})
     else:      
-        states_df = states_df.rename(columns={0:'id',1:'E',2:'g',3:'J'})                        
+        states_df = states_df.rename(columns={0:'id',1:'E',2:'g',3:'J'})  
+    t.end()     
+    print('Finished reading states!\n')                   
     return(states_df)
 
 # Read transitions file
@@ -420,10 +424,12 @@ def get_transfiles(read_path):
     return(list(set(trans_filepaths)))    
 
 def read_all_trans(read_path):
+    t = Timer()
+    t.start()
+    print('Reading all transitions ...')
     t_df = dict()
     all_trans_df = pd.DataFrame()
     trans_filepaths = get_transfiles(read_path)
-    print('Reading the transitions ...')
     for trans_filename in tqdm(trans_filepaths, position=0, leave=True, ascii=True):
         t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
                                            chunksize=1_000_000, iterator=True, low_memory=False)
@@ -434,7 +440,9 @@ def read_all_trans(read_path):
         trans_col_name={0:'u', 1:'l', 2:'A'}
     else:
         trans_col_name={0:'u', 1:'l', 2:'A', 3:'v'}
-    all_trans_df = all_trans_df.rename(columns=trans_col_name)                         
+    all_trans_df = all_trans_df.rename(columns=trans_col_name)  
+    t.end()                
+    print('Finished reading all transitions!\n')         
     return(all_trans_df, ncolumn)
     
 # Convert among the frequency, upper and lower state energy 
@@ -497,8 +505,8 @@ def read_broad(read_path):
     nbroad = len(broad)
     broad = list(i for i in broad if i==i)
     ratio = list(i for i in ratio if i==i)
-    print('Broadeners \t: ', str(broad).replace('[','').replace(']','').replace("'",''))
-    print('Ratios \t\t: ', str(ratio).replace('[','').replace(']',''))
+    print('Broadeners \t\t\t\t\t\t\t\t:', str(broad).replace('[','').replace(']','').replace("'",''))
+    print('Ratios \t\t\t\t\t\t\t\t\t\t:', str(ratio).replace('[','').replace(']',''))
     return(broad, ratio, nbroad, broad_dfs)        
 
 # Read HITRAN database files
@@ -820,6 +828,9 @@ def get_part_transfiles(read_path):
     return(list(set(filenames)))      
     
 def read_part_trans(read_path):
+    t = Timer()
+    t.start()
+    print('Reading part transitions ...')
     trans_filenames = get_part_transfiles(read_path)
     t_df = dict()
     trans_part_df = pd.DataFrame()
@@ -835,6 +846,8 @@ def read_part_trans(read_path):
     else:
         trans_col_name={0:'u', 1:'l', 2:'A', 3:'v'}
     trans_part_df = trans_part_df.rename(columns=trans_col_name)
+    t.end()
+    print('Finished reading part transitions!\n')   
     return(trans_part_df, ncolumn)
 
 def extract_broad(broad_df, states_l_df):
@@ -1550,6 +1563,11 @@ def linelist_StickSpectra(states_part_df,trans_part_df, ncolumn):
 # Stick spectra
 def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     print('Calculate stick spectra.')  
+    if abs_emi == 'Ab':
+        print('Absorption stick spectra')
+    if abs_emi == 'Em':
+        print('Emission stick spectra')
+        
     t = Timer()
     t.start()
     A, v, Ep, Epp, gp, Jp, Jpp, stick_qn_df = linelist_StickSpectra(states_part_df,trans_part_df, ncolumn)
@@ -1586,7 +1604,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
             pass
         else:
             os.makedirs(ss_plot_folder, exist_ok=True)
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(12, 6))
         plt.ylim([1e-30, 10*max(I)])
         plt.plot(v, I, label='T = '+str(T)+' K', linewidth=0.4)
         plt.semilogy()
@@ -1598,7 +1616,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         for line in leg.get_lines():
             line.set_linewidth(1.0)         # Change the line width for the legend.
         plt.savefig(ss_plot_folder+molecule+'__T'+str(T)+'__'+str(min_wn)
-                    +'-'+str(max_wn)+'__'+database+'.png', dpi=500)
+                    +'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.png', dpi=500)
         plt.show()
         print('Stick spectra plot saved.')
     t.end()
@@ -1796,7 +1814,7 @@ def LorentzianHWHM_gamma(num_v, gamma_HWHM, broad, gamma_L, n_air, gamma_air, ga
     if gamma_HWHM != 'None':
         gamma = np.full(num_v, gamma_HWHM)
     else:
-        if database == 'EXOMOL':
+        if database == 'ExoMol':
             gamma = pd.DataFrame()
             for i in range(len(broad)):
                 gamma[i] = Lorentzian_HWHM (gamma_L[i].values, n_air[i].values,T,P)
@@ -2644,12 +2662,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
     return (xsec)
 
 # Plot and Save Results
-def plot_xsec(wn, xsec, database, profile):
-    plots_foldername = save_path+'/xsecs/plots/'+molecule+'/'+database+'/'
-    if os.path.exists(plots_foldername):
-        pass
-    else:
-        os.makedirs(plots_foldername, exist_ok=True)       
+def save_xsec(wn, xsec, database, profile_label):             
     xsecs_foldername = save_path+'/xsecs/files/'+molecule+'/'+database+'/'
     if os.path.exists(xsecs_foldername):
         pass
@@ -2657,40 +2670,47 @@ def plot_xsec(wn, xsec, database, profile):
         os.makedirs(xsecs_foldername, exist_ok=True)
     print('{:25s} : {:<6}'.format('Temperature selected', T), 'K')
     print('{:25s} : {:<6}'.format('Pressure selected', P), 'bar')
-    #plt.legend(fancybox=True, framealpha=0.0)
-    parameters = {'axes.labelsize': 14,
-                'legend.fontsize': 14,
-                'xtick.labelsize': 12,
-                'ytick.labelsize': 12}
-    plt.rcParams.update(parameters)
+    
     if 'L' not in wn_wl:
         print('{:25s} : {:<6}'.format('Cutoff is', cutoff), u'cm\u207B\u00B9')
         print('{:25s} : {:<6}'.format('Threshold is', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
         print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
-        # Plot cross sections and save it as .png.
-        plt.figure(figsize=(12, 6))
-        plt.ylim([1e-30, 10*max(xsec)])
-        plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile, linewidth=0.4)
-        plt.semilogy()
-        #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile) 
-        plt.xlabel('Wavenumber, cm$^{-1}$')
-        plt.ylabel('Cross-section, cm$^{2}$/molecule')
-        plt.legend()
-        leg = plt.legend()                  # Get the legend object.
-        for line in leg.get_lines():
-            line.set_linewidth(1.0)         # Change the line width for the legend.
-        plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wn)+'-'+str(max_wn)+'__'
-                   +database+'__'+abs_emi+'__'+profile+'.png', dpi=500)
-        plt.show()
-        print('Cross sections plot saved.')
         # Save cross sections into .xsec file.
         xsec_df = pd.DataFrame()
         xsec_df['wavenumber'] = wn
         xsec_df['cross-section'] = xsec
         xsec_filename = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wn)+'-'+str(max_wn)+'__'
-                         +database+'__'+abs_emi+'__'+profile+'.xsec')
-        np.savetxt(xsec_filename, xsec_df, fmt="%.06f %20.8e")
+                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
+        np.savetxt(xsec_filename, xsec_df, fmt="%12.6f %14.8E")
         print('Cross sections file saved.')
+        if PlotCrossSectionYN == 'Y':
+            plots_foldername = save_path+'/xsecs/plots/'+molecule+'/'+database+'/'
+            if os.path.exists(plots_foldername):
+                pass
+            else:
+                os.makedirs(plots_foldername, exist_ok=True)  
+            #plt.legend(fancybox=True, framealpha=0.0)
+            parameters = {'axes.labelsize': 14,
+                        'legend.fontsize': 14,
+                        'xtick.labelsize': 12,
+                        'ytick.labelsize': 12}
+            plt.rcParams.update(parameters)
+            # Plot cross sections and save it as .png.
+            plt.figure(figsize=(12, 6))
+            plt.ylim([1e-30, 10*max(xsec)])
+            plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
+            plt.semilogy()
+            #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
+            plt.xlabel('Wavenumber, cm$^{-1}$')
+            plt.ylabel('Cross-section, cm$^{2}$/molecule')
+            plt.legend()
+            leg = plt.legend()                  # Get the legend object.
+            for line in leg.get_lines():
+                line.set_linewidth(1.0)         # Change the line width for the legend.
+            plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wn)+'-'+str(max_wn)+'__'
+                    +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
+            plt.show()
+            print('Cross sections plot saved.')
     elif 'L' in wn_wl:
         wl = 10000 / wn
         min_wl = '%.02f' % (10000 / max_wn)
@@ -2698,49 +2718,61 @@ def plot_xsec(wn, xsec, database, profile):
         print('{:25s} : {:<6}'.format('Cutoff is', 10000/cutoff),u'\xb5m')
         print('{:25s} : {:<6}'.format('Threshold is',10000/threshold),u'\xb5m/(moleculeu \xb5m\u00B2)')
         print('{:25s} : {} {} {} {}'.format('Wavelength range selected',min_wl,u'\xb5m -',max_wl,u'\xb5m'))
-        # Plot cross sections and save it as .png.
-        plt.figure(figsize=(12, 6))
-        plt.ylim([1e-30, 10*max(xsec)])
-        plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile, linewidth=0.4)
-        plt.semilogy()
-        #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile) 
-        plt.xlabel(u'Wavelength, \xb5m')
-        plt.ylabel(u'Cross-section, \xb5m\u207B\u00B2/molecule')
-        plt.legend()
-        leg = plt.legend()                  # Get the legend object.
-        for line in leg.get_lines():
-            line.set_linewidth(1.0)         # Change the line width for the legend.
-        plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wl)+'-'+str(max_wl)+'__'
-                    +database+'__'+abs_emi+'__'+profile+'.png', dpi=500)
-        plt.show()
-        print('Cross sections plot saved.')
         # Save cross sections into .xsec file.
         xsec_df = pd.DataFrame()
         xsec_df['wavelength'] = wl
         xsec_df['cross-section'] = xsec
         xsec_filename = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wl)+'-'+str(max_wl)+'__'
-                         +database+'__'+abs_emi+'__'+profile+'.xsec')
-        np.savetxt(xsec_filename, xsec_df, fmt="%.06f %20.8e")
-        print('Cross sections file saved.')
+                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
+        np.savetxt(xsec_filename, xsec_df, fmt="%12.6f %14.8E")
+        print('Cross sections file saved.')       
+        if PlotCrossSectionYN == 'Y':
+            plots_foldername = save_path+'/xsecs/plots/'+molecule+'/'+database+'/'
+            if os.path.exists(plots_foldername):
+                pass
+            else:
+                os.makedirs(plots_foldername, exist_ok=True)  
+            #plt.legend(fancybox=True, framealpha=0.0)
+            parameters = {'axes.labelsize': 14,
+                        'legend.fontsize': 14,
+                        'xtick.labelsize': 12,
+                        'ytick.labelsize': 12}
+            plt.rcParams.update(parameters)
+            # Plot cross sections and save it as .png.
+            plt.figure(figsize=(12, 6))
+            plt.ylim([1e-30, 10*max(xsec)])
+            plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
+            plt.semilogy()
+            #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
+            plt.xlabel(u'Wavelength, \xb5m')
+            plt.ylabel(u'Cross-section, \xb5m\u207B\u00B2/molecule')
+            plt.legend()
+            leg = plt.legend()                  # Get the legend object.
+            for line in leg.get_lines():
+                line.set_linewidth(1.0)         # Change the line width for the legend.
+            plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wl)+'-'+str(max_wl)+'__'
+                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
+            plt.show()
+            print('Cross sections plot saved.')
     else:
-        print('Please type in correct format: wn or wl.')
+        print('Please choose wavenumber or wavelength and type in correct format: wn or wl.')
 
 def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolumn):
     print('Calculate cross-sections.')
     t = Timer()
     t.start()
     # ExoMol or HITRAN
-    if database == 'EXOMOL':
+    if database == 'ExoMol':
         gamma_air = gamma_self = []
         broad, ratio, nbroad, broad_dfs = read_broad(read_path)
         Q = read_exomolweb_pf(T)              # Read partition function from the ExoMol website.
         # Q = read_exomol_pf(read_path, T)    # Read partition function from local partition function file.
         # Absorption or emission cross section
-        if abs_emi == 'A': 
+        if abs_emi == 'Ab': 
             print('Absorption cross section')
             A, v, Epp, gp, gamma_L, n_air = linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
             coef = cal_abscoefs(v, gp, A, Epp, Q, abundance)
-        elif abs_emi == 'E': 
+        elif abs_emi == 'Em': 
             print('Emission cross section')
             A, v, Ep, gp, gamma_L, n_air = linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
             coef = cal_emicoefs(v, gp, A, Ep, Q, abundance)
@@ -2775,59 +2807,72 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
     # Line profiles
     if profile[0:3] == 'DOP':
         print('Doppler profile')
+        profile_label = 'Doppler'
         xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff, threshold)
     elif profile[0:3] == 'GAU':
         print('Gaussion profile')
+        profile_label = 'Gaussion'
         xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff, threshold)
     elif profile[0:3] == 'LOR':
         print('Lorentzian profile')
+        profile_label = 'Lorentzian'
         xsec = cross_section_Lorentzian(wn_grid, v, gamma, coef, cutoff, threshold)
     elif 'SCI' in profile and 'W' not in profile:
         print('SciPy Voigt profile')
+        profile_label = 'SciPy Voigt'
         xsec = cross_section_SciPyVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
     elif 'W' in profile:
         print('SciPy wofz Voigt profile')
+        profile_label = 'SciPy wofz Voigt'
         xsec = cross_section_SciPyWofzVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
     elif 'H' in profile:
         print('Humlicek Voigt profile')
+        profile_label = 'Humlicek Voigt'
         xsec = cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff, threshold)  
-    elif 'PS' in profile and 'K' not in profile and 'L' not in profile and 'R' not in profile:
-        print('Pseudo Voigt profile')
+    elif 'TH' in profile:
+        print('Thompson pseudo-Voigt profile')
+        profile_label = 'Thompson pseudo-Voigt'
         eta, hV = PseudoVoigt(alpha, gamma)
         xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold)       
     elif 'K' in profile and 'H' not in profile:
-        print('Kielkopf Pseudo Voigt profile')
+        print('Kielkopf pseudo-Voigt profile')
+        profile_label = 'Kielkopf pseudo-Voigt'
         eta, hV = PseudoKielkopfVoigt(alpha, gamma)
         xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold)       
     elif 'OL' in profile:
-        print('Olivero Pseudo Voigt profile')
+        print('Olivero pseudo-Voigt profile')
+        profile_label = 'Olivero pseudo-Voigt'
         eta, hV = PseudoOliveroVoigt(alpha, gamma)
         xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold)       
     elif 'LI' in profile or 'LL' in profile:
-        print('Liu-Lin Pseudo Voigt profile')
+        print('Liu-Lin pseudo-Voigt profile')
+        profile_label = 'Liu-Lin pseudo-Voigt'
         eta, hV = PseudoLiuLinVoigt(alpha, gamma)
         xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold)       
     elif 'RO' in profile:
-        print('Rocco Pseudo Voigt profile')
+        print('Rocco pseudo-Voigt profile')
+        profile_label = 'Rocco pseudo-Voigt'
         eta, hV = PseudoRoccoVoigt(alpha, gamma)
         xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold) 
     elif 'BIN' in profile and 'DOP' in profile:
         print('Binned Doppler profile')
+        profile_label = 'Binned Doppler'
         xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff, threshold)        
     elif 'BIN' in profile and 'GAU' in profile:
         print('Binned Gaussion profile')
+        profile_label = 'Binned Gaussion'
         xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff, threshold)
     elif 'BIN' in profile and 'LOR' in profile:
         print('Binned Lorentzian profile')
+        profile_label = 'Binned Lorentzian'
         xsec = cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff, threshold)
     elif 'BIN' in profile and 'VOI' in profile:
         print('Binned Voigt profile')
+        profile_label = 'Binned Voigt'
         xsec = cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)           
     else:
         raise ImportError('Please choose line profile from the list.')
-    
-    if PlotCrossSectionYN == 'Y':
-        plot_xsec(wn_grid, xsec, database, profile)    
+    save_xsec(wn_grid, xsec, database, profile_label)    
     t.end()
     pass
 
@@ -2839,7 +2884,7 @@ def get_results(read_path):
     trans_part_df = pd.DataFrame() 
     hitran_df = pd.DataFrame()
     # ExoMol or HITRAN
-    if database == 'EXOMOL':
+    if database == 'ExoMol':
         print('ExoMol database')
         # All functions need whole states.
         states_df = read_all_states(read_path)
