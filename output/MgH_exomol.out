@@ -6,13 +6,19 @@ Running time on system    : 0.022229433059692383 s
 Finished reading states!
 
 Reading all transitions ...
-  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  5.59it/s]100%|##########| 1/1 [00:00<00:00,  5.58it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|##########| 1/1 [00:00<00:00,  5.59it/s]
+100%|##########| 1/1 [00:00<00:00,  5.58it/s]
 Running time on CPU       : 0.183021212 s
 Running time on system    : 0.1840064525604248 s
 Finished reading all transitions!
 
 Reading part transitions ...
-  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00,  5.60it/s]100%|##########| 1/1 [00:00<00:00,  5.59it/s]
+
+  0%|          | 0/1 [00:00<?, ?it/s]
+100%|##########| 1/1 [00:00<00:00,  5.60it/s]
+100%|##########| 1/1 [00:00<00:00,  5.59it/s]
 Running time on CPU       : 0.17893655900000005 s
 Running time on system    : 0.17981362342834473 s
 Finished reading part transitions!

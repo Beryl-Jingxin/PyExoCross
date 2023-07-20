@@ -38,15 +38,88 @@ In the standard HITRAN format, both global and local quantum numbers have 15 cha
 
 *Example*
 
+Convert data format from ExoMol to HITRAN.
+
 ```bash
+# Data source #
+Database                                ExoMol
+Molecule                                MgH
+Isotopologue                            24Mg-1H
+Dataset                                 XAB
+MolIsoID                                501
+
+
+# File path #
+ReadPath                                /mnt/data/exomol/exomol3_data/
+SavePath                                /home/jingxin/data/pyexocross/
+
+
+# Functions #
+Conversion                              1
+PartitionFunctions                      1
+SpecificHeats                           1
+CoolingFunctions                        1
+Lifetimes                               1
+StickSpectra                            1
+CrossSections                           1
+
+
+# Quantum numbers for conversion, stick spectra and cross sections #
+QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
+QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+
+
 # Conversion #
 ConversionFormat                        1  
-ConversionUncertainty                   0.01
-ConversionFrequncyRange                 0                 30000  
+ConversionFrequncyRange                 0                 30000      
 GlobalQNLabel                           eS       v        Omega
-GlobalQNFormat                          %10s     %1d      %4s
+GlobalQNFormat                          %9s      %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.001
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
+```
+
+Convert data from HITRAN to ExoMol.
+
+```bash
+# Basic information #
+Database                                HITRAN
+Molecule                                NO
+Isotopologue                            14N-16O
+Dataset                                 XABC
+MolIsoID                                81
+
+
+# File path #
+ReadPath                                /home/jingxin/data/HITRAN/NO.par
+SavePath                                /home/jingxin/data/pyexocross/
+
+
+# Functions #
+Conversion                              1
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+StickSpectra                            0
+CrossSections                           0
+
+
+# Quantum numbers #
+QNslabel                                X     Omega   v1      m      Br    Sym    F
+QNsformat                               %2s   %3s     %2d     %1s    %2s   %1s    %5s
+
+
+# Conversion #
+ConversionFormat                        2  
+ConversionUncertainty                   0.005
+ConversionFrequncyRange                 0                 63000   
+NumberQN                                9   
+GlobalQNLabel                           X       Omega    v1   
+GlobalQNFormat                          %2s     %3s      %2d  
+LocalQNLabel                            m       Br       Sym     F    
+LocalQNFormat                           %1s     %2s      %1s     %5s     
 ```
 
 **Note**
