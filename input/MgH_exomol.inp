@@ -30,7 +30,7 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 ConversionFormat                        1  
 ConversionFrequncyRange                 0                 30000      
 GlobalQNLabel                           eS       v        Omega
-GlobalQNFormat                          %9s      %2d      %4s
+GlobalQNFormat                          %9s     %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
 ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.001
