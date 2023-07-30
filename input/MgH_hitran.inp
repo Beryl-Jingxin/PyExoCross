@@ -18,7 +18,7 @@ SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
 StickSpectra                            1
-CrossSections                           0
+CrossSections                           1
 
 
 # Quantum numbers #
@@ -36,14 +36,6 @@ LocalQNFormat                           %5.1f    %2s
 ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.001
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30                      
 
-# Calculate partition, specific heats or cooling functions #
-Ntemp                                   1                         # The number of temperature steps
-Tmax                                    5000                      # Maximal temperature in K 
-
-
-# Calculate lifetimes #
-None
-
 
 # Calculate stick spectra or cross sections #
 Temperature                             300
@@ -51,7 +43,7 @@ Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.001
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          par[]   e/f[e]   v[0,1,2,3] 
+QNsFilter(Y/N)                          N          eS[]   v[0,1,2,3] 
 
 
 # Calculate stick spectra #
@@ -68,4 +60,4 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   N
+PlotCrossSection(Y/N)                   Y

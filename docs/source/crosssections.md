@@ -149,7 +149,3 @@ DopplerHWHM(Y/N)                        n          0.1            # Set Doppler 
 LorentzianHWHM(Y/N)                     n          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   n
 ```
-
-**Note**
-
-If the line lists data is not in the ExoMol format, please convert your data format into the ExoMol format at first and then compute partition functions with *PyExoCross*.

@@ -15,7 +15,7 @@ SavePath                                /home/jingxin/data/pyexocross/
 Conversion                              1
 PartitionFunctions                      1
 SpecificHeats                           1
-CoolingFunctions                        1
+CoolingFunctions                        0
 Lifetimes                               1
 StickSpectra                            1
 CrossSections                           1
@@ -33,8 +33,8 @@ GlobalQNLabel                           X       Omega    v1
 GlobalQNFormat                          %2s     %3s      %2d               
 LocalQNLabel                            m       Br       Sym     F         
 LocalQNFormat                           %1s     %2s      %1s     %5s       
-ConvUncFilter(Y/N)                      Y          0.005          # If Y, default value 0.001
-ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30     
+ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.001
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30     
       
 
 # Calculate partition, cooling functions or specific heats #
@@ -52,11 +52,11 @@ Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.001
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          X[X]       Omega[]       v1[0,1]
+QNsFilter(Y/N)                          Y          X[]       Omega[]       v1[0,1]
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   N
+PlotStickSpectra(Y/N)                   Y
 
 
 # Calculate cross sections #
@@ -69,4 +69,4 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          25             # If Y, default value 25
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   N
+PlotCrossSection(Y/N)                   Y

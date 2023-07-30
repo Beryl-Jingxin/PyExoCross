@@ -31,10 +31,3 @@ where :math:`Q(T)` is the partition function.
    # Calculate partition, specific heats or cooling functions #
    Ntemp                                   1                         # The number of temperature steps
    Tmax                                    5000                      # Maximal temperature in K 
-
-**Note**
-
-If the line lists data is not in the ExoMol format, please convert your
-data format into the ExoMol format at first and then compute cooling
-functions with *PyExoCross*.
-

@@ -24,7 +24,7 @@ PartitionFunctions                      0
 SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
-StickSpectra                            0
+StickSpectra                            1
 CrossSections                           1
 
 
@@ -63,7 +63,7 @@ QNsFilter(Y/N)                          Y          par[+]   e/f[e]   v[0,1,2,3]
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   N
+PlotStickSpectra(Y/N)                   Y
 
 
 # Calculate cross sections #
@@ -76,7 +76,7 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   N
+PlotCrossSection(Y/N)                   Y
 ```
 
 ## Example for the HITRAN database

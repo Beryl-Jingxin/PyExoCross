@@ -1,0 +1,30 @@
+nohup: ignoring input
+HITRAN database
+Molecule 		: H2S 			Molecule ID 		: 31 
+Isotopologue 	: 1H2-32S 		Isotopologue ID 	: 1 
+Dataset 		: H2S-HITRAN
+Calculate stick spectra.
+Absorption cross section
+Stick spectra plot saved.
+Running time on CPU       : 2.7568896240000003 s
+Running time on system    : 3.826190710067749 s
+Stick spectra has been saved!
+
+Calculate cross-sections.
+Absorption cross section
+Gaussion profile
+Temperature selected      : 300    K
+Pressure selected         : 1.0    bar
+Cutoff is                 : 25.0   cm⁻¹
+Threshold is              : None   cm⁻¹/(molecule cm⁻²)
+Wavenumber range selected : 0.0 cm⁻¹ - 12000.0 cm⁻¹
+Cross sections file saved.
+Cross sections plot saved.
+Running time on CPU       : 5.296510859 s
+Running time on system    : 3.7728590965270996 s
+
+The program total running time:
+Running time on CPU       : 8.598684406 s
+Running time on system    : 8.144884586334229 s
+
+Finished!

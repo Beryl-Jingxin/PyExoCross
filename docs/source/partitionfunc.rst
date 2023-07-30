@@ -30,4 +30,6 @@ The partition functions equation is:
 
 If the line lists data is not in the ExoMol format, please convert your
 data format into the ExoMol format at first and then compute partition
-functions with *PyExoCross*.
+functions with *PyExoCross*. 
+So please read `**Conversion** <https://pyexocross.readthedocs.io/en/latest/conversion.html>`_ 
+and write ``1`` after ``Conversion``, ``2`` after ``ConversionFormat`` and fill ``Conversion`` section.
