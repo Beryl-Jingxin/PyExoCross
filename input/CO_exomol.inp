@@ -1,0 +1,39 @@
+# Data source #
+Database                                ExoMol
+Molecule                                CO
+Isotopologue                            12C-16O
+Dataset                                 Li2015
+MolIsoID                                51
+
+
+# File path #
+ReadPath                                /mnt/data/exomol/exomol3_data/
+SavePath                                /home/jingxin/data/pyexocross/
+
+
+# Functions #
+Conversion                              0
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+StickSpectra                            1
+CrossSections                           0
+
+
+# Quantum numbers #
+QNslabel                                v        kp      
+QNsformat                               %4d      %4s
+
+
+# Calculate stick spectra or cross sections #
+Temperature                             296
+Range                                   0          5000
+Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
+UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+QNsFilter(Y/N)                          Y          v[1]  kp[]
+
+
+# Calculate stick spectra #
+PlotStickSpectra(Y/N)                   Y

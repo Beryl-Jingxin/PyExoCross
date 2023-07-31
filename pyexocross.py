@@ -1627,7 +1627,7 @@ def linelist_StickSpectra(states_part_df,trans_part_df, ncolumn):
                 QNpp[QNs_label[i]+'"'] = states_l_df[QNs_label[i]].values
             stick_qn_df = pd.concat([QNp,QNpp],axis='columns')
         else:
-            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
+            raise ImportError("Empty result. Please increase filter range or wavenumber range in the input file.")  
     else:
         id_u = trans_part_df['u'].values
         id_s = states_part_df['id'].values
