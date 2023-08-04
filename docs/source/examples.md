@@ -35,7 +35,7 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 
 # Conversion #
 ConversionFormat                        1  
-ConversionFrequncyRange                 0                 30000      
+ConversionFrequncyRange                 0          30000      
 GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %9s     %2d      %4s
 LocalQNLabel                            J        e/f
@@ -59,7 +59,7 @@ Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          par[+]   e/f[e]   v[0,1,2,3]  
+QNsFilter(Y/N)                          Y          par[+,+]   e/f[e,f]   v[1,;2,;,0;4,4;4,3]  
 
 
 # Calculate stick spectra #
@@ -86,8 +86,8 @@ PlotCrossSection(Y/N)                   Y
 Database                                HITRAN
 Molecule                                MgH
 Isotopologue                            24Mg-1H
-Dataset                                 XAB
-MolIsoID                                501
+Dataset                                 MgH-HITRAN
+MolIsoID                                xxx
 
 
 # File path #
@@ -113,7 +113,7 @@ QNsformat                               %1s  %1s   %13s  %3d   %1d      %7s     
 # Conversion #
 ConversionFormat                        2  
 ConversionUncertainty                   0.005
-ConversionFrequncyRange                 0                 30000      
+ConversionFrequncyRange                 0        30000      
 GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %10s     %1d      %4s
 LocalQNLabel                            J        e/f
@@ -135,7 +135,7 @@ Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          N          par[+]   e/f[e]   v[0,1,2,3]  
+QNsFilter(Y/N)                          N          par[+,+;-,-]   e/f[]   v[1,;,0;3,3;3,2]  
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   N

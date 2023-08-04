@@ -32,14 +32,23 @@ If `Threshold(Y/N)` is yes, the value is the minimum intensity you require.
 If `QNsFilter(Y/N)` is yes, program will do filter on quantum numbers. \
 Write the quantum number labels required here, the spelling of the quantum number labels must be the same as `QNslabel`. \
 The other quantum number labels which are in `QNslabel` but not in `QNsFilter(Y/N)` will not be stored in the result file. \
-Write the quantum number values required after each label in `[]` and seperated by `,`, don't leave blank between different values inside the `[]`. \
+Write the quantum number values required after each label in `[]` and seperated by `,` and `;`, don't leave blank between different values inside the `[]`. \
 Leave blank between different quantum number labels, don't write `,`.\
 If you need all values of a quantum number label, write this label and wirte nothing inside the `[]`. Note, don't write any blank inside `[]`, you should write `[]`, not `[ ]`.\
-Inside `[]` use `,`, don't write any blank inside the `[]`. Outside `[]`, use blank ` `, don't write any `,` outside `[]`.
+Inside `[]` use `,` and `;` don't write any blank inside the `[]`. Outside `[]`, use blank ` `, don't write any `,` or `;` outside `[]`.\
+For one quantum number label, write in one `[]`, you can provide the quantum number values for upper and lower states, and seperated by `,`. \
+For one quantum number label, write in one `[]`, you can provide more than one pair of values, and seperated by `;`.
 
-Doppler profile uses Doppler HWHM calculated by program, if you want to use Doppler profile, set `N` after `DopplerHWHM(Y/N)`. If you use Gaussian profile, please set `Y` after `DopplerHWHM(Y/N)`, your Doppler HWHM value will be used for calculating Gaussian profile.
+*Example*
 
-If you want a figure of corss sections, please set `Y` for `PlotCrossSection(Y/N)`.
+`v1[]` means you want quantum number label v1 and you want all quantum number values of this label v1.\
+`v1[1,0]` means you want quantum number label v1 and you want the upper QN = 1 and lower QN = 0. So v1' = 1 and v1" = 0.\
+`v1[,0]` means you want quantum number label v1 and you want all upper QN but the lower QN = 0. So v1' = 0, 1, 2, 3, ... and v1" = 0. \
+`v1[3,]` means you want quantum number label v1 and you want all lower QN but the upper QN = 3. So v1' = 3 and v1" = 0, 1, 2, 3. \
+`v1[1,1;2,2]` means you want quantum number label v1 and you want when v1' = 1, v1" = 1; when v1' = 2, v1" = 2.\
+`v1[1,0;1,1]` is same as `v1[1,]`. \
+`v1[1,0;2,0;3,0;4,0]` is same as `v1[,0]`.\
+`v1[1,;,0;5,5]  v2[]` means you want quantumnumber labels v1 and v2. For v1, you want all lines with v1' = 1 , all lines with v1" = 0 and the lines with v1' = 5 and at the same time v1" = 5. Meanwhile, you want all lines for v2.
 
 * The definition file `.def` of ExoMol database (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
 * HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
@@ -56,10 +65,7 @@ Wrong format of the quantum number column nams: '1', '2', 'electronic state'.
 UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
-QNsFilter(Y/N)                          N          par[]   e/f[e]   v[0,1,2,3]  
-DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   N
+QNsFilter(Y/N)                          N          par[]   e/f[]   v[1,;2,2;2,1;,0]  
 ```
 
 ## Broadeners
@@ -96,6 +102,10 @@ Choose line profile from:
 
 `Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `HumlicekVoigt`, `ThompsonPseudoVoigt`, `KielkopfPseudoVoigt`, `OliveroPseudoVoigt`, `LiuLinPseudoVoigt`, `PRoccoseudoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`.
 
+Doppler profile uses Doppler HWHM calculated by program, if you want to use Doppler profile, set `N` after `DopplerHWHM(Y/N)`. If you use Gaussian profile, please set `Y` after `DopplerHWHM(Y/N)`, your Doppler HWHM value will be used for calculating Gaussian profile.
+
+If you want a figure of corss sections, please set `Y` for `PlotCrossSection(Y/N)`.
+
 *Example*
 
 ```bash
@@ -109,7 +119,7 @@ Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.001
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          par[]   e/f[e]   v[0,1,2,3]  
+QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,1;1,0;2,]  
 
 # Calculate cross sections #
 Pressure                                1
@@ -135,7 +145,7 @@ Range                                   1000       5000
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          No         0.001         # If Y, default value 0.001
 Threshold(Y/N)                          NO         1e-30         # If Y, default value 1e-30
-QNsFilter(Y/N)                          N          par[]   e/f[e]   v[0,1,2,3]  
+QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,;2,;,0;4,4;4,3]  
 
 # Calculate cross sections #
 Pressure                                0.1

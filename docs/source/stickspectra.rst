@@ -7,21 +7,35 @@ uncertainty filter ``UncFilter`` and ``PlotStickSpectra(Y/N)``.
 Filters
 :::::::
 
-``Y/N``: ``Y``, ``YES``, ``Yes``, ``yes`` and ``N``, ``NO``, ``No``, ``no`` all can work. \
-If you don't use it, write ``N`` here. You don't need to change the content behind it. \
+``Y/N``: ``Y``, ``YES``, ``Yes``, ``yes`` and ``N``, ``NO``, ``No``, ``no`` all can work. \n
+If you don't use it, write ``N`` here. You don't need to change the content behind it. \n
 If after using filters, the program gets an empty result, then you will receive an warning to ask you write new filter values.
 
 If ``UncFilter(Y/N)`` is yes, the value is the maximum uncertainty you require. 
 
 If ``Threshold(Y/N)`` is yes, the value is the minimum intensity you require.
 
-If ``QNsFilter(Y/N)`` is yes, program will do filter on quantum numbers. \
-Write the quantum number labels required here, the spelling of the quantum number labels must be the same as ``QNslabel``. \
-The other quantum number labels which are in ``QNslabel`` but not in ``QNsFilter(Y/N)`` will not be stored in the result file. \
-Write the quantum number values required after each label in ``[]`` and seperated by ``,``, don't leave blank between different values inside the ``[]``. \
-Leave blank between different quantum number labels, don't write ``,``.\
-If you need all values of a quantum number label, write this label and wirte nothing inside the ``[]``. Note, don't write any blank inside ``[]``, you should write ``[]``, not ``[ ]``.\
-Inside ``[]`` use ``,``, don't write any blank inside the ``[]``. Outside ``[]``, use blank, don't write any ``,`` outside ``[]``.
+If ``QNsFilter(Y/N)`` is yes, program will do filter on quantum numbers. \n
+Write the quantum number labels required here, the spelling of the quantum number labels must be the same as ``QNslabel``. \n
+The other quantum number labels which are in ``QNslabel`` but not in ``QNsFilter(Y/N)`` will not be stored in the result file. \n
+Write the quantum number values required after each label in ``[]`` and seperated by ``,`` and ``;``, don't leave blank between different values inside the ``[]``. \n
+Leave blank between different quantum number labels, don't write ``,``.\n
+If you need all values of a quantum number label, write this label and wirte nothing inside the ``[]``. Note, don't write any blank inside ``[]``, you should write ``[]``, not ``[ ]``.\n
+Inside ``[]`` use ``,`` and ``;``, don't write any blank inside the ``[]``. Outside ``[]``, use blank, don't write any ``,`` or ``;`` outside ``[]``. \n
+For one quantum number label, write in one ``[]``, you can provide the quantum number values for upper and lower states, and seperated by ``,``. 
+For one quantum number label, write in one ``[]``, you can provide more than one pair of values, and seperated by ``;``.\n
+
+*Example*
+
+``v1[]`` means you want quantum number label v1 and you want all quantum number values of this label v1.\n
+``v1[1,0]`` means you want quantum number label v1 and you want the upper QN = 1 and lower QN = 0. So v1' = 1 and v1" = 0.\n
+``v1[,0]`` means you want quantum number label v1 and you want all upper QN but the lower QN = 0. So v1' = 0, 1, 2, 3, ... and v1" = 0. \n
+``v1[3,]`` means you want quantum number label v1 and you want all lower QN but the upper QN = 3. So v1' = 3 and v1" = 0, 1, 2, 3. \n
+``v1[1,1;2,2]`` means you want quantum number label v1 and you want when v1' = 1, v1" = 1; when v1' = 2, v1" = 2.\n
+``v1[1,0;1,1]`` is same as ``v1[1,]``. \n
+``v1[1,0;2,0;3,0;4,0]`` is same as ``v1[,0]``.\n
+``v1[1,;,0;5,5]  v2[]`` means you want quantumnumber labels v1 and v2. For v1, you want all lines with v1' = 1 , all lines with v1" = 0 and the lines with v1' = 5 and at the same time v1" = 5. Meanwhile, you want all lines for v2.\n
+
 
 If you need a stick spectra figure, please write ``Y`` after ``PlotStickSpectra(Y/N)``.
 
@@ -47,7 +61,7 @@ The intensity equation is:
     Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
     UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.001
     Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-    QNsFilter(Y/N)                          Y          par[]   e/f[e]   v[0,1,2,3]  
+    QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,1;1,0;2,;,0]  
 
     # Calculate stick spectra #
     PlotStickSpectra(Y/N)                   Y
@@ -64,7 +78,7 @@ The intensity equation is:
     Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
     UncFilter(Y/N)                          N          0.005          # If Y, default value 0.001
     Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-    QNsFilter(Y/N)                          N          par[]   e/f[e]   v[0,1,2,3]  
+    QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,1;1,0]  
 
     # Calculate stick spectra #
     PlotStickSpectra(Y/N)                   N
