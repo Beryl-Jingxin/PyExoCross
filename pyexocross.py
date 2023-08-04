@@ -13,11 +13,14 @@ import numexpr as ne
 from tqdm import tqdm
 from io import StringIO
 import astropy.units as au
+from itertools import chain
 import matplotlib.pyplot as plt
 from scipy.special import voigt_profile, wofz, erf, roots_hermite
 import warnings
 warnings.simplefilter("ignore", np.ComplexWarning)
 pd.options.mode.chained_assignment = None
+import matplotlib as mpl
+mpl.rcParams['agg.path.chunksize'] = 10000
 
 # The input file path
 def parse_args():
@@ -26,6 +29,7 @@ def parse_args():
     args = parse.parse_args()
     inp_filepath = args.path
     return inp_filepath
+inp_filepath = parse_args()
 
 # Report time
 class Timer:    
@@ -113,7 +117,7 @@ def inp_para(inp_filepath):
         elif ConversionThresholdYN == 'N':
             ConversionThreshold = 'None'
         else:
-            raise ImportError("Please type the correct threshold choice 'Y' or 'N' into the input file.")           
+            raise ImportError("Please type the correct threshold choice 'Y' or 'N' into the input file.")       
     else:
         ConversionFormat = 0
         ConversionMinFreq = 0
@@ -166,7 +170,7 @@ def inp_para(inp_filepath):
             QNs_value = []
             for i in range(len(QNsFilter)):
                 QNs_label.append(QNsFilter[i].split('[')[0])
-                QNs_value.append(QNsFilter[i].split('[')[1].split(']')[0].split(','))
+                QNs_value.append(QNsFilter[i].split('[')[1].split(']')[0].split(';'))
             QNs_format = [QNsformat_list[j] for j in [QNslabel_list.index(i) for i in QNs_label]]
         elif QNsFilterYN == 'N':
             QNsFilter = []
@@ -204,7 +208,7 @@ def inp_para(inp_filepath):
             N_point = int((max_wn - min_wn)/bin_size+1)
         else:
             raise ImportError("Please type the correct grid choice 'Npoints' or 'BinSize' into the input file.")
-        # Cutoff 
+        # Cutoff
         cutoffYN = inp_df[col0.isin(['Cutoff(Y/N)'])][1].values[0].upper()[0]
         if cutoffYN == 'Y':
             cutoff = float(inp_df[col0.isin(['Cutoff(Y/N)'])][2])
@@ -250,8 +254,8 @@ def inp_para(inp_filepath):
             gamma_HWHM = 'None'
         else:
             raise ImportError("Please type the correct Lorentzian HWHM choice 'Y' or 'N' into the input file.")
-        # Plot
-        PlotCrossSectionYN = inp_df[col0.isin(['PlotCrossSection(Y/N)'])][1].values[0].upper()[0]       
+        # Plot 
+        PlotCrossSectionYN = inp_df[col0.isin(['PlotCrossSection(Y/N)'])][1].values[0].upper()[0]   
     else:
         bin_size = 'None'
         N_point = 'None'
@@ -265,7 +269,7 @@ def inp_para(inp_filepath):
         profile = 'None'
         wn_wl = 'None'
         PlotCrossSectionYN = 'None'
-    # Molecule and isotopologue ID, abundance, mass uncertainty, lifetime and g-factor
+    # Molecule and isotopologue ID, abundance, mass uncertainty, lifetime and g-factor           
     molecule_id = int(mol_iso_id/10)
     isotopologue_id = mol_iso_id - molecule_id * 10
     if database == 'ExoMol':
@@ -301,7 +305,6 @@ def inp_para(inp_filepath):
             alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
             check_uncertainty, check_lifetime, check_gfactor, PlotStickSpectraYN, PlotCrossSectionYN)
 
-
 # Constants and parameters
 # Parameters for calculating
 import astropy.constants as ac
@@ -315,7 +318,6 @@ kB = ac.k_B.to('erg/K').value       # Boltzmann's const (erg/K)
 R = ac.R.to('J / (K mol)').value    # Molar gas constant (J/(K mol))
 c2 = h * c / kB                     # Second radiation constant (cm K)
 
-inp_filepath = parse_args()
 (database, molecule, isotopologue, dataset, read_path, save_path, 
  Conversion, PartitionFunctions, CoolingFunctions, Lifetimes, SpecificHeats, StickSpectra, CrossSections,
  ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
@@ -516,6 +518,28 @@ def read_broad(read_path):
     print('Broadeners  \t:', str(broad).replace('[','').replace(']','').replace("'",''))
     print('Ratios  \t\t:', str(ratio).replace('[','').replace(']',''))
     return(broad, ratio, nbroad, broad_dfs)               
+
+# Quantum number filter
+def QNfilter_linelist(linelist_df, QNs_value, QNs_label):
+    for i in range(len(QNs_label)):
+        if QNs_value[i] != ['']:
+            linelist_df[i] = linelist_df[[QNs_label[i]+"'",QNs_label[i]+'"']].agg(','.join, axis=1).astype(str).str.replace(' ', '')
+            uval = linelist_df[QNs_label[i]+"'"].astype(str).str.replace(' ', '').drop_duplicates().values
+            lval = linelist_df[QNs_label[i]+'"'].astype(str).str.replace(' ', '').drop_duplicates().values
+            vallist = []
+            ulist = []
+            llist = []
+            for qnval in QNs_value[i]:
+                if '' not in qnval.split(','):
+                    vallist.append(qnval)
+                elif qnval.split(',')[0] == '':
+                    ulist.append([qnval.replace(",",val+",") for val in uval])
+                elif qnval.split(',')[1] == '':
+                    llist.append([qnval.replace(",",","+val) for val in lval])
+            QNs_value[i] = vallist+list(chain(*ulist))+list(chain(*llist))
+            linelist_df = linelist_df[linelist_df[i].isin(QNs_value[i])].drop(columns=[i])   
+    linelist_df = linelist_df.sort_values('v')  
+    return(linelist_df)   
 
 # Read HITRAN database files
 # Read HITRAN line list file
@@ -833,21 +857,17 @@ def hitran_linelist_QN(hitran_df):
     QNu_label_noJ = [i+"'" for i in QNu_label if i != 'J'] 
     QNl_label_noJ = [j+'"' for j in QNl_label if j != 'J']
     QN_label_noJ = QNu_label_noJ + QNl_label_noJ
-    hitran_linelist_colname = ['v','S','A','gamma_air','gamma_self','E"','n_air','delta_air',"g'",'g"',"J'","E'",'J"']+QN_label_noJ
+    hitran_main_colname = ['v','S','A','gamma_air','gamma_self','E"','n_air','delta_air',"g'",'g"',"J'","E'",'J"']
+    hitran_linelist_colname = hitran_main_colname + QN_label_noJ
     hitran_linelist_df.set_axis(hitran_linelist_colname, axis=1, inplace=True)
     # Do quantum number filter.
     if QNsFilter !=[]:   
-        QNs_labelp = [i+"'" for i in QNs_label]
-        QNs_labelpp = [i+'"' for i in QNs_label]
-        newstr = ''.join((ch if ch in '0123456789.' else ' ') for ch in str(QNs_format))
-        newfloat = [float(i) for i in newstr.split()]
-        nQN = np.arange(len(newfloat))
-        QNs_valuesNewformat = ['%'+str(list(map(int, newfloat))[i])+'s' for i in nQN]
-        for i in range(len(QNs_labelp)):
-            if QNs_value[i] != ['']:
-                hitran_linelist_df = hitran_linelist_df[hitran_linelist_df[QNs_labelp[i]]
-                                                        .isin([QNs_valuesNewformat[i] % j for j in QNs_value[i]])]              
-    return(hitran_linelist_df, QN_label_noJ)
+        QNs_col = [i+"'" for i in QNs_label] + [i+'"' for i in QNs_label]
+        hitran_linelist_df = hitran_linelist_df[hitran_main_colname + QNs_col]
+        hitran_linelist_df = QNfilter_linelist(hitran_linelist_df, QNs_value, QNs_label)
+    else:
+        QNs_col = QN_label_noJ      
+    return(hitran_linelist_df, QNs_col)
 
 def linelist_hitran(hitran_linelist_df):
     '''
@@ -1098,8 +1118,12 @@ def read_part_states(states_df):
     if QNsFilter !=[]:    
         for i in range(len(QNs_label)):
             if QNs_value[i] != ['']:
-                states_part_df = states_part_df[states_part_df[QNs_label[i]].isin(QNs_value[i])]
-    return(states_part_df)
+                list_QN_value = str(QNs_value[i]).replace("', '",",").replace("'","").replace('[','').replace(']','').split(',')
+                if '' in list_QN_value:
+                    states_part_df = states_part_df
+                else:
+                    states_part_df = states_part_df[states_part_df[QNs_label[i]].isin(list_QN_value)]
+    return(states_part_df)  
  
 def get_part_transfiles(read_path):
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
@@ -1137,7 +1161,7 @@ def get_part_transfiles(read_path):
         filenames = trans_filepaths
     else:
         filenames = []
-        for trans_filename in tqdm(trans_filepaths, position=0, leave=True, ncols=100, desc='Finding trans files'):
+        for trans_filename in tqdm(trans_filepaths, position=0, leave=True, ncols=100, desc='Finding trans files'): 
             lower = int(trans_filename.split('__')[2].split('.')[0].split('-')[0])
             upper = int(trans_filename.split('__')[2].split('.')[0].split('-')[1]) 
             if (lower <= int(min_wn) < upper):
@@ -1145,7 +1169,7 @@ def get_part_transfiles(read_path):
             if (lower >= int(min_wn) and upper <= int(max_wn)):
                 filenames.append(trans_filename)
             if (lower <= int(max_wn) < upper):
-                filenames.append(trans_filename)    
+                filenames.append(trans_filename)   
     return(list(set(filenames)))      
     
 def read_part_trans(read_path):
@@ -1158,6 +1182,7 @@ def read_part_trans(read_path):
     # Initialise the iterator object.
     for trans_filename in tqdm(trans_filenames, position=0, leave=True,
                                ncols=100, desc='Reading transitions'):
+        print('\n',trans_filename)
         t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None, 
                                            chunksize=1_000_000, iterator=True, encoding='utf-8')
         for chunk in t_df[trans_filename]:
@@ -1456,9 +1481,6 @@ def error_code2unc(unc_code):
     unc_code[(unc_code==7)] = 0.000001
     unc_code[(unc_code==8)] = 0.0000001
     unc_code[(unc_code==9)] = 0.00000001
-    #unc_states_df = pd.DataFrame()
-    #unc_states_df['Unc'] = pd.DataFrame(unc_code)
-    #return(unc_states_df)
     return(unc_code)
 
 def convert_QNValues_hitran2exomol(hitran2exomol_states_df, GlobalQNLabel_list, LocalQNLabel_list):
@@ -1487,7 +1509,6 @@ def convert_hitran2StatesTrans(hitran_df, hitranQNlabels, QNu_label, QNl_label, 
     hitran2exomol_lower_df.columns = ['A','g','Unc','E'] + QNl_label
     hitran2exomol_st_df = pd.concat([hitran2exomol_upper_df, hitran2exomol_lower_df], axis=0)
     unc_code = hitran2exomol_st_df['Unc'].values
-    #unc_states_df = error_code2unc(unc_code)
     hitran2exomol_st_df['Unc'] = error_code2unc(unc_code)
     hitran2exomol_st_df = hitran2exomol_st_df.fillna('')
     hitran2exomol_st_E = hitran2exomol_st_df.groupby(['g','Unc'] + hitranQNlabels)['E'].mean().reset_index()
@@ -1627,7 +1648,7 @@ def linelist_StickSpectra(states_part_df,trans_part_df, ncolumn):
                 QNpp[QNs_label[i]+'"'] = states_l_df[QNs_label[i]].values
             stick_qn_df = pd.concat([QNp,QNpp],axis='columns')
         else:
-            raise ImportError("Empty result. Please increase filter range or wavenumber range in the input file.")  
+            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     else:
         id_u = trans_part_df['u'].values
         id_s = states_part_df['id'].values
@@ -1691,7 +1712,9 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     stick_spectra_df = pd.concat([stick_st_df, stick_qn_df], axis='columns')
     if threshold != 'None':
         stick_spectra_df = stick_spectra_df[stick_spectra_df['I'] >= threshold]
-    stick_spectra_df = stick_spectra_df.sort_values('v')  
+    stick_spectra_df = QNfilter_linelist(stick_spectra_df, QNs_value, QNs_label)
+    stick_spectra_df = stick_spectra_df.sort_values('v')   
+       
     QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")
               .replace('d','s').replace('i','s').replace('.1f','s'))
     ss_folder = save_path + '/stick_spectra/stick/'
@@ -1735,7 +1758,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     t.end()
     print('Stick spectra has been saved!\n')  
 
-def hitran_stick_spectra(hitran_linelist_df, QN_label_noJ, T):
+def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     print('Calculate stick spectra.')  
     t = Timer()
     t.start()
@@ -1751,11 +1774,11 @@ def hitran_stick_spectra(hitran_linelist_df, QN_label_noJ, T):
     else:
         raise ImportError("Please choose one from: 'Absoption' or 'Emission'.")
     
-    ss_colname = ['v','S',"J'","E'",'J"','E"']+QN_label_noJ
+    ss_colname = ['v','S',"J'","E'",'J"','E"'] + QNs_col
     stick_spectra_df = hitran_linelist_df[ss_colname]
     stick_spectra_df = stick_spectra_df.sort_values('v')  
-    QN_label_noJ_list = str(QN_label_noJ).replace("'","").replace('"','').replace('[','').replace(']','').replace(' ','').split(',')
-    QN_format_noJ = [QNsformat_list[i] for i in [QNslabel_list.index(j) for j in QN_label_noJ_list]]
+
+    QN_format_noJ = [QNsformat_list[i] for i in [QNslabel_list.index(j) for j in QNs_label]]
     QNsfmf = (str(QN_format_noJ).replace("'","").replace(",","").replace("[","").replace("]","")
               .replace('d','s').replace('i','s').replace('.1f','s'))
     ss_folder = save_path + '/stick_spectra/stick/'
@@ -1764,7 +1787,7 @@ def hitran_stick_spectra(hitran_linelist_df, QN_label_noJ, T):
     else:
         os.makedirs(ss_folder, exist_ok=True)
     ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
-    fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f '+QNsfmf
+    fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
     
     # Plot cross sections and save it as .png.
@@ -1796,7 +1819,7 @@ def hitran_stick_spectra(hitran_linelist_df, QN_label_noJ, T):
         plt.show()
         print('Stick spectra plot saved.')
     t.end()
-    print('Stick spectra has been saved!\n')  
+    print('Stick spectra has been saved!\n')   
     
 ## Cross Section
 def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn): 
@@ -3034,6 +3057,8 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
     pass
 
 # Get Results
+
+# Get Results
 def get_results(read_path): 
     t_tot = Timer()
     t_tot.start()  
@@ -3043,7 +3068,7 @@ def get_results(read_path):
     # ExoMol or HITRAN
     if database == 'ExoMol':
         print('ExoMol database')
-        print('Molecule \t\t\t:', molecule, '\nIsotopologue \t\t:', isotopologue, '\nDataset \t\t\t:', dataset)
+        print('Molecule\t\t:', molecule, '\nIsotopologue\t:', isotopologue, '\nDataset\t\t\t:', dataset)
         # All functions need whole states.
         states_df = read_all_states(read_path)
         # Only calculating lifetimes and cooling functions need whole transitions.
@@ -3080,9 +3105,9 @@ def get_results(read_path):
             raise ImportError("Please choose functions which you want to calculate.")
     elif database == 'HITRAN':
         print('HITRAN database')
-        print('Molecule \t\t:', molecule, '\t\t\tMolecule ID \t\t:', molecule_id, 
-              '\nIsotopologue \t:', isotopologue, '\t\tIsotopologue ID \t:', isotopologue_id,
-              '\nDataset \t\t:', dataset)
+        print('Molecule\t:', molecule, '\t\t\tMolecule ID\t:', molecule_id, 
+              '\nIsotopologue\t:', isotopologue, '\t\tIsotopologue ID\t:', isotopologue_id,
+              '\nDataset\t\t:', dataset)
         parfile_df = read_parfile(read_path)
         if (Conversion == 1 and ConversionFormat == 2):
             hitran_df = read_hitran_parfile(read_path,parfile_df,ConversionMinFreq,ConversionMaxFreq,
@@ -3111,9 +3136,9 @@ def get_results(read_path):
         if (StickSpectra == 1 or CrossSections == 1):
             hitran_df = read_hitran_parfile (read_path,parfile_df,min_wn,max_wn,
                                              UncFilter,threshold).reset_index().drop(columns='index')
-            (hitran_linelist_df, QN_label_noJ) = hitran_linelist_QN(hitran_df)
+            (hitran_linelist_df, QNs_col) = hitran_linelist_QN(hitran_df)
         if StickSpectra == 1:
-            hitran_stick_spectra(hitran_linelist_df, QN_label_noJ, T)
+            hitran_stick_spectra(hitran_linelist_df, QNs_col, T)
         if CrossSections == 1:
             ncolumn = 0
             get_crosssection(read_path, states_part_df, trans_part_df, hitran_linelist_df, ncolumn)

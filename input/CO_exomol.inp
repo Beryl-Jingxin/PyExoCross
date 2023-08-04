@@ -28,11 +28,11 @@ QNsformat                               %4d      %4s
 
 # Calculate stick spectra or cross sections #
 Temperature                             296
-Range                                   0          5000
+Range                                   0          20000
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          v[1]  kp[]
+QNsFilter(Y/N)                          Y          v[1,0;2,;,3;4,1;4,0]  
 
 
 # Calculate stick spectra #

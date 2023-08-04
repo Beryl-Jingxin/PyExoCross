@@ -1,21 +1,21 @@
 nohup: ignoring input
 ExoMol database
-Molecule 			: LiOH 
-Isotopologue 		: 7Li-16O-1H 
-Dataset 			: OYT7
+Molecule		: LiOH 
+Isotopologue	: 7Li-16O-1H 
+Dataset			: OYT7
 Reading states ...
-Running time on CPU       : 0.725498752 s
-Running time on system    : 0.7628388404846191 s
+Running time on CPU       : 0.7413759289999999 s
+Running time on system    : 0.7497215270996094 s
 Finished reading states!
 
 Calculate specific heats.
-Running time on CPU       : 53.268144375 s
-Running time on system    : 53.524479389190674 s
+Running time on CPU       : 53.099279800000005 s
+Running time on system    : 53.383389472961426 s
 Specific heats has been saved!
 
 
 The program total running time:
-Running time on CPU       : 54.000593884000004 s
-Running time on system    : 54.29428768157959 s
+Running time on CPU       : 53.848327746 s
+Running time on system    : 54.14081311225891 s
 
 Finished!
