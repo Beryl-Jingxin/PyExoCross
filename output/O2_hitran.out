@@ -1,0 +1,18 @@
+nohup: ignoring input
+HITRAN database
+Molecule	: O2 			Molecule ID	: 7 
+Isotopologue	: 16O2 		Isotopologue ID	: 1 
+Dataset		: O2-HITRAN
+Calculate stick spectra.
+Emission cross section
+Stick spectra plot saved.
+Running time on CPU       : 1.2526965229999998 s
+Running time on system    : 2.515123128890991 s
+Stick spectra has been saved!
+
+
+The program total running time:
+Running time on CPU       : 1.4239607630000002 s
+Running time on system    : 2.688607692718506 s
+
+Finished!

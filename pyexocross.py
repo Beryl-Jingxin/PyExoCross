@@ -728,7 +728,7 @@ def localQNgroups(molecule,isotopologue):
     localQNgroup6  = {'group':['O2','SO'],
                       'ulabel':['none','F'],
                       'uformat':['%10s','%5s'],
-                      'llabel': ['none','Br','N','Br','J','F','M'],
+                      'llabel': ['none','Br1','N','Br2','J','F','M'],
                       'lformat':['%1s','%1s','%3d','%1s','%3d','%5s','%1s']}
     localQNgroup7a = {'group':['NO','ClO'],
                       'ulabel':['m','none','F'],
@@ -866,7 +866,9 @@ def hitran_linelist_QN(hitran_df):
         hitran_linelist_df = hitran_linelist_df[hitran_main_colname + QNs_col]
         hitran_linelist_df = QNfilter_linelist(hitran_linelist_df, QNs_value, QNs_label)
     else:
-        QNs_col = QN_label_noJ      
+        QNs_col = QN_label_noJ    
+    if len(hitran_linelist_df) == 0:
+        raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")   
     return(hitran_linelist_df, QNs_col)
 
 def linelist_hitran(hitran_linelist_df):
