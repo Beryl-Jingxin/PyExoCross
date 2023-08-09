@@ -56,12 +56,12 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 # Functions #
 Conversion                              1
-PartitionFunctions                      1
-SpecificHeats                           1
-CoolingFunctions                        1
-Lifetimes                               1
-StickSpectra                            1
-CrossSections                           1
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+StickSpectra                            0
+CrossSections                           0
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
@@ -76,8 +76,8 @@ GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %9s      %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
-ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.001
-ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
+ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.001
+ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30
 ```
 
 Convert data from HITRAN to ExoMol.
@@ -87,7 +87,7 @@ Convert data from HITRAN to ExoMol.
 Database                                HITRAN
 Molecule                                NO
 Isotopologue                            14N-16O
-Dataset                                 XABC
+Dataset                                 XABC-HITRAN
 MolIsoID                                81
 
 
@@ -111,15 +111,15 @@ QNslabel                                X     Omega   v1      m      Br    Sym  
 QNsformat                               %2s   %3s     %2d     %1s    %2s   %1s    %5s
 
 
-# Conversion #
+# Conversion # 
 ConversionFormat                        2  
-ConversionUncertainty                   0.005
-ConversionFrequncyRange                 0                 63000   
-NumberQN                                9   
-GlobalQNLabel                           X       Omega    v1   
-GlobalQNFormat                          %2s     %3s      %2d  
-LocalQNLabel                            m       Br       Sym     F    
-LocalQNFormat                           %1s     %2s      %1s     %5s     
+ConversionFrequncyRange                 0          63000   
+GlobalQNLabel                           X       Omega    v1                
+GlobalQNFormat                          %2s     %3s      %2d               
+LocalQNLabel                            m       Br       Sym     F         
+LocalQNFormat                           %1s     %2s      %1s     %5s       
+ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.001
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30      
 ```
 
 **Note**

@@ -36,6 +36,7 @@ LocalQNFormat                           %3d      %3d      %3d     %5s    %1s
 ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.001
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30                      
 
+
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
 Tmax                                    3000                      # Maximal temperature in K 

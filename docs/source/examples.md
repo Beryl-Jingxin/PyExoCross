@@ -19,11 +19,11 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-Conversion                              0
-PartitionFunctions                      0
-SpecificHeats                           0
-CoolingFunctions                        0
-Lifetimes                               0
+Conversion                              1
+PartitionFunctions                      1
+SpecificHeats                           1
+CoolingFunctions                        1
+Lifetimes                               1
 StickSpectra                            1
 CrossSections                           1
 
@@ -40,8 +40,8 @@ GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %9s     %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
-ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.001
-ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
+ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.001
+ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30
                            
 
 # Calculate partition, specific heats or cooling functions #
@@ -63,7 +63,7 @@ QNsFilter(Y/N)                          Y          par[+,+]   e/f[e,f]   v[1,;2,
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   Y          Curve          # 'Curve' or 'Point'
+PlotStickSpectra(Y/N)                   Y          Point          # 'Curve' or 'Point'
 
 
 # Calculate cross sections #
@@ -76,7 +76,7 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   Y
+PlotCrossSection(Y/N)                   Y          Curve          # 'Curve' or 'Point'
 ```
 
 ## Example for the HITRAN database
@@ -84,45 +84,46 @@ PlotCrossSection(Y/N)                   Y
 ```bash
 # Basic information #
 Database                                HITRAN
-Molecule                                MgH
-Isotopologue                            24Mg-1H
-Dataset                                 MgH-HITRAN
-MolIsoID                                xxx
+Molecule                                H2S
+Isotopologue                            1H2-32S
+Dataset                                 H2S-HITRAN
+MolIsoID                                311
 
 
 # File path #
-ReadPath                                /home/jingxin/data/pyexocross/conversion/24Mg-1H__XAB.par
+ReadPath                                /home/jingxin/data/HITRAN/H2S.par
 SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-Conversion                              1
+Conversion                              0
 PartitionFunctions                      0
 SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
-StickSpectra                            0
-CrossSections                           0
+StickSpectra                            1
+CrossSections                           1
 
 
 # Quantum numbers #
-QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %1d      %7s      %7s
+QNslabel                                v1     v2    v3     Ka     Kc    F     Sym
+QNsformat                               %2d    %2d   %2d    %3d    %3d   %5s   %1s  
 
 
 # Conversion #
 ConversionFormat                        2  
-ConversionUncertainty                   0.005
-ConversionFrequncyRange                 0        30000      
-GlobalQNLabel                           eS       v        Omega
-GlobalQNFormat                          %10s     %1d      %4s
-LocalQNLabel                            J        e/f
-LocalQNFormat                           %5.1f    %2s
-                           
+ConversionFrequncyRange                 0         12000      
+GlobalQNLabel                           v1       v2       v3
+GlobalQNFormat                          %2d      %2d      %2d
+LocalQNLabel                            J        Ka       Kc      F      Sym
+LocalQNFormat                           %3d      %3d      %3d     %5s    %1s
+ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.001
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30                      
+
 
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    5000                      # Maximal temperature in K 
+Tmax                                    3000                      # Maximal temperature in K 
 
 
 # Calculate lifetimes #
@@ -131,25 +132,26 @@ None
 
 # Calculate stick spectra or cross sections #
 Temperature                             300
-Range                                   0          30000
+Range                                   0          12000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.001
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          N          par[+,+;-,-]   e/f[]   v[1,;,0;3,3;3,2]  
+QNsFilter(Y/N)                          Y          v1[1,]   v2[1,]   v3[1,0;1,1] 
+
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   N
+PlotStickSpectra(Y/N)                   Y          Curve          # 'Curve' or 'Point'
 
 
 # Calculate cross sections #
 Pressure                                1
 Npoints/BinSize                         Npoints    10001
-Broadeners                              Default    
-Ratios                                  1.0        
-Profile                                 SciPyVoigt        
+Broadeners                              Default
+Ratios                                  1.0
+Profile                                 Gaussian        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
-Cutoff(Y/N)                             Y          100            # If Y, default value 25
-DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
+Cutoff(Y/N)                             Y          25             # If Y, default value 25
+DopplerHWHM(Y/N)                        Y          0.321          # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   N          Point          # 'Curve' or 'Point'
+PlotCrossSection(Y/N)                   Y          Curve          # 'Curve' or 'Point'
 ```
