@@ -63,7 +63,7 @@ QNsFilter(Y/N)                          Y          par[+,+]   e/f[e,f]   v[1,;2,
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   Y
+PlotStickSpectra(Y/N)                   Y          Curve          # 'Curve' or 'Point'
 
 
 # Calculate cross sections #
@@ -151,5 +151,5 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   N
+PlotCrossSection(Y/N)                   N          Point          # 'Curve' or 'Point'
 ```

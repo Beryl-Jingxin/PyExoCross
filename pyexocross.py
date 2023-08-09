@@ -194,8 +194,13 @@ def inp_para(inp_filepath):
     # Stick spectra
     if StickSpectra != 0:
         PlotStickSpectraYN = inp_df[col0.isin(['PlotStickSpectra(Y/N)'])][1].values[0].upper()[0]
+        if PlotStickSpectraYN == 'Y':
+            PlotStickSpectraCP = inp_df[col0.isin(['PlotStickSpectra(Y/N)'])][2].values[0].upper()[0]
+        else:
+            PlotStickSpectraCP = 'None'
     else:
         PlotStickSpectraYN = 'None'
+        PlotStickSpectraCP = 'None'
 
     # Cross sections
     if CrossSections != 0:
@@ -255,7 +260,11 @@ def inp_para(inp_filepath):
         else:
             raise ImportError("Please type the correct Lorentzian HWHM choice 'Y' or 'N' into the input file.")
         # Plot 
-        PlotCrossSectionYN = inp_df[col0.isin(['PlotCrossSection(Y/N)'])][1].values[0].upper()[0]   
+        PlotCrossSectionYN = inp_df[col0.isin(['PlotCrossSection(Y/N)'])][1].values[0].upper()[0]  
+        if PlotCrossSectionYN == 'Y':
+            PlotCrossSectionCP = inp_df[col0.isin(['PlotCrossSection(Y/N)'])][2].values[0].upper()[0]
+        else:
+            PlotCrossSectionCP = 'None'   
     else:
         bin_size = 'None'
         N_point = 'None'
@@ -269,6 +278,7 @@ def inp_para(inp_filepath):
         profile = 'None'
         wn_wl = 'None'
         PlotCrossSectionYN = 'None'
+        PlotCrossSectionCP = 'None' 
     # Molecule and isotopologue ID, abundance, mass uncertainty, lifetime and g-factor           
     molecule_id = int(mol_iso_id/10)
     isotopologue_id = mol_iso_id - molecule_id * 10
@@ -303,7 +313,8 @@ def inp_para(inp_filepath):
             Ntemp, Tmax, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
             cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
-            check_uncertainty, check_lifetime, check_gfactor, PlotStickSpectraYN, PlotCrossSectionYN)
+            check_uncertainty, check_lifetime, check_gfactor, 
+            PlotStickSpectraYN, PlotStickSpectraCP, PlotCrossSectionYN, PlotCrossSectionCP)
 
 # Constants and parameters
 # Parameters for calculating
@@ -325,7 +336,8 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
  Ntemp, Tmax, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
  cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
- check_uncertainty, check_lifetime, check_gfactor, PlotStickSpectraYN, PlotCrossSectionYN) = inp_para(inp_filepath)
+ check_uncertainty, check_lifetime, check_gfactor, 
+ PlotStickSpectraYN, PlotStickSpectraCP, PlotCrossSectionYN, PlotCrossSectionCP) = inp_para(inp_filepath)
 
 # Constants
 c2InvTref = c2 / Tref                 # c2 / T_ref (cm)
@@ -1703,6 +1715,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     t.start()
     A, v, Ep, Epp, gp, Jp, Jpp, stick_qn_df = linelist_StickSpectra(states_part_df,trans_part_df, ncolumn)
     Q = read_exomol_pf(read_path, T)
+    # Absorption or emission stick spectra.
     if abs_emi == 'Ab':
         print('Absorption stick spectra')
         I = cal_abscoefs(v, gp, A, Epp, Q, abundance)
@@ -1719,7 +1732,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
        
     QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")
               .replace('d','s').replace('i','s').replace('.1f','s'))
-    ss_folder = save_path + '/stick_spectra/stick/'
+    ss_folder = save_path + '/stick_spectra/stick/'+molecule+'/'+database+'/'
     if os.path.exists(ss_folder):
         pass
     else:
@@ -1729,7 +1742,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f '+QNsfmf+' '+QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
     
-    # Plot cross sections and save it as .png.
+    # Plot stick spectra and save it as .png.
     if PlotStickSpectraYN == 'Y':
         from matplotlib.ticker import MultipleLocator, FormatStrFormatter
         parameters = {'axes.labelsize': 14, 
@@ -1737,14 +1750,19 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
                     'xtick.labelsize': 12,
                     'ytick.labelsize': 12}
         plt.rcParams.update(parameters)
-        ss_plot_folder = save_path + '/stick_spectra/plots/'
+        ss_plot_folder = save_path + '/stick_spectra/plots/'+molecule+'/'+database+'/'
         if os.path.exists(ss_plot_folder):
             pass
         else:
             os.makedirs(ss_plot_folder, exist_ok=True)
         plt.figure(figsize=(12, 6))
         plt.ylim([1e-30, 10*max(I)])
-        plt.plot(v, I, label='T = '+str(T)+' K', linewidth=0.4)
+        if PlotStickSpectraCP == 'C':
+            plt.plot(v, I, label='T = '+str(T)+' K', linewidth=0.4)
+        elif PlotStickSpectraCP == 'P':
+            plt.scatter(v, I, label='T = '+str(T)+' K', s=10)
+        else:
+            raise ImportError("Please choose the plot type: 'Curve' or 'Point'.")
         plt.semilogy()
         #plt.title(database+' '+molecule+' intensity') 
         plt.xlabel('Wavenumber, cm$^{-1}$')
@@ -1766,12 +1784,12 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     t.start()
     A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = linelist_hitran(hitran_linelist_df)
     Q = read_hitran_pf(T)
-    # Absorption or emission cross section
+    # Absorption or emission stick spectra.
     if abs_emi == 'Ab': 
-        print('Absorption cross section') 
+        print('Absorption stick spectra') 
         I = cal_abscoefs(v, gp, A, Epp, Q, abundance)
     elif abs_emi == 'Em': 
-        print('Emission cross section')
+        print('Emission stick spectra')
         I = cal_emicoefs(v, gp, A, Ep, Q, abundance)
     else:
         raise ImportError("Please choose one from: 'Absoption' or 'Emission'.")
@@ -1783,7 +1801,7 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     QN_format_noJ = [QNsformat_list[i] for i in [QNslabel_list.index(j) for j in QNs_label]]
     QNsfmf = (str(QN_format_noJ).replace("'","").replace(",","").replace("[","").replace("]","")
               .replace('d','s').replace('i','s').replace('.1f','s'))
-    ss_folder = save_path + '/stick_spectra/stick/'
+    ss_folder = save_path + '/stick_spectra/stick/'+molecule+'/'+database+'/'
     if os.path.exists(ss_folder):
         pass
     else:
@@ -1792,7 +1810,7 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
     
-    # Plot cross sections and save it as .png.
+    # Plot stick spectra and save it as .png.
     if PlotStickSpectraYN == 'Y':
         from matplotlib.ticker import MultipleLocator, FormatStrFormatter
         parameters = {'axes.labelsize': 14, 
@@ -1800,14 +1818,19 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
                     'xtick.labelsize': 12,
                     'ytick.labelsize': 12}
         plt.rcParams.update(parameters)
-        ss_plot_folder = save_path + '/stick_spectra/plots/'
+        ss_plot_folder = save_path + '/stick_spectra/plots/'+molecule+'/'+database+'/'
         if os.path.exists(ss_plot_folder):
             pass
         else:
             os.makedirs(ss_plot_folder, exist_ok=True)
         plt.figure(figsize=(12, 6))
         plt.ylim([1e-30, 10*max(I)])
-        plt.plot(v, I, label='T = '+str(T)+' K', linewidth=0.4)
+        if PlotStickSpectraCP == 'C':
+            plt.plot(v, I, label='T = '+str(T)+' K', linewidth=0.4)
+        elif PlotStickSpectraCP == 'P':
+            plt.scatter(v, I, label='T = '+str(T)+' K', s=10)
+        else:
+            raise ImportError("Please choose the plot type: 'Curve' or 'Point'.") 
         plt.semilogy()
         #plt.title(database+' '+molecule+' intensity') 
         plt.xlabel('Wavenumber, cm$^{-1}$')
@@ -2879,7 +2902,12 @@ def save_xsec(wn, xsec, database, profile_label):
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
             plt.ylim([1e-30, 10*max(xsec)])
-            plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
+            if PlotCrossSectionCP == 'C':
+                plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
+            elif PlotStickSpectraCP == 'P':
+                plt.scatter(wn, xsec, label='T = '+str(T)+' K, '+profile_label, s=10)
+            else:
+                raise ImportError("Please choose the plot type: 'Curve' or 'Point'.") 
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.xlabel('Wavenumber, cm$^{-1}$')
@@ -2889,7 +2917,7 @@ def save_xsec(wn, xsec, database, profile_label):
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
             plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wn)+'-'+str(max_wn)+'__'
-                    +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
+                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
             plt.show()
             print('Cross sections plot saved.')
     elif 'L' in wn_wl:
@@ -2922,7 +2950,12 @@ def save_xsec(wn, xsec, database, profile_label):
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
             plt.ylim([1e-30, 10*max(xsec)])
-            plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
+            if PlotCrossSectionCP == 'C':
+                plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
+            elif PlotStickSpectraCP == 'P':
+                plt.scatter(wl, xsec, label='T = '+str(T)+' K, '+profile_label, s=10)
+            else:
+                raise ImportError("Please choose the plot type: 'Curve' or 'Point'.")  
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.xlabel(u'Wavelength, \xb5m')

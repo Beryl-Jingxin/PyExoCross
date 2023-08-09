@@ -1,0 +1,36 @@
+nohup: ignoring input
+[]
+HITRAN database
+Molecule	: MgH 			Molecule ID	: 50 
+Isotopologue	: 24Mg-1H 		Isotopologue ID	: 1 
+Dataset		: MgH-HITRAN
+Convert data from the HITRAN format to the ExoMol format states.
+Running time on CPU       : 0.025528190999999367 s
+Running time on system    : 0.025603055953979492 s
+Converted states file has been saved!
+
+Convert data from the HITRAN format to the ExoMol format transitions.
+Running time on CPU       : 0.5024220069999998 s
+Running time on system    : 0.509753942489624 s
+Converted transition file has been saved!
+
+Convert data from the HITRAN format to the ExoMol format broadening.
+Running time on CPU       : 0.001553173000001351 s
+Running time on system    : 0.001560211181640625 s
+Convert broadening files have been saved!
+
+Finished conversion!
+
+Calculate stick spectra.
+Absorption cross section
+Traceback (most recent call last):
+  File "pyexocross.py", line 3188, in <module>
+    get_results(read_path)
+  File "pyexocross.py", line 3177, in get_results
+    hitran_stick_spectra(hitran_linelist_df, QNs_col, T)
+  File "pyexocross.py", line 1812, in hitran_stick_spectra
+    np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
+  File "<__array_function__ internals>", line 6, in savetxt
+  File "/home/jingxin/.local/lib/python3.6/site-packages/numpy/lib/npyio.py", line 1404, in savetxt
+    raise error
+ValueError: fmt has wrong number of % formats:  %12.8E %12.8E %7s %12.4f %7s %12.4f  

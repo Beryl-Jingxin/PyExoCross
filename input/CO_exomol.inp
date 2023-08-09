@@ -36,4 +36,4 @@ QNsFilter(Y/N)                          Y          v[1,0;2,;,3;4,1;4,0]
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   Y
+PlotStickSpectra(Y/N)                   Y          Point          # 'Curve' or 'Point'

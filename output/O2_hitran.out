@@ -4,15 +4,15 @@ Molecule	: O2 			Molecule ID	: 7
 Isotopologue	: 16O2 		Isotopologue ID	: 1 
 Dataset		: O2-HITRAN
 Calculate stick spectra.
-Emission cross section
+Emission stick spectra
 Stick spectra plot saved.
-Running time on CPU       : 1.2526965229999998 s
-Running time on system    : 2.515123128890991 s
+Running time on CPU       : 1.3464036319999977 s
+Running time on system    : 2.513127088546753 s
 Stick spectra has been saved!
 
 
 The program total running time:
-Running time on CPU       : 1.4239607630000002 s
-Running time on system    : 2.688607692718506 s
+Running time on CPU       : 1.5673962770000003 s
+Running time on system    : 2.734732151031494 s
 
 Finished!

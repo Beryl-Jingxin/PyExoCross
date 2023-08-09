@@ -1,23 +1,33 @@
 Cross sections
 ==============
 
-`Range`: Give two values as the minimum and maximum of the wavenumber range. No `,` or `;` between these two numbers, just leave blank here.
+`Temperature`: Please provide temperature in unit K.
 
-`Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSiza` is the interval size of the grid.
+`Range`: Give two values as the minimum and maximum of the wavenumber range. No `,` or `;` between these two numbers, just leave blank here.
 
 `Absorption/Emission`: Choose `Absorption` or `Emission`.
 
+`Pressure`: Please provide pressure in unit bar.
+
+`Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSiza` is the interval size of the grid.
+
 `Wavenumber(wn)/wavelength(wl)`: Choose `wn` or `wl`.
+
+If you want a figure of corss sections, please set `Y` for `PlotCrossSection(Y/N)`.
 
 *Example*
 
 ```
+# Calculate stick spectra or cross sections #
 Temperature                             300
-Pressure                                1
 Range                                   0          30000
-Npoints/BinSize                         Npoints    30001
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+
+# Calculate cross sections #
+Pressure                                1
+Npoints/BinSize                         Npoints    10001           
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
+PlotCrossSection(Y/N)                   Y          Curve          # 'Curve' or 'Point'
 ```
 
 ## Filters
@@ -100,11 +110,19 @@ Ratios                                  0.9      0.1
 
 Choose line profile from:
 
-`Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `HumlicekVoigt`, `ThompsonPseudoVoigt`, `KielkopfPseudoVoigt`, `OliveroPseudoVoigt`, `LiuLinPseudoVoigt`, `PRoccoseudoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`.
+`Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `HumlicekVoigt`, `ThompsonPseudoVoigt`, `KielkopfPseudoVoigt`, `OliveroPseudoVoigt`, `LiuLinPseudoVoigt`, `PRoccoseudoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`. Please note: no blank when you write the line profile name.
 
 Doppler profile uses Doppler HWHM calculated by program, if you want to use Doppler profile, set `N` after `DopplerHWHM(Y/N)`. If you use Gaussian profile, please set `Y` after `DopplerHWHM(Y/N)`, your Doppler HWHM value will be used for calculating Gaussian profile.
 
-If you want a figure of corss sections, please set `Y` for `PlotCrossSection(Y/N)`.
+`LorentzianHWHM(Y/N)`: If you prefer to provide a Lorentzian HWHM as a constant, write `Y` here and give the HWHM value. If you need the program to calculate tempertaure and pressure-dependent Loretzian HWHM, please write `N` here.
+
+*Example*
+
+```bash
+Profile                                 SciPyVoigt
+DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
+```
 
 *Example*
 
@@ -131,7 +149,7 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   Y
+PlotCrossSection(Y/N)                   Y          Curve          # 'Curve' or 'Point'
 ```
 
 ```bash
