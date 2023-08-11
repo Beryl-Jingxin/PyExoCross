@@ -29,11 +29,9 @@ If ``Threshold(Y/N)`` is yes, the value is the minimum intensity you require.
 
 | ``v1[]`` means you want quantum number label v1 and you want all quantum number values of this label v1.
 | ``v1[1,0]`` means you want quantum number label v1 and you want the upper QN = 1 and lower QN = 0. So v1' = 1 and v1" = 0.
-| ``v1[,0]`` means you want quantum number label v1 and you want all upper QN but the lower QN = 0. So v1' = 0, 1, 2, 3, ... and v1" = 0. 
-| ``v1[3,]`` means you want quantum number label v1 and you want all lower QN but the upper QN = 3. So v1' = 3 and v1" = 0, 1, 2, 3. 
+| ``v1[,0]`` means you want quantum number label v1 and you want all upper QN but the lower QN = 0. So v1' = 0, 1, 2, 3, 4, ... and v1" = 0. 
+| ``v1[3,]`` means you want quantum number label v1 and you want all lower QN but the upper QN = 3. So v1' = 3 and v1" = 0, 1, 2, 3, 4, ... 
 | ``v1[1,1;2,2]`` means you want quantum number label v1 and you want when v1' = 1, v1" = 1; when v1' = 2, v1" = 2.
-| ``v1[1,0;1,1]`` is same as ``v1[1,]``. 
-| ``v1[1,0;2,0;3,0;4,0]`` is same as ``v1[,0]``.
 | ``v1[1,;,0;5,5]  v2[]`` means you want quantumnumber labels v1 and v2. For v1, you want all lines with v1' = 1 , all lines with v1" = 0 and the lines with v1' = 5 and at the same time v1" = 5. Meanwhile, you want all lines for v2.
 
 
