@@ -1,0 +1,37 @@
+# Data source #
+Database                                ExoMol
+Molecule                                ZrO
+Isotopologue                            90Zr-16O
+Dataset                                 ZorrO
+MolIsoID                                501
+
+
+# File path #
+ReadPath                                /mnt/data/exomol/exomol3_data/
+SavePath                                /home/jingxin/data/pyexocross/
+
+
+# Functions #
+Conversion                              1
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+StickSpectra                            0
+CrossSections                           0
+
+
+# Quantum numbers for conversion, stick spectra and cross sections #
+QNslabel                                +/-  e/f   State    v     Lambda   Sigma    Omega   
+QNsformat                               %1s  %1s   %12s     %3d   %3d      %3d      %3d
+
+
+# Conversion #
+ConversionFormat                        1  
+ConversionFrequncyRange                 0                 30000      
+GlobalQNLabel                           State   v        Omega
+GlobalQNFormat                          %9s     %3d      %3d
+LocalQNLabel                            J        +/-      e/f
+LocalQNFormat                           %5.1f    %1s      %1s
+ConvUncFilter(Y/N)                      Y          0.01             # If Y, default value 0.001
+ConvThreshold(Y/N)                      N          1e-30            # If Y, default value 1e-30

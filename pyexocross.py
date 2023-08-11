@@ -1223,13 +1223,13 @@ def extract_broad(broad_df, states_l_df):
 
 # Intensity
 # Calculate absorption coefficient
-def cal_abscoefs(v, gp, A, Epp, Q, abundance):
+def cal_abscoefs(T, v, gp, A, Epp, Q, abundance):
     #abscoef = gp * A * np.exp(- c2 * Epp / T) * (1 - np.exp(- c2 * v / T)) / (8 * np.pi * c * v**2 * Q) * abundance  
     abscoef = ne.evaluate('gp * A * exp(- c2 * Epp / T) * (1 - exp(- c2 * v / T)) * Inv8Pic / (v ** 2 * Q) * abundance')  
     return abscoef
 
 # Calculate emission coefficient
-def cal_emicoefs(v, gp, A, Ep, Q, abundance):
+def cal_emicoefs(T, v, gp, A, Ep, Q, abundance):
     # emicoef = gp * A * v * np.exp(- c2 * Ep / T) / (4 * np.pi) / Q * abundance   
     emicoef = ne.evaluate('gp * A * v * exp(- c2 * Ep / T) * Inv4Pi / Q * abundance')
     return emicoef
@@ -1442,8 +1442,8 @@ def error_code(unc):
 def convert_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
     states_unc_df = read_unc_states(states_df)
     A, v, Ep, Epp, gp, gpp, unc, gamma_air, gamma_self, n_air, QN_df = linelist_ExoMol2HITRAN(states_unc_df,trans_part_df, ncolumn)
-    Q = read_exomol_pf(read_path, T)
-    I = cal_abscoefs(v, gp, A, Epp, Q, abundance)
+    Q = read_exomol_pf(read_path, Tref)
+    I = cal_abscoefs(Tref, v, gp, A, Epp, Q, abundance)
     unc = error_code(unc)
     nrows = len(A)
     delta_air = ['']*nrows 
@@ -1718,10 +1718,10 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     # Absorption or emission stick spectra.
     if abs_emi == 'Ab':
         print('Absorption stick spectra')
-        I = cal_abscoefs(v, gp, A, Epp, Q, abundance)
+        I = cal_abscoefs(T, v, gp, A, Epp, Q, abundance)
     if abs_emi == 'Em':
         print('Emission stick spectra')
-        I = cal_emicoefs(v, gp, A, Ep, Q, abundance)
+        I = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
     stick_st_dic = {'v':v, 'I':I, "J'":Jp, "E'":Ep, 'J"':Jpp, 'E"':Epp}
     stick_st_df = pd.DataFrame(stick_st_dic)
     stick_spectra_df = pd.concat([stick_st_df, stick_qn_df], axis='columns')
@@ -1787,10 +1787,10 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     # Absorption or emission stick spectra.
     if abs_emi == 'Ab': 
         print('Absorption stick spectra') 
-        I = cal_abscoefs(v, gp, A, Epp, Q, abundance)
+        I = cal_abscoefs(T, v, gp, A, Epp, Q, abundance)
     elif abs_emi == 'Em': 
         print('Emission stick spectra')
-        I = cal_emicoefs(v, gp, A, Ep, Q, abundance)
+        I = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
     else:
         raise ImportError("Please choose one from: 'Absoption' or 'Emission'.")
     
@@ -2985,11 +2985,11 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
         if abs_emi == 'Ab': 
             print('Absorption cross section')
             A, v, Epp, gp, gamma_L, n_air = linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
-            coef = cal_abscoefs(v, gp, A, Epp, Q, abundance)
+            coef = cal_abscoefs(T, v, gp, A, Epp, Q, abundance)
         elif abs_emi == 'Em': 
             print('Emission cross section')
             A, v, Ep, gp, gamma_L, n_air = linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
-            coef = cal_emicoefs(v, gp, A, Ep, Q, abundance)
+            coef = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
         else:
             raise ImportError("Please choose one from: 'Absoption' or 'Emission'.")         
     elif database == 'HITRAN':
@@ -3000,11 +3000,11 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
         # Absorption or emission cross section
         if abs_emi == 'Ab': 
             print('Absorption cross section') 
-            coef = cal_abscoefs(v, gp, A, Epp, Q, abundance)
+            coef = cal_abscoefs(T, v, gp, A, Epp, Q, abundance)
         elif abs_emi == 'Em': 
             print('Emission cross section')
             Ep = cal_Ep(Epp, v)
-            coef = cal_emicoefs(v, gp, A, Ep, Q, abundance)
+            coef = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
         else:
             raise ImportError("Please choose one from: 'Absoption' or 'Emission'.") 
     else:
