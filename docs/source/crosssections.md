@@ -27,7 +27,7 @@ Absorption/Emission                     Absorption                # 'Absorption'
 Pressure                                1
 Npoints/BinSize                         Npoints    10001           
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
-PlotCrossSection(Y/N)                   Y          Curve          # 'Curve' or 'Point'
+PlotCrossSection(Y/N)                   Y
 ```
 
 ## Filters
@@ -147,7 +147,7 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   Y          Curve          # 'Curve' or 'Point'
+PlotCrossSection(Y/N)                   Y
 ```
 
 ```bash

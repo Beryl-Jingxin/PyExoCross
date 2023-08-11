@@ -35,7 +35,7 @@ If ``Threshold(Y/N)`` is yes, the value is the minimum intensity you require.
 | ``v1[1,;,0;5,5]  v2[]`` means you want quantumnumber labels v1 and v2. For v1, you want all lines with v1' = 1 , all lines with v1" = 0 and the lines with v1' = 5 and at the same time v1" = 5. Meanwhile, you want all lines for v2.
 
 
-If you need a stick spectra figure, please write ``Y`` after ``PlotStickSpectra(Y/N)``. You can also choose what kind of figure you want: plot with points or plot as a curve.
+If you need a stick spectra figure, please write ``Y`` after ``PlotStickSpectra(Y/N)``. 
 
 The intensity equation is:
 
@@ -62,7 +62,7 @@ The intensity equation is:
     QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,1;1,0;2,;,0]  
 
     # Calculate stick spectra #
-    PlotStickSpectra(Y/N)                   Y          Point          # 'Curve' or 'Point'
+    PlotStickSpectra(Y/N)                   Y
 
 .. code:: bash
 

@@ -63,7 +63,7 @@ QNsFilter(Y/N)                          Y          par[+,+]   e/f[e,f]   v[1,;2,
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   Y          Point          # 'Curve' or 'Point'
+PlotStickSpectra(Y/N)                   Y
 
 
 # Calculate cross sections #
@@ -76,7 +76,7 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   Y          Curve          # 'Curve' or 'Point'
+PlotCrossSection(Y/N)                   Y
 ```
 
 ## Example for the HITRAN database
@@ -140,7 +140,7 @@ QNsFilter(Y/N)                          Y          v1[1,]   v2[1,]   v3[1,0;1,1]
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   Y          Curve          # 'Curve' or 'Point'
+PlotStickSpectra(Y/N)                   Y
 
 
 # Calculate cross sections #
@@ -153,5 +153,5 @@ Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          25             # If Y, default value 25
 DopplerHWHM(Y/N)                        Y          0.321          # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   Y          Curve          # 'Curve' or 'Point'
+PlotCrossSection(Y/N)                   N
 ```
