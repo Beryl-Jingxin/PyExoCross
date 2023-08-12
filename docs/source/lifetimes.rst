@@ -1,8 +1,9 @@
 Lifetimes
 ===================
 
-Please provide the line list files. 
-You don't need to change anything in lifetime section.
+| Please provide the line list files. 
+| If you want to save compressed .states.bz2 file, please wirte ``Y`` after ``Compress(Y/N)``, 
+otherwise, if you write ``N``, the uncompressed .states file will be saved.
 
 The lifetimes equation is:
 
@@ -15,7 +16,8 @@ The lifetimes equation is:
 .. code:: bash
 
     # Calculate lifetimes #
-    None
+    Compress(Y/N)                           Y                         If Y, save as .states.bz2 file; otherwise, save as .states file
+
 
 **Note**
 

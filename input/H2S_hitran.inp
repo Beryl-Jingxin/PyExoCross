@@ -43,7 +43,7 @@ Tmax                                    3000                      # Maximal temp
 
 
 # Calculate lifetimes #
-None
+Compress(Y/N)                           Y                         If Y, save as .states.bz2 file; otherwise, save as .states file
 
 
 # Calculate stick spectra or cross sections #

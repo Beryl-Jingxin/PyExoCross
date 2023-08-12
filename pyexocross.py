@@ -138,7 +138,10 @@ def inp_para(inp_filepath):
         Tmax = 0  
      
     # Calculate lifetimes 
-    # None
+    if Lifetimes != 0:
+        CompressYN = inp_df[col0.isin(['Compress(Y/N)'])][1].values[0].upper()[0]
+    else:
+        CompressYN = 'None'
     
     # Calculate stick spectra or cross sections 
     if StickSpectra + CrossSections != 0:
@@ -301,7 +304,7 @@ def inp_para(inp_filepath):
             Conversion, PartitionFunctions, CoolingFunctions, Lifetimes, SpecificHeats, StickSpectra, CrossSections,
             ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
-            Ntemp, Tmax, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+            Ntemp, Tmax, CompressYN, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
             cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
             check_uncertainty, check_lifetime, check_gfactor, PlotStickSpectraYN, PlotCrossSectionYN)
@@ -323,7 +326,7 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
  Conversion, PartitionFunctions, CoolingFunctions, Lifetimes, SpecificHeats, StickSpectra, CrossSections,
  ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
- Ntemp, Tmax, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+ Ntemp, Tmax, CompressYN, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
  cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
  check_uncertainty, check_lifetime, check_gfactor, PlotStickSpectraYN, PlotCrossSectionYN) = inp_para(inp_filepath)
@@ -357,12 +360,12 @@ if bin_size != 'None':
 # Convert among the frequency, upper and lower state energy 
 # Calculate frequency
 def cal_v(Ep, Epp):
-    v = ne.evaluate('abs(Ep - Epp)')
+    v = ne.evaluate('Ep - Epp')
     return(v)
 
 # Calculate upper state energy with ExoMol database
 def cal_Ep(Epp, v):
-    Ep = ne.evaluate('abs(Epp + v)')
+    Ep = ne.evaluate('Epp + v')
     return(Ep)
 
 # Calculate upper state energy with HITRAN database
@@ -952,19 +955,21 @@ def exomol_specificheat(states_df, Ntemp, Tmax):
 
 # Lifetime
 def exomol_lifetime(read_path, states_df, all_trans_df):
+    
     print('Calculate lifetimes.')  
     t = Timer()
     t.start()
+    
     sum_A = all_trans_df.groupby('u')['A'].sum()
     lifetime = ne.evaluate('1 / sum_A') 
     lt_df = pd.Series(lifetime).map('{: >12.4E}'.format).reset_index()
     lt_df.columns=['u','lt']
-    uid = lt_df['u']
     add_u = pd.DataFrame()
-    add_u['u'] = pd.concat([states_df['id'].astype('int'), uid]).drop_duplicates(keep=False)
-    add_u['lt'] = '         inf'
-    lifetime_df = pd.concat([lt_df, add_u], ignore_index=True)
+    add_u['u'] = pd.concat([states_df['id'].astype('int'), pd.Series(sum_A.index)]).drop_duplicates(keep=False) - 1
+    add_u['lt'] = '         Inf'
+    lifetime_df = pd.concat([add_u, lt_df], ignore_index=True)
     lifetime_df.sort_values('u',inplace=True)
+    
     states_filenames = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset 
                                  + '/' + isotopologue + '__' + dataset + '.states.bz2')
     s_df = pd.read_csv(states_filenames[0], compression='bz2', header=None, dtype=object)
@@ -977,30 +982,29 @@ def exomol_lifetime(read_path, states_df, all_trans_df):
     if check_uncertainty == 1:
         for i in range(nrows):
             new_rows.append(s_df[0][i][:53]+lifetime_list[i]+s_df[0][i][65:]+'\n')
+
     lf_folder = save_path + '/lifetime/'
     if os.path.exists(lf_folder):
         pass
     else:
         os.makedirs(lf_folder, exist_ok=True)  
-    ####### bz2 ######
-    lf_path = lf_folder + isotopologue + '__' + dataset + '.states.bz2'
-    with bz2.open(lf_path, 'wt') as f:
-        for i in range(nrows):
-            f.write(new_rows[i])
-        f.close
-    ##################
-    
-    ##### states #####
-    '''
-    lf_path = lf_folder + isotopologue + '__' + dataset + '.states'
-    with open(lf_path, 'wt') as f:
-        for i in range(nrows):
-            f.write(new_rows[i])
-        f.close
-    '''
-    ##################
+        
+    if CompressYN == 'Y':
+        lf_path = lf_folder + isotopologue + '__' + dataset + '.states.bz2'
+        with bz2.open(lf_path, 'wt') as f:
+            for i in range(nrows):
+                f.write(new_rows[i])
+            f.close
+    else:
+        lf_path = lf_folder + isotopologue + '__' + dataset + '.states'
+        with open(lf_path, 'wt') as f:
+            for i in range(nrows):
+                f.write(new_rows[i])
+            f.close
+
     t.end()
     print('Lifetimes has been saved!\n')   
+   
 
 # Calculate cooling function
 def linelist_coolingfunc(states_df, all_trans_df, ncolumn):

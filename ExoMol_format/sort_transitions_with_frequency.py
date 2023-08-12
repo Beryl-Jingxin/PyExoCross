@@ -73,7 +73,7 @@ def read_all_trans(read_path):
     return(all_trans_df, ncolumn)
 
 def cal_v(Ep, Epp):
-    v = ne.evaluate('abs(Ep - Epp)')
+    v = ne.evaluate('Ep - Epp')
     return(v)
 
 states_df = read_all_states(read_path)
