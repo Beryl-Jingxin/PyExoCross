@@ -70,7 +70,7 @@ Wrong format of the quantum number column nams: '1', '2', 'electronic state'.
 *Example*
 
 ```bash
-UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 Cutoff(Y/N)                             Y          100            # If Y, default value 25
 QNsFilter(Y/N)                          N          par[]   e/f[]   v[1,;2,2;2,1;,0]  
@@ -133,7 +133,7 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 Temperature                             300
 Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.001
+UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
 QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,1;1,0;2,]  
 
@@ -158,8 +158,8 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 # Calculate stick spectra or cross sections #
 Temperature                             1000
 Range                                   1000       5000
-Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          No         0.001         # If Y, default value 0.001
+Absorption/Emission                     Emission                 # 'Absorption' or 'Emission'
+UncFilter(Y/N)                          No         0.01          # If Y, default value 0.01
 Threshold(Y/N)                          NO         1e-30         # If Y, default value 1e-30
 QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,;2,;,0;4,4;4,3]  
 

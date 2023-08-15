@@ -33,5 +33,5 @@ GlobalQNLabel                           State   v        Omega
 GlobalQNFormat                          %9s     %3d      %3d
 LocalQNLabel                            J        +/-      e/f
 LocalQNFormat                           %5.1f    %1s      %1s
-ConvUncFilter(Y/N)                      Y          0.01             # If Y, default value 0.001
+ConvUncFilter(Y/N)                      Y          0.01             # If Y, default value 0.01
 ConvThreshold(Y/N)                      N          1e-30            # If Y, default value 1e-30

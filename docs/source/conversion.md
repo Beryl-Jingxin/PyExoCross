@@ -76,7 +76,7 @@ GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %9s      %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
-ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.001
+ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.01
 ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30
 ```
 
@@ -118,7 +118,7 @@ GlobalQNLabel                           X       Omega    v1
 GlobalQNFormat                          %2s     %3s      %2d               
 LocalQNLabel                            m       Br       Sym     F         
 LocalQNFormat                           %1s     %2s      %1s     %5s       
-ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.001
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30      
 ```
 

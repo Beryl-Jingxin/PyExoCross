@@ -39,7 +39,7 @@ Compress(Y/N)                           Y                         If Y, save as 
 Temperature                             296
 Range                                   2000       2500
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.01           # If Y, default value 0.001
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 QNsFilter(Y/N)                          Y          Gamma[]  e/f[]  n1[1,0;2,0]  n2[1,;,0]  l2[]  n3[]
 

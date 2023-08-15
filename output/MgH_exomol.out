@@ -52,3 +52,28 @@ Converted par file has been saved!
 
 Calculate stick spectra.
 Absorption stick spectra
+Stick spectra plot saved.
+Running time on CPU       : 18.682192275 s
+Running time on system    : 17.931284189224243 s
+Stick spectra has been saved!
+
+Calculate cross-sections.
+Broadeners  	: Default
+Ratios  		: 1.0
+Absorption cross section
+SciPy Voigt profile
+Temperature selected      : 300    K
+Pressure selected         : 1.0    bar
+Cutoff is                 : 100.0  cm⁻¹
+Threshold is              : None   cm⁻¹/(molecule cm⁻²)
+Wavenumber range selected : 0.0 cm⁻¹ - 30000.0 cm⁻¹
+Cross sections file saved.
+Cross sections plot saved.
+Running time on CPU       : 5.731792210999998 s
+Running time on system    : 3.402796745300293 s
+
+The program total running time:
+Running time on CPU       : 42.402132471 s
+Running time on system    : 34.68111515045166 s
+
+Finished!

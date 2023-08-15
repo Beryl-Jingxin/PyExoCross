@@ -40,7 +40,7 @@ GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %9s     %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
-ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.001
+ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.01
 ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30
                            
 
@@ -57,7 +57,7 @@ Compress(Y/N)                           Y                         If Y, save as 
 Temperature                             300
 Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.001          # If Y, default value 0.001
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 QNsFilter(Y/N)                          Y          par[+,+]   e/f[e,f]   v[1,;2,;,0;4,4;4,3]  
 
@@ -117,7 +117,7 @@ GlobalQNLabel                           v1       v2       v3
 GlobalQNFormat                          %2d      %2d      %2d
 LocalQNLabel                            J        Ka       Kc      F      Sym
 LocalQNFormat                           %3d      %3d      %3d     %5s    %1s
-ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.001
+ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.01
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30                      
 
 
@@ -134,7 +134,7 @@ Compress(Y/N)                           Y                         If Y, save as 
 Temperature                             300
 Range                                   0          12000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.01           # If Y, default value 0.001
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 QNsFilter(Y/N)                          Y          v1[1,]   v2[1,]   v3[1,0;1,1] 
 

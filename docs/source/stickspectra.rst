@@ -57,7 +57,7 @@ The intensity equation is:
     Temperature                             300
     Range                                   0          30000
     Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-    UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.001
+    UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.01
     Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
     QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,1;1,0;2,;,0]  
 
@@ -74,7 +74,7 @@ The intensity equation is:
     Temperature                             1000
     Range                                   1000       5000
     Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
-    UncFilter(Y/N)                          N          0.005          # If Y, default value 0.001
+    UncFilter(Y/N)                          N          0.005          # If Y, default value 0.01
     Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
     QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,1;1,0]  
 

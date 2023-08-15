@@ -1749,6 +1749,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         else:
             os.makedirs(ss_plot_folder, exist_ok=True)
         plt.figure(figsize=(12, 6))
+        plt.xlim([min_wn, max_wn])
         plt.ylim([1e-30, 10*max(I)])
         plt.vlines(v, 0, I, label='T = '+str(T)+' K', linewidth=0.4)
         plt.semilogy()
@@ -1812,6 +1813,7 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
         else:
             os.makedirs(ss_plot_folder, exist_ok=True)
         plt.figure(figsize=(12, 6))
+        plt.xlim([min_wn, max_wn])
         plt.ylim([1e-30, 10*max(I)])
         plt.vlines(v, 0, I, label='T = '+str(T)+' K', linewidth=0.4)
         plt.semilogy()
@@ -2746,7 +2748,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
         end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
         wngrid_start = wn_grid[start]
         wngrid_end = wn_grid[end-1]
-        for iquad in range(0, nquad):
+        for iquad in range(nquad):
             xi = roots[iquad]   
             bnormq.append(BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, xi))
         bnormqT =np.transpose(np.array(bnormq))
@@ -2756,7 +2758,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
             wn_grid_i = wn_grid[i]
             dv = ne.evaluate('wn_grid_i - v')
             lorenz = []
-            for iquad in range(0, nquad):
+            for iquad in range(nquad):
                 xi = roots[iquad] 
                 lorenz.append(BinnedVoigt_lorenz(dv, sigma, gamma, xi))
             lorenzT = np.transpose(np.array(lorenz))  
@@ -2772,7 +2774,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
             end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
             wngrid_start = wn_grid[start]
             wngrid_end = wn_grid[end-1]
-            for iquad in range(0, nquad):
+            for iquad in range(nquad):
                 xi = roots[iquad]   
                 bnormq.append(BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, _sigma, _gamma, xi))
             bnormqT =np.transpose(np.array(bnormq))
@@ -2782,7 +2784,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
                 wn_grid_i = wn_grid[i]
                 _dv = ne.evaluate('wn_grid_i - v')[filter]
                 lorenz = []
-                for iquad in range(0, nquad):
+                for iquad in range(nquad):
                     xi = roots[iquad]  
                     lorenz.append(BinnedVoigt_lorenz(_dv, _sigma, _gamma, xi))
                 lorenzT = np.transpose(np.array(lorenz))  
@@ -2793,7 +2795,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
         end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
         wngrid_start = wn_grid[start]
         wngrid_end = wn_grid[end-1]
-        for iquad in range(0, nquad):
+        for iquad in range(nquad):
             xi = roots[iquad]   
             bnormq.append(BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, xi))
         _xsec = np.zeros(shape=(end-start))
@@ -2808,7 +2810,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
                 _gamma = gamma[filter]
                 _coef = coef[filter]
                 lorenz = []
-                for iquad in range(0, nquad):
+                for iquad in range(nquad):
                     xi = roots[iquad]  
                     lorenz.append(BinnedVoigt_lorenz(_dv, _sigma, _gamma, xi))
                 bnormqT =np.transpose(np.array([bnormq[i][filter] for i in range(nquad)]))
@@ -2821,7 +2823,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
         end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
         wngrid_start = wn_grid[start]
         wngrid_end = wn_grid[end-1]
-        for iquad in range(0, nquad):
+        for iquad in range(nquad):
             xi = roots[iquad]   
             bnormq.append(BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, xi))
         _xsec = np.zeros(shape=(end-start))
@@ -2837,7 +2839,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
                 _gamma = gamma[filter]
                 _coef = coef[filter]
                 lorenz = []   
-                for iquad in range(0, nquad):
+                for iquad in range(nquad):
                     xi = roots[iquad]  
                     lorenz.append(BinnedVoigt_lorenz(_dv, _sigma, _gamma, xi))
                 bnormqT =np.transpose(np.array([bnormq[i][filter] for i in range(nquad)]))
@@ -2884,6 +2886,7 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
+            plt.xlim([min_wn, max_wn])
             plt.ylim([1e-30, 10*max(xsec)])
             plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
             plt.semilogy()
@@ -2927,6 +2930,7 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
+            plt.xlim([min_wl, max_wl])
             plt.ylim([1e-30, 10*max(xsec)])
             plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
             plt.semilogy()
@@ -3063,8 +3067,6 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
     save_xsec(wn_grid, xsec, database, profile_label)    
     t.end()
     pass
-
-# Get Results
 
 # Get Results
 def get_results(read_path): 
