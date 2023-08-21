@@ -1730,7 +1730,8 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         pass
     else:
         os.makedirs(ss_folder, exist_ok=True)
-    ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
+    ss_path = (ss_folder+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'
+               +str(min_wn)+'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.stick') 
     ss_colname = stick_spectra_df.columns
     fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f '+QNsfmf+' '+QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
@@ -1760,8 +1761,8 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         leg = plt.legend()                  # Get the legend object.
         for line in leg.get_lines():
             line.set_linewidth(1.0)         # Change the line width for the legend.
-        plt.savefig(ss_plot_folder+molecule+'__T'+str(T)+'__'+str(min_wn)
-                    +'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.png', dpi=500)
+        plt.savefig(ss_plot_folder+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'
+                    +str(min_wn)+'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.png', dpi=500)
         plt.show()
         print('Stick spectra plot saved.')
     t.end()
@@ -1795,7 +1796,8 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
         pass
     else:
         os.makedirs(ss_folder, exist_ok=True)
-    ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
+    ss_path = (ss_folder+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'
+               +str(min_wn)+'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.stick')    
     fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
     
@@ -1824,8 +1826,8 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
         leg = plt.legend()                  # Get the legend object.
         for line in leg.get_lines():
             line.set_linewidth(1.0)         # Change the line width for the legend.
-        plt.savefig(ss_plot_folder+molecule+'__T'+str(T)+'__'+str(min_wn)
-                    +'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.png', dpi=500)
+        plt.savefig(ss_plot_folder+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'
+                    +str(min_wn)+'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.png', dpi=500)
         plt.show()
         print('Stick spectra plot saved.')
     t.end()
@@ -2868,8 +2870,8 @@ def save_xsec(wn, xsec, database, profile_label):
         xsec_df = pd.DataFrame()
         xsec_df['wavenumber'] = wn
         xsec_df['cross-section'] = xsec
-        xsec_filename = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wn)+'-'+str(max_wn)+'__'
-                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
+        xsec_filename = (xsecs_foldername+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'+wn_wl+str(min_wn)
+                         +'-'+str(max_wn)+'__'+database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
         np.savetxt(xsec_filename, xsec_df, fmt="%12.6f %14.8E")
         print('Cross sections file saved.')
         if PlotCrossSectionYN == 'Y':
@@ -2897,8 +2899,8 @@ def save_xsec(wn, xsec, database, profile_label):
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wn)+'-'+str(max_wn)+'__'
-                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
+            plt.savefig(plots_foldername+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'+wn_wl+str(min_wn)+'-'
+                        +str(max_wn)+'__'+database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
             plt.show()
             print('Cross sections plot saved.')
     elif 'L' in wn_wl:
@@ -2912,8 +2914,8 @@ def save_xsec(wn, xsec, database, profile_label):
         xsec_df = pd.DataFrame()
         xsec_df['wavelength'] = wl
         xsec_df['cross-section'] = xsec
-        xsec_filename = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wl)+'-'+str(max_wl)+'__'
-                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
+        xsec_filename = (xsecs_foldername+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'+wn_wl+str(min_wl)
+                         +'-'+str(max_wl)+'__'+database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
         np.savetxt(xsec_filename, xsec_df, fmt="%12.6f %14.8E")
         print('Cross sections file saved.')       
         if PlotCrossSectionYN == 'Y':
@@ -2941,8 +2943,8 @@ def save_xsec(wn, xsec, database, profile_label):
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl+str(min_wl)+'-'+str(max_wl)+'__'
-                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
+            plt.savefig(plots_foldername+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'+wn_wl+str(min_wl)+'-'
+                        +str(max_wl)+'__'+database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
             plt.show()
             print('Cross sections plot saved.')
     else:

@@ -1,8 +1,8 @@
 nohup: ignoring input
 HITRAN database
-Molecule	: H2S 			Molecule ID	: 31 
+Molecule	    : H2S 			Molecule ID	    : 31 
 Isotopologue	: 1H2-32S 		Isotopologue ID	: 1 
-Dataset		: H2S-HITRAN
+Dataset		    : H2S-HITRAN
 Calculate stick spectra.
 Absorption cross section
 Stick spectra plot saved.

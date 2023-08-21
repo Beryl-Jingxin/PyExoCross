@@ -1,8 +1,8 @@
 nohup: ignoring input
 HITRAN database
-Molecule	: O2 			Molecule ID	: 7 
-Isotopologue	: 16O2 		Isotopologue ID	: 1 
-Dataset		: O2-HITRAN
+Molecule	    : O2 			Molecule ID	    : 7 
+Isotopologue	: 16O2 		    Isotopologue ID	: 1 
+Dataset		    : O2-HITRAN
 Calculate stick spectra.
 Emission stick spectra
 Stick spectra plot saved.
