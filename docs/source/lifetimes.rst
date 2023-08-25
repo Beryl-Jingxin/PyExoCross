@@ -16,7 +16,7 @@ The lifetimes equation is:
 .. code:: bash
 
     # Calculate lifetimes #
-    Compress(Y/N)                           Y                         If Y, save as .states.bz2 file; otherwise, save as .states file
+    Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 
 
 **Note**
