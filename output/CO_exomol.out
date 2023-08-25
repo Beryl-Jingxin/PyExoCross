@@ -4,28 +4,28 @@ Molecule		: CO
 Isotopologue	: 12C-16O 
 Dataset			: Li2015
 Reading states ...
-Running time on CPU       : 1.0557113979999997 s
-Running time on system    : 0.016611099243164062 s
+Running time on CPU       : 1.1528126600000004 s
+Running time on system    : 0.018146753311157227 s
 Finished reading states!
 
 Reading part transitions ...
 Reading transitions:   0%|                                                    | 0/1 [00:00<?, ?it/s]
  /mnt/data/exomol/exomol3_data/CO/12C-16O/Li2015/12C-16O__Li2015.trans.bz2
-Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  4.07it/s]Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  4.07it/s]
-Running time on CPU       : 4.460516760000001 s
-Running time on system    : 0.2507915496826172 s
+Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  3.97it/s]Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  3.97it/s]
+Running time on CPU       : 1.128001267000002 s
+Running time on system    : 0.2574784755706787 s
 Finished reading part transitions!
 
 Calculate stick spectra.
 Emission stick spectra
 Stick spectra plot saved.
-Running time on CPU       : 7.488184715999999 s
-Running time on system    : 7.61516547203064 s
+Running time on CPU       : 1.7885790959999994 s
+Running time on system    : 1.802480936050415 s
 Stick spectra has been saved!
 
 
 The program total running time:
-Running time on CPU       : 13.339927070999998 s
-Running time on system    : 7.887956619262695 s
+Running time on CPU       : 4.505936143999998 s
+Running time on system    : 2.085075616836548 s
 
 Finished!

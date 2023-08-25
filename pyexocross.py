@@ -141,7 +141,7 @@ def inp_para(inp_filepath):
     if Lifetimes != 0:
         CompressYN = inp_df[col0.isin(['Compress(Y/N)'])][1].values[0].upper()[0]
     else:
-        CompressYN = 'None'
+        CompressYN = 'N'
     
     # Calculate stick spectra or cross sections 
     if StickSpectra + CrossSections != 0:
@@ -197,8 +197,17 @@ def inp_para(inp_filepath):
     # Stick spectra
     if StickSpectra != 0:
         PlotStickSpectraYN = inp_df[col0.isin(['PlotStickSpectra(Y/N)'])][1].values[0].upper()[0]
+        if PlotStickSpectraYN == 'Y':
+            _limitYaxisStick = inp_df[col0.isin(['Y-axisLimitStick'])][1].values[0]
+            if _limitYaxisStick == '#':
+                limitYaxisStick = 1e-30
+            elif pd.isnull(_limitYaxisStick) == True:
+                limitYaxisStick = 1e-30
+            else:
+                limitYaxisStick = float(_limitYaxisStick)
     else:
         PlotStickSpectraYN = 'None'
+        limitYaxisStick = 1e-30
 
     # Cross sections
     if CrossSections != 0:
@@ -259,6 +268,14 @@ def inp_para(inp_filepath):
             raise ImportError("Please type the correct Lorentzian HWHM choice 'Y' or 'N' into the input file.")
         # Plot 
         PlotCrossSectionYN = inp_df[col0.isin(['PlotCrossSection(Y/N)'])][1].values[0].upper()[0]  
+        if PlotCrossSectionYN == 'Y':
+            _limitYaxisXsec = inp_df[col0.isin(['Y-axisLimitXsec'])][1].values[0]
+            if _limitYaxisXsec == '#':
+                limitYaxisXsec = 1e-30
+            elif pd.isnull(_limitYaxisXsec) == True:
+                limitYaxisXsec = 1e-30
+            else:
+                limitYaxisXsec = float(_limitYaxisXsec)
     else:
         bin_size = 'None'
         N_point = 'None'
@@ -272,7 +289,8 @@ def inp_para(inp_filepath):
         profile = 'None'
         wn_wl = 'None'
         PlotCrossSectionYN = 'None'
-        
+        limitYaxisXsec = 1e-30
+
     # Molecule and isotopologue ID, abundance, mass uncertainty, lifetime and g-factor           
     molecule_id = int(mol_iso_id/10)
     isotopologue_id = mol_iso_id - molecule_id * 10
@@ -307,7 +325,10 @@ def inp_para(inp_filepath):
             Ntemp, Tmax, CompressYN, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
             cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
-            check_uncertainty, check_lifetime, check_gfactor, PlotStickSpectraYN, PlotCrossSectionYN)
+            check_uncertainty, check_lifetime, check_gfactor, 
+            PlotStickSpectraYN, limitYaxisStick, PlotCrossSectionYN, limitYaxisXsec)
+
+
 
 # Constants and parameters
 # Parameters for calculating
@@ -329,7 +350,8 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
  Ntemp, Tmax, CompressYN, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
  cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
- check_uncertainty, check_lifetime, check_gfactor, PlotStickSpectraYN, PlotCrossSectionYN) = inp_para(inp_filepath)
+ check_uncertainty, check_lifetime, check_gfactor,
+ PlotStickSpectraYN, limitYaxisStick, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
 
 # Constants
 c2InvTref = c2 / Tref                 # c2 / T_ref (cm)
@@ -1715,7 +1737,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     if abs_emi == 'Em':
         print('Emission stick spectra')
         I = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
-    stick_st_dic = {'v':v, 'I':I, "J'":Jp, "E'":Ep, 'J"':Jpp, 'E"':Epp}
+    stick_st_dic = {'v':v, 'S':I, "J'":Jp, "E'":Ep, 'J"':Jpp, 'E"':Epp}
     stick_st_df = pd.DataFrame(stick_st_dic)
     stick_spectra_df = pd.concat([stick_st_df, stick_qn_df], axis='columns')
     if threshold != 'None':
@@ -1751,8 +1773,8 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
             os.makedirs(ss_plot_folder, exist_ok=True)
         plt.figure(figsize=(12, 6))
         plt.xlim([min_wn, max_wn])
-        plt.ylim([1e-30, 10*max(I)])
-        plt.vlines(v, 0, I, label='T = '+str(T)+' K', linewidth=0.4)
+        plt.ylim([limitYaxisStick, 10*max(I)])
+        plt.vlines(stick_spectra_df['v'], 0, stick_spectra_df['S'], label='T = '+str(T)+' K', linewidth=0.4)
         plt.semilogy()
         #plt.title(database+' '+molecule+' intensity') 
         plt.xlabel('Wavenumber, cm$^{-1}$')
@@ -1816,8 +1838,8 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
             os.makedirs(ss_plot_folder, exist_ok=True)
         plt.figure(figsize=(12, 6))
         plt.xlim([min_wn, max_wn])
-        plt.ylim([1e-30, 10*max(I)])
-        plt.vlines(v, 0, I, label='T = '+str(T)+' K', linewidth=0.4)
+        plt.ylim([limitYaxisStick, 10*max(I)])
+        plt.vlines(stick_spectra_df['v'], 0, stick_spectra_df['S'], label='T = '+str(T)+' K', linewidth=0.4)
         plt.semilogy()
         #plt.title(database+' '+molecule+' intensity') 
         plt.xlabel('Wavenumber, cm$^{-1}$')
@@ -2889,7 +2911,7 @@ def save_xsec(wn, xsec, database, profile_label):
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
             plt.xlim([min_wn, max_wn])
-            plt.ylim([1e-30, 10*max(xsec)])
+            plt.ylim([limitYaxisXsec, 10*max(xsec)])
             plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
@@ -2933,7 +2955,7 @@ def save_xsec(wn, xsec, database, profile_label):
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
             plt.xlim([min_wl, max_wl])
-            plt.ylim([1e-30, 10*max(xsec)])
+            plt.ylim([limitYaxisXsec, 10*max(xsec)])
             plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 

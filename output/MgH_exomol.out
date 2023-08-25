@@ -4,57 +4,23 @@ Molecule		: MgH
 Isotopologue	: 24Mg-1H 
 Dataset			: XAB
 Reading states ...
-Running time on CPU       : 0.02254216600000003 s
-Running time on system    : 0.03702855110168457 s
+Running time on CPU       : 1.4401957569999997 s
+Running time on system    : 0.022628307342529297 s
 Finished reading states!
-
-Reading all transitions ...
-Reading transitions:   0%|                                                    | 0/1 [00:00<?, ?it/s]Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  4.66it/s]Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  4.65it/s]
-Running time on CPU       : 0.20056967700000006 s
-Running time on system    : 0.22101902961730957 s
-Finished reading all transitions!
 
 Reading part transitions ...
 Reading transitions:   0%|                                                    | 0/1 [00:00<?, ?it/s]
  /mnt/data/exomol/exomol3_data/MgH/24Mg-1H/XAB/24Mg-1H__XAB.trans.bz2
-Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.09it/s]Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.08it/s]
-Running time on CPU       : 0.19070400100000007 s
-Running time on system    : 0.19800734519958496 s
+Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.63it/s]Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.62it/s]
+Running time on CPU       : 3.923766647999999 s
+Running time on system    : 0.18158292770385742 s
 Finished reading part transitions!
-
-Calculate partition functions.
-Running time on CPU       : 0.328535402 s
-Running time on system    : 0.33705973625183105 s
-Partition functions has been saved!
-
-Calculate specific heats.
-Running time on CPU       : 1.028119219 s
-Running time on system    : 1.0338714122772217 s
-Specific heats has been saved!
-
-Calculate lifetimes.
-Running time on CPU       : 0.054431544999999915 s
-Running time on system    : 0.05405759811401367 s
-Lifetimes has been saved!
-
-Calculate cooling functions.
-Calculating:   0%|                                                         | 0/5000 [00:00<?, ?it/s]Calculating:   1%|▍                                              | 47/5000 [00:00<00:10, 459.83it/s]Calculating:   2%|▉                                              | 97/5000 [00:00<00:10, 481.83it/s]Calculating:   3%|█▍                                            | 156/5000 [00:00<00:09, 528.44it/s]Calculating:   4%|█▉                                            | 210/5000 [00:00<00:09, 532.15it/s]Calculating:   5%|██▍                                           | 264/5000 [00:00<00:09, 524.95it/s]Calculating:   6%|██▉                                           | 317/5000 [00:00<00:09, 516.98it/s]Calculating:   7%|███▍                                          | 369/5000 [00:00<00:09, 504.82it/s]Calculating:   8%|███▊                                          | 420/5000 [00:00<00:09, 506.33it/s]Calculating:   9%|████▎                                         | 472/5000 [00:00<00:08, 507.84it/s]Calculating:  11%|████▉                                         | 531/5000 [00:01<00:08, 530.25it/s]Calculating:  12%|█████▍                                        | 587/5000 [00:01<00:08, 535.99it/s]Calculating:  13%|█████▉                                        | 642/5000 [00:01<00:08, 539.02it/s]Calculating:  14%|██████▍                                       | 702/5000 [00:01<00:07, 555.72it/s]Calculating:  15%|██████▉                                       | 759/5000 [00:01<00:07, 559.96it/s]Calculating:  16%|███████▌                                      | 819/5000 [00:01<00:07, 569.42it/s]Calculating:  18%|████████                                      | 879/5000 [00:01<00:07, 575.99it/s]Calculating:  19%|████████▌                                     | 937/5000 [00:01<00:07, 573.54it/s]Calculating:  20%|█████████▏                                    | 995/5000 [00:01<00:07, 567.52it/s]Calculating:  21%|█████████▍                                   | 1052/5000 [00:01<00:06, 566.24it/s]Calculating:  22%|█████████▉                                   | 1109/5000 [00:02<00:07, 553.05it/s]Calculating:  23%|██████████▍                                  | 1165/5000 [00:02<00:07, 546.15it/s]Calculating:  24%|███████████                                  | 1223/5000 [00:02<00:06, 555.23it/s]Calculating:  26%|███████████▌                                 | 1281/5000 [00:02<00:06, 562.25it/s]Calculating:  27%|████████████                                 | 1342/5000 [00:02<00:06, 574.97it/s]Calculating:  28%|████████████▌                                | 1400/5000 [00:02<00:06, 565.63it/s]Calculating:  29%|█████████████▏                               | 1460/5000 [00:02<00:06, 573.24it/s]Calculating:  30%|█████████████▋                               | 1520/5000 [00:02<00:06, 579.52it/s]Calculating:  32%|██████████████▏                              | 1579/5000 [00:02<00:05, 582.45it/s]Calculating:  33%|██████████████▊                              | 1639/5000 [00:02<00:05, 586.86it/s]Calculating:  34%|███████████████▎                             | 1698/5000 [00:03<00:05, 584.56it/s]Calculating:  35%|███████████████▊                             | 1757/5000 [00:03<00:05, 585.42it/s]Calculating:  36%|████████████████▎                            | 1816/5000 [00:03<00:05, 586.66it/s]Calculating:  38%|████████████████▉                            | 1875/5000 [00:03<00:05, 586.39it/s]Calculating:  39%|█████████████████▍                           | 1935/5000 [00:03<00:05, 588.10it/s]Calculating:  40%|█████████████████▉                           | 1994/5000 [00:03<00:05, 586.00it/s]Calculating:  41%|██████████████████▍                          | 2053/5000 [00:03<00:05, 585.79it/s]Calculating:  42%|███████████████████                          | 2114/5000 [00:03<00:04, 591.09it/s]Calculating:  43%|███████████████████▌                         | 2174/5000 [00:03<00:04, 591.06it/s]Calculating:  45%|████████████████████                         | 2235/5000 [00:03<00:04, 594.14it/s]Calculating:  46%|████████████████████▋                        | 2296/5000 [00:04<00:04, 597.95it/s]Calculating:  47%|█████████████████████▏                       | 2357/5000 [00:04<00:04, 599.60it/s]Calculating:  48%|█████████████████████▊                       | 2418/5000 [00:04<00:04, 601.74it/s]Calculating:  50%|██████████████████████▎                      | 2480/5000 [00:04<00:04, 604.19it/s]Calculating:  51%|██████████████████████▊                      | 2541/5000 [00:04<00:04, 605.79it/s]Calculating:  52%|███████████████████████▍                     | 2602/5000 [00:04<00:03, 605.97it/s]Calculating:  53%|███████████████████████▉                     | 2663/5000 [00:04<00:03, 603.44it/s]Calculating:  54%|████████████████████████▌                    | 2724/5000 [00:04<00:03, 605.13it/s]Calculating:  56%|█████████████████████████                    | 2785/5000 [00:04<00:03, 606.48it/s]Calculating:  57%|█████████████████████████▌                   | 2846/5000 [00:04<00:03, 604.66it/s]Calculating:  58%|██████████████████████████▏                  | 2907/5000 [00:05<00:03, 605.45it/s]Calculating:  59%|██████████████████████████▋                  | 2968/5000 [00:05<00:03, 606.42it/s]Calculating:  61%|███████████████████████████▎                 | 3029/5000 [00:05<00:03, 607.29it/s]Calculating:  62%|███████████████████████████▊                 | 3090/5000 [00:05<00:03, 606.14it/s]Calculating:  63%|████████████████████████████▎                | 3151/5000 [00:05<00:03, 606.44it/s]Calculating:  64%|████████████████████████████▉                | 3212/5000 [00:05<00:02, 605.71it/s]Calculating:  65%|█████████████████████████████▍               | 3274/5000 [00:05<00:02, 607.03it/s]Calculating:  67%|██████████████████████████████               | 3335/5000 [00:05<00:02, 604.85it/s]Calculating:  68%|██████████████████████████████▌              | 3396/5000 [00:05<00:02, 601.54it/s]Calculating:  69%|███████████████████████████████              | 3457/5000 [00:05<00:02, 602.93it/s]Calculating:  70%|███████████████████████████████▋             | 3518/5000 [00:06<00:02, 603.48it/s]Calculating:  72%|████████████████████████████████▏            | 3579/5000 [00:06<00:02, 590.23it/s]Calculating:  73%|████████████████████████████████▊            | 3639/5000 [00:06<00:02, 586.87it/s]Calculating:  74%|█████████████████████████████████▎           | 3698/5000 [00:06<00:02, 587.75it/s]Calculating:  75%|█████████████████████████████████▊           | 3758/5000 [00:06<00:02, 591.12it/s]Calculating:  76%|██████████████████████████████████▎          | 3818/5000 [00:06<00:02, 587.28it/s]Calculating:  78%|██████████████████████████████████▉          | 3877/5000 [00:06<00:01, 577.57it/s]Calculating:  79%|███████████████████████████████████▍         | 3937/5000 [00:06<00:01, 582.36it/s]Calculating:  80%|███████████████████████████████████▉         | 3998/5000 [00:06<00:01, 590.13it/s]Calculating:  81%|████████████████████████████████████▌        | 4059/5000 [00:07<00:01, 595.19it/s]Calculating:  82%|█████████████████████████████████████        | 4120/5000 [00:07<00:01, 598.71it/s]Calculating:  84%|█████████████████████████████████████▋       | 4181/5000 [00:07<00:01, 601.33it/s]Calculating:  85%|██████████████████████████████████████▏      | 4242/5000 [00:07<00:01, 603.44it/s]Calculating:  86%|██████████████████████████████████████▋      | 4303/5000 [00:07<00:01, 604.07it/s]Calculating:  87%|███████████████████████████████████████▎     | 4364/5000 [00:07<00:01, 603.63it/s]Calculating:  88%|███████████████████████████████████████▊     | 4425/5000 [00:07<00:00, 602.76it/s]Calculating:  90%|████████████████████████████████████████▎    | 4486/5000 [00:07<00:00, 604.23it/s]Calculating:  91%|████████████████████████████████████████▉    | 4547/5000 [00:07<00:00, 605.33it/s]Calculating:  92%|█████████████████████████████████████████▍   | 4608/5000 [00:07<00:00, 605.49it/s]Calculating:  93%|██████████████████████████████████████████   | 4669/5000 [00:08<00:00, 606.19it/s]Calculating:  95%|██████████████████████████████████████████▌  | 4730/5000 [00:08<00:00, 606.97it/s]Calculating:  96%|███████████████████████████████████████████  | 4791/5000 [00:08<00:00, 607.45it/s]Calculating:  97%|███████████████████████████████████████████▋ | 4852/5000 [00:08<00:00, 607.99it/s]Calculating:  98%|████████████████████████████████████████████▏| 4913/5000 [00:08<00:00, 608.14it/s]Calculating:  99%|████████████████████████████████████████████▊| 4974/5000 [00:08<00:00, 608.14it/s]Calculating: 100%|█████████████████████████████████████████████| 5000/5000 [00:08<00:00, 583.37it/s]
-Running time on CPU       : 8.646193552 s
-Running time on system    : 8.705223083496094 s
-Cooling functions has been saved!
-
-Convert data from the ExoMol format to the HITRAN format.
-INFO: Pandarallel will run on 8 workers.
-INFO: Pandarallel will use Memory file system to transfer data between the main process and workers.
-Running time on CPU       : 1.9776667139999997 s
-Running time on system    : 2.378758430480957 s
-Converted par file has been saved!
 
 Calculate stick spectra.
 Absorption stick spectra
 Stick spectra plot saved.
-Running time on CPU       : 14.632167908999998 s
-Running time on system    : 15.000147819519043 s
+Running time on CPU       : 17.95734861 s
+Running time on system    : 17.483417510986328 s
 Stick spectra has been saved!
 
 Calculate cross-sections.
@@ -69,11 +35,11 @@ Threshold is              : None   cm⁻¹/(molecule cm⁻²)
 Wavenumber range selected : 0.0 cm⁻¹ - 30000.0 cm⁻¹
 Cross sections file saved.
 Cross sections plot saved.
-Running time on CPU       : 5.585974786999998 s
-Running time on system    : 3.4098169803619385 s
+Running time on CPU       : 5.547128665999999 s
+Running time on system    : 3.3732528686523438 s
 
 The program total running time:
-Running time on CPU       : 32.685416714 s
-Running time on system    : 31.39448046684265 s
+Running time on CPU       : 29.138002815999997 s
+Running time on system    : 21.066349029541016 s
 
 Finished!

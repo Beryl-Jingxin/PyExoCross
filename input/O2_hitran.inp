@@ -37,3 +37,4 @@ QNsFilter(Y/N)                          Y          v1[1,0]
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
+Y-axisLimitStick                        1e-40                     # Default value is 1e-30
