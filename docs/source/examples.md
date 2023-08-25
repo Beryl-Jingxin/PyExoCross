@@ -141,6 +141,7 @@ QNsFilter(Y/N)                          Y          v1[1,]   v2[1,]   v3[1,0;1,1]
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
+Y-axisLimitStick                        1e-40                     # Default value is 1e-30
 
 
 # Calculate cross sections #
@@ -154,4 +155,5 @@ Cutoff(Y/N)                             Y          25             # If Y, defaul
 DopplerHWHM(Y/N)                        Y          0.321          # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   N
+Y-axisLimitXsec                                                   # Default value is 1e-30
 ```

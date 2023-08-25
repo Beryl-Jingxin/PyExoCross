@@ -15,6 +15,8 @@ Cross sections
 
 If you want a figure of corss sections, please set `Y` for `PlotCrossSection(Y/N)`.
 
+And if you want set the lower limit of y-axis for plotting, please write after `Y-axisLimitXsec`, otherwise, the default lower limit y-axis is 1e-30.
+
 *Example*
 
 ```
@@ -28,6 +30,7 @@ Pressure                                1
 Npoints/BinSize                         Npoints    10001           
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 PlotCrossSection(Y/N)                   Y
+Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
 ```
 
 ## Filters
@@ -129,6 +132,7 @@ LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzi
 QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
 QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
 
+
 # Calculate stick spectra or cross sections #
 Temperature                             300
 Range                                   0          30000
@@ -136,6 +140,7 @@ Absorption/Emission                     Absorption                # 'Absorption'
 UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
 QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,1;1,0;2,]  
+
 
 # Calculate cross sections #
 Pressure                                1
@@ -148,12 +153,14 @@ Cutoff(Y/N)                             Y          100            # If Y, defaul
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y
+Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
 ```
 
 ```bash
 # Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
 QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+
 
 # Calculate stick spectra or cross sections #
 Temperature                             1000
@@ -162,6 +169,7 @@ Absorption/Emission                     Emission                 # 'Absorption' 
 UncFilter(Y/N)                          No         0.01          # If Y, default value 0.01
 Threshold(Y/N)                          NO         1e-30         # If Y, default value 1e-30
 QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,;2,;,0;4,4;4,3]  
+
 
 # Calculate cross sections #
 Pressure                                0.1
@@ -173,5 +181,6 @@ Wavenumber(wn)/wavelength(wl)           wl                        # 'wn' or 'wl'
 Cutoff(Y/N)                             N          100            # If Y, default value 25
 DopplerHWHM(Y/N)                        n          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     n          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   n
+PlotCrossSection(Y/N)                   NO
+Y-axisLimitXsec                                                   # Default value is 1e-30
 ```

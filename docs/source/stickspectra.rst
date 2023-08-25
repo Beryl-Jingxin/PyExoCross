@@ -1,8 +1,17 @@
 Stick spectra
 =============
 
-Please provide the line lists, ``Temperature``, wavenumber ``Range``, 
-uncertainty filter ``UncFilter`` and ``PlotStickSpectra(Y/N)``.
+``Temperature``: Please provide temperature in unit K.
+
+``Range``: Give two values as the minimum and maximum of the wavenumber range. No ``,`` or ``;`` 
+between these two numbers, just leave blank here.
+
+``Absorption/Emission``: Choose ``Absorption`` or ``Emission``.
+
+If you want a figure of corss sections, please set ``Y`` for ``PlotCrossSection(Y/N)``.
+
+And if you want set the lower limit of y-axis for plotting, please write after ``Y-axisLimitStick``, 
+otherwise, the default lower limit y-axis is 1e-30.
 
 Filters
 :::::::
@@ -53,6 +62,7 @@ The intensity equation is:
     QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
     QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
 
+
     # Calculate stick spectra or cross sections #
     Temperature                             300
     Range                                   0          30000
@@ -61,14 +71,17 @@ The intensity equation is:
     Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
     QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,1;1,0;2,;,0]  
 
+
     # Calculate stick spectra #
     PlotStickSpectra(Y/N)                   Y
+    Y-axisLimitStick                        1e-40                     # Default value is 1e-30
 
 .. code:: bash
 
     # Quantum numbers for conversion, stick spectra and cross sections #
     QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
     QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+
 
     # Calculate stick spectra or cross sections #
     Temperature                             1000
@@ -78,5 +91,7 @@ The intensity equation is:
     Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
     QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,1;1,0]  
 
+
     # Calculate stick spectra #
     PlotStickSpectra(Y/N)                   N
+    Y-axisLimitStick                                                  # Default value is 1e-30
