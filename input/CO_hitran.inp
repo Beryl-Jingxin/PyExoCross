@@ -1,22 +1,22 @@
 # Basic information #
 Database                                HITRAN
-Molecule                                NO
-Isotopologue                            14N-16O
-Dataset                                 NO-HITRAN
-MolIsoID                                81
+Molecule                                CO
+Isotopologue                            12C-16O
+Dataset                                 CO-HITRAN
+MolIsoID                                51
 
 
 # File path #
-ReadPath                                /home/jingxin/data/HITRAN/NO.par
+ReadPath                                /home/jingxin/data/HITRAN/CO.par
 SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
 Conversion                              1
-PartitionFunctions                      1
-SpecificHeats                           1
-CoolingFunctions                        1
-Lifetimes                               1
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
 StickSpectra                            1
 CrossSections                           1
 
@@ -43,7 +43,7 @@ Tmax                                    5000                      # Maximal temp
 
 
 # Calculate lifetimes #
-Compress(Y/N)                           N                         # If Y, save as .states.bz2 file; otherwise, save as .states file
+Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 
 
 # Calculate stick spectra or cross sections #

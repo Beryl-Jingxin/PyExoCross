@@ -21,6 +21,8 @@ warnings.simplefilter("ignore", np.ComplexWarning)
 pd.options.mode.chained_assignment = None
 import matplotlib as mpl
 mpl.rcParams['agg.path.chunksize'] = 10000
+from pandarallel import pandarallel
+pandarallel.initialize(nb_workers=4,progress_bar=False)    # Initialize.
 
 # The input file path
 def parse_args():

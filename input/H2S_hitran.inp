@@ -12,7 +12,7 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-Conversion                              0
+Conversion                              1
 PartitionFunctions                      0
 SpecificHeats                           0
 CoolingFunctions                        0
@@ -28,7 +28,7 @@ QNsformat                               %2d    %2d   %2d    %3d    %3d   %5s   %
 
 # Conversion #
 ConversionFormat                        2  
-ConversionFrequncyRange                 0         12000      
+ConversionFrequncyRange                 0          12000      
 GlobalQNLabel                           v1       v2       v3
 GlobalQNFormat                          %2d      %2d      %2d
 LocalQNLabel                            J        Ka       Kc      F      Sym
