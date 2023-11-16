@@ -80,6 +80,7 @@ def inp_para(inp_filepath):
     PartitionFunctions = int(inp_df[col0.isin(['PartitionFunctions'])][1])
     CoolingFunctions = int(inp_df[col0.isin(['CoolingFunctions'])][1])
     Lifetimes = int(inp_df[col0.isin(['Lifetimes'])][1])
+    OscillatorStrengths = int(inp_df[col0.isin(['OscillatorStrengths'])][1])
     SpecificHeats = int(inp_df[col0.isin(['SpecificHeats'])][1])
     StickSpectra = int(inp_df[col0.isin(['StickSpectra'])][1])
     CrossSections = int(inp_df[col0.isin(['CrossSections'])][1])
@@ -123,7 +124,7 @@ def inp_para(inp_filepath):
     else:
         ConversionFormat = 0
         ConversionMinFreq = 0
-        ConversionMaxFreq = 0
+        ConversionMaxFreq = 1e20
         GlobalQNLabel_list = []
         GlobalQNFormat_list = []
         LocalQNLabel_list = []
@@ -144,6 +145,14 @@ def inp_para(inp_filepath):
         CompressYN = inp_df[col0.isin(['Compress(Y/N)'])][1].values[0].upper()[0]
     else:
         CompressYN = 'N'
+        
+    # Calculate oscillator strengths
+    if OscillatorStrengths != 0:
+        fgORf = inp_df[col0.isin(['fg/f'])][1].values[0].upper()
+        Ncolumns = int(inp_df[col0.isin(['Ncolumns'])][1])      # Number of columns in result file
+    else:
+        fgORf = 'FG'
+        Ncolumns = 3
     
     # Calculate stick spectra or cross sections 
     if StickSpectra + CrossSections != 0:
@@ -187,7 +196,7 @@ def inp_para(inp_filepath):
     else:
         T = 0
         min_wn = 0
-        max_wn = 0
+        max_wn = 1e20
         abs_emi = 'None'
         UncFilter = 'None'
         threshold = 'None'
@@ -259,13 +268,13 @@ def inp_para(inp_filepath):
             else:
                 raise ImportError("Please type the correct Doppler HWHM choice 'Y' or 'N' into the input file.")
         else:
-            raise ImportError("Please type the correct line profile.")
+            alpha_HWHM = 'None'
         # Lorentzian HWHM 
         LorentzianHWHMYN = inp_df[col0.isin(['LorentzianHWHM(Y/N)'])][1].values[0].upper()[0]  
         if LorentzianHWHMYN == 'Y':
             gamma_HWHM = float(inp_df[col0.isin(['LorentzianHWHM(Y/N)'])][2])
         elif LorentzianHWHMYN == 'N':
-            gamma_HWHM = 'None'
+            gamma_HWHM = 'None' 
         else:
             raise ImportError("Please type the correct Lorentzian HWHM choice 'Y' or 'N' into the input file.")
         # Plot 
@@ -306,6 +315,10 @@ def inp_para(inp_filepath):
             check_uncertainty = int(def_df[def_df['2'].isin(['Uncertainty'])]['0'].values[0])
         else:
             check_uncertainty = 0
+        if def_df.to_string().find('Predissociative') != -1:
+            check_predissoc = int(def_df[def_df['2'].isin(['Predissociative'])]['0'].values[0])
+        else:
+            check_predissoc = 0
         check_lifetime = int(def_df[def_df['2'].isin(['Lifetime'])]['0'].values[0])
         check_gfactor = int(def_df[def_df['3'].isin(['g-factor'])]['0'].values[0])
     elif database == 'HITRAN':
@@ -315,22 +328,21 @@ def inp_para(inp_filepath):
         abundance = float(iso_meta_row['Abundance'][0].replace('\xa0×\xa010','E'))
         mass = float(iso_meta_row['Molar Mass /g·mol-1'])                   # HITRAN molar mass (g/mol)
         check_uncertainty = 0
+        check_predissoc = 0
         check_lifetime = 0
         check_gfactor = 0
     else:
         raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")
     
     return (database, molecule, isotopologue, dataset, read_path, save_path, 
-            Conversion, PartitionFunctions, CoolingFunctions, Lifetimes, SpecificHeats, StickSpectra, CrossSections,
+            Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
             ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
-            Ntemp, Tmax, CompressYN, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+            Ntemp, Tmax, CompressYN, fgORf, Ncolumns, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
             cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
-            check_uncertainty, check_lifetime, check_gfactor, 
+            check_uncertainty, check_lifetime, check_gfactor, check_predissoc, 
             PlotStickSpectraYN, limitYaxisStick, PlotCrossSectionYN, limitYaxisXsec)
-
-
 
 # Constants and parameters
 # Parameters for calculating
@@ -346,13 +358,13 @@ R = ac.R.to('J / (K mol)').value    # Molar gas constant (J/(K mol))
 c2 = h * c / kB                     # Second radiation constant (cm K)
 
 (database, molecule, isotopologue, dataset, read_path, save_path, 
- Conversion, PartitionFunctions, CoolingFunctions, Lifetimes, SpecificHeats, StickSpectra, CrossSections,
+ Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
  ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
- Ntemp, Tmax, CompressYN, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+ Ntemp, Tmax, CompressYN, fgORf, Ncolumns, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
  cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
- check_uncertainty, check_lifetime, check_gfactor,
+ check_uncertainty, check_lifetime, check_gfactor, check_predissoc, 
  PlotStickSpectraYN, limitYaxisStick, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
 
 # Constants
@@ -364,6 +376,7 @@ SqrtPI = np.sqrt(np.pi)
 Sqrtln2 = np.sqrt(np.log(2))
 OneminSqrtPIln2 = 1 - np.sqrt(np.pi * np.log(2))
 Negln2 = -np.log(2)
+PI4c = np.pi * 4 * c
 Inv8Pic = 1 / (8 * np.pi * c)         # 8 * pi * c (s/cm)
 Inv4Pi = 1 / (4 * np.pi)
 Inv2ln2 = 1 / (2 * np.log(2))
@@ -404,6 +417,11 @@ def cal_Ep_hitran(hitran_df):
 def cal_Jp(Fp, Fpp, Jpp):
     Jp = ne.evaluate('Fp + Fpp - Jpp')
     return(Jp)
+
+# Calculate F
+def cal_F(g):
+    F = ne.evaluate('(g - 1) * 0.5')
+    return(F)
 
 # Read input files
 # Read ExoMol database files
@@ -759,7 +777,7 @@ def localQNgroups(molecule,isotopologue):
                       'llabel': ['none','Br1','N','Br2','J','F','M'],
                       'lformat':['%1s','%1s','%3d','%1s','%3d','%5s','%1s']}
     localQNgroup7a = {'group':['NO','ClO'],
-                      'ulabel':['m','none','F'],
+                      'ulabel':['none','none','F'],     # m, none, F
                       'uformat':['%1s','%9s','%5s'],
                       'llabel': ['none','Br','J','Sym','F'],
                       'lformat':['%2s','%2s','%5.1f','%1s','%5s']}
@@ -792,112 +810,98 @@ def localQNgroups(molecule,isotopologue):
         LocalQNlowerFormats = LocalQNFormat_list     
     return(LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats)
 
-def convert_J_hitran(LQNu_df, LQNl_df, LocalQNupperLabels):
-    Jpp = pd.to_numeric(LQNl_df['J'].values, errors='coerce')
-    Jpp_df = pd.DataFrame(Jpp,columns=['Jpp'])
-    if 'J' not in LocalQNupperLabels:
-        if 'F' in LocalQNupperLabels:
-            Fp = pd.to_numeric(LQNu_df['F'].values, errors='coerce')
-            Fpp = pd.to_numeric(LQNl_df['F'].values, errors='coerce')
-            Jp = cal_Jp(Fp, Fpp, Jpp)
-        else:
-            Jp = [' ']*len(Jpp)
-        LocalQNupperLabels = LocalQNupperLabels + ['J']    
-        LQNu_df['J'] = Jp
-    else:
-        Jp = pd.to_numeric(LQNu_df['J'].values, errors='coerce')
-    return(LocalQNupperLabels, LQNu_df, Jpp_df, Jp)
-
 def separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerLabels,
                        GlobalQNFormats,LocalQNupperFormats,LocalQNlowerFormats):
-    GQN_format = list(map(int, list(map(float, (str(GlobalQNFormats).replace("'%","").replace("[","")
-                                                .replace("']","").replace("',","").replace('s','').replace('d','')
-                                                .replace('f','').replace('e','').split(' '))))))
-    LQNu_format = list(map(int, list(map(float, (str(LocalQNupperFormats).replace("'%","").replace("[","")
-                                                .replace("']","").replace("',","").replace('s','').replace('d','')
-                                                .replace('f','').replace('e','').split(' '))))))
-    LQNl_format = list(map(int, list(map(float, (str(LocalQNlowerFormats).replace("'%","").replace("[","")
-                                                .replace("']","").replace("',","").replace('s','').replace('d','')
-                                                .replace('f','').replace('e','').split(' ')))))) 
+    GlobalQNLabels,GlobalQNFormats = globalQNclasses(molecule,isotopologue)
+    LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats = localQNgroups(molecule,isotopologue)
+    GQN_format = [int(s) for s in str(GlobalQNFormats).replace('.1','') if s.isdigit()]
+    LQNu_format = [int(s) for s in str(LocalQNupperFormats).replace('.1','') if s.isdigit()]
+    LQNl_format = [int(s) for s in str(LocalQNlowerFormats).replace('.1','') if s.isdigit()]
+    hitran_df['Qp'] = [x.replace(' .5','0.5') for x in hitran_df['Qp'].values]
+    hitran_df['Qpp'] = [x.replace(' .5','0.5') for x in hitran_df['Qpp'].values]
+    hitran_df['Vp'] = [x.replace(' .5','0.5') for x in hitran_df['Vp'].values]
+    hitran_df['Vpp'] = [x.replace(' .5','0.5') for x in hitran_df['Vpp'].values]
     # Global quantum numbers    
-    GQNu_df = pd.DataFrame()  
-    GQNl_df = pd.DataFrame()  
     n_GQN = len(GlobalQNLabels)
-    reverse_GQNLabel = list(reversed(GlobalQNLabels)) 
-    reverse_GQNFormat = list(reversed(GQN_format)) 
-    j = 15
+    GQNlsum = []
+    GQNrsum = []
     for i in range(n_GQN):
-        GQNu_df[reverse_GQNLabel[i]] = hitran_df['Vp'].map(lambda x: x[j-reverse_GQNFormat[i]:j]) 
-        GQNl_df[reverse_GQNLabel[i]] = hitran_df['Vpp'].map(lambda x: x[j-reverse_GQNFormat[i]:j]) 
-        j -= reverse_GQNFormat[i]
+        GQNlsum.append(sum(GQN_format[:i]))
+        GQNrsum.append(sum(GQN_format[:i+1]))  
+    GQNu_df = pd.DataFrame(columns=GlobalQNLabels)  
+    GQNl_df = pd.DataFrame(columns=GlobalQNLabels)  
+    for i in range(n_GQN):
+        GQNu_df[GlobalQNLabels[i]] = hitran_df['Vp'].map(lambda x: x[GQNlsum[i]:GQNrsum[i]]) 
+        GQNl_df[GlobalQNLabels[i]] = hitran_df['Vpp'].map(lambda x: x[GQNlsum[i]:GQNrsum[i]]) 
     if 'none' in GlobalQNLabels:
-        GQNu_df = GQNu_df[reverse_GQNLabel].drop(columns=['none'])
-        GQNl_df = GQNl_df[reverse_GQNLabel].drop(columns=['none']) 
-    # Local quantum numbers
-    LQNu_df = pd.DataFrame()  
-    n_LQNu = len(LocalQNupperLabels)
-    reverse_LQNupperLabel = list(reversed(LocalQNupperLabels)) 
-    reverse_LQNupperFormat = list(reversed(LQNu_format)) 
-    j = 15
-    for i in range(n_LQNu):
-        LQNu_df[reverse_LQNupperLabel[i]] = hitran_df['Qp'].map(lambda x: x[j-reverse_LQNupperFormat[i]:j]) 
-        j -= reverse_LQNupperFormat[i]
-    if 'none' in LocalQNupperLabels:
-        LQNu_df = LQNu_df[reverse_LQNupperLabel].drop(columns=['none'])
-    LQNl_df = pd.DataFrame()  
-    n_LQNl = len(LocalQNlowerLabels)
-    reverse_LQNlowerLabel = list(reversed(LocalQNlowerLabels)) 
-    reverse_LQNlowerFormat = list(reversed(LQNl_format)) 
-    j = 15
-    hitran_df['Qpp'] = hitran_df['Qpp'].replace(' .5','0.5')
-    for i in range(n_LQNl):
-        LQNl_df[reverse_LQNlowerLabel[i]] = hitran_df['Qpp'].map(lambda x: x[j-reverse_LQNlowerFormat[i]:j]) 
-        j -= reverse_LQNlowerFormat[i]
-    if 'none' in LocalQNlowerLabels:
-        LQNl_df = LQNl_df[reverse_LQNlowerLabel].drop(columns=['none'])
+        GQNu_df = GQNu_df.drop(columns=['none'])
+        GQNl_df = GQNl_df.drop(columns=['none'])
 
-    LocalQNupperLabels, LQNu_df, Jpp_df, Jp = convert_J_hitran(LQNu_df, LQNl_df, LocalQNupperLabels)
-    while 'none' in GlobalQNLabels: GlobalQNLabels.remove('none')
-    while 'none' in LocalQNupperLabels: LocalQNupperLabels.remove('none')
-    while 'none' in LocalQNlowerLabels: LocalQNlowerLabels.remove('none')
-    GQNu_df = GQNu_df[GlobalQNLabels]
-    GQNl_df = GQNl_df[GlobalQNLabels]
-    LQNu_df = LQNu_df[LocalQNupperLabels]
-    LQNl_df = LQNl_df[LocalQNlowerLabels]
-    QNu_label = GlobalQNLabels + LocalQNupperLabels
-    QNl_label = GlobalQNLabels + LocalQNlowerLabels
-    hitranQNlabel = QNu_label + QNl_label
-    hitranQNlabels = sorted(set(hitranQNlabel),key=hitranQNlabel.index)
-    return(hitranQNlabels, Jpp_df, Jp, GQNu_df, GQNl_df, LQNu_df, LQNl_df, QNu_label, QNl_label)
+    # Local quantum numbers    
+    n_LQNu = len(LocalQNupperLabels)
+    LQNulsum = []
+    LQNursum = []
+    for i in range(n_LQNu):
+        LQNulsum.append(sum(LQNu_format[:i]))
+        LQNursum.append(sum(LQNu_format[:i+1]))
+    n_LQNl = len(LocalQNlowerLabels)
+    LQNllsum = []
+    LQNlrsum = []
+    for i in range(n_LQNl):
+        LQNllsum.append(sum(LQNl_format[:i]))
+        LQNlrsum.append(sum(LQNl_format[:i+1]))
+    LQNu_df = pd.DataFrame(columns=LocalQNupperLabels)  
+    for i in range(n_LQNu):
+        LQNu_df[LocalQNupperLabels[i]] = hitran_df['Qp'].map(lambda x: x[LQNulsum[i]:LQNursum[i]]) 
+    if 'none' in LocalQNupperLabels:
+        LQNu_df = LQNu_df.drop(columns=['none'])
+    LQNl_df = pd.DataFrame(columns=LocalQNlowerLabels)  
+    for i in range(n_LQNl):
+        LQNl_df[LocalQNlowerLabels[i]] = hitran_df['Qpp'].map(lambda x: x[LQNllsum[i]:LQNlrsum[i]]) 
+    if 'none' in LocalQNlowerLabels:
+        LQNl_df = LQNl_df.drop(columns=['none'])
+        
+    if 'Br' in LocalQNupperLabels:
+        LQNu_df = LQNu_df.drop(columns=['Br'])    
+    if 'Br' in LocalQNlowerLabels:
+        LQNl_df['Br'] = LQNl_df['Br'].map(lambda x: x[1]).replace(['Q','P','R','O','S'],[0,-1,1,-2,2])
+        LQNl_df['J'] = pd.to_numeric(LQNl_df['J'])
+        LQNu_df['J'] = LQNl_df['Br'] + LQNl_df['J']
+        LQNl_df = LQNl_df.drop(columns=['Br'])
+
+    if 'F' not in LocalQNupperLabels:
+        LQNu_df['F'] = LQNu_df['J']
+        LQNl_df['F'] = LQNl_df['J']
+        
+    QNu_df = pd.concat([GQNu_df, LQNu_df], axis='columns')
+    QNl_df = pd.concat([GQNl_df, LQNl_df], axis='columns')
+    QNu_col = [i+"'" for i in list(QNu_df.columns)] 
+    QNl_col = [i+'"' for i in list(QNl_df.columns)] 
+    return(QNu_df, QNl_df, QNu_col, QNl_col)
 
 def hitran_linelist_QN(hitran_df):
     GlobalQNLabels,GlobalQNFormats = globalQNclasses(molecule,isotopologue)
     LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats = localQNgroups(molecule,isotopologue)
-    (hitranQNlabels, Jpp_df, Jp, GQNu_df, GQNl_df, 
-    LQNu_df, LQNl_df, QNu_label, QNl_label) = separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,
-                                                                 LocalQNlowerLabels,GlobalQNFormats,
-                                                                 LocalQNupperFormats,LocalQNlowerFormats)
+    QNu_df, QNl_df, QNu_col, QNl_col = separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerLabels,
+                                                          GlobalQNFormats,LocalQNupperFormats,LocalQNlowerFormats)
     Ep_df = cal_Ep_hitran(hitran_df)
-    Jp_df = pd.DataFrame({'Jp':Jp})
     hitran_linelist_df = hitran_df[['v','S','A','gamma_air','gamma_self','Epp','n_air','delta_air','gp','gpp']]
-    hitran_linelist_df = pd.concat([hitran_linelist_df, Jp_df, Ep_df, Jpp_df, 
-                                    GQNu_df, LQNu_df, GQNl_df, LQNl_df], axis='columns').drop(columns=['J'])
-    QNu_label_noJ = [i+"'" for i in QNu_label if i != 'J'] 
-    QNl_label_noJ = [j+'"' for j in QNl_label if j != 'J']
-    QN_label_noJ = QNu_label_noJ + QNl_label_noJ
-    hitran_main_colname = ['v','S','A','gamma_air','gamma_self','E"','n_air','delta_air',"g'",'g"',"J'","E'",'J"']
-    hitran_linelist_colname = hitran_main_colname + QN_label_noJ
+    hitran_linelist_df = pd.concat([hitran_linelist_df, Ep_df, QNu_df, QNl_df], axis='columns')
+    hitran_main_colname = ['v','S','A','gamma_air','gamma_self','E"','n_air','delta_air',"g'",'g"',"E'"]
+    QN_col = QNu_col + QNl_col
+    hitran_linelist_colname = hitran_main_colname + QN_col
     hitran_linelist_df.set_axis(hitran_linelist_colname, axis=1, inplace=True)
     # Do quantum number filter.
     if QNsFilter !=[]:   
         QNs_col = [i+"'" for i in QNs_label] + [i+'"' for i in QNs_label]
-        hitran_linelist_df = hitran_linelist_df[hitran_main_colname + QNs_col]
+        if 'J' not in QNs_label:
+            hitran_linelist_df = hitran_linelist_df[hitran_main_colname + QNs_col + ["J'", 'J"']]
+        else:
+            hitran_linelist_df = hitran_linelist_df[hitran_main_colname + QNs_col]
         hitran_linelist_df = QNfilter_linelist(hitran_linelist_df, QNs_value, QNs_label)
     else:
-        QNs_col = QN_label_noJ    
-    if len(hitran_linelist_df) == 0:
-        raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")   
-    return(hitran_linelist_df, QNs_col)
+        QNs_col = QN_col    
+    return(hitran_linelist_df, QNs_col) 
 
 def linelist_hitran(hitran_linelist_df):
     '''
@@ -914,10 +918,10 @@ def linelist_hitran(hitran_linelist_df):
     delta_air = hitran_linelist_df['delta_air'].values
     gp = hitran_linelist_df["g'"].values
     v = hitran_linelist_df['v'].values
-    #if broad == 'Air':
-    #    v = hitran_df['v'].values + delta_air * (P - P_ref) / P
-    #else:
-    #    v = hitran_df['v'].values
+    # if broad == 'Air':
+    #   v = hitran_df['v'].values + delta_air * (P - P_ref) / P
+    # else:
+    #   v = hitran_df['v'].values
     return (A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air)
 
 # Calculate parition function
@@ -945,7 +949,8 @@ def exomol_partition_func(states_df, Ntemp, Tmax):
     pf_path = pf_folder + isotopologue + '__' + dataset + '.pf'
     np.savetxt(pf_path, partition_func_df, fmt="%8.1f %15.4f")
     t.end()
-    print('Partition functions has been saved!\n')  
+    print('Partition functions have been saved!\n')  
+
 
 # Calculate specific heat
 def calculate_specific_heats(En, gn, T):
@@ -975,15 +980,10 @@ def exomol_specificheat(states_df, Ntemp, Tmax):
     cp_path = cp_folder + isotopologue + '__' + dataset + '.cp'
     np.savetxt(cp_path, specificheat_func_df, fmt="%8.1f %15.4f")
     t.end()
-    print('Specific heats has been saved!\n')  
+    print('Specific heats have been saved!\n')  
 
-# Lifetime
-def exomol_lifetime(read_path, states_df, all_trans_df):
-    
-    print('Calculate lifetimes.')  
-    t = Timer()
-    t.start()
-    
+# Calculate lifetime
+def cal_lifetime(states_df, all_trans_df):
     sum_A = all_trans_df.groupby('u')['A'].sum()
     lifetime = ne.evaluate('1 / sum_A') 
     lt_df = pd.Series(lifetime).map('{: >12.4E}'.format).reset_index()
@@ -993,11 +993,18 @@ def exomol_lifetime(read_path, states_df, all_trans_df):
     add_u['lt'] = '         Inf'
     lifetime_df = pd.concat([add_u, lt_df], ignore_index=True)
     lifetime_df.sort_values('u',inplace=True)
-    
+    return(lifetime_df)
+
+# Lifetime
+def exomol_lifetime(read_path, states_df, all_trans_df):
+    print('Calculate lifetimes.')  
+    t = Timer()
+    t.start()
+    lifetime_df = cal_lifetime(states_df, all_trans_df)
+    lifetime_list = list(lifetime_df['lt'])
     states_filenames = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset 
                                  + '/' + isotopologue + '__' + dataset + '.states.bz2')
     s_df = pd.read_csv(states_filenames[0], compression='bz2', header=None, dtype=object)
-    lifetime_list = list(lifetime_df['lt'])
     nrows = len(s_df)
     new_rows = []
     if check_uncertainty == 0:
@@ -1006,13 +1013,11 @@ def exomol_lifetime(read_path, states_df, all_trans_df):
     if check_uncertainty == 1:
         for i in range(nrows):
             new_rows.append(s_df[0][i][:53]+lifetime_list[i]+s_df[0][i][65:]+'\n')
-
     lf_folder = save_path + '/lifetime/'
     if os.path.exists(lf_folder):
         pass
     else:
         os.makedirs(lf_folder, exist_ok=True)  
-        
     if CompressYN == 'Y':
         lf_path = lf_folder + isotopologue + '__' + dataset + '.states.bz2'
         with bz2.open(lf_path, 'wt') as f:
@@ -1025,10 +1030,8 @@ def exomol_lifetime(read_path, states_df, all_trans_df):
             for i in range(nrows):
                 f.write(new_rows[i])
             f.close
-
     t.end()
-    print('Lifetimes has been saved!\n')   
-   
+    print('Lifetimes have been saved!\n')   
 
 # Calculate cooling function
 def linelist_coolingfunc(states_df, all_trans_df, ncolumn):
@@ -1054,7 +1057,7 @@ def linelist_coolingfunc(states_df, all_trans_df, ncolumn):
     if ncolumn == 4:
         v = trans_s_df['v'].values.astype('float')
     else:
-        Epp = states_l_df['E'].astype('float')    # Upper state energy
+        Epp = states_l_df['E'].values.astype('float')     # Upper state energy
         v = cal_v(Ep, Epp) 
     return (A, v, Ep, gp)
 
@@ -1071,15 +1074,9 @@ def exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn
     t.start()
     A, v, Ep, gp = linelist_coolingfunc(states_df, all_trans_df, ncolumn)
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
-    if database == 'ExoMol':
-        Qs = read_exomol_pf(read_path, Ts)
-        # Qs = read_exomolweb_pf(Ts)
-    elif database == 'HITRAN':
-        Qs = read_hitran_pf(Ts)
-    else:
-        raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")    
-    cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), position=0,leave=True, 
-                                                                                ncols=100, desc='Calculating')]
+    Qs = read_exomol_pf(read_path, Ts)
+    # Qs = read_exomolweb_pf(Ts)
+    cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), desc='Calculating')]
     cooling_func_df = pd.DataFrame()
     cooling_func_df['T'] = Ts
     cooling_func_df['cooling function'] = cooling_func
@@ -1091,21 +1088,20 @@ def exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn
     cf_path = cf_folder + isotopologue + '__' + dataset + '.cf' 
     np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20.8E")
     t.end()
-    tqdm.write('Cooling functions has been saved!\n')  
+    tqdm.write('Cooling functions have been saved!\n')   
     
 # Cooling function for HITRAN database
 def hitran_cooling_func(hitran_df, Ntemp, Tmax):
     print('Calculate cooling functions.')  
     t = Timer()
     t.start()
-    Ep = cal_Ep_hitran(hitran_df).values
+    Ep = cal_Ep(hitran_df['Epp'].values,hitran_df['v'].values)
     A = hitran_df['A'].values
     v = hitran_df['v'].values
-    gp = hitran_df['gp'].values
+    gp = hitran_df['gp'].values 
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     Qs = read_hitran_pf(Ts)
-    cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), position=0, leave=True, 
-                                                                                ncols=100, desc='Calculating')]
+    cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), desc='Calculating')]
     cooling_func_df = pd.DataFrame()
     cooling_func_df['T'] = Ts
     cooling_func_df['cooling function'] = cooling_func
@@ -1117,8 +1113,95 @@ def hitran_cooling_func(hitran_df, Ntemp, Tmax):
     cf_path = cf_folder + isotopologue + '__' + dataset + '.cf' 
     np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20.8E")
     t.end()
-    print('Cooling functions has been saved!\n')   
+    print('Cooling functions have been saved!\n')      
 
+# Calculate oscillator strength
+def linelist_oscillator_strength(states_df, all_trans_df, ncolumn):
+    id_u = all_trans_df['u'].values
+    id_l = all_trans_df['l'].values
+    states_df['id'] = pd.to_numeric(states_df['id'])
+    states_df.set_index(['id'], inplace=True, drop=False)
+    id_s = states_df['id']
+    all_trans_df.set_index(['u'], inplace=True, drop=False)
+    id_us = list(set(id_u).intersection(set(id_s)))
+    trans_us_df = all_trans_df.loc[id_us]
+    id_l = trans_us_df['l'].values
+    id_ls = list(set(id_l).intersection(set(id_s)))
+    trans_us_df.set_index(['l'], inplace=True, drop=False)
+    trans_s_df = trans_us_df.loc[id_ls]
+    id_su = trans_s_df['u'].values
+    id_sl = trans_s_df['l'].values
+    states_u_df = states_df.loc[id_su]
+    states_l_df = states_df.loc[id_sl]
+    gp = states_u_df['g'].values.astype('int')
+    gpp = states_l_df['g'].values.astype('int')
+    A = trans_s_df['A'].values.astype('float')
+    if ncolumn == 4:
+        v = trans_s_df['v'].values.astype('float')
+    else:
+        Ep = states_u_df['E'].values.astype('float')
+        Epp = states_l_df['E'].values.astype('float')     # Upper state energy
+        v = cal_v(Ep, Epp) 
+    return (gp, gpp, A, v, trans_s_df)
+
+def cal_oscillator_strength(gp, gpp, A, v):
+    fg = ne.evaluate('gp * A / (c * v)**2')
+    f = ne.evaluate('fg / gpp')
+    if 'G' not in fgORf:
+        oscillator_strength = f
+    else:
+        oscillator_strength = fg
+    return oscillator_strength
+
+# Oscillator strength for ExoMol database
+def exomol_oscillator_strength(states_df, all_trans_df, ncolumn):
+    print('Calculate oscillator strengths.')  
+    t = Timer()
+    t.start()
+    gp, gpp, A, v, trans_s_df = linelist_oscillator_strength(states_df, all_trans_df, ncolumn)
+    if Ncolumns == 4:
+        oscillator_strength_df = trans_s_df[['u', 'l', 'A']]
+        os_format = "%12d %12d %10.4E %20.8E"
+    else:
+        oscillator_strength_df = trans_s_df[['u', 'l']]
+        os_format = "%12d %12d %20.8E"
+    oscillator_strength_df['os'] = cal_oscillator_strength(gp, gpp, A, v)
+    os_folder = save_path + '/oscillator_strength/'
+    if os.path.exists(os_folder):
+        pass
+    else:
+        os.makedirs(os_folder, exist_ok=True)  
+    os_path = os_folder + isotopologue + '__' + dataset + '.os' 
+    np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
+    t.end()
+    print('Oscillator strengths have been saved!\n')   
+    
+# Oscillator strength for HITRAN database
+def hitran_oscillator_strength(hitran_df):
+    print('Calculate oscillator strengths.')  
+    t = Timer()
+    t.start()
+    A = hitran_df['A'].values
+    v = hitran_df['v'].values
+    gp = hitran_df['gp'].values
+    gpp = hitran_df['gp'].values
+    if Ncolumns == 4:
+        oscillator_strength_df = hitran_df[['gp', 'gpp', 'A']]
+        os_format = "%7.1f %7.1f %10.3E %20.8E"
+    else:
+        oscillator_strength_df = hitran_df[['gp', 'gpp']]
+        os_format = "%7.1f %7.1f %20.8E"
+    oscillator_strength_df['os'] = cal_oscillator_strength(gp, gpp, A, v)
+    os_folder = save_path + '/oscillator_strength/'
+    if os.path.exists(os_folder):
+        pass
+    else:
+        os.makedirs(os_folder, exist_ok=True)  
+    os_path = os_folder + isotopologue + '__' + dataset + '.os' 
+    np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
+    t.end()
+    print('Oscillator strengths have been saved!\n') 
+    
 # Process data
 def read_part_states(states_df):
     if UncFilter != 'None' :
@@ -1302,14 +1385,14 @@ def read_unc_states(states_df):
     states_unc_df.columns = fullcolname  
     colnames = ['id','E','g'] + col_unc + GlobalQNLabel_list + LocalQNLabel_list
     states_unc_df = states_unc_df[colnames] 
-    states_unc_df = convert_QNValues_exomol2hitran(states_unc_df, GlobalQNLabel_list, LocalQNLabel_list) 
+    states_unc_df = convert_QNValues_exomol2hitran(states_unc_df, GlobalQNLabel_list, LocalQNLabel_list)
     return(states_unc_df)
 
 def convert_QNFormat_exomol2hitran(states_u_df, states_l_df, GlobalQNLabel_list, GlobalQNFormat_list, 
                                    LocalQNLabel_list, LocalQNFormat_list):
     from pandarallel import pandarallel
     pandarallel.initialize(nb_workers=8,progress_bar=False)    # Initialize.
-
+    
     gQNp = pd.DataFrame()
     gQNpp = pd.DataFrame()
     n_gQN = len(GlobalQNLabel_list)
@@ -1402,7 +1485,7 @@ def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df, ncolumn):
         Epp = states_l_df['E'].values.astype('float')
         trans_s_df['v'] = cal_v(Ep, Epp)
         trans_s_df = trans_s_df[trans_s_df['v'].between(ConversionMinFreq,ConversionMaxFreq)] 
-        trans_s_df.sort_values(by=['v'], inplace=True)  
+        trans_s_df.sort_values(by=['v'], inplace=True) 
     id_su = trans_s_df['u'].values
     id_sl = trans_s_df['l'].values
     states_u_df = states_unc_df.loc[id_su]
@@ -1438,8 +1521,9 @@ def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df, ncolumn):
             self_broad_df = pd.read_csv(fname_self, sep='\s+', names=broad_col_name, header=None, engine='python')
             gamma_self = extract_broad(self_broad_df,states_l_df)[0]
     else:
-        gamma_self= np.full((1,rows),default_broad_df['gamma_L'][0])[0]    
-    QN_df = convert_QNFormat_exomol2hitran(states_u_df, states_l_df, GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list)
+        gamma_self= np.full((1,rows),default_broad_df['gamma_L'][0])[0]  
+    QN_df = convert_QNFormat_exomol2hitran(states_u_df, states_l_df, GlobalQNLabel_list, GlobalQNFormat_list, 
+                                           LocalQNLabel_list, LocalQNFormat_list)
     return (A, v, Ep, Epp, gp, gpp, unc, gamma_air, gamma_self, n_air, QN_df)
 
 def error_code(unc):
@@ -1476,13 +1560,11 @@ def convert_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
     hitran_begin_df = pd.DataFrame(hitran_begin_dic)
     hitran_end_dic = {'Error':unc,'Iref':iref,'*':flag,"g'":gp, 'g"':gpp}
     hitran_end_df = pd.DataFrame(hitran_end_dic)
-
     hitran_res_df = pd.concat([hitran_begin_df, QN_df, hitran_end_df], axis='columns')
     if ConversionThreshold != 'None':
         hitran_res_df = hitran_res_df[hitran_res_df['I'] >= ConversionThreshold]
     hitran_res_df = hitran_res_df.sort_values('v')
     return(hitran_res_df)
-
 
 def conversion_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
     print('Convert data from the ExoMol format to the HITRAN format.')  
@@ -1498,22 +1580,9 @@ def conversion_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
     hitran_format = "%2s%1s%12.6f%10.3E%10.3E%5.3f%5.3f%10.4f%4.2f%8s%15s%15s%15s%15s%6s%12s%1s%7.1f%7.1f"
     np.savetxt(conversion_path, hitran_res_df, fmt=hitran_format)
     t.end()
-    print('Converted par file has been saved!\n')    
+    print('Converted par file has been saved!\n')     
     
 # HITRAN to ExoMol
-def error_code2unc(unc_code):    
-    unc_code[(unc_code==0)] = 10
-    unc_code[(unc_code==1)] = 1
-    unc_code[(unc_code==2)] = 0.1
-    unc_code[(unc_code==3)] = 0.01
-    unc_code[(unc_code==4)] = 0.001
-    unc_code[(unc_code==5)] = 0.0001
-    unc_code[(unc_code==6)] = 0.00001
-    unc_code[(unc_code==7)] = 0.000001
-    unc_code[(unc_code==8)] = 0.0000001
-    unc_code[(unc_code==9)] = 0.00000001
-    return(unc_code)
-
 def convert_QNValues_hitran2exomol(hitran2exomol_states_df, GlobalQNLabel_list, LocalQNLabel_list):
     QNLabel_list = GlobalQNLabel_list+LocalQNLabel_list
     if 'Gtot' in QNLabel_list:
@@ -1532,56 +1601,65 @@ def convert_QNValues_hitran2exomol(hitran2exomol_states_df, GlobalQNLabel_list, 
         hitran2exomol_states_df["taui"] = hitran2exomol_states_df["taui"].str.replace('s','0').str.replace('a','1')
     return(hitran2exomol_states_df)
 
-def convert_hitran2StatesTrans(hitran_df, hitranQNlabels, QNu_label, QNl_label, GQNu_df, GQNl_df, LQNu_df, LQNl_df):
-    Ep_df = cal_Ep_hitran(hitran_df)
-    hitran2exomol_upper_df = pd.concat([hitran_df[['A','gp','Unc']],Ep_df,GQNu_df,LQNu_df], axis=1, join='inner')
-    hitran2exomol_lower_df = pd.concat([hitran_df[['A','gpp','Unc','Epp']],GQNl_df,LQNl_df], axis=1, join='inner')
-    hitran2exomol_upper_df.columns = ['A','g','Unc','E'] + QNu_label
-    hitran2exomol_lower_df.columns = ['A','g','Unc','E'] + QNl_label
-    hitran2exomol_st_df = pd.concat([hitran2exomol_upper_df, hitran2exomol_lower_df], axis=0)
-    unc_code = hitran2exomol_st_df['Unc'].values
-    hitran2exomol_st_df['Unc'] = error_code2unc(unc_code)
-    hitran2exomol_st_df = hitran2exomol_st_df.fillna('')
-    hitran2exomol_st_E = hitran2exomol_st_df.groupby(['g','Unc'] + hitranQNlabels)['E'].mean().reset_index()
-    hitran2exomol_st_Unc = hitran2exomol_st_E.groupby(['g'] + hitranQNlabels)['Unc'].min().reset_index()
-    hitran2exomol_st_df = (hitran2exomol_st_Unc.merge(hitran2exomol_st_E, on=['g','Unc']+hitranQNlabels, how='inner')
-                           .sort_values('E').reset_index().drop(columns='index'))
-        
-    # States
-    id_states_df = pd.DataFrame(hitran2exomol_st_df.index+1, columns=['id'])
-    hitran2exomol_stQN_df = pd.concat([id_states_df,hitran2exomol_st_df], axis=1)
-    hitran2exomol_states_df = convert_QNValues_hitran2exomol(hitran2exomol_stQN_df, GlobalQNLabel_list, LocalQNLabel_list)
-    hitranQNlabels.remove('J')
-    states_columns_order = ['id','E','g','J','Unc']+hitranQNlabels
-    #states_columns_order = ['id','E','g','J','Unc']+QNslabel_list
-    hitran2exomol_states_df = hitran2exomol_states_df[states_columns_order]
+def convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df):
+    hitran2exomol_upper_df = pd.concat([hitran_df[['A','v','gp','Unc','Ep']],QNu_df], axis=1, join='inner')
+    hitran2exomol_lower_df = pd.concat([hitran_df[['A','v','gpp','Unc','Epp']],QNl_df], axis=1, join='inner')
+    Jpp_df = hitran2exomol_lower_df['J']
+    # hitran2exomol_upper_df['F'] = cal_F(hitran2exomol_upper_df['gp']).astype(str) 
+    # hitran2exomol_lower_df['F'] = cal_F(hitran2exomol_lower_df['gpp']).astype(str) 
+    hitran2exomol_upper_df.columns = list(map(lambda x: x.replace('gp','g').replace('Ep','E'), list(hitran2exomol_upper_df.columns)))
+    hitran2exomol_lower_df.columns = list(map(lambda x: x.replace('gpp','g').replace('Epp','E'), list(hitran2exomol_lower_df.columns)))
+    # hitran2exomol_lower_df = hitran2exomol_lower_df.reset_index(drop=True)
+    # hitran2exomol_upper_df = hitran2exomol_upper_df.reset_index(drop=True)
+    # if ('Sym"' in QNl_col) and ("Sym'" not in QNu_col):
+    #     hitran2exomol_upper_df['Sym'] = hitran2exomol_lower_df['Sym']
+    #     index_change_sym = np.where(np.array(hitran2exomol_lower_df['J']-hitran2exomol_upper_df['J'])==0.0)[0]
+    #     hitran2exomol_upper_df['Sym'][index_change_sym] = (hitran2exomol_upper_df['Sym'][index_change_sym]
+    #                                                        .replace('e','e2f').replace('f','e').replace('e2f','f'))
+    hitran2exomol_ul_df = pd.concat([hitran2exomol_upper_df, hitran2exomol_lower_df], axis=0)
+    hitranQNlabels = [x for x in list(hitran2exomol_ul_df.columns)[5:] if x != 'M' and x != 'm']
+    hitran2exomol_states_noid = (hitran2exomol_ul_df.loc[hitran2exomol_ul_df.groupby(['g']+hitranQNlabels)['Unc'].idxmax()][['E','g','Unc']+hitranQNlabels]
+                                .drop_duplicates().sort_values('E').groupby(['E','g']+hitranQNlabels)['Unc'].max().reset_index())
+    hitran2exomol_states_id = hitran2exomol_states_noid
+    hitran2exomol_states_id['id'] = hitran2exomol_states_noid.index+1
+    states_columns_order = ['id','E','g','F','Unc']+[x for x in hitranQNlabels if x != 'F']
+    hitran2exomol_states_id = hitran2exomol_states_id[states_columns_order]
 
     # Transitions
-    hitran2exomol_upperAE_df = (hitran2exomol_upper_df.fillna('').merge(hitran2exomol_states_df, on=['g']+QNu_label, how='inner')
-                                .drop(columns=['g','J','Unc_x','Unc_y','E_x']+hitranQNlabels).sort_values('A').reset_index()
-                                .rename(columns={'id':'uid','E_y':"E'"}))
-    hitran2exomol_lowerAE_df = (hitran2exomol_lower_df.fillna('').merge(hitran2exomol_states_df, on=['g']+QNl_label, how='inner')
-                                .drop(columns=['g','J','Unc_x','Unc_y','E_x']+hitranQNlabels).sort_values('A').reset_index()
-                                .rename(columns={'A':'A2','id':'lid','E_y':'E"'}))
-    hitran2exomol_AE = pd.concat([hitran2exomol_upperAE_df, hitran2exomol_lowerAE_df],axis=1).drop(columns=['index','A2'])
-    Ep = hitran2exomol_AE["E'"].to_numpy()
-    Epp = hitran2exomol_AE['E"'].to_numpy()
-    hitran2exomol_AE['v'] = cal_v(Ep, Epp)
-    hitran2exomol_trans_df = hitran2exomol_AE[['uid','lid','A','v']].sort_values('v')
-    return(hitran2exomol_states_df, hitran2exomol_trans_df)
+    upper_QNlabel = list(hitran2exomol_upper_df.columns[5:])
+    upper_idAv = hitran2exomol_upper_df.merge(hitran2exomol_states_id, on=['g']+upper_QNlabel, how='inner').drop(columns=upper_QNlabel)
+    upper_idAv['diffE'] = np.abs(upper_idAv['E_x']-upper_idAv['E_y'])
+    upper_AvEid = upper_idAv.loc[upper_idAv.groupby(['v'])['diffE'].idxmin()][['id','A','v','E_y']].rename(columns={'id':'u','E_y':'Ep'})
+    lower_QNlabel = list(hitran2exomol_lower_df.columns[5:])
+    lower_idAv = hitran2exomol_lower_df.merge(hitran2exomol_states_id, on=['g']+lower_QNlabel, how='inner').drop(columns=lower_QNlabel)
+    lower_idAv['diffE'] = np.abs(lower_idAv['E_x']-lower_idAv['E_y'])
+    lower_AvEid = lower_idAv.loc[lower_idAv.groupby(['v'])['diffE'].idxmin()][['id','A','v','E_y',]].rename(columns={'id':'l','E_y':'Epp'})
+    hitran2exomol_idAv = upper_AvEid.merge(lower_AvEid, on=['v'], how='inner').drop(columns=['A_y']).rename(columns={'A_x':'A','v':'v_x'})
+    hitran2exomol_idAv['v'] = hitran2exomol_idAv['Ep']-hitran2exomol_idAv['Epp']
+    diff = hitran2exomol_idAv[['u','l','A','v','v_x']]
+    diff['diffv'] = np.abs(diff['v_x'] - diff['v'])
+    hitran2exomol_trans_df = diff.loc[diff.groupby(['v'])['diffv'].idxmin()][['u','l','A','v']].sort_values('v')
+    
+    # States
+    hitran2exomol_states_df = convert_QNValues_hitran2exomol(hitran2exomol_states_id, GlobalQNLabel_list, LocalQNLabel_list)
+    hitran2exomol_states_df['Unc'] = (hitran2exomol_states_df['Unc'].replace(10,1e-09).replace(9,1e-08)
+                                      .replace(8,1e-07).replace(7,1e-06).replace(6,1e-05).replace(5,1e-04)
+                                      .replace(4,0.001).replace(3,0.01).replace(2,0.1).replace(0,10))
+    return(Jpp_df, hitran2exomol_states_df, hitran2exomol_trans_df)
 
 def convert_hitran2broad(hitran_df, Jpp_df):
     broad_code_df = pd.DataFrame(np.full_like(Jpp_df.astype(str),'a0'), columns=['code'])
-    hitran2exomol_air_df = pd.concat([broad_code_df, hitran_df[['gamma_air','n_air']], Jpp_df], axis=1).drop_duplicates()
-    hitran2exomol_self_df = pd.concat([broad_code_df, hitran_df[['gamma_self','n_air']], Jpp_df], axis=1).drop_duplicates()
+    hitran2exomol_air_df = pd.concat([broad_code_df, hitran_df[['gamma_air','n_air']], Jpp_df], axis=1).drop_duplicates().dropna()
+    hitran2exomol_self_df = pd.concat([broad_code_df, hitran_df[['gamma_self','n_air']], Jpp_df], axis=1).drop_duplicates().dropna()
     return(hitran2exomol_air_df, hitran2exomol_self_df)
 
-def conversion_states(hitran2exomol_states_df, hitranQNlabels, conversion_folder):
+def conversion_states(hitran2exomol_states_df, conversion_folder):
     print('Convert data from the HITRAN format to the ExoMol format states.')  
     t = Timer()
     t.start()
     conversion_states_path = conversion_folder + isotopologue + '__' + dataset + '.states.bz2'
-    hitranQNformats = [QNsformat_list[j] for j in [QNslabel_list.index(i) for i in hitranQNlabels]]
+    hitranQNlabels_noF = hitran2exomol_states_df.columns[5:].tolist()
+    hitranQNformats = [QNsformat_list[j] for j in [QNslabel_list.index(i) for i in hitranQNlabels_noF]]
     # states_format = ("%12s %12.6f %6s %7s %12.6f " 
     #                  + str(QNsformat_list).replace("['","").replace("']","")
     #                  .replace("'","").replace(",","").replace("d","s").replace("i","s"))
@@ -1624,24 +1702,26 @@ def conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_fol
     if nbroad != 0:
         print('Convert broadening files have been saved!\n')  
     else:
-        print('No broadening files need to be saved!\n')   
+        print('No broadening files need to be saved!\n')  
 
 def conversion_hitran2exomol(hitran_df):
+    hitran_df = hitran_df[~hitran_df['Vp'].isin([' '*15])]
+    hitran_df = hitran_df[~hitran_df['Vpp'].isin([' '*15])]
+    hitran_df = hitran_df[~hitran_df['Qp'].isin([' '*15])]
+    hitran_df = hitran_df[~hitran_df['Qpp'].isin([' '*15])]
     GlobalQNLabels,GlobalQNFormats = globalQNclasses(molecule,isotopologue)
     LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats = localQNgroups(molecule,isotopologue)
-    (hitranQNlabels, Jpp_df, Jp, GQNu_df, GQNl_df, 
-     LQNu_df, LQNl_df, QNu_label, QNl_label) = separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,
-                                                                  LocalQNlowerLabels,GlobalQNFormats,
-                                                                  LocalQNupperFormats,LocalQNlowerFormats)
-    hitran2exomol_states_df, hitran2exomol_trans_df = convert_hitran2StatesTrans(hitran_df, hitranQNlabels, QNu_label, QNl_label, 
-                                                                                 GQNu_df, GQNl_df, LQNu_df, LQNl_df)
+    QNu_df, QNl_df, QNu_col, QNl_col = separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerLabels,
+                                                          GlobalQNFormats,LocalQNupperFormats,LocalQNlowerFormats)
+    hitran_df['Ep'] = cal_Ep(hitran_df['Epp'].values,hitran_df['v'].values)
+    Jpp_df, hitran2exomol_states_df, hitran2exomol_trans_df = convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df)
     hitran2exomol_air_df, hitran2exomol_self_df = convert_hitran2broad(hitran_df, Jpp_df)
     conversion_folder = save_path+'/conversion/HITRAN2ExoMol/'+molecule+'/'+isotopologue+'/'+dataset+'/' 
     if os.path.exists(conversion_folder):
         pass
     else:
         os.makedirs(conversion_folder, exist_ok=True)      
-    conversion_states(hitran2exomol_states_df, hitranQNlabels, conversion_folder)
+    conversion_states(hitran2exomol_states_df, conversion_folder)
     conversion_trans(hitran2exomol_trans_df, conversion_folder)
     conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_folder)
     print('Finished conversion!\n')
@@ -1790,7 +1870,7 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         plt.show()
         print('Stick spectra plot saved.')
     t.end()
-    print('Stick spectra has been saved!\n')  
+    print('Stick spectra have been saved!\n')  
 
 def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     print('Calculate stick spectra.')  
@@ -1855,7 +1935,7 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
         plt.show()
         print('Stick spectra plot saved.')
     t.end()
-    print('Stick spectra has been saved!\n')   
+    print('Stick spectra have been saved!\n')   
     
 ## Cross Section
 def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn): 
@@ -1863,7 +1943,7 @@ def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
         if cutoff == 'None':
             trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn, max_wn)] 
         else:
-            trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn - cutoff, max_wn + cutoff)] 
+            trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn - cutoff, max_wn + cutoff)]      
         id_u = trans_part_df['u'].values
         id_s = states_part_df['id'].values
         trans_part_df.set_index(['u'], inplace=True, drop=False)
@@ -1883,6 +1963,10 @@ def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
             gp = states_u_df['g'].values.astype('int')
             A = trans_s_df['A'].values.astype('float')
             v = trans_s_df['v'].values.astype('float')
+            if 'tau' in states_part_df.columns.to_list():
+                tau = states_u_df['tau'].values.astype('float')
+            else:
+                tau = np.zeros(len(gp))
         else:
             raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     else:
@@ -1903,6 +1987,10 @@ def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
         trans_s_df['Epp'] = states_l_df['E'].values.astype('float')
         trans_s_df['gp'] = states_u_df['g'].values.astype('int')
         trans_s_df['v'] = cal_v(trans_s_df['Ep'].values, trans_s_df['Epp'].values)
+        if 'tau' in states_part_df.columns.to_list():
+            trans_s_df['tau'] = states_u_df['tau'].values.astype('float')
+        else:
+            trans_s_df['tau'] = np.zeros(len(gp))
         if cutoff == 'None':
             trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn, max_wn)]
         else:
@@ -1913,6 +2001,7 @@ def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
             gp = trans_s_df['gp'].values
             A = trans_s_df['A'].values
             v = trans_s_df['v'].values
+            tau = trans_s_df['tau'].values
             id_sl = trans_s_df['l'].values
             states_l_df = states_part_df.loc[id_sl]
         else:
@@ -1927,7 +2016,7 @@ def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
         else:
             gamma_L[i] = extract_broad(broad_dfs[i],states_l_df)[0] * ratio[i]
             n_air[i] = extract_broad(broad_dfs[i],states_l_df)[1] * ratio[i]
-    return (A, v, Epp, gp, gamma_L, n_air)
+    return (A, v, Epp, gp, tau, gamma_L, n_air)
 
 def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn):
     if ncolumn == 4:
@@ -1954,6 +2043,10 @@ def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
             gp = states_u_df['g'].values.astype('int')
             A = trans_s_df['A'].values.astype('float')
             v = trans_s_df['v'].values.astype('float')
+            if 'tau' in states_part_df.columns.to_list():
+                tau = states_u_df['tau'].values.astype('float')
+            else:
+                tau = np.zeros(len(gp))
         else:
             raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     else:
@@ -1974,6 +2067,10 @@ def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
         trans_s_df['Epp'] = states_l_df['E'].values.astype('float')
         trans_s_df['gp'] = states_u_df['g'].values.astype('int')
         trans_s_df['v'] = cal_v(trans_s_df['Ep'].values, trans_s_df['Epp'].values)
+        if 'tau' in states_part_df.columns.to_list():
+            trans_s_df['tau'] = states_u_df['tau'].values.astype('float')
+        else:
+            trans_s_df['tau'] = np.zeros(len(gp))
         if cutoff == 'None':
             trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn, max_wn)]
         else:
@@ -1984,6 +2081,7 @@ def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
             gp = trans_s_df['gp'].values
             A = trans_s_df['A'].values
             v = trans_s_df['v'].values
+            tau = trans_s_df['tau'].values
             id_sl = trans_s_df['l'].values
             states_l_df = states_part_df.loc[id_sl]
         else:
@@ -1998,7 +2096,7 @@ def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans
         else:
             gamma_L[i] = extract_broad(broad_dfs[i],states_l_df)[0] * ratio[i]
             n_air[i] = extract_broad(broad_dfs[i],states_l_df)[1] * ratio[i]
-    return (A, v, Ep, gp, gamma_L, n_air)
+    return (A, v, Ep, gp, tau, gamma_L, n_air)
 
 # Line profile
 def Doppler_HWHM(v,T):
@@ -2018,6 +2116,11 @@ def Lorentzian_HWHM(gamma_L, n_air,T,P):
     gamma = ne.evaluate('gamma_L * (Tref / T)**n_air * (P / Pref)')
     return gamma
 
+def lifetime_broadening(tau):
+    '''Return the lifetime broadening -- gamma_tau.'''
+    gamma_tau = ne.evaluate('1 / (PI4c) * tau')
+    return gamma_tau
+
 def DopplerHWHM_alpha(num_v, alpha_HWHM, v, T):
     if alpha_HWHM != 'None':
         alpha = np.full(num_v, alpha_HWHM)
@@ -2025,17 +2128,22 @@ def DopplerHWHM_alpha(num_v, alpha_HWHM, v, T):
         alpha = Doppler_HWHM(v,T)
     return(alpha)
 
-def LorentzianHWHM_gamma(num_v, gamma_HWHM, broad, gamma_L, n_air, gamma_air, gamma_self, ratios, T, P):
+def LorentzianHWHM_gamma(num_v, gamma_HWHM, broad, gamma_L, n_air, gamma_air, gamma_self, tau, T, P):
     if gamma_HWHM != 'None':
         gamma = np.full(num_v, gamma_HWHM)
     else:
         if database == 'ExoMol':
-            gamma = pd.DataFrame()
+            gamma_p = pd.DataFrame()
             for i in range(len(broad)):
-                gamma[i] = Lorentzian_HWHM (gamma_L[i].values, n_air[i].values,T,P)
-            gamma = gamma.sum(axis=1).values  
+                gamma_p[i] = Lorentzian_HWHM (gamma_L[i].values, n_air[i].values,T,P)
+            gamma_p = gamma_p.sum(axis=1).values  
+            if check_predissoc == 0 and 'LOR' not in profile:
+                gamma_tau = lifetime_broadening(tau)
+                gamma = gamma_p + gamma_tau
+            else:
+                gamma = gamma_p
         elif database == 'HITRAN':   
-            gamma_L = gamma_air*0.7+ gamma_self*0.3
+            gamma_L = gamma_air*0.7 + gamma_self*0.3
             gamma = Lorentzian_HWHM(gamma_L, n_air,T,P) 
     return(gamma)
 
@@ -2982,22 +3090,23 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
     if database == 'ExoMol':
         gamma_air = gamma_self = []
         broad, ratio, nbroad, broad_dfs = read_broad(read_path)
-        # Q = read_exomolweb_pf(T)              # Read partition function from the ExoMol website.
-        Q = read_exomol_pf(read_path, T)        # Read partition function from local partition function file.
+        Q = read_exomolweb_pf(T)              # Read partition function from the ExoMol website.
+        # Q = read_exomol_pf(read_path, T)    # Read partition function from local partition function file.
         # Absorption or emission cross section
         if abs_emi == 'Ab': 
             print('Absorption cross section')
-            A, v, Epp, gp, gamma_L, n_air = linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
+            A, v, Epp, gp, tau, gamma_L, n_air = linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
             coef = cal_abscoefs(T, v, gp, A, Epp, Q, abundance)
         elif abs_emi == 'Em': 
             print('Emission cross section')
-            A, v, Ep, gp, gamma_L, n_air = linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
+            A, v, Ep, gp, tau, gamma_L, n_air = linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
             coef = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
         else:
             raise ImportError("Please choose one from: 'Absoption' or 'Emission'.")         
     elif database == 'HITRAN':
         gamma_L = []
         broad = []
+        tau = []
         A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = linelist_hitran(hitran_df)
         Q = read_hitran_pf(T)
         # Absorption or emission cross section
@@ -3017,7 +3126,7 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
     if 'LOR' not in profile:
         alpha = DopplerHWHM_alpha(num_v, alpha_HWHM, v, T)
     if 'DOP' not in profile and 'GAU' not in profile:
-        gamma = LorentzianHWHM_gamma(num_v, gamma_HWHM, broad, gamma_L, n_air, gamma_air, gamma_self, ratios, T, P)
+        gamma = LorentzianHWHM_gamma(num_v, gamma_HWHM, broad, gamma_L, n_air, gamma_air, gamma_self, tau, T, P)
     if 'SCI' in profile or 'W' in profile:
         sigma = Gaussian_standard_deviation(alpha)     
     if 'VOI' in profile and 'BIN' in profile:
@@ -3104,13 +3213,18 @@ def get_results(read_path):
     # ExoMol or HITRAN
     if database == 'ExoMol':
         print('ExoMol database')
-        print('Molecule\t\t:', molecule, '\nIsotopologue\t:', isotopologue, '\nDataset\t\t\t:', dataset)
+        print('Molecule\t:', molecule, '\nIsotopologue\t:', isotopologue, '\nDataset\t\t:', dataset)
         # All functions need whole states.
         states_df = read_all_states(read_path)
-        # Only calculating lifetimes and cooling functions need whole transitions.
-        NeedAllTrans = Lifetimes + CoolingFunctions
+        # Only calculating lifetimes, cooling functions and oscillator stengths need whole transitions.
+        NeedAllTrans = Lifetimes + CoolingFunctions + OscillatorStrengths
         if NeedAllTrans != 0: 
-            (all_trans_df, ncolumn) = read_all_trans(read_path)
+            (all_trans_df, ncolumn) = read_all_trans(read_path)  
+        if CrossSections == 1 and check_predissoc + check_lifetime == 0 and 'VOI' in profile:
+            if NeedAllTrans == 0:
+                (all_trans_df, ncolumn) = read_all_trans(read_path)  
+            lifetime_df = cal_lifetime(states_df, all_trans_df)
+            states_df['tau'] = lifetime_df['tau'].values  
         # Only calculating stick spectra and cross sections need part of states.
         NeedPartStates = StickSpectra + CrossSections
         if NeedPartStates != 0:
@@ -3119,9 +3233,10 @@ def get_results(read_path):
         NeedPartTrans = Conversion + StickSpectra + CrossSections
         if NeedPartTrans != 0:
             (trans_part_df, ncolumn) = read_part_trans(read_path) 
+
         # Functions
         Nfunctions = (PartitionFunctions + SpecificHeats + Lifetimes + CoolingFunctions 
-                      + Conversion + StickSpectra  + CrossSections)
+                      + OscillatorStrengths + Conversion + StickSpectra  + CrossSections)
         if Nfunctions > 0:
             if PartitionFunctions == 1:
                 exomol_partition_func(states_df, Ntemp, Tmax)
@@ -3129,13 +3244,15 @@ def get_results(read_path):
                 exomol_specificheat(states_df, Ntemp, Tmax)
             if Lifetimes == 1:
                 exomol_lifetime(read_path, states_df, all_trans_df)
+            if OscillatorStrengths == 1:
+                exomol_oscillator_strength(states_df, all_trans_df, ncolumn)
             if CoolingFunctions == 1:
                 exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn)
-            if (Conversion==1 and ConversionFormat==1):
+            if (Conversion == 1 and ConversionFormat == 1):
                 conversion_exomol2hitran(read_path, states_df, trans_part_df, ncolumn)
             if StickSpectra == 1:
                 exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T)
-            if CrossSections ==1:
+            if CrossSections == 1:
                 get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolumn) 
         else:   
             raise ImportError("Please choose functions which you want to calculate.")
@@ -3152,25 +3269,37 @@ def get_results(read_path):
         # Use ExoMol functions
         NuseExoMolFunc = PartitionFunctions+SpecificHeats+Lifetimes
         if NuseExoMolFunc > 0:
+            read_hitran2exomol_path = save_path + 'conversion/HITRAN2ExoMol/'
             if ConversionFormat != 2:
-                hitran_df = read_hitran_parfile(read_path,parfile_df,ConversionMinFreq==0,ConversionMaxFreq==1e10,
-                                                'None','None').reset_index().drop(columns='index')
-                conversion_hitran2exomol(hitran_df)
+                conversion_foldername = read_hitran2exomol_path+molecule+'/'+isotopologue+'/'+dataset+'/'
+                if os.path.exists(conversion_foldername):
+                    states_list = glob.glob(conversion_foldername + isotopologue + '__' + dataset + '.states.bz2')
+                    trans_list = glob.glob(conversion_foldername + isotopologue + '__' + dataset + '*.trans.bz2')
+                    if (states_list == [] and trans_list == []):
+                        hitran_df = read_hitran_parfile(read_path,parfile_df,ConversionMinFreq,ConversionMaxFreq,
+                                                        'None','None').reset_index().drop(columns='index')
+                        conversion_hitran2exomol(hitran_df)
             # All functions need whole states.
-            read_exomol_path = '/home/jingxin/data/pyexocross/conversion/HITRAN2ExoMol/'
-            states_df = read_all_states(read_exomol_path)
+            states_df = read_all_states(read_hitran2exomol_path)
             if PartitionFunctions == 1:
                 exomol_partition_func(states_df, Ntemp, Tmax)
             if SpecificHeats == 1:
                 exomol_specificheat(states_df, Ntemp, Tmax)
             if Lifetimes == 1:
-                (all_trans_df, ncolumn) = read_all_trans(read_exomol_path)
-                exomol_lifetime(read_exomol_path, states_df, all_trans_df)
+                (all_trans_df, ncolumn) = read_all_trans(read_hitran2exomol_path)
+                # hitran_lifetime(states_df, all_trans_df)
+                exomol_lifetime(read_hitran2exomol_path, states_df, all_trans_df)
+        # Use HITRAN functions
+        # Calculate cooling functions or oscillatore strengths.
+        NeedWholeHITRAN = CoolingFunctions+OscillatorStrengths
+        if NeedWholeHITRAN != 0: 
+            hitran_df = read_hitran_parfile(read_path,parfile_df,min_wn,max_wn,'None','None').reset_index().drop(columns='index')
         if CoolingFunctions == 1:
-            hitran_df = read_hitran_parfile (read_path,parfile_df,min_wn,max_wn,'None','None').reset_index().drop(columns='index')
             hitran_cooling_func(hitran_df, Ntemp, Tmax)
+        if OscillatorStrengths == 1:
+            hitran_oscillator_strength(hitran_df)
         if (StickSpectra == 1 or CrossSections == 1):
-            hitran_df = read_hitran_parfile (read_path,parfile_df,min_wn,max_wn,
+            hitran_df = read_hitran_parfile(read_path,parfile_df,min_wn,max_wn,
                                              UncFilter,threshold).reset_index().drop(columns='index')
             (hitran_linelist_df, QNs_col) = hitran_linelist_QN(hitran_df)
         if StickSpectra == 1:

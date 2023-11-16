@@ -71,7 +71,7 @@ Pressure                                1
 Npoints/BinSize                         Npoints    10001
 Broadeners                              Air        Self 
 Ratios                                  0.7        0.3     
-Profile                                 SciPyVoigt        
+Profile                                 Lorentzian        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          25             # If Y, default value 25
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant
