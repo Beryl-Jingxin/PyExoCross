@@ -9,9 +9,12 @@ Running time on system    : 0.022628307342529297 s
 Finished reading states!
 
 Reading part transitions ...
-Reading transitions:   0%|                                                    | 0/1 [00:00<?, ?it/s]
+
+Reading transitions:   0%|                                                    | 0/1 [00:00<?, ?it/s]
  /mnt/data/exomol/exomol3_data/MgH/24Mg-1H/XAB/24Mg-1H__XAB.trans.bz2
-Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.63it/s]Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.62it/s]
+
+Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.63it/s]
+Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.62it/s]
 Running time on CPU       : 3.923766647999999 s
 Running time on system    : 0.18158292770385742 s
 Finished reading part transitions!
@@ -21,7 +24,7 @@ Absorption stick spectra
 Stick spectra plot saved.
 Running time on CPU       : 17.95734861 s
 Running time on system    : 17.483417510986328 s
-Stick spectra has been saved!
+Stick spectra have been saved!
 
 Calculate cross-sections.
 Broadeners  	: Default

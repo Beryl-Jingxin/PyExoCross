@@ -17,6 +17,7 @@ PartitionFunctions                      1
 SpecificHeats                           1
 CoolingFunctions                        1
 Lifetimes                               1
+OscillatorStrengths                     1
 StickSpectra                            1
 CrossSections                           1
 
@@ -37,13 +38,18 @@ ConvUncFilter(Y/N)                      N          0.01           # If Y, defaul
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
                            
 
-# Calculate partition, specific heats or cooling functions #
+# Calculate partition functions, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
 Tmax                                    5000                      # Maximal temperature in K 
 
 
 # Calculate lifetimes #
 Compress(Y/N)                           N                         # If Y, save as .states.bz2 file; otherwise, save as .states file
+
+
+# Calculate oscillator strengths #
+fg/f                                    fg
+Ncolumns                                4                         # 3 (without A) or 4 (with A)
 
 
 # Calculate stick spectra or cross sections #
