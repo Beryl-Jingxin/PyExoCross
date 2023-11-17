@@ -63,7 +63,7 @@ QNsFilter(Y/N)                          N          par[]   e/f[,e]   v[1,0;2,0;3
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
-Y-axisLimitStick                                                  # Default value is 1e-30
+Y-axisLimitStick                        1e-30                     # Default value is 1e-30
 
 
 # Calculate cross sections #

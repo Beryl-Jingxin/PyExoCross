@@ -1,4 +1,4 @@
-# Basic information #
+# Data source #
 Database                                HITRAN
 Molecule                                CO
 Isotopologue                            12C-16O
@@ -22,7 +22,7 @@ StickSpectra                            1
 CrossSections                           1
 
 
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                J       X     Omega   v1      m      Sym    
 QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
 

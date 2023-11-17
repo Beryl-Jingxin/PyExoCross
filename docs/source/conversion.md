@@ -60,6 +60,7 @@ PartitionFunctions                      0
 SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
+OscillatorStrengths                     0
 StickSpectra                            0
 CrossSections                           0
 
@@ -71,7 +72,7 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 
 # Conversion #
 ConversionFormat                        1  
-ConversionFrequncyRange                 0                 30000      
+ConversionFrequncyRange                 0                 30000  
 GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %9s      %2d      %4s
 LocalQNLabel                            J        e/f
@@ -83,7 +84,7 @@ ConvThreshold(Y/N)                      Y          1e-30          # If Y, defaul
 Convert data from HITRAN to ExoMol.
 
 ```bash
-# Basic information #
+# Data source #
 Database                                HITRAN
 Molecule                                NO
 Isotopologue                            14N-16O
@@ -102,11 +103,12 @@ PartitionFunctions                      0
 SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
+OscillatorStrengths                     0
 StickSpectra                            0
 CrossSections                           0
 
 
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections 
 QNslabel                                X     Omega   v1      m      Br    Sym    F
 QNsformat                               %2s   %3s     %2d     %1s    %2s   %1s    %5s
 
@@ -114,12 +116,12 @@ QNsformat                               %2s   %3s     %2d     %1s    %2s   %1s  
 # Conversion # 
 ConversionFormat                        2  
 ConversionFrequncyRange                 0          63000   
-GlobalQNLabel                           X       Omega    v1                
-GlobalQNFormat                          %2s     %3s      %2d               
-LocalQNLabel                            m       Br       Sym     F         
-LocalQNFormat                           %1s     %2s      %1s     %5s       
+GlobalQNLabel                           X       Omega    v1  
+GlobalQNFormat                          %2s     %3s      %2d   
+LocalQNLabel                            m       Br       Sym     F   
+LocalQNFormat                           %1s     %2s      %1s     %5s   
 ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
-ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30      
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30  
 ```
 
 **Note**

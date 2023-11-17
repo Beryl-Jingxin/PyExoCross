@@ -22,7 +22,7 @@ StickSpectra                            1
 CrossSections                           0
 
 
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                Gamma   e/f     n1      n2      l2      n3
 QNsformat                               %2s     %2s     %4i     %5i     %4i     %4i
 

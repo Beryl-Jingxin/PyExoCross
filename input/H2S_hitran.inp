@@ -1,4 +1,4 @@
-# Basic information #
+# Data source #
 Database                                HITRAN
 Molecule                                H2S
 Isotopologue                            1H2-32S
@@ -22,7 +22,7 @@ StickSpectra                            1
 CrossSections                           1
 
 
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                v1     v2    v3     Ka     Kc    F     Sym
 QNsformat                               %2d    %2d   %2d    %3d    %3d   %5s   %1s  
 

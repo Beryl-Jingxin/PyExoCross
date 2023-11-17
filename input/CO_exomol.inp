@@ -22,7 +22,7 @@ StickSpectra                            1
 CrossSections                           0
 
 
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                v        kp      
 QNsformat                               %4d      %4s
 

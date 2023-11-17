@@ -22,6 +22,30 @@ The partition functions equation is:
 
 .. code:: bash
 
+   # Data source #
+   Database                                ExoMol
+   Molecule                                MgH
+   Isotopologue                            24Mg-1H
+   Dataset                                 XAB
+   MolIsoID                                501
+
+
+   # File path #
+   ReadPath                                /mnt/data/exomol/exomol3_data/
+   SavePath                                /home/jingxin/data/pyexocross/
+
+
+   # Functions #
+   Conversion                              0
+   PartitionFunctions                      1
+   SpecificHeats                           0
+   CoolingFunctions                        0
+   Lifetimes                               0
+   OscillatorStrengths                     0
+   StickSpectra                            0
+   CrossSections                           0
+
+
    # Calculate partition, specific heats or cooling functions #
    Ntemp                                   1                         # The number of temperature steps
    Tmax                                    5000                      # Maximal temperature in K 

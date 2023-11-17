@@ -1,4 +1,4 @@
-# Basic information #
+# Data source #
 Database                                HITRAN
 Molecule                                NO
 Isotopologue                            14N-16O
@@ -22,7 +22,7 @@ StickSpectra                            1
 CrossSections                           1
 
 
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                J       X     Omega   v1      m      Sym    
 QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
 
@@ -38,7 +38,7 @@ ConvUncFilter(Y/N)                      N          0.005          # If Y, defaul
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30     
       
 
-# Calculate partition, cooling functions or specific heats #
+# Calculate partition functions, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
 Tmax                                    5000                      # Maximal temperature in K 
 
@@ -77,4 +77,4 @@ Cutoff(Y/N)                             Y          25             # If Y, defaul
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y
-Y-axisLimitXsec                                                   # Default value is 1e-30
+Y-axisLimitXsec                         1e-30                     # Default value is 1e-30

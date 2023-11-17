@@ -127,7 +127,7 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 In current version, *PyExoCross* can convert data format between the ExoMol and the HITRAN formats.
 
-*PyExoCross* also implements the computations of other useful functions including partition functions, specific heats, cooling functions, radiative lifetimes, stick spectra and cross sections for data from the ExoMol database.
+*PyExoCross* also implements the computations of other useful functions including partition functions, specific heats, cooling functions, radiative lifetimes, oscillator strengths, stick spectra and cross sections for data from the ExoMol database.
 
 *PyExoCross* provides computations of cross sections for data from the HITRAN database. If you want to use the other functions, please convert the data format from the HITRAN format to the ExoMol format at first and then treat the data as the ExoMol data to use *PyExoCross*.
 
@@ -147,6 +147,7 @@ PartitionFunctions                      0
 SpecificHeats                           1
 CoolingFunctions                        0
 Lifetimes                               0
+OscillatorStrengths                     0
 StickSpectra                            0
 CrossSections                           1
 ```
@@ -167,7 +168,7 @@ Wrong format of the quantum number column nams: '1', '2', 'electronic state'.
 *Example*
 
 ```bash
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
 QNsformat                               %1s  %1s   %13s  %3d   %1d      %7.1f    %7.1f
 ```

@@ -58,6 +58,30 @@ The intensity equation is:
 
 .. code:: bash
 
+    # Data source #
+    Database                                ExoMol
+    Molecule                                MgH
+    Isotopologue                            24Mg-1H
+    Dataset                                 XAB
+    MolIsoID                                501
+
+
+    # File path #
+    ReadPath                                /mnt/data/exomol/exomol3_data/
+    SavePath                                /home/jingxin/data/pyexocross/
+    
+
+    # Functions #
+    Conversion                              0
+    PartitionFunctions                      0
+    SpecificHeats                           0
+    CoolingFunctions                        0
+    Lifetimes                               0
+    OscillatorStrengths                     0
+    StickSpectra                            1
+    CrossSections                           0
+
+
     # Quantum numbers for conversion, stick spectra and cross sections #
     QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
     QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
@@ -78,9 +102,33 @@ The intensity equation is:
 
 .. code:: bash
 
+    # Data source #
+    Database                                HITRAN
+    Molecule                                NO
+    Isotopologue                            14N-16O
+    Dataset                                 NO-HITRAN
+    MolIsoID                                81
+
+
+    # File path #
+    ReadPath                                /home/jingxin/data/HITRAN/NO.par
+    SavePath                                /home/jingxin/data/pyexocross/
+
+
+    # Functions #
+    Conversion                              0
+    PartitionFunctions                      0
+    SpecificHeats                           0
+    CoolingFunctions                        0
+    Lifetimes                               0
+    OscillatorStrengths                     0
+    StickSpectra                            1
+    CrossSections                           0
+
+
     # Quantum numbers for conversion, stick spectra and cross sections #
-    QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-    QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+    QNslabel                                J       X     Omega   v1      m      Sym    
+    QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
 
 
     # Calculate stick spectra or cross sections #

@@ -1,4 +1,4 @@
-# Basic information #
+# Data source #
 Database                                HITRAN
 Molecule                                O2
 Isotopologue                            16O2
@@ -22,7 +22,7 @@ StickSpectra                            1
 CrossSections                           0
 
 
-# Quantum numbers #
+# Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                X     Omega   v1      Br1     N      Br2      F      M
 QNsformat                               %2s   %3s     %2d     %1s    %3d     %1s      %5s    %1s
 

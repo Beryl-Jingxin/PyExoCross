@@ -15,6 +15,30 @@ The lifetimes equation is:
 
 .. code:: bash
 
+    # Data source #
+    Database                                ExoMol
+    Molecule                                MgH
+    Isotopologue                            24Mg-1H
+    Dataset                                 XAB
+    MolIsoID                                501
+ 
+
+    # File path #
+    ReadPath                                /mnt/data/exomol/exomol3_data/
+    SavePath                                /home/jingxin/data/pyexocross/
+    
+
+    # Functions #
+    Conversion                              0
+    PartitionFunctions                      0
+    SpecificHeats                           0
+    CoolingFunctions                        0
+    Lifetimes                               1
+    OscillatorStrengths                     0
+    StickSpectra                            0
+    CrossSections                           0
+
+
     # Calculate lifetimes #
     Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 

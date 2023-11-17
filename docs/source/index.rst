@@ -19,6 +19,7 @@ Welcome to PyExoCross's documentation!
    specificheats.rst
    coolingfunc.rst
    lifetimes.rst
+   oscillatorstrengths.rst
    stickspectra.rst
    crosssections.md
    license.md
