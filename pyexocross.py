@@ -148,10 +148,10 @@ def inp_para(inp_filepath):
         
     # Calculate oscillator strengths
     if OscillatorStrengths != 0:
-        fgORf = inp_df[col0.isin(['fg/f'])][1].values[0].upper()
+        gfORf = inp_df[col0.isin(['gf/f'])][1].values[0].upper()
         Ncolumns = int(inp_df[col0.isin(['Ncolumns'])][1])      # Number of columns in result file
     else:
-        fgORf = 'FG'
+        gfORf = 'GF'
         Ncolumns = 3
     
     # Calculate stick spectra or cross sections 
@@ -338,7 +338,7 @@ def inp_para(inp_filepath):
             Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
             ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
-            Ntemp, Tmax, CompressYN, fgORf, Ncolumns, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+            Ntemp, Tmax, CompressYN, gfORf, Ncolumns, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
             cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
             check_uncertainty, check_lifetime, check_gfactor, check_predissoc, 
@@ -361,7 +361,7 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
  Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
  ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
- Ntemp, Tmax, CompressYN, fgORf, Ncolumns, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+ Ntemp, Tmax, CompressYN, gfORf, Ncolumns, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
  cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
  check_uncertainty, check_lifetime, check_gfactor, check_predissoc, 
@@ -1145,12 +1145,12 @@ def linelist_oscillator_strength(states_df, all_trans_df, ncolumn):
     return (gp, gpp, A, v, trans_s_df)
 
 def cal_oscillator_strength(gp, gpp, A, v):
-    fg = ne.evaluate('gp * A / (c * v)**2')
-    f = ne.evaluate('fg / gpp')
-    if 'G' not in fgORf:
+    gf = ne.evaluate('gp * A / (c * v)**2')
+    f = ne.evaluate('gf / gpp')
+    if 'G' not in gfORf:
         oscillator_strength = f
     else:
-        oscillator_strength = fg
+        oscillator_strength = gf
     return oscillator_strength
 
 # Oscillator strength for ExoMol database

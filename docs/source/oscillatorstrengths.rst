@@ -1,10 +1,11 @@
 Oscillator strengths
 ====================
 
-Oscillator strength ``fg``, which is what people usually use.  
-Sometimes people need ``f``, not ``fg``. ``f`` is the actual oscillator strength and the actual value of ``f`` is ``fg`` divided by ``g"``.
+Weighted oscillator strength ``gf``, which is what people usually use.  
+``f`` is the actual oscillator strength and the actual value of ``f`` is ``gf`` divided by ``g"``.
+Sometimes people need oscillator strength ``f``, not ``gf``.
 
-| ``fg/f``: Choose oscillator strength ``fg`` or actual oscillator strength ``f``.
+| ``gf/f``: Choose weigthed oscillator strength ``gf`` or actual oscillator strength ``f``.
 | ``Ncolumns``: Type ``3`` or ``4``. 
 | ``3`` columns: upper ID, lower ID, oscillator strength (ExoMol database) or g', g", oscillator strength (HITRAN database).
 | ``4`` columns: upper ID, lower ID, Einstein A-coefficient, oscillator strength (ExoMol database) or g', g", Einstein A-coefficient, oscillator strength (HITRAN database).
@@ -13,7 +14,7 @@ The oscillator strengths equation is:
 
 .. math::
 
-    fg^{''}=\frac{g^{'}_\textrm{tot}A_{fi}}{(c\tilde{v}_{fi})^2}.
+    gf=\frac{g^{'}_\textrm{tot}A_{fi}}{(c\tilde{v}_{fi})^2}.
 
 *Example*
 
@@ -44,6 +45,6 @@ The oscillator strengths equation is:
 
 
     # Calculate oscillator strengths #
-    fg/f                                    fg
+    gf/f                                    gf
     Ncolumns                                4                         # 3 (without A) or 4 (with A)
 

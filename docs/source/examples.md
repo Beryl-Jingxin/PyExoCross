@@ -55,7 +55,7 @@ Compress(Y/N)                           Y                         # If Y, save a
 
 
 # Calculate oscillator strengths #
-fg/f                                    fg
+gf/f                                    gf
 Ncolumns                                4                         # 3 (without A) or 4 (with A)
 
 
@@ -140,7 +140,7 @@ Compress(Y/N)                           Y                         # If Y, save a
 
 
 # Calculate oscillator strengths #
-fg/f                                    fg
+gf/f                                    gf
 Ncolumns                                4                         # 3 (without A) or 4 (with A)
 
 
