@@ -1,9 +1,9 @@
 # Data source #
 Database                                ExoMol
-Molecule                                CO2
-Isotopologue                            12C-16O2
-Dataset                                 UCL-4000
-MolIsoID                                21
+Molecule                                NO
+Isotopologue                            14N-16O
+Dataset                                 XABC
+MolIsoID                                81
 
 
 # File path #
@@ -18,13 +18,13 @@ SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
-StickSpectra                            1
-CrossSections                           0
+StickSpectra                            0
+CrossSections                           1
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                Gamma   e/f     n1      n2      l2      n3
-QNsformat                               %2s     %2s     %4i     %5i     %4i     %4i
+QNslabel                                +/-    e/f     State    v     Lambda   Sigma    Omega
+QNsformat                               %1s    %1s     %5s      %5d   %5d      %5.1f    %5.1f
 
 
 # Calculate partition, specific heats or cooling functions #
@@ -48,7 +48,7 @@ Range                                   2000       2500
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          Gamma[]  e/f[]  n1[1,0;2,0]  n2[1,;,0]  l2[]  n3[]
+QNsFilter(Y/N)                          Y          State[A2Sigma+,;B2Pi,]  v[]  Lambda[]  Sigma[]  Omega[]
 
 
 # Calculate stick spectra #
@@ -58,13 +58,13 @@ Y-axisLimitStickSpectra                 1e-40                     # Default valu
 
 # Calculate cross sections #
 Pressure                                1
-Npoints/BinSize                         Npoints    10001
-Broadeners                              Default    
+Npoints/BinSize                         BinSize    0.1
+Broadeners                              air    
 Ratios                                  1.0        
 Profile                                 Gaussian       
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          100            # If Y, default value 25 
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   Y
+PlotCrossSection(Y/N)                   Y  
 Y-axisLimitXsec                         1e-40                     # Default value is 1e-30

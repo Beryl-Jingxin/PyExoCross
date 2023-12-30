@@ -1,39 +1,39 @@
 # Data source #
 Database                                HITRAN
-Molecule                                NO
-Isotopologue                            14N-16O
-Dataset                                 NO-HITRAN
-MolIsoID                                81
+Molecule                                H2O
+Isotopologue                            1H2-16O
+Dataset                                 H2O-HITRAN
+MolIsoID                                11
 
 
 # File path #
-ReadPath                                /home/jingxin/data/HITRAN/NO.par
+ReadPath                                /home/jingxin/data/HITRAN/H2O.par
 SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-Conversion                              1
-PartitionFunctions                      1
-SpecificHeats                           1
-CoolingFunctions                        1
-Lifetimes                               1
-OscillatorStrengths                     1
-StickSpectra                            1
+Conversion                              0
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+OscillatorStrengths                     0
+StickSpectra                            0
 CrossSections                           1
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                J       X     Omega   v1      m      Sym    
-QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
+QNslabel                                v1     v2    v3     J     Ka    Kc    F    Sym  
+QNsformat                               %2d    %2d   %2d    %3d   %3d   %3d   %5s  %1s
 
 
 # Conversion #  
 ConversionFormat                        2  
-ConversionFrequncyRange                 0          63000   
-GlobalQNLabel                           X       Omega    v1                
-GlobalQNFormat                          %2s     %3s      %2d               
-LocalQNLabel                            m       Br       Sym     F         
-LocalQNFormat                           %1s     %2s      %1s     %5s       
+ConversionFrequncyRange                 0          1000   
+GlobalQNLabel                           v1     v2    v3               
+GlobalQNFormat                          %2d    %2d   %2d         
+LocalQNLabel                            J     Ka    Kc    F    Sym          
+LocalQNFormat                           %3d   %3d   %3d   %5s  %1s     
 ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.01
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30     
       
@@ -55,11 +55,11 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 Temperature                             300
-Range                                   0          30000
+Range                                   0          1000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          X[]       Omega[]       v1[1,0;2,]
+QNsFilter(Y/N)                          Y          v1[]       v2[]       v3[1,0;2,]
 
 
 # Calculate stick spectra #

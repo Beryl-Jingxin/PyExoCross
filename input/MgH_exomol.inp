@@ -49,7 +49,8 @@ Compress(Y/N)                           N                         # If Y, save a
 
 # Calculate oscillator strengths #
 gf/f                                    gf
-Ncolumns                                4                         # 3 (without A) or 4 (with A)
+PlotOscillatorStrength(Y/N)             Y    
+Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
 
 
 # Calculate stick spectra or cross sections #
@@ -63,7 +64,7 @@ QNsFilter(Y/N)                          N          par[]   e/f[,e]   v[1,0;2,0;3
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
-Y-axisLimitStick                        1e-30                     # Default value is 1e-30
+Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30
 
 
 # Calculate cross sections #

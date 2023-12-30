@@ -1,9 +1,9 @@
 # Data source #
 Database                                ExoMol
-Molecule                                CO2
-Isotopologue                            12C-16O2
-Dataset                                 UCL-4000
-MolIsoID                                21
+Molecule                                H2O
+Isotopologue                            1H2-16O
+Dataset                                 POKAZATEL
+MolIsoID                                11
 
 
 # File path #
@@ -23,8 +23,8 @@ CrossSections                           0
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                Gamma   e/f     n1      n2      l2      n3
-QNsformat                               %2s     %2s     %4i     %5i     %4i     %4i
+QNslabel                                Ka      Kc      v1      v2      v3      Gamma_rve
+QNsformat                               %2d     %2d     %2d     %2d     %2d     %2s
 
 
 # Calculate partition, specific heats or cooling functions #
@@ -44,15 +44,15 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 Temperature                             296
-Range                                   2000       2500
-Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
+Range                                   20000      20500
+Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          Gamma[]  e/f[]  n1[1,0;2,0]  n2[1,;,0]  l2[]  n3[]
+QNsFilter(Y/N)                          Y          Ka[]  Kc[]  v1[1,0;2,0]  v2[1,;,0]  v3[]  Gamma_rve[]
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   Y
+PlotStickSpectra(Y/N)                   N
 Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30
 
 

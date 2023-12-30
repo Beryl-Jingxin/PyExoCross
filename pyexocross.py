@@ -1187,7 +1187,7 @@ def hitran_oscillator_strength(hitran_df):
     gpp = hitran_df['gp'].values
     if Ncolumns == 4:
         oscillator_strength_df = hitran_df[['gp', 'gpp', 'A']]
-        os_format = "%7.1f %7.1f %10.3E %20.8E"
+        os_format = "%7.1f %7.1f %10.4E %20.8E"
     else:
         oscillator_strength_df = hitran_df[['gp', 'gpp']]
         os_format = "%7.1f %7.1f %20.8E"
@@ -2218,14 +2218,14 @@ def HumlicekVoigt_profile(dv, alpha, gamma):
     HumlicekVoigtProfile = ne.evaluate('real(w) / alpha * Sqrtln2InvPi')
     return HumlicekVoigtProfile
 
-def PseudoVoigt_profile(dv, alpha, gamma, eta, hV):
+def PseudoVoigt_profile(dv, alpha, gamma, eta):
     '''
     hv is the Voigt half-width at half-maximum (HWHM), 
     which can be found from the HWHM of the associated Doppler and Lorentzian profile.
     eta is a function of Voigt profile half width at half maximum (HWHM) parameters.
     '''
-    GaussianProfile = Doppler_profile(dv, hV)
-    LorentzianProfile = Lorentzian_profile(dv, hV)
+    GaussianProfile = Doppler_profile(dv, alpha)
+    LorentzianProfile = Lorentzian_profile(dv, gamma)
     PseudoVoigtProfile = ne.evaluate('eta * LorentzianProfile + (1 - eta) * GaussianProfile')
     return PseudoVoigtProfile
 
@@ -2237,7 +2237,7 @@ def PseudoThompsonVoigt(alpha, gamma):
     ''' 
     hV = ne.evaluate('(alpha**5+2.69269*alpha**4*gamma+2.42843*alpha**3*gamma**2+4.47163*alpha**2*gamma**3+0.07842*alpha*gamma**4+gamma**5)**0.2')
     eta = ne.evaluate('1.36603*(gamma/hV) - 0.47719*(gamma/hV)**2 + 0.11116*(gamma/hV)**3')
-    return (eta, hV)
+    return (eta)
 
 def PseudoKielkopfVoigt(alpha, gamma):
     '''
@@ -2247,7 +2247,7 @@ def PseudoKielkopfVoigt(alpha, gamma):
     '''
     hV = ne.evaluate('0.5346 * gamma + sqrt(0.2166 * gamma**2 + alpha**2)')
     eta = ne.evaluate('1.36603*(gamma/hV) - 0.47719*(gamma/hV)**2 + 0.11116*(gamma/hV)**3')
-    return (eta, hV)
+    return (eta)
 
 def PseudoOliveroVoigt(alpha, gamma):
     '''
@@ -2258,7 +2258,7 @@ def PseudoOliveroVoigt(alpha, gamma):
     d = ne.evaluate('(gamma-alpha)/(gamma+alpha)')
     hV = ne.evaluate('(1-0.18121*(1-d**2)-(0.023665*exp(0.6*d)+0.00418*exp(-1.9*d))*sinPI*d)*(alpha+gamma)')
     eta = ne.evaluate('1.36603*(gamma/hV) - 0.47719*(gamma/hV)**2 + 0.11116*(gamma/hV)**3')
-    return (eta, hV)
+    return (eta)
 
 def PseudoLiuLinVoigt(alpha, gamma):
     '''
@@ -2269,7 +2269,7 @@ def PseudoLiuLinVoigt(alpha, gamma):
     d = ne.evaluate('(gamma-alpha)/(gamma+alpha)')
     hV = ne.evaluate('(1-0.18121*(1-d**2)-(0.023665*exp(0.6*d)+0.00418*exp(-1.9*d))*sinPI*d)*(alpha+gamma)')
     eta = ne.evaluate('0.68188+0.61293*d-0.18384*d**2-0.11568*d**3')
-    return (eta, hV)
+    return (eta)
 
 def PseudoRoccoVoigt(alpha, gamma):
     '''
@@ -2283,7 +2283,7 @@ def PseudoRoccoVoigt(alpha, gamma):
     Vy = ne.evaluate('bhalfy*exp(y**2)*(1-erfy)')
     hV = ne.evaluate('alpha / Sqrtln2 * bhalfy')
     eta = ne.evaluate('(Vy-Sqrtln2)/(Vy*OneminSqrtPIln2)')
-    return (eta, hV)
+    return (eta)
 
 def BinnedGaussian_profile(dv, alpha):
     '''Return binned Gaussian line profile at dv with HWHM alpha.'''
@@ -2649,7 +2649,7 @@ def cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff, threshol
     xsec[start:end] += _xsec
     return (xsec)
 
-def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold):
+def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
     Return the wavennumbers and cross sections with Pseudo Voigt profile.
@@ -2663,7 +2663,7 @@ def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, t
             idx = i-start
             wn_grid_i = wn_grid[i]
             dv = ne.evaluate('wn_grid_i - v')
-            PseudoVoigt = PseudoVoigt_profile(dv, alpha, gamma, eta, hV)
+            PseudoVoigt = PseudoVoigt_profile(dv, alpha, gamma, eta)
             _xsec[idx] = ne.evaluate('sum(coef * PseudoVoigt)')
     elif (cutoff == 'None') & (threshold != 'None'):
         filter = coef >= threshold
@@ -2671,7 +2671,6 @@ def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, t
         if _alpha.size > 0:
             _gamma = gamma[filter]
             _eta = eta[filter]
-            _hV = hV[filter]
             _coef = coef[filter]
             start = max(0,wn_grid.searchsorted(v.min())-1)
             end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
@@ -2680,7 +2679,7 @@ def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, t
                 idx = i-start
                 wn_grid_i = wn_grid[i]
                 _dv = ne.evaluate('wn_grid_i - v')[filter]
-                PseudoVoigt = PseudoVoigt_profile(_dv, _alpha, _gamma, _eta, _hV)
+                PseudoVoigt = PseudoVoigt_profile(_dv, _alpha, _gamma, _eta)
                 _xsec[idx] = ne.evaluate('sum(_coef * PseudoVoigt)')
     elif (cutoff != 'None') & (threshold == 'None'):
         start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
@@ -2696,9 +2695,8 @@ def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, t
                 _alpha = alpha[filter]
                 _gamma = gamma[filter]
                 _eta = eta[filter]
-                _hV = hV[filter]
                 _coef = coef[filter]
-                PseudoVoigt = PseudoVoigt_profile(_dv, _alpha, _gamma, _eta, _hV)
+                PseudoVoigt = PseudoVoigt_profile(_dv, _alpha, _gamma, _eta)
                 _xsec[idx] = ne.evaluate('sum(_coef * PseudoVoigt)')
     else: 
         filter_threshold = coef >= threshold
@@ -2716,9 +2714,8 @@ def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, t
                 _alpha = alpha[filter]
                 _gamma = gamma[filter]
                 _eta = eta[filter]
-                _hV = hV[filter]
                 _coef = coef[filter]
-                PseudoVoigt = PseudoVoigt_profile(_dv, _alpha, _gamma, _eta, _hV)
+                PseudoVoigt = PseudoVoigt_profile(_dv, _alpha, _gamma, _eta)
                 _xsec[idx] = ne.evaluate('sum(_coef * PseudoVoigt)')  
     xsec[start:end] += _xsec
     return (xsec)       
@@ -3159,28 +3156,28 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
     elif 'TH' in profile:
         print('Thompson pseudo-Voigt profile')
         profile_label = 'Thompson pseudo-Voigt'
-        eta, hV = PseudoThompsonVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold)       
+        eta = PseudoThompsonVoigt(alpha, gamma)
+        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold)       
     elif 'K' in profile and 'H' not in profile:
         print('Kielkopf pseudo-Voigt profile')
         profile_label = 'Kielkopf pseudo-Voigt'
-        eta, hV = PseudoKielkopfVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold)       
+        eta = PseudoKielkopfVoigt(alpha, gamma)
+        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold)       
     elif 'OL' in profile:
         print('Olivero pseudo-Voigt profile')
         profile_label = 'Olivero pseudo-Voigt'
-        eta, hV = PseudoOliveroVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold)       
+        eta = PseudoOliveroVoigt(alpha, gamma)
+        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold)       
     elif 'LI' in profile or 'LL' in profile:
         print('Liu-Lin pseudo-Voigt profile')
         profile_label = 'Liu-Lin pseudo-Voigt'
-        eta, hV = PseudoLiuLinVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold)       
+        eta = PseudoLiuLinVoigt(alpha, gamma)
+        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold)       
     elif 'RO' in profile:
         print('Rocco pseudo-Voigt profile')
         profile_label = 'Rocco pseudo-Voigt'
-        eta, hV = PseudoRoccoVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, hV, coef, cutoff, threshold) 
+        eta = PseudoRoccoVoigt(alpha, gamma)
+        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold) 
     elif 'BIN' in profile and 'DOP' in profile:
         print('Binned Doppler profile')
         profile_label = 'Binned Doppler'
