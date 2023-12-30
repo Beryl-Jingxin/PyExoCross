@@ -10,19 +10,33 @@ import argparse
 import numpy as np
 import pandas as pd
 import numexpr as ne
-from tqdm import tqdm
-from io import StringIO
 import astropy.units as au
-from itertools import chain
+import astropy.constants as ac
 import matplotlib.pyplot as plt
+from io import StringIO
+from itertools import chain
+from tqdm.notebook import tqdm
+from indexed_bzip2 import IndexedBzip2File
+from multiprocessing import Process, Pool, freeze_support
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from scipy.special import voigt_profile, wofz, erf, roots_hermite
+
 import warnings
 warnings.simplefilter("ignore", np.ComplexWarning)
 pd.options.mode.chained_assignment = None
+
 import matplotlib as mpl
 mpl.rcParams['agg.path.chunksize'] = 10000
+
+import multiprocessing as mp
+freeze_support()
+num_cpus = mp.cpu_count()
+print('Number of CPU: ', num_cpus)
+n_workers = 2 * num_cpus
+print(f'{n_workers} workers are available')
+
 from pandarallel import pandarallel
-pandarallel.initialize(nb_workers=4,progress_bar=False)    # Initialize.
+pandarallel.initialize(nb_workers=n_workers,progress_bar=False)    # Initialize.
 
 # The input file path
 def parse_args():
@@ -65,7 +79,7 @@ def inp_para(inp_filepath):
     molecule = inp_df[col0.isin(['Molecule'])][1].values[0]
     isotopologue = inp_df[col0.isin(['Isotopologue'])][1].values[0]
     dataset = inp_df[col0.isin(['Dataset'])][1].values[0]
-    mol_iso_id = int(inp_df[col0.isin(['MolIsoID'])][1])
+    mol_iso_id = int(inp_df[col0.isin(['MolIsoID'])][1].iloc[0])
     
     # File path
     read_path = inp_df[col0.isin(['ReadPath'])][1].values[0]
@@ -76,14 +90,14 @@ def inp_para(inp_filepath):
         os.makedirs(save_path, exist_ok=True)
         
     # Functions 
-    Conversion = int(inp_df[col0.isin(['Conversion'])][1])
-    PartitionFunctions = int(inp_df[col0.isin(['PartitionFunctions'])][1])
-    CoolingFunctions = int(inp_df[col0.isin(['CoolingFunctions'])][1])
-    Lifetimes = int(inp_df[col0.isin(['Lifetimes'])][1])
-    OscillatorStrengths = int(inp_df[col0.isin(['OscillatorStrengths'])][1])
-    SpecificHeats = int(inp_df[col0.isin(['SpecificHeats'])][1])
-    StickSpectra = int(inp_df[col0.isin(['StickSpectra'])][1])
-    CrossSections = int(inp_df[col0.isin(['CrossSections'])][1])
+    Conversion = int(inp_df[col0.isin(['Conversion'])][1].iloc[0])
+    PartitionFunctions = int(inp_df[col0.isin(['PartitionFunctions'])][1].iloc[0])
+    CoolingFunctions = int(inp_df[col0.isin(['CoolingFunctions'])][1].iloc[0])
+    Lifetimes = int(inp_df[col0.isin(['Lifetimes'])][1].iloc[0])
+    OscillatorStrengths = int(inp_df[col0.isin(['OscillatorStrengths'])][1].iloc[0])
+    SpecificHeats = int(inp_df[col0.isin(['SpecificHeats'])][1].iloc[0])
+    StickSpectra = int(inp_df[col0.isin(['StickSpectra'])][1].iloc[0])
+    CrossSections = int(inp_df[col0.isin(['CrossSections'])][1].iloc[0])
     
     # Quantum numbers
     NeedQNs = Conversion + StickSpectra + CrossSections
@@ -98,9 +112,9 @@ def inp_para(inp_filepath):
     
     # Convert from one format to another
     if Conversion != 0:
-        ConversionFormat = int(inp_df[col0.isin(['ConversionFormat'])][1])
-        ConversionMinFreq = float(inp_df[col0.isin(['ConversionFrequncyRange'])][1])
-        ConversionMaxFreq = float(inp_df[col0.isin(['ConversionFrequncyRange'])][2])
+        ConversionFormat = int(inp_df[col0.isin(['ConversionFormat'])][1].iloc[0])
+        ConversionMinFreq = float(inp_df[col0.isin(['ConversionFrequncyRange'])][1].iloc[0])
+        ConversionMaxFreq = float(inp_df[col0.isin(['ConversionFrequncyRange'])][2].iloc[0])
         GlobalQNLabel_list = list(inp_df[col0.isin(['GlobalQNLabel'])].iloc[0].dropna())[1:]
         GlobalQNFormat_list = list(inp_df[col0.isin(['GlobalQNFormat'])].iloc[0].dropna())[1:]
         LocalQNLabel_list = list(inp_df[col0.isin(['LocalQNLabel'])].iloc[0].dropna())[1:]
@@ -108,7 +122,7 @@ def inp_para(inp_filepath):
         # Uncertainty filter
         ConversionUncYN = inp_df[col0.isin(['ConvUncFilter(Y/N)'])][1].values[0].upper()[0]
         if ConversionUncYN == 'Y':
-            ConversionUnc = float(inp_df[col0.isin(['ConvUncFilter(Y/N)'])][2])
+            ConversionUnc = float(inp_df[col0.isin(['ConvUncFilter(Y/N)'])][2].iloc[0])
         elif ConversionUncYN == 'N':
             ConversionUnc = 'None'
         else:
@@ -116,7 +130,7 @@ def inp_para(inp_filepath):
         # Threshold filter
         ConversionThresholdYN = inp_df[col0.isin(['ConvThreshold(Y/N)'])][1].values[0].upper()[0]
         if ConversionThresholdYN == 'Y':
-            ConversionThreshold = float(inp_df[col0.isin(['ConvThreshold(Y/N)'])][2])
+            ConversionThreshold = float(inp_df[col0.isin(['ConvThreshold(Y/N)'])][2].iloc[0])
         elif ConversionThresholdYN == 'N':
             ConversionThreshold = 'None'
         else:
@@ -134,8 +148,8 @@ def inp_para(inp_filepath):
         
     # Calculate partition, cooling functions or specific heats 
     if PartitionFunctions + CoolingFunctions + SpecificHeats != 0:
-        Ntemp = int(inp_df[col0.isin(['Ntemp'])][1])    # The number of temperature steps
-        Tmax = int(inp_df[col0.isin(['Tmax'])][1])      # Maximal temperature in K (minimal T = 1 K )
+        Ntemp = int(inp_df[col0.isin(['Ntemp'])][1].iloc[0])    # The number of temperature steps
+        Tmax = int(inp_df[col0.isin(['Tmax'])][1].iloc[0])      # Maximal temperature in K (minimal T = 1 K )
     else:
         Ntemp = 0
         Tmax = 0  
@@ -149,21 +163,32 @@ def inp_para(inp_filepath):
     # Calculate oscillator strengths
     if OscillatorStrengths != 0:
         gfORf = inp_df[col0.isin(['gf/f'])][1].values[0].upper()
-        Ncolumns = int(inp_df[col0.isin(['Ncolumns'])][1])      # Number of columns in result file
+        PlotOscillatorStrengthYN = inp_df[col0.isin(['PlotOscillatorStrength(Y/N)'])][1].values[0].upper() 
+        if PlotOscillatorStrengthYN == 'Y':
+            _limitYaxisOS = inp_df[col0.isin(['Y-axisLimitOscillatorStrength'])][1].values[0]
+            if _limitYaxisOS == '#':
+                limitYaxisOS = 1e-30
+            elif pd.isnull(_limitYaxisOS) == True:
+                limitYaxisOS = 1e-30
+            else:
+                limitYaxisOS = float(_limitYaxisOS)
+        else:
+            limitYaxisOS = 0
     else:
         gfORf = 'GF'
-        Ncolumns = 3
+        PlotOscillatorStrengthYN = 'None'
+        limitYaxisOS = 0
     
     # Calculate stick spectra or cross sections 
     if StickSpectra + CrossSections != 0:
-        T = int(inp_df[col0.isin(['Temperature'])][1])
-        min_wn = float(inp_df[col0.isin(['Range'])][1])
-        max_wn = float(inp_df[col0.isin(['Range'])][2])
+        T = int(inp_df[col0.isin(['Temperature'])][1].iloc[0])
+        min_wn = float(inp_df[col0.isin(['Range'])][1].iloc[0])
+        max_wn = float(inp_df[col0.isin(['Range'])][2].iloc[0])
         abs_emi = inp_df[col0.isin(['Absorption/Emission'])][1].values[0].upper()[0].replace('A','Ab').replace('E','Em')
         # Uncertainty filter
         UncFilterYN = inp_df[col0.isin(['UncFilter(Y/N)'])][1].values[0].upper()[0]
         if UncFilterYN == 'Y':
-            UncFilter = float(inp_df[col0.isin(['UncFilter(Y/N)'])][2])
+            UncFilter = float(inp_df[col0.isin(['UncFilter(Y/N)'])][2].iloc[0])
         elif UncFilterYN == 'N':
             UncFilter = 'None'
         else:
@@ -171,7 +196,7 @@ def inp_para(inp_filepath):
         # Threshold filter
         thresholdYN = inp_df[col0.isin(['Threshold(Y/N)'])][1].values[0].upper()[0]
         if thresholdYN == 'Y':
-            threshold = float(inp_df[col0.isin(['Threshold(Y/N)'])][2])
+            threshold = float(inp_df[col0.isin(['Threshold(Y/N)'])][2].iloc[0])
         elif thresholdYN == 'N':
             threshold = 'None'
         else:
@@ -209,38 +234,40 @@ def inp_para(inp_filepath):
     if StickSpectra != 0:
         PlotStickSpectraYN = inp_df[col0.isin(['PlotStickSpectra(Y/N)'])][1].values[0].upper()[0]
         if PlotStickSpectraYN == 'Y':
-            _limitYaxisStick = inp_df[col0.isin(['Y-axisLimitStick'])][1].values[0]
-            if _limitYaxisStick == '#':
-                limitYaxisStick = 1e-30
-            elif pd.isnull(_limitYaxisStick) == True:
-                limitYaxisStick = 1e-30
+            _limitYaxisStickSpectra = inp_df[col0.isin(['Y-axisLimitStickSpectra'])][1].values[0]
+            if _limitYaxisStickSpectra == '#':
+                limitYaxisStickSpectra = 1e-30
+            elif pd.isnull(_limitYaxisStickSpectra) == True:
+                limitYaxisStickSpectra = 1e-30
             else:
-                limitYaxisStick = float(_limitYaxisStick)
+                limitYaxisStickSpectra = float(_limitYaxisStickSpectra)
+        else:
+            limitYaxisStickSpectra = 0
     else:
         PlotStickSpectraYN = 'None'
-        limitYaxisStick = 1e-30
+        limitYaxisStickSpectra = 0
 
     # Cross sections
     if CrossSections != 0:
         NpointsORBinSize = inp_df[col0.isin(['Npoints/BinSize'])][1].values[0].upper()
         if 'POI' in NpointsORBinSize:
-            N_point = int(inp_df[col0.isin(['Npoints/BinSize'])][2])
+            N_point = int(inp_df[col0.isin(['Npoints/BinSize'])][2].iloc[0])
             bin_size = float((max_wn - min_wn)/(N_point-1))
         elif 'BIN' in NpointsORBinSize or 'SIZ' in NpointsORBinSize:
-            bin_size = float(inp_df[col0.isin(['Npoints/BinSize'])][2])
+            bin_size = float(inp_df[col0.isin(['Npoints/BinSize'])][2].iloc[0])
             N_point = int((max_wn - min_wn)/bin_size+1)
         else:
             raise ImportError("Please type the correct grid choice 'Npoints' or 'BinSize' into the input file.")
         # Cutoff
         cutoffYN = inp_df[col0.isin(['Cutoff(Y/N)'])][1].values[0].upper()[0]
         if cutoffYN == 'Y':
-            cutoff = float(inp_df[col0.isin(['Cutoff(Y/N)'])][2])
+            cutoff = float(inp_df[col0.isin(['Cutoff(Y/N)'])][2].iloc[0])
         elif cutoffYN == 'N':
             cutoff = 'None'
         else:
             raise ImportError("Please type the correct cutoff choice 'Y' or 'N' into the input file.")
         # Other parameters
-        P = float(inp_df[col0.isin(['Pressure'])][1])
+        P = float(inp_df[col0.isin(['Pressure'])][1].iloc[0])
         broadeners = list(inp_df[col0.isin(['Broadeners'])].iloc[0])[1:]
         broadeners = [i for i in broadeners if i is not np.nan]
         ratios = np.array(list(inp_df[col0.isin(['Ratios'])].iloc[0])[1:], dtype=float)
@@ -254,7 +281,7 @@ def inp_para(inp_filepath):
             alpha_HWHM = 'None'
         elif 'GAU' in profile:
             if DopplerHWHMYN == 'Y':
-                alpha_HWHM = float(inp_df[col0.isin(['DopplerHWHM(Y/N)'])][2])
+                alpha_HWHM = float(inp_df[col0.isin(['DopplerHWHM(Y/N)'])][2].iloc[0])
             else:
                 raise ImportError("Gaussian line profile requires a HWHM. " 
                                   + "Please choose 'Y' and give a value for Doppler HWHM in the input file. " 
@@ -262,7 +289,7 @@ def inp_para(inp_filepath):
                                   + "(with calculated temperature-dependent Doppler HWHM).")
         elif 'VOI' in profile:
             if DopplerHWHMYN == 'Y':
-                alpha_HWHM = float(inp_df[col0.isin(['DopplerHWHM(Y/N)'])][2])
+                alpha_HWHM = float(inp_df[col0.isin(['DopplerHWHM(Y/N)'])][2].iloc[0])
             elif DopplerHWHMYN == 'N':
                 alpha_HWHM = 'None'
             else:
@@ -272,9 +299,9 @@ def inp_para(inp_filepath):
         # Lorentzian HWHM 
         LorentzianHWHMYN = inp_df[col0.isin(['LorentzianHWHM(Y/N)'])][1].values[0].upper()[0]  
         if LorentzianHWHMYN == 'Y':
-            gamma_HWHM = float(inp_df[col0.isin(['LorentzianHWHM(Y/N)'])][2])
+            gamma_HWHM = float(inp_df[col0.isin(['LorentzianHWHM(Y/N)'])][2].iloc[0])
         elif LorentzianHWHMYN == 'N':
-            gamma_HWHM = 'None' 
+            gamma_HWHM = 'None'
         else:
             raise ImportError("Please type the correct Lorentzian HWHM choice 'Y' or 'N' into the input file.")
         # Plot 
@@ -287,6 +314,8 @@ def inp_para(inp_filepath):
                 limitYaxisXsec = 1e-30
             else:
                 limitYaxisXsec = float(_limitYaxisXsec)
+        else:
+            limitYaxisXsec = 0
     else:
         bin_size = 'None'
         N_point = 'None'
@@ -300,7 +329,7 @@ def inp_para(inp_filepath):
         profile = 'None'
         wn_wl = 'None'
         PlotCrossSectionYN = 'None'
-        limitYaxisXsec = 1e-30
+        limitYaxisXsec = 0
 
     # Molecule and isotopologue ID, abundance, mass uncertainty, lifetime and g-factor           
     molecule_id = int(mol_iso_id/10)
@@ -338,16 +367,15 @@ def inp_para(inp_filepath):
             Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
             ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
-            Ntemp, Tmax, CompressYN, gfORf, Ncolumns, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+            Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
             cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
-            check_uncertainty, check_lifetime, check_gfactor, check_predissoc, 
-            PlotStickSpectraYN, limitYaxisStick, PlotCrossSectionYN, limitYaxisXsec)
+            check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
+            PlotStickSpectraYN, limitYaxisStickSpectra, PlotCrossSectionYN, limitYaxisXsec)
+
 
 # Constants and parameters
 # Parameters for calculating
-import astropy.constants as ac
-#from astropy import constants, units as ac, au
 Tref = 296.0                        # Reference temperature is 296 K
 Pref = 1.0                          # Reference pressure is 1 bar
 N_A = ac.N_A.value                  # Avogadro number (1/mol)
@@ -361,11 +389,11 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
  Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
  ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
- Ntemp, Tmax, CompressYN, gfORf, Ncolumns, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+ Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
  cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
- check_uncertainty, check_lifetime, check_gfactor, check_predissoc, 
- PlotStickSpectraYN, limitYaxisStick, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
+ check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
+ PlotStickSpectraYN, limitYaxisStickSpectra, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
 
 # Constants
 c2InvTref = c2 / Tref                 # c2 / T_ref (cm)
@@ -452,6 +480,28 @@ def read_all_states(read_path):
     return(states_df)
 
 # Read transitions file
+def read_trans(trans_filename):
+    global u, l, A, v
+    file = IndexedBzip2File(trans_filename, parallelization=n_workers)
+    lines = file.readlines()
+    file.close()
+    ncolumn = len(lines[0].split())
+    if ncolumn == 4:
+        for line in lines:
+            part = line.split()
+            u.append(int(part[0]))
+            l.append(int(part[1]))
+            A.append(float(part[2]))
+            v.append(float(part[3]))
+    else:
+        for line in lines:
+            part = line.split()
+            u.append(int(part[0]))
+            l.append(int(part[1]))
+            A.append(float(part[2]))   
+    results = (u, l, A, v)
+    return results
+
 def get_transfiles(read_path):
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
     trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*trans.bz2')
@@ -492,23 +542,40 @@ def read_all_trans(read_path):
     t = Timer()
     t.start()
     print('Reading all transitions ...')
-    t_df = dict()
-    all_trans_df = pd.DataFrame()
+    
+    global u, l, A, v
+    u = []
+    l = []
+    A = []
+    v = []
     trans_filepaths = get_transfiles(read_path)
-    for trans_filename in tqdm(trans_filepaths, position=0, leave=True, 
-                               ncols=100, desc='Reading transitions'):
-        t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
-                                           chunksize=1_000_000, iterator=True, low_memory=False)
-        for chunk in t_df[trans_filename]:
-            all_trans_df = pd.concat([all_trans_df,chunk])
-    ncolumn = len(all_trans_df.columns)
-    if ncolumn == 3: 
-        trans_col_name={0:'u', 1:'l', 2:'A'}
+    nfile = len(trans_filepaths)
+    if nfile >= n_workers:
+        nprocess = nfile
+    elif nfile <= num_cpus:
+        nprocess = nfile*5
     else:
-        trans_col_name={0:'u', 1:'l', 2:'A', 3:'v'}
-    all_trans_df = all_trans_df.rename(columns=trans_col_name)  
+        nprocess = nfile*2
+    pool = Pool(processes=nprocess, maxtasksperchild=100) 
+    processes = []
+    for trans_filename in tqdm(trans_filepaths, position=0, leave=True, desc='Reading transitions'):
+        processes.append(pool.apply_async(read_trans, args=(trans_filename,)))
+    pool.close()
+    pool.join()
+    for proc in processes:
+        result = proc.get()
+        u += result[0]
+        l += result[1]
+        A += result[2]
+        v += result[3]
+    if len(v) == 0:
+        ncolumn = 3
+        all_trans_df = pd.DataFrame({'u':u, 'l':l, 'A':A})
+    else:
+        ncolumn = 4
+        all_trans_df = pd.DataFrame({'u':u, 'l':l, 'A':A, 'v':v})
     t.end()                
-    print('Finished reading all transitions!\n')         
+    print('Finished reading all transitions!\n')
     return(all_trans_df, ncolumn)
     
 
@@ -561,9 +628,10 @@ def read_broad(read_path):
     nbroad = len(broad)
     broad = list(i for i in broad if i==i)
     ratio = list(i for i in ratio if i==i)
-    print('Broadeners  \t:', str(broad).replace('[','').replace(']','').replace("'",''))
-    print('Ratios  \t\t:', str(ratio).replace('[','').replace(']',''))
-    return(broad, ratio, nbroad, broad_dfs)               
+    print('Broadeners \t:', str(broad).replace('[','').replace(']','').replace("'",''))
+    print('Ratios \t\t:', str(ratio).replace('[','').replace(']',''))
+    return(broad, ratio, nbroad, broad_dfs)        
+              
 
 # Quantum number filter
 def QNfilter_linelist(linelist_df, QNs_value, QNs_label):
@@ -938,9 +1006,12 @@ def exomol_partition_func(states_df, Ntemp, Tmax):
     gn = states_df['g'].astype('int').values
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     partition_func = [calculate_partition(En, gn, T) for T in Ts]
+    t.end()
+    
     partition_func_df = pd.DataFrame()
     partition_func_df['T'] = Ts
     partition_func_df['partition function'] = partition_func
+    
     pf_folder = save_path + '/partition/'
     if os.path.exists(pf_folder):
         pass
@@ -948,7 +1019,6 @@ def exomol_partition_func(states_df, Ntemp, Tmax):
         os.makedirs(pf_folder, exist_ok=True)
     pf_path = pf_folder + isotopologue + '__' + dataset + '.pf'
     np.savetxt(pf_path, partition_func_df, fmt="%8.1f %15.4f")
-    t.end()
     print('Partition functions have been saved!\n')  
 
 
@@ -969,9 +1039,12 @@ def exomol_specificheat(states_df, Ntemp, Tmax):
     gn = states_df['g'].astype('int').values
     Ts = np.array(range(200, Tmax+1, Ntemp)) 
     specificheat_func = [calculate_specific_heats(En, gn, T) for T in Ts]
+    t.end()
+    
     specificheat_func_df = pd.DataFrame()
     specificheat_func_df['T'] = Ts
-    specificheat_func_df['specific heat'] = specificheat_func
+    specificheat_func_df['specific heat'] = specificheat_func 
+    
     cp_folder = save_path + '/specific_heat/'
     if os.path.exists(cp_folder):
         pass
@@ -979,8 +1052,8 @@ def exomol_specificheat(states_df, Ntemp, Tmax):
         os.makedirs(cp_folder, exist_ok=True)  
     cp_path = cp_folder + isotopologue + '__' + dataset + '.cp'
     np.savetxt(cp_path, specificheat_func_df, fmt="%8.1f %15.4f")
-    t.end()
     print('Specific heats have been saved!\n')  
+ 
 
 # Calculate lifetime
 def cal_lifetime(states_df, all_trans_df):
@@ -1002,6 +1075,8 @@ def exomol_lifetime(read_path, states_df, all_trans_df):
     t.start()
     lifetime_df = cal_lifetime(states_df, all_trans_df)
     lifetime_list = list(lifetime_df['lt'])
+    t.end()
+    
     states_filenames = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset 
                                  + '/' + isotopologue + '__' + dataset + '.states.bz2')
     s_df = pd.read_csv(states_filenames[0], compression='bz2', header=None, dtype=object)
@@ -1013,11 +1088,13 @@ def exomol_lifetime(read_path, states_df, all_trans_df):
     if check_uncertainty == 1:
         for i in range(nrows):
             new_rows.append(s_df[0][i][:53]+lifetime_list[i]+s_df[0][i][65:]+'\n')
+
     lf_folder = save_path + '/lifetime/'
     if os.path.exists(lf_folder):
         pass
     else:
         os.makedirs(lf_folder, exist_ok=True)  
+        
     if CompressYN == 'Y':
         lf_path = lf_folder + isotopologue + '__' + dataset + '.states.bz2'
         with bz2.open(lf_path, 'wt') as f:
@@ -1030,8 +1107,8 @@ def exomol_lifetime(read_path, states_df, all_trans_df):
             for i in range(nrows):
                 f.write(new_rows[i])
             f.close
-    t.end()
     print('Lifetimes have been saved!\n')   
+  
 
 # Calculate cooling function
 def linelist_coolingfunc(states_df, all_trans_df, ncolumn):
@@ -1069,7 +1146,7 @@ def calculate_cooling(A, v, Ep, gp, T, Q):
 
 # Cooling function for ExoMol database
 def exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn):
-    tqdm.write('Calculate cooling functions.')  
+    tqdm.write('Calculate cooling functions.') 
     t = Timer()
     t.start()
     A, v, Ep, gp = linelist_coolingfunc(states_df, all_trans_df, ncolumn)
@@ -1077,9 +1154,12 @@ def exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn
     Qs = read_exomol_pf(read_path, Ts)
     # Qs = read_exomolweb_pf(Ts)
     cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), desc='Calculating')]
+    t.end()
+    
     cooling_func_df = pd.DataFrame()
     cooling_func_df['T'] = Ts
     cooling_func_df['cooling function'] = cooling_func
+    
     cf_folder = save_path + '/cooling/'
     if os.path.exists(cf_folder):
         pass
@@ -1087,8 +1167,7 @@ def exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn
         os.makedirs(cf_folder, exist_ok=True)  
     cf_path = cf_folder + isotopologue + '__' + dataset + '.cf' 
     np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20.8E")
-    t.end()
-    tqdm.write('Cooling functions have been saved!\n')   
+    tqdm.write('Cooling functions has been saved!\n')      
     
 # Cooling function for HITRAN database
 def hitran_cooling_func(hitran_df, Ntemp, Tmax):
@@ -1098,13 +1177,16 @@ def hitran_cooling_func(hitran_df, Ntemp, Tmax):
     Ep = cal_Ep(hitran_df['Epp'].values,hitran_df['v'].values)
     A = hitran_df['A'].values
     v = hitran_df['v'].values
-    gp = hitran_df['gp'].values 
+    gp = hitran_df['gp'].values
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     Qs = read_hitran_pf(Ts)
     cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), desc='Calculating')]
+    t.end()
+     
     cooling_func_df = pd.DataFrame()
     cooling_func_df['T'] = Ts
     cooling_func_df['cooling function'] = cooling_func
+
     cf_folder = save_path + '/cooling/'
     if os.path.exists(cf_folder):
         pass
@@ -1112,8 +1194,8 @@ def hitran_cooling_func(hitran_df, Ntemp, Tmax):
         os.makedirs(cf_folder, exist_ok=True)  
     cf_path = cf_folder + isotopologue + '__' + dataset + '.cf' 
     np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20.8E")
-    t.end()
-    print('Cooling functions have been saved!\n')      
+    print('Cooling functions have been saved!\n')       
+
 
 # Calculate oscillator strength
 def linelist_oscillator_strength(states_df, all_trans_df, ncolumn):
@@ -1136,14 +1218,16 @@ def linelist_oscillator_strength(states_df, all_trans_df, ncolumn):
     gp = states_u_df['g'].values.astype('int')
     gpp = states_l_df['g'].values.astype('int')
     A = trans_s_df['A'].values.astype('float')
+
     if ncolumn == 4:
         v = trans_s_df['v'].values.astype('float')
     else:
         Ep = states_u_df['E'].values.astype('float')
-        Epp = states_l_df['E'].values.astype('float')     # Upper state energy
+        Epp = states_l_df['E'].values.astype('float')
         v = cal_v(Ep, Epp) 
-    return (gp, gpp, A, v, trans_s_df)
+    return (gp, gpp, A, v)
 
+# Calculate gf or f
 def cal_oscillator_strength(gp, gpp, A, v):
     gf = ne.evaluate('gp * A / (c * v)**2')
     f = ne.evaluate('gf / gpp')
@@ -1153,28 +1237,58 @@ def cal_oscillator_strength(gp, gpp, A, v):
         oscillator_strength = gf
     return oscillator_strength
 
+# Plot oscillator strength 
+def plot_oscillator_strength(oscillator_strength_df):
+    v = oscillator_strength_df['v']
+    osc_str = oscillator_strength_df['os']
+    parameters = {'axes.labelsize': 18, 
+                  'legend.fontsize': 18,
+                  'xtick.labelsize': 14,
+                  'ytick.labelsize': 14}
+    plt.rcParams.update(parameters)
+    os_plot_folder = save_path + '/oscillator_strength/plots/'+molecule+'/'+database+'/'
+    if os.path.exists(os_plot_folder):
+        pass
+    else:
+        os.makedirs(os_plot_folder, exist_ok=True)
+    plt.figure(figsize=(12, 6))
+    plt.ylim([limitYaxisOS, 10*max(osc_str)])
+    plt.plot(v, osc_str, label=molecule, linewidth=0.4)
+    plt.semilogy()
+    #plt.title(database+' '+molecule+' oscillator strengths') 
+    plt.xlabel('Wavenumber, cm$^{-1}$')
+    plt.ylabel('Oscillator strength, ('+gfORf.lower()+')')
+    plt.legend()
+    leg = plt.legend()                  # Get the legend object.
+    for line in leg.get_lines():
+        line.set_linewidth(1.0)         # Change the line width for the legend.
+    plt.savefig(os_plot_folder+molecule+'__'+database+'__'+gfORf.lower()+'__os.png', dpi=500)
+    plt.show()
+
 # Oscillator strength for ExoMol database
 def exomol_oscillator_strength(states_df, all_trans_df, ncolumn):
     print('Calculate oscillator strengths.')  
     t = Timer()
     t.start()
-    gp, gpp, A, v, trans_s_df = linelist_oscillator_strength(states_df, all_trans_df, ncolumn)
-    if Ncolumns == 4:
-        oscillator_strength_df = trans_s_df[['u', 'l', 'A']]
-        os_format = "%12d %12d %10.4E %20.8E"
-    else:
-        oscillator_strength_df = trans_s_df[['u', 'l']]
-        os_format = "%12d %12d %20.8E"
+    gp, gpp, A, v= linelist_oscillator_strength(states_df, all_trans_df, ncolumn)
+    oscillator_strength_df = pd.DataFrame(list(zip(gp,gpp,v)), columns=['gp','gpp','v'])
     oscillator_strength_df['os'] = cal_oscillator_strength(gp, gpp, A, v)
+    oscillator_strength_df = oscillator_strength_df.sort_values(by=['v'])
+    t.end()
+    
     os_folder = save_path + '/oscillator_strength/'
     if os.path.exists(os_folder):
         pass
     else:
         os.makedirs(os_folder, exist_ok=True)  
     os_path = os_folder + isotopologue + '__' + dataset + '.os' 
+    os_format = "%7.1f %7.1f %12.6f %20.8E"
     np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
-    t.end()
-    print('Oscillator strengths have been saved!\n')   
+    
+    # Plot oscillator strengths and save it as .png.
+    if PlotOscillatorStrengthYN == 'Y':
+        plot_oscillator_strength(oscillator_strength_df)
+    print('Oscillator strengths have been saved!\n')    
     
 # Oscillator strength for HITRAN database
 def hitran_oscillator_strength(hitran_df):
@@ -1185,22 +1299,25 @@ def hitran_oscillator_strength(hitran_df):
     v = hitran_df['v'].values
     gp = hitran_df['gp'].values
     gpp = hitran_df['gp'].values
-    if Ncolumns == 4:
-        oscillator_strength_df = hitran_df[['gp', 'gpp', 'A']]
-        os_format = "%7.1f %7.1f %10.4E %20.8E"
-    else:
-        oscillator_strength_df = hitran_df[['gp', 'gpp']]
-        os_format = "%7.1f %7.1f %20.8E"
+    oscillator_strength_df = hitran_df[['gp', 'gpp', 'v']]
     oscillator_strength_df['os'] = cal_oscillator_strength(gp, gpp, A, v)
+    oscillator_strength_df = oscillator_strength_df.sort_values(by=['v'])
+    t.end()
+    
     os_folder = save_path + '/oscillator_strength/'
     if os.path.exists(os_folder):
         pass
     else:
         os.makedirs(os_folder, exist_ok=True)  
     os_path = os_folder + isotopologue + '__' + dataset + '.os' 
+    os_format = "%7.1f %7.1f %12.6f %20.8E"
     np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
-    t.end()
+    
+    # Plot oscillator strengths and save it as .png.
+    if PlotOscillatorStrengthYN == 'Y':
+        plot_oscillator_strength(oscillator_strength_df)  
     print('Oscillator strengths have been saved!\n') 
+    
     
 # Process data
 def read_part_states(states_df):
@@ -1290,25 +1407,40 @@ def read_part_trans(read_path):
     t = Timer()
     t.start()
     print('Reading part transitions ...')
-    trans_filenames = get_part_transfiles(read_path)
-    t_df = dict()
-    trans_part_df = pd.DataFrame()
-    # Initialise the iterator object.
-    for trans_filename in tqdm(trans_filenames, position=0, leave=True,
-                               ncols=100, desc='Reading transitions'):
-        print('\n',trans_filename)
-        t_df[trans_filename] = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None, 
-                                           chunksize=1_000_000, iterator=True, encoding='utf-8')
-        for chunk in t_df[trans_filename]:
-            trans_part_df = pd.concat([trans_part_df, chunk])
-    ncolumn = len(trans_part_df.columns)
-    if ncolumn == 3: 
-        trans_col_name={0:'u', 1:'l', 2:'A'}
+    
+    global u, l, A, v
+    u = []
+    l = []
+    A = []
+    v = []
+    trans_filepaths = get_part_transfiles(read_path)
+    nfile = len(trans_filepaths)
+    if nfile >= n_workers:
+        nprocess = nfile
+    elif nfile <= num_cpus:
+        nprocess = nfile*5
     else:
-        trans_col_name={0:'u', 1:'l', 2:'A', 3:'v'}
-    trans_part_df = trans_part_df.rename(columns=trans_col_name)
-    t.end()
-    print('Finished reading part transitions!\n')   
+        nprocess = nfile*2
+    pool = Pool(processes=nprocess, maxtasksperchild=100) 
+    processes = []
+    for trans_filename in tqdm(trans_filepaths, position=0, leave=True, desc='Reading transitions'):
+        processes.append(pool.apply_async(read_trans, args=(trans_filename,)))
+    pool.close()
+    pool.join()
+    for proc in processes:
+        result = proc.get()
+        u += result[0]
+        l += result[1]
+        A += result[2]
+        v += result[3]
+    if len(v) == 0:
+        ncolumn = 3
+        trans_part_df = pd.DataFrame({'u':u, 'l':l, 'A':A})
+    else:
+        ncolumn = 4
+        trans_part_df = pd.DataFrame({'u':u, 'l':l, 'A':A, 'v':v})
+    t.end()                
+    print('Finished reading part transitions!\n')
     return(trans_part_df, ncolumn)
 
 def extract_broad(broad_df, states_l_df):
@@ -1805,7 +1937,38 @@ def linelist_StickSpectra(states_part_df,trans_part_df, ncolumn):
             raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     return (A, v, Ep, Epp, gp, Jp, Jpp, stick_qn_df)
 
-# Stick spectra
+# Plot stick spectra
+def plot_stick_spectra(stick_spectra_df):  
+    v = stick_spectra_df['v']
+    I = stick_spectra_df['S']
+    parameters = {'axes.labelsize': 18, 
+                  'legend.fontsize': 18,
+                  'xtick.labelsize': 14,
+                  'ytick.labelsize': 14}
+    plt.rcParams.update(parameters)
+    ss_plot_folder = save_path + '/stick_spectra/plots/'+molecule+'/'+database+'/'
+    if os.path.exists(ss_plot_folder):
+        pass
+    else:
+        os.makedirs(ss_plot_folder, exist_ok=True)
+    plt.figure(figsize=(12, 6))
+    plt.xlim([min_wn, max_wn])
+    plt.ylim([limitYaxisStickSpectra, 10*max(I)])
+    plt.vlines(v, 0, I, label='T = '+str(T)+' K', linewidth=0.4)
+    plt.semilogy()
+    #plt.title(database+' '+molecule+' intensity') 
+    plt.xlabel('Wavenumber, cm$^{-1}$')
+    plt.ylabel('Intensity, cm/molecule')
+    plt.legend()
+    leg = plt.legend()                  # Get the legend object.
+    for line in leg.get_lines():
+        line.set_linewidth(1.0)         # Change the line width for the legend.
+    plt.savefig(ss_plot_folder+molecule+'__T'+str(T)+'__'+str(min_wn)
+                +'-'+str(max_wn)+'__'+database+'__'+abs_emi+'__sp.png', dpi=500)
+    plt.show()
+    print('Stick spectra plot saved.')
+
+# Stick spectra for ExoMol database
 def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
     print('Calculate stick spectra.')  
     t = Timer()
@@ -1834,44 +1997,17 @@ def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
         pass
     else:
         os.makedirs(ss_folder, exist_ok=True)
-    ss_path = (ss_folder+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'
-               +str(min_wn)+'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.stick') 
+    ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
     ss_colname = stick_spectra_df.columns
     fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f '+QNsfmf+' '+QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
     
     # Plot stick spectra and save it as .png.
     if PlotStickSpectraYN == 'Y':
-        from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-        parameters = {'axes.labelsize': 14, 
-                    'legend.fontsize': 14,
-                    'xtick.labelsize': 12,
-                    'ytick.labelsize': 12}
-        plt.rcParams.update(parameters)
-        ss_plot_folder = save_path + '/stick_spectra/plots/'+molecule+'/'+database+'/'
-        if os.path.exists(ss_plot_folder):
-            pass
-        else:
-            os.makedirs(ss_plot_folder, exist_ok=True)
-        plt.figure(figsize=(12, 6))
-        plt.xlim([min_wn, max_wn])
-        plt.ylim([limitYaxisStick, 10*max(I)])
-        plt.vlines(stick_spectra_df['v'], 0, stick_spectra_df['S'], label='T = '+str(T)+' K', linewidth=0.4)
-        plt.semilogy()
-        #plt.title(database+' '+molecule+' intensity') 
-        plt.xlabel('Wavenumber, cm$^{-1}$')
-        plt.ylabel('Intensity, cm/molecule')
-        plt.legend()
-        leg = plt.legend()                  # Get the legend object.
-        for line in leg.get_lines():
-            line.set_linewidth(1.0)         # Change the line width for the legend.
-        plt.savefig(ss_plot_folder+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'
-                    +str(min_wn)+'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.png', dpi=500)
-        plt.show()
-        print('Stick spectra plot saved.')
-    t.end()
+        plot_stick_spectra(stick_spectra_df)
     print('Stick spectra have been saved!\n')  
 
+# Stick spectra for HITRAN database
 def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     print('Calculate stick spectra.')  
     t = Timer()
@@ -1890,7 +2026,8 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     
     ss_colname = ['v','S',"J'","E'",'J"','E"'] + QNs_col
     stick_spectra_df = hitran_linelist_df[ss_colname]
-    stick_spectra_df = stick_spectra_df.sort_values('v')  
+    stick_spectra_df = stick_spectra_df.sort_values('v') 
+    t.end() 
 
     QN_format_noJ = [QNsformat_list[i] for i in [QNslabel_list.index(j) for j in QNs_label]]
     QNsfmf = (str(QN_format_noJ).replace("'","").replace(",","").replace("[","").replace("]","")
@@ -1900,42 +2037,15 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
         pass
     else:
         os.makedirs(ss_folder, exist_ok=True)
-    ss_path = (ss_folder+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'
-               +str(min_wn)+'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.stick')    
+    ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
     fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
     
     # Plot stick spectra and save it as .png.
     if PlotStickSpectraYN == 'Y':
-        from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-        parameters = {'axes.labelsize': 14, 
-                    'legend.fontsize': 14,
-                    'xtick.labelsize': 12,
-                    'ytick.labelsize': 12}
-        plt.rcParams.update(parameters)
-        ss_plot_folder = save_path + '/stick_spectra/plots/'+molecule+'/'+database+'/'
-        if os.path.exists(ss_plot_folder):
-            pass
-        else:
-            os.makedirs(ss_plot_folder, exist_ok=True)
-        plt.figure(figsize=(12, 6))
-        plt.xlim([min_wn, max_wn])
-        plt.ylim([limitYaxisStick, 10*max(I)])
-        plt.vlines(stick_spectra_df['v'], 0, stick_spectra_df['S'], label='T = '+str(T)+' K', linewidth=0.4)
-        plt.semilogy()
-        #plt.title(database+' '+molecule+' intensity') 
-        plt.xlabel('Wavenumber, cm$^{-1}$')
-        plt.ylabel('Intensity, cm/molecule')
-        plt.legend()
-        leg = plt.legend()                  # Get the legend object.
-        for line in leg.get_lines():
-            line.set_linewidth(1.0)         # Change the line width for the legend.
-        plt.savefig(ss_plot_folder+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'
-                    +str(min_wn)+'-'+str(max_wn)+'__'+database+'__'+abs_emi+'.png', dpi=500)
-        plt.show()
-        print('Stick spectra plot saved.')
-    t.end()
-    print('Stick spectra have been saved!\n')   
+        plot_stick_spectra(stick_spectra_df)
+    print('Stick spectra have been saved!\n')  
+      
     
 ## Cross Section
 def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn): 
@@ -2999,8 +3109,8 @@ def save_xsec(wn, xsec, database, profile_label):
         xsec_df = pd.DataFrame()
         xsec_df['wavenumber'] = wn
         xsec_df['cross-section'] = xsec
-        xsec_filename = (xsecs_foldername+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'+wn_wl+str(min_wn)
-                         +'-'+str(max_wn)+'__'+database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
+        xsec_filename = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
+                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
         np.savetxt(xsec_filename, xsec_df, fmt="%12.6f %14.8E")
         print('Cross sections file saved.')
         if PlotCrossSectionYN == 'Y':
@@ -3010,16 +3120,16 @@ def save_xsec(wn, xsec, database, profile_label):
             else:
                 os.makedirs(plots_foldername, exist_ok=True)  
             #plt.legend(fancybox=True, framealpha=0.0)
-            parameters = {'axes.labelsize': 14,
-                        'legend.fontsize': 14,
-                        'xtick.labelsize': 12,
-                        'ytick.labelsize': 12}
+            parameters = {'axes.labelsize': 18,
+                          'legend.fontsize': 18,
+                          'xtick.labelsize': 14,
+                          'ytick.labelsize': 14}
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
             plt.xlim([min_wn, max_wn])
             plt.ylim([limitYaxisXsec, 10*max(xsec)])
-            plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
+            plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)   
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.xlabel('Wavenumber, cm$^{-1}$')
@@ -3028,8 +3138,8 @@ def save_xsec(wn, xsec, database, profile_label):
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            plt.savefig(plots_foldername+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'+wn_wl+str(min_wn)+'-'
-                        +str(max_wn)+'__'+database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
+            plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
+                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
             plt.show()
             print('Cross sections plot saved.')
     elif 'L' in wn_wl:
@@ -3043,8 +3153,8 @@ def save_xsec(wn, xsec, database, profile_label):
         xsec_df = pd.DataFrame()
         xsec_df['wavelength'] = wl
         xsec_df['cross-section'] = xsec
-        xsec_filename = (xsecs_foldername+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'+wn_wl+str(min_wl)
-                         +'-'+str(max_wl)+'__'+database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
+        xsec_filename = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
+                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
         np.savetxt(xsec_filename, xsec_df, fmt="%12.6f %14.8E")
         print('Cross sections file saved.')       
         if PlotCrossSectionYN == 'Y':
@@ -3054,16 +3164,16 @@ def save_xsec(wn, xsec, database, profile_label):
             else:
                 os.makedirs(plots_foldername, exist_ok=True)  
             #plt.legend(fancybox=True, framealpha=0.0)
-            parameters = {'axes.labelsize': 14,
-                        'legend.fontsize': 14,
-                        'xtick.labelsize': 12,
-                        'ytick.labelsize': 12}
+            parameters = {'axes.labelsize': 18, 
+                          'legend.fontsize': 18,
+                          'xtick.labelsize': 14,
+                          'ytick.labelsize': 14}
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
             plt.xlim([min_wl, max_wl])
             plt.ylim([limitYaxisXsec, 10*max(xsec)])
-            plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)
+            plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)             
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.xlabel(u'Wavelength, \xb5m')
@@ -3072,8 +3182,8 @@ def save_xsec(wn, xsec, database, profile_label):
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            plt.savefig(plots_foldername+molecule+'__'+isotopologue+'__'+dataset+'__T'+str(T)+'__'+wn_wl+str(min_wl)+'-'
-                        +str(max_wl)+'__'+database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
+            plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
+                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
             plt.show()
             print('Cross sections plot saved.')
     else:
@@ -3082,13 +3192,13 @@ def save_xsec(wn, xsec, database, profile_label):
 def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolumn):
     print('Calculate cross-sections.')
     t = Timer()
-    t.start()
     # ExoMol or HITRAN
     if database == 'ExoMol':
         gamma_air = gamma_self = []
         broad, ratio, nbroad, broad_dfs = read_broad(read_path)
         Q = read_exomolweb_pf(T)              # Read partition function from the ExoMol website.
         # Q = read_exomol_pf(read_path, T)    # Read partition function from local partition function file.
+        t.start()
         # Absorption or emission cross section
         if abs_emi == 'Ab': 
             print('Absorption cross section')
@@ -3106,6 +3216,7 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
         tau = []
         A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = linelist_hitran(hitran_df)
         Q = read_hitran_pf(T)
+        t.start()
         # Absorption or emission cross section
         if abs_emi == 'Ab': 
             print('Absorption cross section') 
@@ -3196,8 +3307,8 @@ def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolum
         xsec = cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)           
     else:
         raise ImportError('Please choose line profile from the list.')
-    save_xsec(wn_grid, xsec, database, profile_label)    
     t.end()
+    save_xsec(wn_grid, xsec, database, profile_label)    
     pass
 
 # Get Results
