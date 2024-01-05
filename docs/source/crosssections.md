@@ -27,7 +27,7 @@ Absorption/Emission                     Absorption                # 'Absorption'
 
 # Calculate cross sections #
 Pressure                                1
-Npoints/BinSize                         Npoints    10001       
+Npoints/BinSize                         Npoints    10001     
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 PlotCrossSection(Y/N)                   Y
 Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
@@ -36,7 +36,7 @@ Y-axisLimitXsec                         1e-40                     # Default valu
 ## Filters
 
 `Y/N`: `Y`, `YES`, `Yes`, `yes` and `N`, `NO`, `No`, `no` all can work. If you don't use it, write `N` here. You don't need to change the content behind it.
-If after using filters, the program gets an empty result, then you will receive an warning to ask you write new filter values.
+If after using filters, the program gets an empty result, then you will receive an warning to ask you write new filter values to icrease the range.
 
 If `UncFilter(Y/N)` is yes, the value is the maximum uncertainty you require.
 

@@ -18,7 +18,7 @@ Filters
 
 | ``Y/N``: ``Y``, ``YES``, ``Yes``, ``yes`` and ``N``, ``NO``, ``No``, ``no`` all can work. 
 | If you don't use it, write ``N`` here. You don't need to change the content behind it. 
-| If after using filters, the program gets an empty result, then you will receive an warning to ask you write new filter values.
+| If after using filters, the program gets an empty result, then you will receive an warning to ask you write new filter values to increase the range. 
 
 If ``UncFilter(Y/N)`` is yes, the value is the maximum uncertainty you require. 
 

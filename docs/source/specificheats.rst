@@ -40,10 +40,10 @@ where the partition function :math:`Q(T)` and its first two moments are:
    
    # Data source #
    Database                                ExoMol
-   Molecule                                MgH
-   Isotopologue                            24Mg-1H
-   Dataset                                 XAB
-   MolIsoID                                501
+   Molecule                                CO2
+   Isotopologue                            12C-16O2
+   Dataset                                 UCL-4000
+   MolIsoID                                21
 
 
    # File path #

@@ -3,12 +3,13 @@ Oscillator strengths
 
 Weighted oscillator strength ``gf``, which is what people usually use.  
 ``f`` is the actual oscillator strength and the actual value of ``f`` is ``gf`` divided by ``g"``.
-Sometimes people need oscillator strength ``f``, not ``gf``.
+Sometimes people need oscillator strength ``f``, not ``gf``. 
+
+The ressult file have 4 columns: g', g", v and oscillator strength.
 
 | ``gf/f``: Choose weigthed oscillator strength ``gf`` or actual oscillator strength ``f``.
-| ``Ncolumns``: Type ``3`` or ``4``. 
-| ``3`` columns: upper ID, lower ID, oscillator strength (ExoMol database) or g', g", oscillator strength (HITRAN database).
-| ``4`` columns: upper ID, lower ID, Einstein A-coefficient, oscillator strength (ExoMol database) or g', g", Einstein A-coefficient, oscillator strength (HITRAN database).
+| ``PlotOscillatorStrength(Y/N)``: If you need a oscillator strength figure, please write ``Y`` here. 
+| ``Y-axisLimitOscillatorStrength``: If you want set the lower limit of y-axis for plotting, please write here, otherwise, the default lower limit y-axis is 1e-30.
 
 The oscillator strengths equation is:
 
@@ -22,16 +23,16 @@ The oscillator strengths equation is:
 
     # Data source #
     Database                                ExoMol
-    Molecule                                MgH
-    Isotopologue                            24Mg-1H
-    Dataset                                 XAB
-    MolIsoID                                501
- 
+    Molecule                                CO2
+    Isotopologue                            12C-16O2
+    Dataset                                 UCL-4000
+    MolIsoID                                21
+
 
     # File path #
     ReadPath                                /mnt/data/exomol/exomol3_data/
     SavePath                                /home/jingxin/data/pyexocross/
-    
+
 
     # Functions #
     Conversion                              0
@@ -46,5 +47,6 @@ The oscillator strengths equation is:
 
     # Calculate oscillator strengths #
     gf/f                                    gf
-    Ncolumns                                4                         # 3 (without A) or 4 (with A)
+    PlotOscillatorStrength(Y/N)             N    
+    Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
 

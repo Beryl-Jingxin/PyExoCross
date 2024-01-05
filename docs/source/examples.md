@@ -7,10 +7,10 @@ The examples of the whole input files for the ExoMol and HITRAN databases.
 ```bash
 # Data source #
 Database                                ExoMol
-Molecule                                MgH
-Isotopologue                            24Mg-1H
-Dataset                                 XAB
-MolIsoID                                501
+Molecule                                H2O
+Isotopologue                            1H2-16O
+Dataset                                 POKAZATEL
+MolIsoID                                11
 
 
 # File path #
@@ -19,31 +19,20 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-Conversion                              1
-PartitionFunctions                      1
-SpecificHeats                           1
-CoolingFunctions                        1
-Lifetimes                               1
-OscillatorStrengths                     1
+Conversion                              0
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+OscillatorStrengths                     0
 StickSpectra                            1
-CrossSections                           1
+CrossSections                           0
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+QNslabel                                Ka      Kc      v1      v2      v3      Gamma_rve
+QNsformat                               %2d     %2d     %2d     %2d     %2d     %2s
 
-
-# Conversion #
-ConversionFormat                        1  
-ConversionFrequncyRange                 0          30000  
-GlobalQNLabel                           eS       v        Omega
-GlobalQNFormat                          %9s     %2d      %4s
-LocalQNLabel                            J        e/f
-LocalQNFormat                           %5.1f    %2s
-ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.01
-ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30
-   
 
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
@@ -56,21 +45,22 @@ Compress(Y/N)                           Y                         # If Y, save a
 
 # Calculate oscillator strengths #
 gf/f                                    gf
-Ncolumns                                4                         # 3 (without A) or 4 (with A)
+PlotOscillatorStrength(Y/N)             N  
+Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
 
 
 # Calculate stick spectra or cross sections #
-Temperature                             300
-Range                                   0          30000
+Temperature                             296
+Range                                   20000      20500
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
+UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          par[]   e/f[e,f]   v[1,;2,;,0;4,4;4,3]  
+QNsFilter(Y/N)                          Y          Ka[]  Kc[]  v1[1,0;2,0]  v2[1,;,0]  v3[]  Gamma_rve[]
 
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
-Y-axisLimitStick                        1e-30                     # Default value is 1e-30
+Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30
 
 
 # Calculate cross sections #
@@ -78,9 +68,9 @@ Pressure                                1
 Npoints/BinSize                         Npoints    10001
 Broadeners                              Default  
 Ratios                                  1.0  
-Profile                                 SciPyVoigt  
+Profile                                 Gaussian   
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
-Cutoff(Y/N)                             Y          100            # If Y, default value 25
+Cutoff(Y/N)                             Y          100            # If Y, default value 25 
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y
@@ -92,14 +82,14 @@ Y-axisLimitXsec                         1e-40                     # Default valu
 ```bash
 # Data source #
 Database                                HITRAN
-Molecule                                H2S
-Isotopologue                            1H2-32S
-Dataset                                 H2S-HITRAN
-MolIsoID                                311
+Molecule                                H2O
+Isotopologue                            1H2-16O
+Dataset                                 H2O-HITRAN
+MolIsoID                                11
 
 
 # File path #
-ReadPath                                /home/jingxin/data/HITRAN/H2S.par
+ReadPath                                /home/jingxin/data/HITRAN/H2O.par
 SavePath                                /home/jingxin/data/pyexocross/
 
 
@@ -110,64 +100,65 @@ SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
-StickSpectra                            1
+StickSpectra                            0
 CrossSections                           1
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                v1     v2    v3     Ka     Kc    F     Sym
-QNsformat                               %2d    %2d   %2d    %3d    %3d   %5s   %1s  
+QNslabel                                v1     v2    v3     J     Ka    Kc    F    Sym  
+QNsformat                               %2d    %2d   %2d    %3d   %3d   %3d   %5s  %1s
 
 
-# Conversion #
+# Conversion #  
 ConversionFormat                        2  
-ConversionFrequncyRange                 0         12000  
-GlobalQNLabel                           v1       v2       v3
-GlobalQNFormat                          %2d      %2d      %2d
-LocalQNLabel                            J        Ka       Kc      F      Sym
-LocalQNFormat                           %3d      %3d      %3d     %5s    %1s
+ConversionFrequncyRange                 0          1000   
+GlobalQNLabel                           v1     v2    v3       
+GlobalQNFormat                          %2d    %2d   %2d   
+LocalQNLabel                            J     Ka    Kc    F    Sym  
+LocalQNFormat                           %3d   %3d   %3d   %5s  %1s   
 ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.01
-ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30  
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30   
+  
 
-
-# Calculate partition, specific heats or cooling functions #
+# Calculate partition functions, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    3000                      # Maximal temperature in K 
+Tmax                                    5000                      # Maximal temperature in K 
 
 
 # Calculate lifetimes #
-Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
+Compress(Y/N)                           N                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 
 
 # Calculate oscillator strengths #
 gf/f                                    gf
-Ncolumns                                4                         # 3 (without A) or 4 (with A)
+PlotOscillatorStrength(Y/N)             Y  
+Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
 
 
 # Calculate stick spectra or cross sections #
 Temperature                             300
-Range                                   0          12000
+Range                                   0          1000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
-Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          v1[1,]   v2[1,]   v3[1,0;1,1] 
+UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
+Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
+QNsFilter(Y/N)                          Y          v1[]       v2[]       v3[1,0;2,]
 
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
-Y-axisLimitStick                        1e-40                     # Default value is 1e-30
+Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30
 
 
 # Calculate cross sections #
 Pressure                                1
 Npoints/BinSize                         Npoints    10001
-Broadeners                              Default
-Ratios                                  1.0
-Profile                                 Gaussian  
+Broadeners                              Air        Self 
+Ratios                                  0.7        0.3   
+Profile                                 Lorentzian  
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 Cutoff(Y/N)                             Y          25             # If Y, default value 25
-DopplerHWHM(Y/N)                        Y          0.321          # Set Doppler HWHM as a constant 
+DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   N
-Y-axisLimitXsec                                                   # Default value is 1e-30
+PlotCrossSection(Y/N)                   Y
+Y-axisLimitXsec                         1e-30                     # Default value is 1e-30
 ```
