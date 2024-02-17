@@ -20,7 +20,12 @@ Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
 CrossSections                           0
-                           
+
+
+# Cores and chunks #
+NCPU                                    32
+ChunkSize                               1000000
+
 
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps

@@ -46,6 +46,11 @@ The partition functions equation is:
    CrossSections                           0
 
 
+   # Cores and chunks #
+   NCPU                                    32
+   ChunkSize                               1000000
+
+
    # Calculate partition, specific heats or cooling functions #
    Ntemp                                   1                         # The number of temperature steps
    Tmax                                    5000                      # Maximal temperature in K 

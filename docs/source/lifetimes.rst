@@ -39,6 +39,11 @@ The lifetimes equation is:
     CrossSections                           0
 
 
+    # Cores and chunks #
+    NCPU                                    32
+    ChunkSize                               1000000
+    
+
     # Calculate lifetimes #
     Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 

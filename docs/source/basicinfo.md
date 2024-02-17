@@ -20,10 +20,10 @@ The molecule and isotopologue ID `MolIsoID` can be set as `0` or any other integ
 ```bash
 # Data source #
 Database                                ExoMol
-Molecule                                MgH
-Isotopologue                            24Mg-1H
-Dataset                                 XAB
-MolIsoID                                501
+Molecule                                H2O
+Isotopologue                            1H2-16O
+Dataset                                 POKAZATEL
+MolIsoID                                11
 ```
 
 **For HITRAN**
@@ -152,7 +152,23 @@ StickSpectra                            0
 CrossSections                           1
 ```
 
-## Quantum Numbers
+## Cores and chunks
+
+Please provide the number of cores `NCPU` and the size of chunks `ChunkSize` of the quantum numbers when you use *PyExoCross* uses multiprocessing.
+
+`NCPU`: The program will run on different cores together. `NCPU` is the number of cores.
+
+`ChunkSize`: The program splits each transitions file to many chunks when reading and calculating. `ChunkSize` is the size of each chunk.
+
+*Example*
+
+```bash
+# Cores and chunks #
+NCPU                                    32
+ChunkSize                               1000000
+```
+
+## Quantum numbers
 
 Please provide the labels `QNslabel` and formats `QNsformat` of the quantum numbers when you use *PyExoCross* to convert data format, calculate stick spectra or cross sections if you need the quantum filter.
 

@@ -13,6 +13,10 @@ Cross sections
 
 `Wavenumber(wn)/wavelength(wl)`: Choose `wn` or `wl`.
 
+If  `PredissocXsec(Y/N)` is yes, predissociation lifetimes will be used/calculated when calculating cross sections with Voigt profile.
+
+If  `Cutoff(Y/N)` is yes, you can provide cutoff here.
+
 If you want a figure of corss sections, please set `Y` for `PlotCrossSection(Y/N)`.
 
 And if you want set the lower limit of y-axis for plotting, please write after `Y-axisLimitXsec`, otherwise, the default lower limit y-axis is 1e-30.
@@ -22,15 +26,18 @@ And if you want set the lower limit of y-axis for plotting, please write after `
 ```
 # Calculate stick spectra or cross sections #
 Temperature                             300
-Range                                   0          30000
+Range                                   0          41200
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+
 
 # Calculate cross sections #
 Pressure                                1
-Npoints/BinSize                         Npoints    10001     
+Npoints/BinSize                         BinSize   0.1 
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
-PlotCrossSection(Y/N)                   Y
-Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
+PredissocXsec(Y/N)                      N
+Cutoff(Y/N)                             Y          25             # If Y, default value 25 
+PlotCrossSection(Y/N)                   N
+Y-axisLimitXsec                         1e-30                     # Default value is 1e-30
 ```
 
 ## Filters
@@ -70,7 +77,6 @@ Wrong format of the quantum number column nams: '1', '2', 'electronic state'.
 ```bash
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-Cutoff(Y/N)                             Y          100            # If Y, default value 25
 QNsFilter(Y/N)                          N          par[]   e/f[]   v[1,;2,2;2,1;,0]  
 ```
 
@@ -106,7 +112,7 @@ Ratios                                  0.9      0.1
 
 Choose line profile from:
 
-`Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `HumlicekVoigt`, `ThompsonPseudoVoigt`, `KielkopfPseudoVoigt`, `OliveroPseudoVoigt`, `LiuLinPseudoVoigt`, `PRoccoseudoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`. Please note: no blank when you write the line profile name.
+`Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `HumlicekVoigt`, `ThompsonPseudoVoigt`, `KielkopfPseudoVoigt`, `OliveroPseudoVoigt`, `LiuLinPseudoVoigt`, `RoccoPseudoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`. Please note: no blank when you write the line profile name.
 
 Doppler profile uses Doppler HWHM calculated by program, if you want to use Doppler profile, set `N` after `DopplerHWHM(Y/N)`. If you use Gaussian profile, please set `Y` after `DopplerHWHM(Y/N)`, your Doppler HWHM value will be used for calculating Gaussian profile.
 
@@ -125,10 +131,10 @@ LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzi
 ```bash
 # Data source #
 Database                                ExoMol
-Molecule                                MgH
-Isotopologue                            24Mg-1H
-Dataset                                 XAB
-MolIsoID                                501
+Molecule                                H2O
+Isotopologue                            1H2-16O
+Dataset                                 POKAZATEL
+MolIsoID                                11
 
 
 # File path #
@@ -147,32 +153,38 @@ StickSpectra                            0
 CrossSections                           1
 
 
+# Cores and chunks #
+NCPU                                    32
+ChunkSize                               1000000
+
+
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+QNslabel                                Ka      Kc      v1      v2      v3      Gamma_rve
+QNsformat                               %2d     %2d     %2d     %2d     %2d     %2s
 
 
 # Calculate stick spectra or cross sections #
 Temperature                             300
-Range                                   0          30000
+Range                                   0          41200
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.01
+UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,1;1,0;2,]  
+QNsFilter(Y/N)                          N          Ka[]  Kc[]  v1[]  v2[1,;,0]  v3[]  Gamma_rve[]
 
 
 # Calculate cross sections #
 Pressure                                1
-Npoints/BinSize                         Npoints    10001
-Broadeners                              Default  
-Ratios                                  1.0  
-Profile                                 Gaussian  
+Npoints/BinSize                         BinSize   0.1
+Broadeners                              H2       He  
+Ratios                                  0.75     0.15  
+Profile                                 SciPyVoigt   
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
-Cutoff(Y/N)                             Y          100            # If Y, default value 25
-DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
-LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   Y
-Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
+PredissocXsec(Y/N)                      N
+Cutoff(Y/N)                             Y          25             # If Y, default value 25 
+DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   N
+Y-axisLimitXsec                         1e-30                     # Default value is 1e-30
 ```
 
 ```bash
@@ -198,6 +210,11 @@ Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
 CrossSections                           1
+
+
+# Cores and chunks #
+NCPU                                    32
+ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #

@@ -22,6 +22,7 @@ Welcome to PyExoCross's documentation!
    oscillatorstrengths.rst
    stickspectra.rst
    crosssections.md
+   report.md
    license.md
 
 

@@ -1,5 +1,4 @@
-
-# Import all what we need.
+## Import all what we need.
 # encoding: utf-8
 import os
 import bz2
@@ -10,15 +9,18 @@ import argparse
 import numpy as np
 import pandas as pd
 import numexpr as ne
+import dask.array as da
 import astropy.units as au
+import dask.dataframe as dd
 import astropy.constants as ac
 import matplotlib.pyplot as plt
 from io import StringIO
 from itertools import chain
 from tqdm.notebook import tqdm
 from indexed_bzip2 import IndexedBzip2File
+from matplotlib.collections import LineCollection
+from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Process, Pool, freeze_support
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 from scipy.special import voigt_profile, wofz, erf, roots_hermite
 
 import warnings
@@ -32,11 +34,9 @@ import multiprocessing as mp
 freeze_support()
 num_cpus = mp.cpu_count()
 print('Number of CPU: ', num_cpus)
-n_workers = 2 * num_cpus
-print(f'{n_workers} workers are available')
 
 from pandarallel import pandarallel
-pandarallel.initialize(nb_workers=n_workers,progress_bar=False)    # Initialize.
+pandarallel.initialize(nb_workers=num_cpus,progress_bar=False)    # Initialize.
 
 # The input file path
 def parse_args():
@@ -47,7 +47,7 @@ def parse_args():
     return inp_filepath
 inp_filepath = parse_args()
 
-# Report time
+## Report time
 class Timer:    
     def start(self):
         self.start_CPU = time.process_time()
@@ -61,8 +61,20 @@ class Timer:
         self.interval_sys = self.end_sys - self.start_sys
         print('{:25s} : {}'.format('Running time on CPU', self.interval_CPU), 's')
         print('{:25s} : {}'.format('Running time on system', self.interval_sys), 's')
+        
+    def cal(self, *args):
+        self.end_CPU = time.process_time()
+        self.end_sys = time.time()
+        self.interval_CPU = self.end_CPU - self.start_CPU
+        self.interval_sys = self.end_sys - self.start_sys
+        return(self.interval_CPU, self.interval_sys)
+    
+    
+## Read Information from Input File
+class InputWarning(UserWarning):
+    pass
 
-# Read information from input file
+
 def inp_para(inp_filepath):
     # Find the maximum column for all the rows.
     with open(inp_filepath, 'r') as temp_f:
@@ -98,6 +110,10 @@ def inp_para(inp_filepath):
     SpecificHeats = int(inp_df[col0.isin(['SpecificHeats'])][1].iloc[0])
     StickSpectra = int(inp_df[col0.isin(['StickSpectra'])][1].iloc[0])
     CrossSections = int(inp_df[col0.isin(['CrossSections'])][1].iloc[0])
+    
+    # Cores and chunks
+    nprocess = int(inp_df[col0.isin(['NCPU'])][1].iloc[0])
+    chunk_size = int(inp_df[col0.isin(['ChunkSize'])][1].iloc[0])
     
     # Quantum numbers
     NeedQNs = Conversion + StickSpectra + CrossSections
@@ -258,6 +274,10 @@ def inp_para(inp_filepath):
             N_point = int((max_wn - min_wn)/bin_size+1)
         else:
             raise ImportError("Please type the correct grid choice 'Npoints' or 'BinSize' into the input file.")
+        # Predissociative cross sections
+        predissocYN = inp_df[col0.isin(['PredissocXsec(Y/N)'])][1].values[0].upper()[0]
+        if predissocYN != 'Y' and predissocYN != 'N':
+            raise ImportError("Please type the correct predissociative choice 'Y' or 'N' into the input file.")        
         # Cutoff
         cutoffYN = inp_df[col0.isin(['Cutoff(Y/N)'])][1].values[0].upper()[0]
         if cutoffYN == 'Y':
@@ -319,6 +339,7 @@ def inp_para(inp_filepath):
     else:
         bin_size = 'None'
         N_point = 'None'
+        predissocYN = 'N'
         cutoff = 'None'         
         alpha_HWHM = 'None'        
         gamma_HWHM = 'None'
@@ -362,19 +383,22 @@ def inp_para(inp_filepath):
         check_gfactor = 0
     else:
         raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")
-    
+
+    if predissocYN == 'Y' and check_predissoc == 0 and 'LOR' not in profile:
+        warnings.warn('Program will cost much time on calculating predissociative lifetimes before calculating the cross sections.\n',InputWarning)
+            
     return (database, molecule, isotopologue, dataset, read_path, save_path, 
             Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
-            ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
+            nprocess, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
             Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
-            cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
+            predissocYN, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
             check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
             PlotStickSpectraYN, limitYaxisStickSpectra, PlotCrossSectionYN, limitYaxisXsec)
 
 
-# Constants and parameters
+## Constants and Parameters
 # Parameters for calculating
 Tref = 296.0                        # Reference temperature is 296 K
 Pref = 1.0                          # Reference pressure is 1 bar
@@ -387,10 +411,10 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
 
 (database, molecule, isotopologue, dataset, read_path, save_path, 
  Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
- ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
+ nprocess, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
  Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
- cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
+ predissocYN, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
  check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
  PlotStickSpectraYN, limitYaxisStickSpectra, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
@@ -422,7 +446,7 @@ if bin_size != 'None':
     binSizeHalf = bin_size / 2 
     InvbinSizePIhalf = 1 / (bin_size * np.pi**0.5)
 
-# Convert among the frequency, upper and lower state energy 
+## Convert frequency, upper and lower energy and J
 # Calculate frequency
 def cal_v(Ep, Epp):
     v = ne.evaluate('Ep - Epp')
@@ -451,56 +475,48 @@ def cal_F(g):
     F = ne.evaluate('(g - 1) * 0.5')
     return(F)
 
-# Read input files
-# Read ExoMol database files
-# Read states file
+# Read Input Files
+## Read ExoMol Database Files
+
+### Read States File
 def read_all_states(read_path):
-    ''' 
-    Read the parameters of the linelist in ExoMol or HITRAN format text file. 
-    Return the dataframe of the data for the following calculations.
-    '''
     t = Timer()
     t.start()
     print('Reading states ...')
-    s_df = dict()
     states_df = pd.DataFrame()
-    states_filenames = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset 
-                                 + '/' + isotopologue + '__' + dataset + '.states.bz2')
-    for states_filename in states_filenames:
-        s_df[states_filename] = pd.read_csv(states_filename, compression='bz2', sep='\s+', header=None,
-                                            chunksize=1_000_000, iterator=True, low_memory=False, dtype=object)
-        for chunk in s_df[states_filename]:
-            states_df = pd.concat([states_df, chunk])
+    states_filename = (read_path + molecule + '/' + isotopologue + '/' + dataset 
+                       + '/' + isotopologue + '__' + dataset + '.states.bz2')
+    
+    chunks = pd.read_csv(states_filename, compression='bz2', sep='\s+', header=None,
+                         chunksize=1_000_000, iterator=True, low_memory=False, dtype=object)
+    for chunk in chunks:
+        states_df = pd.concat([states_df, chunk])
     if check_uncertainty == 1:
         states_df = states_df.rename(columns={0:'id',1:'E',2:'g',3:'J',4:'unc'})
+        convert_dict = {'id':np.int32,'E':np.float64,'g':np.int32,'J':np.float16,'unc':np.float32}
+        states_df = states_df.astype(convert_dict)
     else:      
         states_df = states_df.rename(columns={0:'id',1:'E',2:'g',3:'J'})  
+        convert_dict = {'id':np.int32,'E':np.float64,'g':np.int32,'J':np.float16}
+        states_df = states_df.astype(convert_dict)
     t.end()     
-    print('Finished reading states!\n')                   
+    print('Finished reading states!\n')       
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')                
     return(states_df)
 
-# Read transitions file
+### Read transitions File
 def read_trans(trans_filename):
-    global u, l, A, v
-    file = IndexedBzip2File(trans_filename, parallelization=n_workers)
+    file = IndexedBzip2File(trans_filename, parallelization=num_cpus)
     lines = file.readlines()
     file.close()
-    ncolumn = len(lines[0].split())
-    if ncolumn == 4:
-        for line in lines:
-            part = line.split()
-            u.append(int(part[0]))
-            l.append(int(part[1]))
-            A.append(float(part[2]))
-            v.append(float(part[3]))
-    else:
-        for line in lines:
-            part = line.split()
-            u.append(int(part[0]))
-            l.append(int(part[1]))
-            A.append(float(part[2]))   
-    results = (u, l, A, v)
-    return results
+    u, l, A = [], [], []
+    for line in lines:
+        part = line.split()
+        u.append(int(part[0]))
+        l.append(int(part[1]))
+        A.append(float(part[2]))   
+    trans_df = pd.DataFrame({'u':u, 'l':l, 'A':A})
+    return trans_df
 
 def get_transfiles(read_path):
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
@@ -510,76 +526,33 @@ def get_transfiles(read_path):
     for i in range(num_transfiles_all):
         split_version = trans_filepaths_all[i].split('__')[-1].split('.')[0].split('_')    # Split the filenames.
         num = len(split_version)
-        '''
-        There are four format filenames.
-        The lastest transitions files named in two formats:
-        1. Filenames are named with the name of isotopologue and dataset. 
-           End with .trans.bz2.
-           e.g. 14N-16O__XABC.trans.bz2'
-        2. Filenames are named with the name of isotopologue and dataset. 
-           Also have the range of wavenumbers xxxxx-yyyyy.
-           End with .trans.bz2.
-           e.g. 1H2-16O__POKAZATEL__00000-00100.trans.bz2
-        3. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
-           e.g. 14N-16O__XABC_v2.trans.bz2
-        4. The older version transitions files are named with updated date (yyyymmdd).
-           e.g. 1H3_p__MiZATeP__20170330.trans.bz2
-        After split the filenames:
-        The first format filenames only leave the dataset name, e.g. XABC.
-        The second format filenames only leave the range of the wavenumber, e.g. 00000-00100.
-        The third format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
-        The fourth format filenames only leave the updated date, e.g. 20170330.
-        This program only process the lastest data, so extract the filenames named by the first two format.
-        '''
+        # There are four format filenames.
+        # The lastest transitions files named in two formats:
+        # 1. Filenames are named with the name of isotopologue and dataset. 
+        #    End with .trans.bz2.
+        #    e.g. 14N-16O__XABC.trans.bz2'
+        # 2. Filenames are named with the name of isotopologue and dataset. 
+        #    Also have the range of wavenumbers xxxxx-yyyyy.
+        #    End with .trans.bz2.
+        #    e.g. 1H2-16O__POKAZATEL__00000-00100.trans.bz2
+        # 3. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
+        #    e.g. 14N-16O__XABC_v2.trans.bz2
+        # 4. The older version transitions files are named with updated date (yyyymmdd).
+        #    e.g. 1H3_p__MiZATeP__20170330.trans.bz2
+        # After split the filenames:
+        # The first format filenames only leave the dataset name, e.g. XABC.
+        # The second format filenames only leave the range of the wavenumber, e.g. 00000-00100.
+        # The third format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
+        # The fourth format filenames only leave the updated date, e.g. 20170330.
+        # This program only process the lastest data, so extract the filenames named by the first two format.
         if num == 1:     
             if split_version[0] == dataset:        
                 trans_filepaths.append(trans_filepaths_all[i])
             if len(split_version[0].split('-')) == 2:
                 trans_filepaths.append(trans_filepaths_all[i])
-    return(list(set(trans_filepaths)))    
+    return trans_filepaths    
 
-def read_all_trans(read_path):
-    t = Timer()
-    t.start()
-    print('Reading all transitions ...')
-    
-    global u, l, A, v
-    u = []
-    l = []
-    A = []
-    v = []
-    trans_filepaths = get_transfiles(read_path)
-    nfile = len(trans_filepaths)
-    if nfile >= n_workers:
-        nprocess = nfile
-    elif nfile <= num_cpus:
-        nprocess = nfile*5
-    else:
-        nprocess = nfile*2
-    pool = Pool(processes=nprocess, maxtasksperchild=100) 
-    processes = []
-    for trans_filename in tqdm(trans_filepaths, position=0, leave=True, desc='Reading transitions'):
-        processes.append(pool.apply_async(read_trans, args=(trans_filename,)))
-    pool.close()
-    pool.join()
-    for proc in processes:
-        result = proc.get()
-        u += result[0]
-        l += result[1]
-        A += result[2]
-        v += result[3]
-    if len(v) == 0:
-        ncolumn = 3
-        all_trans_df = pd.DataFrame({'u':u, 'l':l, 'A':A})
-    else:
-        ncolumn = 4
-        all_trans_df = pd.DataFrame({'u':u, 'l':l, 'A':A, 'v':v})
-    t.end()                
-    print('Finished reading all transitions!\n')
-    return(all_trans_df, ncolumn)
-    
-
-# Read partition function file from ExoMol database
+### Read Partition Function File From ExoMol Database
 # Read partition function with online webpage
 def read_exomolweb_pf(T):
     pf_url = ('http://www.exomol.com/db/' + molecule + '/' + isotopologue + '/' + dataset 
@@ -599,8 +572,9 @@ def read_exomol_pf(read_path, T):
     Q = pf_df['Q'][T-1]
     return(Q)
 
-# Read broadening file
+### Read Broadening File
 def read_broad(read_path):
+    print('Reading broadening file ...')
     broad_df = pd.DataFrame()
     broad_dfs = []
     broad = []
@@ -629,15 +603,13 @@ def read_broad(read_path):
     broad = list(i for i in broad if i==i)
     ratio = list(i for i in ratio if i==i)
     print('Broadeners \t:', str(broad).replace('[','').replace(']','').replace("'",''))
-    print('Ratios \t\t:', str(ratio).replace('[','').replace(']',''))
+    print('Ratios \t\t:', str(ratio).replace('[','').replace(']',''),'\n')
     return(broad, ratio, nbroad, broad_dfs)        
-              
 
-# Quantum number filter
 def QNfilter_linelist(linelist_df, QNs_value, QNs_label):
     for i in range(len(QNs_label)):
         if QNs_value[i] != ['']:
-            linelist_df[i] = linelist_df[[QNs_label[i]+"'",QNs_label[i]+'"']].agg(','.join, axis=1).astype(str).str.replace(' ', '')
+            linelist_df[i] = linelist_df[[QNs_label[i]+"'",QNs_label[i]+'"']].fillna('').agg(','.join, axis=1).astype(str).str.replace(' ', '')
             uval = linelist_df[QNs_label[i]+"'"].astype(str).str.replace(' ', '').drop_duplicates().values
             lval = linelist_df[QNs_label[i]+'"'].astype(str).str.replace(' ', '').drop_duplicates().values
             vallist = []
@@ -652,11 +624,10 @@ def QNfilter_linelist(linelist_df, QNs_value, QNs_label):
                     llist.append([qnval.replace(",",","+val) for val in lval])
             QNs_value[i] = vallist+list(chain(*ulist))+list(chain(*llist))
             linelist_df = linelist_df[linelist_df[i].isin(QNs_value[i])].drop(columns=[i])   
-    linelist_df = linelist_df.sort_values('v')  
-    return(linelist_df)   
+    # linelist_df = linelist_df.sort_values('v')  
+    return(linelist_df)        
 
-# Read HITRAN database files
-# Read HITRAN line list file
+### Read HITRAN Linelist File
 def read_parfile(read_path):
     if not os.path.exists(read_path):
         raise ImportError('The input file ' + read_path + ' does not exist.')
@@ -688,6 +659,7 @@ def read_hitran_parfile(read_path, parfile_df, minv, maxv, unclimit, Slimit):
     #hitran_column_name = ['M','I','v','S','Acoeff','gamma_air','gamma_self',
     #                     'Epp','n_air','delta_air','Vp','Vpp','Qp','Qpp',
     #                     'Ierr','Iref','flag','gp','gpp']
+
     hitran_df = pd.DataFrame()
     hitran_df['M'] = pd.to_numeric(parfile_df[0].map(lambda x: x[0:2]), errors='coerce').astype('int64')                 # Molecule identification number
     hitran_df['I'] = pd.to_numeric(parfile_df[0].map(lambda x: x[2:3]), errors='coerce').astype('int64')                 # Isotopologue number
@@ -703,9 +675,11 @@ def read_hitran_parfile(read_path, parfile_df, minv, maxv, unclimit, Slimit):
     hitran_df['Vpp'] = parfile_df[0].map(lambda x: x[82:97])                                                             # Lower-state "global" quanta
     hitran_df['Qp'] = parfile_df[0].map(lambda x: x[97:112])                                                             # Upper-state "local" quanta
     hitran_df['Qpp'] = parfile_df[0].map(lambda x: x[112:127])                                                           # Lower-state "local" quanta
+    #hitran_df['Unc'] = parfile_df[0].map(lambda x: x[127:128])                                                          # Uncertainty code, first integer in the error code
     hitran_df['Unc'] = pd.to_numeric(parfile_df[0].map(lambda x: x[127:128]), errors='coerce').astype('int64')           # Uncertainty code, first integer in the error code
     hitran_df['gp'] = pd.to_numeric(parfile_df[0].map(lambda x: x[146:153]), errors='coerce').astype('int64')            # Statistical weight of the upper state
-    hitran_df['gpp'] = pd.to_numeric(parfile_df[0].map(lambda x: x[153:160]), errors='coerce').astype('int64')           # Statistical weight of the upper state
+    hitran_df['gpp'] = pd.to_numeric(parfile_df[0].map(lambda x: x[153:160]), errors='coerce').astype('int64')           # Statistical weight of the lower state
+    
     hitran_df = hitran_df[hitran_df['M'].isin([molecule_id])]
     hitran_df = hitran_df[hitran_df['I'].isin([isotopologue_id])]
     hitran_df = hitran_df[hitran_df['v'].between(minv, maxv)]
@@ -715,6 +689,7 @@ def read_hitran_parfile(read_path, parfile_df, minv, maxv, unclimit, Slimit):
         hitran_df = hitran_df[hitran_df['S'] >= Slimit]
     return(hitran_df)
 
+### Read Partition Function File From HITRANOnline
 # Read partition function file from HITRANOnline
 def read_hitran_pf(T):
     isometa_url = 'https://hitran.org/docs/iso-meta/'
@@ -725,10 +700,10 @@ def read_hitran_pf(T):
     Q_content = requests.get(Q_url).text
     Q_col_name = ['T', 'Q']
     Q_df = pd.read_csv(StringIO(Q_content), sep='\\s+', names=Q_col_name, header=None)
-    Q = Q_df['Q'][T - 1]   
+    Q = Q_df['Q'][T - 1]          
     return(Q)
 
-# Process HITRAN quantum numbers
+## Process HITRAN quantum numbers
 # Global quantum numbers
 def globalQNclasses(molecule,isotopologue):
     globalQNclass1a = {'class':['CO','HF','HBr','HI','N2','NO+','NO_p','H2','CS'],
@@ -946,7 +921,7 @@ def separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerL
     QNu_col = [i+"'" for i in list(QNu_df.columns)] 
     QNl_col = [i+'"' for i in list(QNl_df.columns)] 
     return(QNu_df, QNl_df, QNu_col, QNl_col)
-
+        
 def hitran_linelist_QN(hitran_df):
     GlobalQNLabels,GlobalQNFormats = globalQNclasses(molecule,isotopologue)
     LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats = localQNgroups(molecule,isotopologue)
@@ -958,7 +933,7 @@ def hitran_linelist_QN(hitran_df):
     hitran_main_colname = ['v','S','A','gamma_air','gamma_self','E"','n_air','delta_air',"g'",'g"',"E'"]
     QN_col = QNu_col + QNl_col
     hitran_linelist_colname = hitran_main_colname + QN_col
-    hitran_linelist_df.set_axis(hitran_linelist_colname, axis=1, inplace=True)
+    hitran_linelist_df.columns = hitran_linelist_colname
     # Do quantum number filter.
     if QNsFilter !=[]:   
         QNs_col = [i+"'" for i in QNs_label] + [i+'"' for i in QNs_label]
@@ -992,13 +967,13 @@ def linelist_hitran(hitran_linelist_df):
     #   v = hitran_df['v'].values
     return (A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air)
 
-# Calculate parition function
+# Calculate Parition Function
 def calculate_partition(En, gn, T):
     partition_func = ne.evaluate('sum(gn * exp(-c2 * En / T))') 
     return(partition_func)
 
 # Partition function
-def exomol_partition_func(states_df, Ntemp, Tmax):
+def exomol_partition(states_df, Ntemp, Tmax):
     print('Calculate partition functions.')  
     t = Timer()
     t.start()
@@ -1007,22 +982,28 @@ def exomol_partition_func(states_df, Ntemp, Tmax):
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     partition_func = [calculate_partition(En, gn, T) for T in Ts]
     t.end()
-    
+    print('Finished calculating partition functions!\n')
+
+    print('Saving partition functions into file ...')   
+    ts = Timer()    
+    ts.start()     
     partition_func_df = pd.DataFrame()
     partition_func_df['T'] = Ts
     partition_func_df['partition function'] = partition_func
     
-    pf_folder = save_path + '/partition/'
+    pf_folder = save_path + 'partition/'
     if os.path.exists(pf_folder):
         pass
     else:
         os.makedirs(pf_folder, exist_ok=True)
     pf_path = pf_folder + isotopologue + '__' + dataset + '.pf'
     np.savetxt(pf_path, partition_func_df, fmt="%8.1f %15.4f")
+    ts.end()
+    print('Partition functions file has been saved:', pf_path, '\n') 
     print('Partition functions have been saved!\n')  
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
 
-
-# Calculate specific heat
+# Specific Heat
 def calculate_specific_heats(En, gn, T):
     pf = ne.evaluate('sum(gn * exp(-c2 * En / T)) ')  
     pfp = ne.evaluate('sum(gn * exp(-c2 * En / T) * (c2 * En / T))')
@@ -1037,65 +1018,95 @@ def exomol_specificheat(states_df, Ntemp, Tmax):
     t.start()
     En = states_df['E'].astype('float').values
     gn = states_df['g'].astype('int').values
-    Ts = np.array(range(200, Tmax+1, Ntemp)) 
+    Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     specificheat_func = [calculate_specific_heats(En, gn, T) for T in Ts]
     t.end()
-    
+    print('Finished calculating specific heats!\n')
+
+    print('Saving specific heats into file ...')   
+    ts = Timer()    
+    ts.start() 
     specificheat_func_df = pd.DataFrame()
     specificheat_func_df['T'] = Ts
     specificheat_func_df['specific heat'] = specificheat_func 
     
-    cp_folder = save_path + '/specific_heat/'
+    cp_folder = save_path + 'specific_heat/'
     if os.path.exists(cp_folder):
         pass
     else:
         os.makedirs(cp_folder, exist_ok=True)  
     cp_path = cp_folder + isotopologue + '__' + dataset + '.cp'
     np.savetxt(cp_path, specificheat_func_df, fmt="%8.1f %15.4f")
-    print('Specific heats have been saved!\n')  
- 
-
+    ts.end()
+    print('Specific heats file has been saved:', cp_path, '\n')  
+    print('Specific heats have been saved!\n')    
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+   
+# Lifetime
 # Calculate lifetime
-def cal_lifetime(states_df, all_trans_df):
-    sum_A = all_trans_df.groupby('u')['A'].sum()
-    lifetime = ne.evaluate('1 / sum_A') 
-    lt_df = pd.Series(lifetime).map('{: >12.4E}'.format).reset_index()
-    lt_df.columns=['u','lt']
-    add_u = pd.DataFrame()
-    add_u['u'] = pd.concat([states_df['id'].astype('int'), pd.Series(sum_A.index)]).drop_duplicates(keep=False) - 1
-    add_u['lt'] = '         Inf'
-    lifetime_df = pd.concat([add_u, lt_df], ignore_index=True)
-    lifetime_df.sort_values('u',inplace=True)
-    return(lifetime_df)
+def ProcessLifetime(states_df, trans_df):
+    A_sum = trans_df.groupby('u')['A'].sum()
+    ids = states_df['id']
+    lifetime_whole = np.zeros(max(ids)+1)
+    lifetime_whole[A_sum.index] = A_sum.values
+    lifetime = lifetime_whole[ids]
+    return lifetime
+
+def calculate_lifetime(states_df, trans_filename):
+    print('Processeing transitions file:', trans_filename)
+    trans_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                        usecols=[0,1,2],names=['u','l','A'], 
+                        blocksize=None, encoding='utf-8')
+    trans_df = trans_dd.compute()
+    # chunk_size = 10000     #500000   #1024*1024
+    trans_df_list = [trans_df[i:i+chunk_size] for i in range(0,trans_df.shape[0],chunk_size)]
+
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        futures = [executor.submit(ProcessLifetime,states_df,df) for df in trans_df_list]
+        lifetime = sum(np.array([future.result() for future in tqdm(futures)]))
+    return lifetime
 
 # Lifetime
-def exomol_lifetime(read_path, states_df, all_trans_df):
+def exomol_lifetime(read_path, states_df):
+    np.seterr(divide='ignore', invalid='ignore')
     print('Calculate lifetimes.')  
+    print('Running on ', nprocess, 'cores.')
     t = Timer()
     t.start()
-    lifetime_df = cal_lifetime(states_df, all_trans_df)
-    lifetime_list = list(lifetime_df['lt'])
+    print('Reading all transitions and calculating lifetimes ...')
+    trans_filenames = get_transfiles(read_path)
+    # Process multiple files in parallel
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        # Submit reading tasks for each file
+        futures = [executor.submit(calculate_lifetime, states_df, 
+                                    trans_filename) for trans_filename in trans_filenames]
+        lifetime_result = 1 / sum(np.array([future.result() for future in tqdm(futures)]))
+        lifetime = np.array([f'{x:>12.4E}'.replace('INF','Inf') for x in lifetime_result])
     t.end()
-    
-    states_filenames = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset 
-                                 + '/' + isotopologue + '__' + dataset + '.states.bz2')
-    s_df = pd.read_csv(states_filenames[0], compression='bz2', header=None, dtype=object)
-    nrows = len(s_df)
+    print('Finished reading all transitions and calculating lifetimes!\n')
+
+    print('Saving lifetimes into file ...')   
+    ts = Timer()    
+    ts.start()  
+    states_filename = (read_path + molecule + '/' + isotopologue + '/' + dataset 
+                        + '/' + isotopologue + '__' + dataset + '.states.bz2')
+    s_df = pd.read_csv(states_filename, compression='bz2', header=None, dtype=object)[0]
+    nrows = len(s_df)           
     new_rows = []
     if check_uncertainty == 0:
         for i in range(nrows):
-            new_rows.append(s_df[0][i][:41]+lifetime_list[i]+s_df[0][i][53:]+'\n')
+            new_rows.append(s_df[i][:41]+lifetime[i]+s_df[i][53:]+'\n')
     if check_uncertainty == 1:
         for i in range(nrows):
-            new_rows.append(s_df[0][i][:53]+lifetime_list[i]+s_df[0][i][65:]+'\n')
+            new_rows.append(s_df[i][:53]+lifetime[i]+s_df[i][65:]+'\n')
 
-    lf_folder = save_path + '/lifetime/'
+    lf_folder = save_path + 'lifetime/'
     if os.path.exists(lf_folder):
         pass
     else:
         os.makedirs(lf_folder, exist_ok=True)  
-        
-    if CompressYN == 'Y':
+       
+    if CompressYN == 'Ym':
         lf_path = lf_folder + isotopologue + '__' + dataset + '.states.bz2'
         with bz2.open(lf_path, 'wt') as f:
             for i in range(nrows):
@@ -1107,70 +1118,93 @@ def exomol_lifetime(read_path, states_df, all_trans_df):
             for i in range(nrows):
                 f.write(new_rows[i])
             f.close
-    print('Lifetimes have been saved!\n')   
-  
+    ts.end()
+    print('Lifetimes file has been saved:', lf_path, '\n') 
+    print('Lifetimes have been saved!\n')    
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
 
-# Calculate cooling function
-def linelist_coolingfunc(states_df, all_trans_df, ncolumn):
-    id_u = all_trans_df['u'].values
-    id_l = all_trans_df['l'].values
-    states_df['id'] = pd.to_numeric(states_df['id'])
-    states_df.set_index(['id'], inplace=True, drop=False)
-    id_s = states_df['id']
-    all_trans_df.set_index(['u'], inplace=True, drop=False)
-    id_us = list(set(id_u).intersection(set(id_s)))
-    trans_us_df = all_trans_df.loc[id_us]
-    id_l = trans_us_df['l'].values
-    id_ls = list(set(id_l).intersection(set(id_s)))
-    trans_us_df.set_index(['l'], inplace=True, drop=False)
-    trans_s_df = trans_us_df.loc[id_ls]
-    id_su = trans_s_df['u'].values
-    id_sl = trans_s_df['l'].values
-    states_u_df = states_df.loc[id_su]
-    states_l_df = states_df.loc[id_sl]
-    Ep = states_u_df['E'].values.astype('float')
-    gp = states_u_df['g'].values.astype('int')
-    A = trans_s_df['A'].values.astype('float')
-    if ncolumn == 4:
-        v = trans_s_df['v'].values.astype('float')
-    else:
-        Epp = states_l_df['E'].values.astype('float')     # Upper state energy
-        v = cal_v(Ep, Epp) 
-    return (A, v, Ep, gp)
-
+# Cooling Function
 def calculate_cooling(A, v, Ep, gp, T, Q):
     # cooling_func = np.sum(A * h * c * v * gp * np.exp(-c2 * Ep / T)) / (4 * PI * Q) 
     _sum = ne.evaluate('sum(A * h * c * v * gp * exp(-c2 * Ep / T))')  
     cooling_func = ne.evaluate('_sum / (4 * PI * Q)')
     return(cooling_func)
 
+# Calculate cooling function
+def ProcessCoolingFunction(states_df,trans_df,Ts,Qs):
+    merged_df = dd.merge(trans_df, states_df, left_on='u', right_on='id', 
+                         how='inner').merge(states_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
+    cooling_func_df = merged_df[['A',"E'",'E"',"g'"]]
+    cooling_func_df['v'] = cal_v(cooling_func_df["E'"].values, cooling_func_df['E"'].values)
+    num = len(cooling_func_df)
+    if num > 0:
+        A = cooling_func_df['A'].values
+        v = cooling_func_df['v'].values
+        Ep = cooling_func_df["E'"].values
+        gp = cooling_func_df["g'"].values
+        cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), desc='Calculating')]
+    else:
+        cooling_func = np.zeros(Tmax)
+    return cooling_func
+
+def calculate_cooling_func(states_df, trans_filename, Ts, Qs):
+    print('Processeing transitions file:', trans_filename)
+    trans_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                        usecols=[0,1,2],names=['u','l','A'], 
+                        blocksize=None, encoding='utf-8')
+    trans_df = trans_dd.compute()
+    # chunk_size = 1024*1024    #500000 
+    trans_df_list = [trans_df[i:i+chunk_size] for i in range(0,trans_df.shape[0],chunk_size)]
+
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        futures = [executor.submit(ProcessCoolingFunction,states_df,df,Ts,Qs) for df in trans_df_list]
+        cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
+    return cooling_func
+
 # Cooling function for ExoMol database
-def exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn):
-    tqdm.write('Calculate cooling functions.') 
+def exomol_cooling(states_df, Ntemp, Tmax):
+    # tqdm.write('Calculate cooling functions.') 
+    print('Calculate cooling functions.') 
+    print('Running on ', nprocess, 'cores.') 
     t = Timer()
     t.start()
-    A, v, Ep, gp = linelist_coolingfunc(states_df, all_trans_df, ncolumn)
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     Qs = read_exomol_pf(read_path, Ts)
     # Qs = read_exomolweb_pf(Ts)
-    cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), desc='Calculating')]
-    t.end()
+    print('Reading all transitions and calculating cooling functions ...')
+    trans_filenames = get_transfiles(read_path)
+
+    # Process multiple files in parallel
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        # Submit reading tasks for each file
+        futures = [executor.submit(calculate_cooling_func, states_df, trans_filename, 
+                                   Ts, Qs) for trans_filename in trans_filenames]
+        cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
     
     cooling_func_df = pd.DataFrame()
     cooling_func_df['T'] = Ts
     cooling_func_df['cooling function'] = cooling_func
+    t.end()
+    print('Finished reading all transitions and calculating cooling functions!\n')
     
-    cf_folder = save_path + '/cooling/'
+    print('Saving cooling functions into file ...')   
+    ts = Timer()    
+    ts.start()     
+    cf_folder = save_path + 'cooling/'
     if os.path.exists(cf_folder):
         pass
     else:
         os.makedirs(cf_folder, exist_ok=True)  
     cf_path = cf_folder + isotopologue + '__' + dataset + '.cf' 
     np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20.8E")
-    tqdm.write('Cooling functions has been saved!\n')      
+    ts.end()
+    print('Cooling functions file has been saved:', cf_path, '\n')  
+    print('Cooling functions have been saved!\n')  
+    # tqdm.write('Cooling functions has been saved!\n') 
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')  
     
 # Cooling function for HITRAN database
-def hitran_cooling_func(hitran_df, Ntemp, Tmax):
+def hitran_cooling(hitran_df, Ntemp, Tmax):
     print('Calculate cooling functions.')  
     t = Timer()
     t.start()
@@ -1194,41 +1228,13 @@ def hitran_cooling_func(hitran_df, Ntemp, Tmax):
         os.makedirs(cf_folder, exist_ok=True)  
     cf_path = cf_folder + isotopologue + '__' + dataset + '.cf' 
     np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20.8E")
-    print('Cooling functions have been saved!\n')       
-
-
-# Calculate oscillator strength
-def linelist_oscillator_strength(states_df, all_trans_df, ncolumn):
-    id_u = all_trans_df['u'].values
-    id_l = all_trans_df['l'].values
-    states_df['id'] = pd.to_numeric(states_df['id'])
-    states_df.set_index(['id'], inplace=True, drop=False)
-    id_s = states_df['id']
-    all_trans_df.set_index(['u'], inplace=True, drop=False)
-    id_us = list(set(id_u).intersection(set(id_s)))
-    trans_us_df = all_trans_df.loc[id_us]
-    id_l = trans_us_df['l'].values
-    id_ls = list(set(id_l).intersection(set(id_s)))
-    trans_us_df.set_index(['l'], inplace=True, drop=False)
-    trans_s_df = trans_us_df.loc[id_ls]
-    id_su = trans_s_df['u'].values
-    id_sl = trans_s_df['l'].values
-    states_u_df = states_df.loc[id_su]
-    states_l_df = states_df.loc[id_sl]
-    gp = states_u_df['g'].values.astype('int')
-    gpp = states_l_df['g'].values.astype('int')
-    A = trans_s_df['A'].values.astype('float')
-
-    if ncolumn == 4:
-        v = trans_s_df['v'].values.astype('float')
-    else:
-        Ep = states_u_df['E'].values.astype('float')
-        Epp = states_l_df['E'].values.astype('float')
-        v = cal_v(Ep, Epp) 
-    return (gp, gpp, A, v)
-
+    print('Cooling functions file has been saved:', cf_path, '\n')
+    print('Cooling functions have been saved!\n')     
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+    
+# Oscillator Strength
 # Calculate gf or f
-def cal_oscillator_strength(gp, gpp, A, v):
+def calculate_oscillator_strength(gp, gpp, A, v):
     gf = ne.evaluate('gp * A / (c * v)**2')
     f = ne.evaluate('gf / gpp')
     if 'G' not in gfORf:
@@ -1237,7 +1243,35 @@ def cal_oscillator_strength(gp, gpp, A, v):
         oscillator_strength = gf
     return oscillator_strength
 
-# Plot oscillator strength 
+# Calculate oscillator strength
+def ProcessOscillatorStrengths(states_df,trans_df):
+    merged_df = dd.merge(trans_df, states_df, left_on='u', right_on='id', 
+                         how='inner').merge(states_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
+    oscillator_strength_df = merged_df[['u','l','A',"E'",'E"',"g'",'g"']]
+    v = cal_v(oscillator_strength_df["E'"].values, oscillator_strength_df['E"'].values)
+    A = oscillator_strength_df['A'].values
+    gp = oscillator_strength_df["g'"].values
+    gpp = oscillator_strength_df['g"'].values
+    oscillator_strength_df['os'] = calculate_oscillator_strength(gp, gpp, A, v)    
+    oscillator_strength_df['v'] = v
+    oscillator_strength_df = oscillator_strength_df[['u','l','os','v']]
+    return (oscillator_strength_df)
+
+def calculate_oscillator_strengths(states_df, trans_filename):
+    print('Processeing transitions file:', trans_filename)
+    trans_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                        usecols=[0,1,2],names=['u','l','A'], 
+                        blocksize=None, encoding='utf-8')
+    trans_df = trans_dd.compute()
+    # chunk_size = 10000    #500000   #1024*1024
+    trans_df_list = [trans_df[i:i+chunk_size] for i in range(0,trans_df.shape[0],chunk_size)]
+
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        futures = [executor.submit(ProcessOscillatorStrengths,states_df,df) for df in trans_df_list]
+        oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures)])
+    return oscillator_strength_df
+
+# Plot oscillator strength
 def plot_oscillator_strength(oscillator_strength_df):
     v = oscillator_strength_df['v']
     osc_str = oscillator_strength_df['os']
@@ -1246,7 +1280,7 @@ def plot_oscillator_strength(oscillator_strength_df):
                   'xtick.labelsize': 14,
                   'ytick.labelsize': 14}
     plt.rcParams.update(parameters)
-    os_plot_folder = save_path + '/oscillator_strength/plots/'+molecule+'/'+database+'/'
+    os_plot_folder = save_path + 'oscillator_strength/plots/'+molecule+'/'+database+'/'
     if os.path.exists(os_plot_folder):
         pass
     else:
@@ -1262,33 +1296,49 @@ def plot_oscillator_strength(oscillator_strength_df):
     leg = plt.legend()                  # Get the legend object.
     for line in leg.get_lines():
         line.set_linewidth(1.0)         # Change the line width for the legend.
-    plt.savefig(os_plot_folder+molecule+'__'+database+'__'+gfORf.lower()+'__os.png', dpi=500)
+    os_plot = os_plot_folder+molecule+'__'+isotopologue+'__'+database+'__'+gfORf.lower()+'__os.png'
+    plt.savefig(os_plot, dpi=500)
     plt.show()
-
-# Oscillator strength for ExoMol database
-def exomol_oscillator_strength(states_df, all_trans_df, ncolumn):
-    print('Calculate oscillator strengths.')  
-    t = Timer()
-    t.start()
-    gp, gpp, A, v= linelist_oscillator_strength(states_df, all_trans_df, ncolumn)
-    oscillator_strength_df = pd.DataFrame(list(zip(gp,gpp,v)), columns=['gp','gpp','v'])
-    oscillator_strength_df['os'] = cal_oscillator_strength(gp, gpp, A, v)
-    oscillator_strength_df = oscillator_strength_df.sort_values(by=['v'])
-    t.end()
+    print('Oscillator strengths plot has been saved:', os_plot, '\n')   
     
-    os_folder = save_path + '/oscillator_strength/'
+# Oscillator strength for ExoMol database
+def exomol_oscillator_strength(states_df):
+    print('Calculate oscillator strengths.')  
+    print('Running on ', nprocess, 'cores.')
+    tot = Timer()
+    tot.start()
+    print('Reading transitions and calculating oscillator strengths ...')    
+    trans_filenames = get_transfiles(read_path)
+    # Process multiple files in parallel
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        # Submit reading tasks for each file
+        futures = [executor.submit(calculate_oscillator_strengths,states_df,
+                                   trans_filename) for trans_filename in trans_filenames]
+        oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures)])
+    oscillator_strength_df.sort_values(by=['v'], ascending=True, inplace=True)  
+    # oscillator_strength_df  = oscillator_strength_df.sort_values('v').reset_index(drop=True)
+    tot.end()
+    print('Finished reading all transitions and calculating oscillator strengths!\n')
+
+    print('Saving oscillator strengths into file ...')   
+    ts = Timer()    
+    ts.start()
+    os_folder = save_path + 'oscillator_strength/files/'+molecule+'/'+database+'/'
     if os.path.exists(os_folder):
         pass
     else:
         os.makedirs(os_folder, exist_ok=True)  
-    os_path = os_folder + isotopologue + '__' + dataset + '.os' 
-    os_format = "%7.1f %7.1f %12.6f %20.8E"
+    os_path = os_folder+isotopologue+'__'+dataset+'_'+gfORf.lower()+'.os' 
+    os_format = "%12d %12d %10.4E %15.6f"
     np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
+    ts.end()
+    print('Oscillator strengths file has been saved:', os_path, '\n')  
     
     # Plot oscillator strengths and save it as .png.
     if PlotOscillatorStrengthYN == 'Y':
         plot_oscillator_strength(oscillator_strength_df)
-    print('Oscillator strengths have been saved!\n')    
+    print('Oscillator strengths have been saved!\n')  
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
     
 # Oscillator strength for HITRAN database
 def hitran_oscillator_strength(hitran_df):
@@ -1300,7 +1350,7 @@ def hitran_oscillator_strength(hitran_df):
     gp = hitran_df['gp'].values
     gpp = hitran_df['gp'].values
     oscillator_strength_df = hitran_df[['gp', 'gpp', 'v']]
-    oscillator_strength_df['os'] = cal_oscillator_strength(gp, gpp, A, v)
+    oscillator_strength_df['os'] = calculate_oscillator_strength(gp, gpp, A, v)
     oscillator_strength_df = oscillator_strength_df.sort_values(by=['v'])
     t.end()
     
@@ -1310,24 +1360,25 @@ def hitran_oscillator_strength(hitran_df):
     else:
         os.makedirs(os_folder, exist_ok=True)  
     os_path = os_folder + isotopologue + '__' + dataset + '.os' 
-    os_format = "%7.1f %7.1f %12.6f %20.8E"
+    os_format = "%7.1f %7.1f %10.4E %15.6f"
     np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
+    print('Oscillator strengths file has been saved:', os_path, '\n')  
     
     # Plot oscillator strengths and save it as .png.
     if PlotOscillatorStrengthYN == 'Y':
         plot_oscillator_strength(oscillator_strength_df)  
     print('Oscillator strengths have been saved!\n') 
-    
-    
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+
 # Process data
 def read_part_states(states_df):
     if UncFilter != 'None' :
-        states_part_df = states_df[states_df['unc'].astype(float) <= UncFilter]
-        states_part_df['id'] = pd.to_numeric(states_part_df['id'])
+        states_part_df = states_df[states_df['unc'] <= UncFilter]
+        # states_part_df['id'] = pd.to_numeric(states_part_df['id'])
         states_part_df.set_index(['id'], inplace=True, drop=False)
     else:
         states_part_df = states_df
-        states_part_df['id'] = pd.to_numeric(states_part_df['id'])
+        # states_part_df['id'] = pd.to_numeric(states_part_df['id'])
         states_part_df.set_index(['id'], inplace=True, drop=False)
     if check_uncertainty == 1:
         col_unc = ['unc']
@@ -1354,8 +1405,9 @@ def read_part_states(states_df):
                     states_part_df = states_part_df
                 else:
                     states_part_df = states_part_df[states_part_df[QNs_label[i]].isin(list_QN_value)]
+    states_part_df.index.name='index'
     return(states_part_df)  
- 
+
 def get_part_transfiles(read_path):
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
     trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*trans.bz2')
@@ -1388,11 +1440,12 @@ def get_part_transfiles(read_path):
                 trans_filepaths.append(trans_filepaths_all[i])
             elif len(split_version[0].split('-')) == 2:
                 trans_filepaths.append(trans_filepaths_all[i])
+        
     if len(trans_filepaths) == 1:
         filenames = trans_filepaths
     else:
         filenames = []
-        for trans_filename in tqdm(trans_filepaths, position=0, leave=True, ncols=100, desc='Finding trans files'): 
+        for trans_filename in tqdm(trans_filepaths, position=0, leave=True, desc='Finding trans files'):
             lower = int(trans_filename.split('__')[2].split('.')[0].split('-')[0])
             upper = int(trans_filename.split('__')[2].split('.')[0].split('-')[1]) 
             if (lower <= int(min_wn) < upper):
@@ -1400,63 +1453,22 @@ def get_part_transfiles(read_path):
             if (lower >= int(min_wn) and upper <= int(max_wn)):
                 filenames.append(trans_filename)
             if (lower <= int(max_wn) < upper):
-                filenames.append(trans_filename)   
-    return(list(set(filenames)))      
-    
-def read_part_trans(read_path):
-    t = Timer()
-    t.start()
-    print('Reading part transitions ...')
-    
-    global u, l, A, v
-    u = []
-    l = []
-    A = []
-    v = []
-    trans_filepaths = get_part_transfiles(read_path)
-    nfile = len(trans_filepaths)
-    if nfile >= n_workers:
-        nprocess = nfile
-    elif nfile <= num_cpus:
-        nprocess = nfile*5
-    else:
-        nprocess = nfile*2
-    pool = Pool(processes=nprocess, maxtasksperchild=100) 
-    processes = []
-    for trans_filename in tqdm(trans_filepaths, position=0, leave=True, desc='Reading transitions'):
-        processes.append(pool.apply_async(read_trans, args=(trans_filename,)))
-    pool.close()
-    pool.join()
-    for proc in processes:
-        result = proc.get()
-        u += result[0]
-        l += result[1]
-        A += result[2]
-        v += result[3]
-    if len(v) == 0:
-        ncolumn = 3
-        trans_part_df = pd.DataFrame({'u':u, 'l':l, 'A':A})
-    else:
-        ncolumn = 4
-        trans_part_df = pd.DataFrame({'u':u, 'l':l, 'A':A, 'v':v})
-    t.end()                
-    print('Finished reading part transitions!\n')
-    return(trans_part_df, ncolumn)
+                filenames.append(trans_filename)    
+    return(list(set(filenames)))
 
-def extract_broad(broad_df, states_l_df):
-    J_df = pd.DataFrame()
+def extract_broad(broad_df, st_df):
     max_broad_J = max(broad_df['Jpp'])
-    J_df['Jpp'] = states_l_df['J'].values.astype('float')
-    J_df['Jpp'][J_df.Jpp > max_broad_J] = max_broad_J
-    id_broad = (J_df['Jpp']-0.1).round(0).astype(int)
-    gamma_L = broad_df['gamma_L'][id_broad].values
-    n_air = broad_df['n_air'][id_broad].values
+    Jpp = st_df['J"'].values
+    Jpp[Jpp > max_broad_J] = max_broad_J
+    id_broad = (st_df['J"']-0.1).round(0).astype('int32').values
+    gamma_L = broad_df['gamma_L'][id_broad]
+    n_air = broad_df['n_air'][id_broad]
     return(gamma_L, n_air)
 
 # Intensity
 # Calculate absorption coefficient
 def cal_abscoefs(T, v, gp, A, Epp, Q, abundance):
-    #abscoef = gp * A * np.exp(- c2 * Epp / T) * (1 - np.exp(- c2 * v / T)) / (8 * np.pi * c * v**2 * Q) * abundance  
+    # abscoef = gp * A * np.exp(- c2 * Epp / T) * (1 - np.exp(- c2 * v / T)) / (8 * np.pi * c * v**2 * Q) * abundance  
     abscoef = ne.evaluate('gp * A * exp(- c2 * Epp / T) * (1 - exp(- c2 * v / T)) * Inv8Pic / (v ** 2 * Q) * abundance')  
     return abscoef
 
@@ -1466,13 +1478,14 @@ def cal_emicoefs(T, v, gp, A, Ep, Q, abundance):
     emicoef = ne.evaluate('gp * A * v * exp(- c2 * Ep / T) * Inv4Pi / Q * abundance')
     return emicoef
 
+# Uncertainty
 # Calculate uncertainty
 def cal_uncertainty(unc_u, unc_l):
     unc = ne.evaluate('sqrt(unc_u ** 2 + unc_l ** 2)')
     return unc
 
-## Conversion
-# ExoMol to HITRAN
+# Conversion
+## ExoMol to HITRAN
 def convert_QNValues_exomol2hitran(states_unc_df, GlobalQNLabel_list, LocalQNLabel_list):
     QNLabel_list = GlobalQNLabel_list+LocalQNLabel_list
     if 'Gtot' in QNLabel_list:
@@ -1518,132 +1531,40 @@ def read_unc_states(states_df):
     colnames = ['id','E','g'] + col_unc + GlobalQNLabel_list + LocalQNLabel_list
     states_unc_df = states_unc_df[colnames] 
     states_unc_df = convert_QNValues_exomol2hitran(states_unc_df, GlobalQNLabel_list, LocalQNLabel_list)
+    states_unc_df.index.name='index'
+    # pd.set_option("display.max_columns",30) 
     return(states_unc_df)
 
-def convert_QNFormat_exomol2hitran(states_u_df, states_l_df, GlobalQNLabel_list, GlobalQNFormat_list, 
-                                   LocalQNLabel_list, LocalQNFormat_list):
-    from pandarallel import pandarallel
-    pandarallel.initialize(nb_workers=8,progress_bar=False)    # Initialize.
-    
-    gQNp = pd.DataFrame()
-    gQNpp = pd.DataFrame()
-    n_gQN = len(GlobalQNLabel_list)
-    for i in range(n_gQN):
-        gQN_format = GlobalQNFormat_list[i].replace("%",'{: >')+'}'
-        gQN_label = GlobalQNLabel_list[i]
-        try:
-            if 'd' in gQN_format or 'f' in gQN_format: 
-                gQNp[gQN_label+"'"] = pd.Series(pd.to_numeric(states_u_df[gQN_label]
-                                                              .values)).parallel_map(gQN_format.format)
-                gQNpp[gQN_label+'"'] = pd.Series(pd.to_numeric(states_l_df[gQN_label]
-                                                               .values)).parallel_map(gQN_format.format)
-            elif 's' in gQN_format or 'a' in gQN_format: 
-                gQNp[gQN_label+"'"] = pd.Series(states_u_df[gQN_label].str.replace('(','',regex=True)
-                                                .str.replace(')','',regex=True).values).parallel_map(gQN_format.format)
-                gQNpp[gQN_label+'"'] = pd.Series(states_l_df[gQN_label].str.replace('(','',regex=True)
-                                                .str.replace(')','',regex=True).values).parallel_map(gQN_format.format)
-        except:
-            if 'd' in gQN_format or 'f' in gQN_format: 
-                gQNp[gQN_label+"'"] = pd.Series(pd.to_numeric(states_u_df[gQN_label].values)).map(gQN_format.format)
-                gQNpp[gQN_label+'"'] = pd.Series(pd.to_numeric(states_l_df[gQN_label].values)).map(gQN_format.format)
-            elif 's' in gQN_format or 'a' in gQN_format:       
-                gQNp[gQN_label+"'"] = pd.Series(states_u_df[gQN_label].str.replace('(','',regex=True)
-                                                .str.replace(')','',regex=True).values).map(gQN_format.format)
-                gQNpp[gQN_label+'"'] = pd.Series(states_l_df[gQN_label].str.replace('(','',regex=True)
-                                                .str.replace(')','',regex=True).values).map(gQN_format.format)
-    globalQNp = pd.DataFrame(gQNp).sum(axis=1).map('{: >15}'.format) 
-    globalQNpp = pd.DataFrame(gQNpp).sum(axis=1).map('{: >15}'.format)  
+def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
+    merged_df = dd.merge(trans_part_df, states_unc_df, left_on='u', right_on='id', 
+                         how='inner').merge(states_unc_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
 
-    lQNp = pd.DataFrame()
-    lQNpp = pd.DataFrame()
-    n_lQN = len(LocalQNLabel_list)
-    for i in range(n_lQN):
-        lQN_format = LocalQNFormat_list[i].replace("%",'{: >')+'}'
-        lQN_label = LocalQNLabel_list[i]
-        try:
-            if 'd' in lQN_format or 'f' in lQN_format: 
-                lQNp[lQN_label+"'"] = pd.Series(pd.to_numeric(states_u_df[lQN_label].values)).parallel_map(lQN_format.format)
-                lQNpp[lQN_label+'"'] = pd.Series(pd.to_numeric(states_l_df[lQN_label].values)).parallel_map(lQN_format.format)
-            elif 's' in lQN_format or 'a' in lQN_format: 
-                lQNp[lQN_label+"'"] = pd.Series(states_u_df[lQN_label].str.replace('(','',regex=True)
-                                                .str.replace(')','',regex=True).values).parallel_map(lQN_format.format)
-                lQNpp[lQN_label+'"'] = pd.Series(states_l_df[lQN_label].str.replace('(','',regex=True)
-                                                .str.replace(')','',regex=True).values).parallel_map(lQN_format.format)
-        except:
-            if 'd' in lQN_format or 'f' in lQN_format: 
-                lQNp[lQN_label+"'"] = pd.Series(pd.to_numeric(states_u_df[lQN_label].values)).map(lQN_format.format)
-                lQNpp[lQN_label+'"'] = pd.Series(pd.to_numeric(states_l_df[lQN_label].values)).map(lQN_format.format)
-            elif 's' in lQN_format or 'a' in lQN_format: 
-                lQNp[lQN_label+"'"] = pd.Series(states_u_df[lQN_label].str.replace('(','',regex=True)
-                                                .str.replace(')','',regex=True).values).map(lQN_format.format)
-                lQNpp[lQN_label+'"'] = pd.Series(states_l_df[lQN_label].str.replace('(','',regex=True)
-                                                .str.replace(')','',regex=True).values).map(lQN_format.format)
-            
-    localQNp = pd.DataFrame(lQNp).sum(axis=1).map('{: >15}'.format) 
-    localQNpp = pd.DataFrame(lQNpp).sum(axis=1).map('{: >15}'.format)  
+    merged_df['v'] = cal_v(merged_df["E'"].values, merged_df['E"'].values)
+    merged_df = merged_df[merged_df['v'].between(min_wn, max_wn)]
+    v = merged_df['v']
+    A = merged_df['A'].values
+    Epp = merged_df['E"'].values
+    gp = merged_df["g'"].values
+    gpp = merged_df['g"'].values
+    exomolst_df = merged_df.drop(columns=["id'", 'id"','u','l','A',"E'",'E"','v',"g'",'g"'])
+    unc = cal_uncertainty(exomolst_df["unc'"], exomolst_df['unc"'])
+    exomolst_df.drop(columns=["unc'",'unc"'], inplace=True)
+    return (exomolst_df, v, A, Epp, gp, gpp, unc)
 
-    QN_df = pd.concat([globalQNp,globalQNpp,localQNp,localQNpp],axis='columns')
-    QN_df.columns = ["V'", 'V"', "Q'", 'Q"']
-    return(QN_df)
-
-def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df, ncolumn):
-    if ncolumn == 4:
-        trans_part_df = trans_part_df[trans_part_df['v'].between(ConversionMinFreq,ConversionMaxFreq)] 
-        id_u = trans_part_df['u'].values
-        id_s = states_unc_df['id'].values
-        trans_part_df.set_index(['u'], inplace=True, drop=False)
-        id_us = list(set(id_u).intersection(set(id_s)))
-        trans_us_df = trans_part_df.loc[id_us]
-        id_l = trans_us_df['l'].values
-        id_ls = list(set(id_l).intersection(set(id_s)))
-        trans_us_df.set_index(['l'], inplace=True, drop=False)
-        trans_s_df = trans_us_df.loc[id_ls]
-        trans_s_df.sort_values(by=['v'], inplace=True)
-    else:
-        id_u = trans_part_df['u'].values
-        id_s = pd.to_numeric(states_unc_df['id']).values
-        trans_part_df.set_index(['u'], inplace=True, drop=False)
-        id_us = list(set(id_u).intersection(set(id_s)))
-        trans_us_df = trans_part_df.loc[id_us]
-        id_l = trans_us_df['l'].values
-        id_ls = list(set(id_l).intersection(set(id_s)))
-        trans_us_df.set_index(['l'], inplace=True, drop=False)
-        trans_s_df = trans_us_df.loc[id_ls]
-        id_su = trans_s_df['u'].values
-        id_sl = trans_s_df['l'].values
-        states_u_df = states_unc_df.loc[id_su]
-        states_l_df = states_unc_df.loc[id_sl]
-        Ep = states_u_df['E'].values.astype('float')
-        Epp = states_l_df['E'].values.astype('float')
-        trans_s_df['v'] = cal_v(Ep, Epp)
-        trans_s_df = trans_s_df[trans_s_df['v'].between(ConversionMinFreq,ConversionMaxFreq)] 
-        trans_s_df.sort_values(by=['v'], inplace=True) 
-    id_su = trans_s_df['u'].values
-    id_sl = trans_s_df['l'].values
-    states_u_df = states_unc_df.loc[id_su]
-    states_l_df = states_unc_df.loc[id_sl]
-    Ep = states_u_df['E'].values.astype('float')
-    Epp = states_l_df['E'].values.astype('float')
-    gp = states_u_df['g'].values.astype('int')
-    gpp = states_l_df['g'].values.astype('int')
-    A = trans_s_df['A'].values.astype('float')
-    v = trans_s_df['v'].values.astype('float')
-    unc_u = states_u_df['unc'].values.astype('float')
-    unc_l = states_l_df['unc'].values.astype('float')
-    unc = cal_uncertainty(unc_u, unc_l)
+def broadener_ExoMol2HITRAN(exomolst_df):
     broad_col_name = ['code', 'gamma_L', 'n_air', 'Jpp']
     default_broad_df = pd.DataFrame(columns=broad_col_name)
     default_gamma_L = 0.07
     default_n_air = 0.5
     default_broad_df = pd.DataFrame([['code', default_gamma_L, default_n_air,'Jpp']],columns=broad_col_name)
     air_broad_df = pd.DataFrame(columns=broad_col_name)
-    rows = len(id_sl)
+    rows = len(exomolst_df)
     pattern_air = read_path + molecule + '/**/*air.broad'
     if glob.glob(pattern_air, recursive=True) != []:
         for fname_air in glob.glob(pattern_air, recursive=True):
             air_broad_df = pd.read_csv(fname_air, sep='\s+', names=broad_col_name, header=None, engine='python')
-            gamma_air = extract_broad(air_broad_df,states_l_df)[0]
-            n_air = extract_broad(air_broad_df,states_l_df)[1]
+            gamma_air = extract_broad(air_broad_df,exomolst_df)[0].values
+            n_air = extract_broad(air_broad_df,exomolst_df)[1].values
     else:
         gamma_air= np.full((1,rows),default_broad_df['gamma_L'][0])[0]
         n_air = np.full((1,rows),default_broad_df['n_air'][0])[0]
@@ -1651,33 +1572,89 @@ def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df, ncolumn):
     if glob.glob(pattern_self, recursive=True) != []:
         for fname_self in glob.glob(pattern_self, recursive=True):
             self_broad_df = pd.read_csv(fname_self, sep='\s+', names=broad_col_name, header=None, engine='python')
-            gamma_self = extract_broad(self_broad_df,states_l_df)[0]
+            gamma_self = extract_broad(self_broad_df,exomolst_df)[0].values
     else:
         gamma_self= np.full((1,rows),default_broad_df['gamma_L'][0])[0]  
-    QN_df = convert_QNFormat_exomol2hitran(states_u_df, states_l_df, GlobalQNLabel_list, GlobalQNFormat_list, 
-                                           LocalQNLabel_list, LocalQNFormat_list)
-    return (A, v, Ep, Epp, gp, gpp, unc, gamma_air, gamma_self, n_air, QN_df)
+    return (gamma_air, gamma_self, n_air)
+        
+def convert_QNFormat_exomol2hitran(exomolst_df, GlobalQNLabel_list, GlobalQNFormat_list, 
+                                   LocalQNLabel_list, LocalQNFormat_list):
+    n_gQN = len(GlobalQNLabel_list)
+    for i in range(n_gQN):
+        gQN_format = GlobalQNFormat_list[i].replace("%",'{: >')+'}'
+        gQN_label = GlobalQNLabel_list[i]
+        try:
+            if 'd' in gQN_format or 'f' in gQN_format: 
+                exomolst_df[gQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+"'"].values)).parallel_map(gQN_format.format)
+                exomolst_df[gQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+'"'].values)).parallel_map(gQN_format.format)
+            elif 's' in gQN_format or 'a' in gQN_format: 
+                exomolst_df[gQN_label+"'"] = pd.Series(exomolst_df[gQN_label+"'"].str.replace('(','').str.replace(')','')).parallel_map(gQN_format.format)
+                exomolst_df[gQN_label+'"'] = pd.Series(exomolst_df[gQN_label+'"'].str.replace('(','').str.replace(')','')).parallel_map(gQN_format.format)
+        except:
+            if 'd' in gQN_format or 'f' in gQN_format: 
+                exomolst_df[gQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+"'"].values)).map(gQN_format.format)
+                exomolst_df[gQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+'"'].values)).map(gQN_format.format)
+            elif 's' in gQN_format or 'a' in gQN_format: 
+                exomolst_df[gQN_label+"'"] = pd.Series(exomolst_df[gQN_label+"'"].str.replace('(','').str.replace(')','')).map(gQN_format.format)
+                exomolst_df[gQN_label+'"'] = pd.Series(exomolst_df[gQN_label+'"'].str.replace('(','').str.replace(')','')).map(gQN_format.format)
+    try:
+        globalQNp = exomolst_df[[GlobalQNLabel_list[i]+"'" for i in range(n_gQN)]].sum(axis=1).parallel_map('{: >15}'.format)  
+        globalQNpp = exomolst_df[[GlobalQNLabel_list[i]+'"' for i in range(n_gQN)]].sum(axis=1).parallel_map('{: >15}'.format)            
+    except:
+        globalQNp = exomolst_df[[GlobalQNLabel_list[i]+"'" for i in range(n_gQN)]].sum(axis=1).map('{: >15}'.format)  
+        globalQNpp = exomolst_df[[GlobalQNLabel_list[i]+'"' for i in range(n_gQN)]].sum(axis=1).map('{: >15}'.format)     
+                
+    n_lQN = len(LocalQNLabel_list)
+    for i in range(n_lQN):
+        lQN_format = LocalQNFormat_list[i].replace("%",'{: >')+'}'
+        lQN_label = LocalQNLabel_list[i]
+        try:
+            if 'd' in lQN_format or 'f' in lQN_format: 
+                exomolst_df[lQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+"'"].values)).parallel_map(lQN_format.format)
+                exomolst_df[lQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+'"'].values)).parallel_map(lQN_format.format)
+            elif 's' in lQN_format or 'a' in lQN_format: 
+                exomolst_df[lQN_label+"'"] = pd.Series(exomolst_df[lQN_label+"'"].str.replace('(','').str.replace(')','')).parallel_map(lQN_format.format)
+                exomolst_df[lQN_label+'"'] = pd.Series(exomolst_df[lQN_label+'"'].str.replace('(','').str.replace(')','')).parallel_map(lQN_format.format)
+        except:
+            if 'd' in lQN_format or 'f' in lQN_format: 
+                exomolst_df[lQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+"'"].values)).map(lQN_format.format)
+                exomolst_df[lQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+'"'].values)).map(lQN_format.format)
+            elif 's' in lQN_format or 'a' in gQN_format: 
+                exomolst_df[lQN_label+"'"] = pd.Series(exomolst_df[lQN_label+"'"].str.replace('(','').str.replace(')','')).map(lQN_format.format)
+                exomolst_df[lQN_label+'"'] = pd.Series(exomolst_df[lQN_label+'"'].str.replace('(','').str.replace(')','')).map(lQN_format.format)
+    try:
+        localQNp = exomolst_df[[LocalQNLabel_list[i]+"'" for i in range(n_lQN)]].sum(axis=1).parallel_map('{: >15}'.format)  
+        localQNpp = exomolst_df[[LocalQNLabel_list[i]+'"' for i in range(n_lQN)]].sum(axis=1).parallel_map('{: >15}'.format)            
+    except:
+        localQNp = exomolst_df[[LocalQNLabel_list[i]+"'" for i in range(n_lQN)]].sum(axis=1).map('{: >15}'.format)  
+        localQNpp = exomolst_df[[LocalQNLabel_list[i]+'"' for i in range(n_lQN)]].sum(axis=1).map('{: >15}'.format)    
+    QN_df = pd.concat([globalQNp,globalQNpp,localQNp,localQNpp],axis='columns')
+    QN_df.columns = ["V'", 'V"', "Q'", 'Q"'] 
+    return QN_df
 
 def error_code(unc):
     unc[(1<=unc)] = '000000'
-    unc[(0.1<=unc) & (unc<1)] = '140000'
-    unc[(0.01<=unc) & (unc<0.1)] = '240000'
-    unc[(0.001<=unc) & (unc<0.01)] = '340000'
-    unc[(0.0001<=unc) & (unc<0.001)] = '440000'
-    unc[(0.00001<=unc) & (unc<0.0001)] = '540000'
-    unc[(0.000001<=unc) & (unc<0.00001)] = '640000'
-    unc[(0.0000001<=unc) & (unc<0.000001)] = '740000'
-    unc[(0.00000001<=unc) & (unc<0.0000001)] = '840000'
-    unc[(unc<0.00000001)] = '940000'
+    unc[(0.1<=unc) & (unc<1)] = '100000'
+    unc[(0.01<=unc) & (unc<0.1)] = '200000'
+    unc[(0.001<=unc) & (unc<0.01)] = '300000'
+    unc[(0.0001<=unc) & (unc<0.001)] = '400000'
+    unc[(0.00001<=unc) & (unc<0.0001)] = '500000'
+    unc[(0.000001<=unc) & (unc<0.00001)] = '600000'
+    unc[(0.0000001<=unc) & (unc<0.000001)] = '700000'
+    unc[(0.00000001<=unc) & (unc<0.0000001)] = '800000'
+    unc[(unc<0.00000001)] = '900000'
     unc = unc.astype(int)
     return(unc)
 
-def convert_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
+def ConvertExoMol2HITRAN(states_df, trans_part_df):
     states_unc_df = read_unc_states(states_df)
-    A, v, Ep, Epp, gp, gpp, unc, gamma_air, gamma_self, n_air, QN_df = linelist_ExoMol2HITRAN(states_unc_df,trans_part_df, ncolumn)
+    (exomolst_df, v, A, Epp, gp, gpp, unc_values) = linelist_ExoMol2HITRAN(states_unc_df,trans_part_df)
+    (gamma_air, gamma_self, n_air) = broadener_ExoMol2HITRAN(exomolst_df)
+    QN_df =  convert_QNFormat_exomol2hitran(exomolst_df, GlobalQNLabel_list, GlobalQNFormat_list, 
+                                            LocalQNLabel_list, LocalQNFormat_list)
     Q = read_exomol_pf(read_path, Tref)
     I = cal_abscoefs(Tref, v, gp, A, Epp, Q, abundance)
-    unc = error_code(unc)
+    unc = error_code(unc_values)
     nrows = len(A)
     delta_air = ['']*nrows 
     iref = ['']*nrows 
@@ -1692,17 +1669,45 @@ def convert_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
     hitran_begin_df = pd.DataFrame(hitran_begin_dic)
     hitran_end_dic = {'Error':unc,'Iref':iref,'*':flag,"g'":gp, 'g"':gpp}
     hitran_end_df = pd.DataFrame(hitran_end_dic)
+
     hitran_res_df = pd.concat([hitran_begin_df, QN_df, hitran_end_df], axis='columns')
     if ConversionThreshold != 'None':
-        hitran_res_df = hitran_res_df[hitran_res_df['I'] >= ConversionThreshold]
-    hitran_res_df = hitran_res_df.sort_values('v')
+        hitran_res_df = hitran_res_df[hitran_res_df['S'] >= ConversionThreshold]
     return(hitran_res_df)
 
-def conversion_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
-    print('Convert data from the ExoMol format to the HITRAN format.')  
-    t = Timer()
-    t.start()
-    hitran_res_df = convert_exomol2hitran(read_path, states_df, trans_part_df, ncolumn)
+def ProcessExoMol2HITRAN(states_df, trans_filename):
+    print('Processeing transitions file:', trans_filename)
+    trans_part_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                                usecols=[0,1,2],names=['u','l','A'], 
+                                blocksize=None, encoding='utf-8')
+    trans_part_df = trans_part_dd.compute()
+    # chunk_size = 500000   #1024*1024
+    trans_part_df_list = [trans_part_df[i:i+chunk_size] for i in range(0,trans_part_df.shape[0],chunk_size)]
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        futures = [executor.submit(ConvertExoMol2HITRAN,states_df,df) for df in trans_part_df_list]
+        hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
+    return hitran_res_df
+
+def conversion_exomol2hitran(states_df):
+    print('Convert data format from ExoMol to HITRAN.')  
+    print('Running on ', nprocess, 'cores.')
+    tot = Timer()
+    tot.start()
+    print('Reading transitions and converting data format from ExoMol to HITRAN ...')    
+    trans_filenames = get_transfiles(read_path)
+    # Process multiple files in parallel
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        # Submit reading tasks for each file
+        futures = [executor.submit(ProcessExoMol2HITRAN,states_df,
+                                   trans_filename) for trans_filename in trans_filenames]
+        hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
+    hitran_res_df.sort_values(by=['v'], ascending=True, inplace=True)  
+    tot.end()
+    print('Finished reading all transitions and converting data format from ExoMol to HITRAN!\n')
+
+    print('Saving HITRAN format data into file ...')   
+    ts = Timer()    
+    ts.start()
     conversion_folder = save_path + '/conversion/ExoMol2HITRAN/'
     if os.path.exists(conversion_folder):
         pass
@@ -1711,10 +1716,12 @@ def conversion_exomol2hitran(read_path, states_df, trans_part_df, ncolumn):
     conversion_path = conversion_folder + isotopologue + '__' + dataset + '.par'
     hitran_format = "%2s%1s%12.6f%10.3E%10.3E%5.3f%5.3f%10.4f%4.2f%8s%15s%15s%15s%15s%6s%12s%1s%7.1f%7.1f"
     np.savetxt(conversion_path, hitran_res_df, fmt=hitran_format)
-    t.end()
-    print('Converted par file has been saved!\n')     
-    
-# HITRAN to ExoMol
+    ts.end()
+    print('Converted par file has been saved!\n')  
+    print('Finished converting data format from ExoMol to HITRAN!')
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+
+## HITRAN to ExoMol
 def convert_QNValues_hitran2exomol(hitran2exomol_states_df, GlobalQNLabel_list, LocalQNLabel_list):
     QNLabel_list = GlobalQNLabel_list+LocalQNLabel_list
     if 'Gtot' in QNLabel_list:
@@ -1739,8 +1746,10 @@ def convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df):
     Jpp_df = hitran2exomol_lower_df['J']
     # hitran2exomol_upper_df['F'] = cal_F(hitran2exomol_upper_df['gp']).astype(str) 
     # hitran2exomol_lower_df['F'] = cal_F(hitran2exomol_lower_df['gpp']).astype(str) 
+
     hitran2exomol_upper_df.columns = list(map(lambda x: x.replace('gp','g').replace('Ep','E'), list(hitran2exomol_upper_df.columns)))
     hitran2exomol_lower_df.columns = list(map(lambda x: x.replace('gpp','g').replace('Epp','E'), list(hitran2exomol_lower_df.columns)))
+
     # hitran2exomol_lower_df = hitran2exomol_lower_df.reset_index(drop=True)
     # hitran2exomol_upper_df = hitran2exomol_upper_df.reset_index(drop=True)
     # if ('Sym"' in QNl_col) and ("Sym'" not in QNu_col):
@@ -1748,12 +1757,15 @@ def convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df):
     #     index_change_sym = np.where(np.array(hitran2exomol_lower_df['J']-hitran2exomol_upper_df['J'])==0.0)[0]
     #     hitran2exomol_upper_df['Sym'][index_change_sym] = (hitran2exomol_upper_df['Sym'][index_change_sym]
     #                                                        .replace('e','e2f').replace('f','e').replace('e2f','f'))
+        
     hitran2exomol_ul_df = pd.concat([hitran2exomol_upper_df, hitran2exomol_lower_df], axis=0)
+
     hitranQNlabels = [x for x in list(hitran2exomol_ul_df.columns)[5:] if x != 'M' and x != 'm']
     hitran2exomol_states_noid = (hitran2exomol_ul_df.loc[hitran2exomol_ul_df.groupby(['g']+hitranQNlabels)['Unc'].idxmax()][['E','g','Unc']+hitranQNlabels]
                                 .drop_duplicates().sort_values('E').groupby(['E','g']+hitranQNlabels)['Unc'].max().reset_index())
     hitran2exomol_states_id = hitran2exomol_states_noid
     hitran2exomol_states_id['id'] = hitran2exomol_states_noid.index+1
+
     states_columns_order = ['id','E','g','F','Unc']+[x for x in hitranQNlabels if x != 'F']
     hitran2exomol_states_id = hitran2exomol_states_id[states_columns_order]
 
@@ -1762,10 +1774,12 @@ def convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df):
     upper_idAv = hitran2exomol_upper_df.merge(hitran2exomol_states_id, on=['g']+upper_QNlabel, how='inner').drop(columns=upper_QNlabel)
     upper_idAv['diffE'] = np.abs(upper_idAv['E_x']-upper_idAv['E_y'])
     upper_AvEid = upper_idAv.loc[upper_idAv.groupby(['v'])['diffE'].idxmin()][['id','A','v','E_y']].rename(columns={'id':'u','E_y':'Ep'})
+
     lower_QNlabel = list(hitran2exomol_lower_df.columns[5:])
     lower_idAv = hitran2exomol_lower_df.merge(hitran2exomol_states_id, on=['g']+lower_QNlabel, how='inner').drop(columns=lower_QNlabel)
     lower_idAv['diffE'] = np.abs(lower_idAv['E_x']-lower_idAv['E_y'])
     lower_AvEid = lower_idAv.loc[lower_idAv.groupby(['v'])['diffE'].idxmin()][['id','A','v','E_y',]].rename(columns={'id':'l','E_y':'Epp'})
+
     hitran2exomol_idAv = upper_AvEid.merge(lower_AvEid, on=['v'], how='inner').drop(columns=['A_y']).rename(columns={'A_x':'A','v':'v_x'})
     hitran2exomol_idAv['v'] = hitran2exomol_idAv['Ep']-hitran2exomol_idAv['Epp']
     diff = hitran2exomol_idAv[['u','l','A','v','v_x']]
@@ -1786,12 +1800,13 @@ def convert_hitran2broad(hitran_df, Jpp_df):
     return(hitran2exomol_air_df, hitran2exomol_self_df)
 
 def conversion_states(hitran2exomol_states_df, conversion_folder):
-    print('Convert data from the HITRAN format to the ExoMol format states.')  
+    print('Convert states data format from HITRAN to ExoMol.')  
     t = Timer()
     t.start()
     conversion_states_path = conversion_folder + isotopologue + '__' + dataset + '.states.bz2'
     hitranQNlabels_noF = hitran2exomol_states_df.columns[5:].tolist()
     hitranQNformats = [QNsformat_list[j] for j in [QNslabel_list.index(i) for i in hitranQNlabels_noF]]
+
     # states_format = ("%12s %12.6f %6s %7s %12.6f " 
     #                  + str(QNsformat_list).replace("['","").replace("']","")
     #                  .replace("'","").replace(",","").replace("d","s").replace("i","s"))
@@ -1800,10 +1815,10 @@ def conversion_states(hitran2exomol_states_df, conversion_folder):
                     .replace("'","").replace(",","").replace("d","s").replace("i","s"))
     np.savetxt(conversion_states_path, hitran2exomol_states_df, fmt=states_format)
     t.end()
-    print('Converted states file has been saved!\n')    
+    print('Converted states file has been saved!\n')  
     
 def conversion_trans(hitran2exomol_trans_df, conversion_folder): 
-    print('Convert data from the HITRAN format to the ExoMol format transitions.')  
+    print('Convert transitions data format from HITRAN to ExoMol.')  
     t = Timer()
     t.start()
     conversion_trans_path = conversion_folder + isotopologue + '__' + dataset + '.trans.bz2'
@@ -1813,7 +1828,7 @@ def conversion_trans(hitran2exomol_trans_df, conversion_folder):
     print('Converted transition file has been saved!\n')  
     
 def conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_folder):
-    print('Convert data from the HITRAN format to the ExoMol format broadening.')  
+    print('Convert broadening data format from HITRAN to ExoMol.')  
     t = Timer()
     t.start()
     nair = len(hitran2exomol_air_df)
@@ -1832,10 +1847,10 @@ def conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_fol
         print('No self broadening file.')
     t.end()
     if nbroad != 0:
-        print('Convert broadening files have been saved!\n')  
+        print('Converted broadening files have been saved!\n')  
     else:
         print('No broadening files need to be saved!\n')  
-
+        
 def conversion_hitran2exomol(hitran_df):
     hitran_df = hitran_df[~hitran_df['Vp'].isin([' '*15])]
     hitran_df = hitran_df[~hitran_df['Vpp'].isin([' '*15])]
@@ -1846,101 +1861,79 @@ def conversion_hitran2exomol(hitran_df):
     QNu_df, QNl_df, QNu_col, QNl_col = separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerLabels,
                                                           GlobalQNFormats,LocalQNupperFormats,LocalQNlowerFormats)
     hitran_df['Ep'] = cal_Ep(hitran_df['Epp'].values,hitran_df['v'].values)
+    
     Jpp_df, hitran2exomol_states_df, hitran2exomol_trans_df = convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df)
+    
     hitran2exomol_air_df, hitran2exomol_self_df = convert_hitran2broad(hitran_df, Jpp_df)
+    
     conversion_folder = save_path+'/conversion/HITRAN2ExoMol/'+molecule+'/'+isotopologue+'/'+dataset+'/' 
     if os.path.exists(conversion_folder):
         pass
     else:
         os.makedirs(conversion_folder, exist_ok=True)      
+    
     conversion_states(hitran2exomol_states_df, conversion_folder)
     conversion_trans(hitran2exomol_trans_df, conversion_folder)
     conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_folder)
-    print('Finished conversion!\n')
-    
-## Calculate stick Spectra
-def linelist_StickSpectra(states_part_df,trans_part_df, ncolumn):
-    if ncolumn == 4:
-        trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn, max_wn)] 
-        id_u = trans_part_df['u'].values
-        id_s = states_part_df['id'].values
-        trans_part_df.set_index(['u'], inplace=True, drop=False)
-        id_us = list(set(id_u).intersection(set(id_s)))
-        trans_us_df = trans_part_df.loc[id_us]
-        id_l = trans_us_df['l'].values
-        id_ls = list(set(id_l).intersection(set(id_s)))
-        if id_ls != []:
-            trans_us_df.set_index(['l'], inplace=True, drop=False)
-            trans_s_df = trans_us_df.loc[id_ls]
-            trans_s_df.sort_values(by=['v'], inplace=True)
-            id_su = trans_s_df['u'].values
-            id_sl = trans_s_df['l'].values
-            states_u_df = states_part_df.loc[id_su]
-            states_l_df = states_part_df.loc[id_sl]
-            Ep = states_u_df['E'].values.astype('float')
-            Epp = states_l_df['E'].values.astype('float')
-            gp = states_u_df['g'].values.astype('int')
-            Jp = pd.to_numeric(states_u_df['J']).values
-            Jpp = pd.to_numeric(states_l_df['J']).values
-            A = trans_s_df['A'].values.astype('float')
-            v = trans_s_df['v'].values.astype('float')
-            QNp = pd.DataFrame()
-            QNpp = pd.DataFrame()
-            for i in range(len(QNs_label)):
-                QNp[QNs_label[i]+"'"] = states_u_df[QNs_label[i]].values
-                QNpp[QNs_label[i]+'"'] = states_l_df[QNs_label[i]].values
-            stick_qn_df = pd.concat([QNp,QNpp],axis='columns')
+    print('Finished converting data format from HITRAN to ExoMol!\n')
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+
+# Stick Spectra
+def ProcessStickSpectra(states_part_df,trans_part_df,T,Q):
+    merged_df = dd.merge(trans_part_df, states_part_df, left_on='u', right_on='id', 
+                         how='inner').merge(states_part_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
+    stick_spectra_df = merged_df.drop(columns=["id'", 'id"','u','l'])
+    stick_spectra_df['v'] = cal_v(stick_spectra_df["E'"].values, stick_spectra_df['E"'].values)
+    stick_spectra_df = stick_spectra_df[stick_spectra_df['v'].between(min_wn, max_wn)]
+    if len(stick_spectra_df) != 0 and QNsFilter != []:
+        stick_spectra_df = QNfilter_linelist(stick_spectra_df, QNs_value, QNs_label)
+    num = len(stick_spectra_df)
+    if num > 0:
+        v = stick_spectra_df['v'].values
+        if abs_emi == 'Ab':
+            stick_spectra_df['S'] = cal_abscoefs(T,v,stick_spectra_df["g'"].values,stick_spectra_df['A'].values,
+                                                    stick_spectra_df['E"'].values,Q,abundance)
+        elif abs_emi == 'Em':
+            stick_spectra_df['S'] = cal_emicoefs(T,v,stick_spectra_df["g'"].values,stick_spectra_df['A'].values,
+                                                    stick_spectra_df["E'"].values,Q,abundance)
         else:
-            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
+            raise ImportError("Please choose one from: 'Absorption' or 'Emission'.")  
+        if threshold != 'None':
+            stick_spectra_df = stick_spectra_df[stick_spectra_df['S'] >= threshold]
+        else:
+            pass  
     else:
-        id_u = trans_part_df['u'].values
-        id_s = states_part_df['id'].values
-        trans_part_df.set_index(['u'], inplace=True, drop=False)
-        id_us = list(set(id_u).intersection(set(id_s)))
-        trans_us_df = trans_part_df.loc[id_us]
-        id_l = trans_us_df['l'].values
-        id_ls = list(set(id_l).intersection(set(id_s)))
-        trans_us_df.set_index(['l'], inplace=True, drop=False)
-        trans_s_df = trans_us_df.loc[id_ls]
-        id_su = trans_s_df['u'].values
-        id_sl = trans_s_df['l'].values
-        states_u_df = states_part_df.loc[id_su]
-        states_l_df = states_part_df.loc[id_sl]
-        trans_s_df['Ep'] = states_u_df['E'].values.astype('float')
-        trans_s_df['Epp'] = states_l_df['E'].values.astype('float')
-        trans_s_df['gp'] = states_u_df['g'].values.astype('int')
-        trans_s_df['Jp'] = pd.to_numeric(states_u_df['J']).values
-        trans_s_df['Jpp'] = pd.to_numeric(states_l_df['J']).values
-        trans_s_df['A'] = trans_s_df['A'].values.astype('float')
-        trans_s_df['v'] = cal_v(trans_s_df['Ep'].values, trans_s_df['Epp'].values)
-        trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn, max_wn)]
-        if len(trans_s_df) != 0:
-            trans_s_df.sort_values(by=['v'], inplace=True) 
-            Ep = trans_s_df['Ep'].values
-            Epp = trans_s_df['Epp'].values
-            gp = trans_s_df['gp'].values
-            Jp = trans_s_df['Jp'].values
-            Jpp = trans_s_df['Jpp'].values
-            A = trans_s_df['A'].values
-            v = trans_s_df['v'].values
-            id_su = trans_s_df['u'].values
-            states_u_df = states_part_df.loc[id_su]        
-            id_sl = trans_s_df['l'].values
-            states_l_df = states_part_df.loc[id_sl]
-            QNp = pd.DataFrame()
-            QNpp = pd.DataFrame()
-            for i in range(len(QNs_label)):
-                QNp[QNs_label[i]+"'"] = states_u_df[QNs_label[i]].values
-                QNpp[QNs_label[i]+'"'] = states_l_df[QNs_label[i]].values
-            stick_qn_df = pd.concat([QNp,QNpp],axis='columns')
-        else:
-            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
-    return (A, v, Ep, Epp, gp, Jp, Jpp, stick_qn_df)
+        stick_spectra_df['S'] = np.array([])
+    stick_spectra_df.drop(columns=['A',"g'",'g"'], inplace=True)
+    col_main = ['v','S',"J'","E'",'J"','E"']
+    col_qn = [col for col in stick_spectra_df.columns if col not in col_main]
+    # col_stick_spectra = col_main + col_qn
+    col_stick_spectra = ['v','S']
+    stick_spectra_df = stick_spectra_df[col_stick_spectra]
+    return stick_spectra_df
+
+def calculate_stick_spectra(states_part_df,trans_filename,T,Q):   
+    print('Processeing transitions file:', trans_filename)
+    trans_part_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                                usecols=[0,1,2],names=['u','l','A'], 
+                                blocksize=None, encoding='utf-8')
+    trans_part_df = trans_part_dd.compute()
+    # chunk_size = 1024*1024    #500000  
+    trans_part_df_list = [trans_part_df[i:i+chunk_size] for i in range(0,trans_part_df.shape[0],chunk_size)]
+    
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        futures = [executor.submit(ProcessStickSpectra,states_part_df,df,T,Q) for df in trans_part_df_list]
+        stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
+    return stick_spectra_df
 
 # Plot stick spectra
 def plot_stick_spectra(stick_spectra_df):  
-    v = stick_spectra_df['v']
-    I = stick_spectra_df['S']
+    print('Plotting stick spectra ...')
+    tp = Timer()
+    tp.start()
+    v = stick_spectra_df['v'].values
+    S = stick_spectra_df['S'].values
+    
     parameters = {'axes.labelsize': 18, 
                   'legend.fontsize': 18,
                   'xtick.labelsize': 14,
@@ -1951,65 +1944,99 @@ def plot_stick_spectra(stick_spectra_df):
         pass
     else:
         os.makedirs(ss_plot_folder, exist_ok=True)
-    plt.figure(figsize=(12, 6))
-    plt.xlim([min_wn, max_wn])
-    plt.ylim([limitYaxisStickSpectra, 10*max(I)])
-    plt.vlines(v, 0, I, label='T = '+str(T)+' K', linewidth=0.4)
-    plt.semilogy()
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.set_xlim([min_wn-10, max_wn+10])
+    ax.set_ylim([limitYaxisStickSpectra, 10*max(S)])
+    # Create a list of line segments
+    lines = [[(v[i], 0), (v[i], S[i])] for i in range(len(v))]
+    # Create a LineCollection object
+    lc = LineCollection(lines, label='T = '+str(T))
+    ax.add_collection(lc)
+    ax.autoscale()
+    ax.margins(x=0.02, y=0.1)
+    ax.semilogy()
     #plt.title(database+' '+molecule+' intensity') 
-    plt.xlabel('Wavenumber, cm$^{-1}$')
-    plt.ylabel('Intensity, cm/molecule')
-    plt.legend()
+    ax.set_xlabel('Wavenumber, cm$^{-1}$')
+    ax.set_ylabel('Intensity, cm/molecule')
     leg = plt.legend()                  # Get the legend object.
     for line in leg.get_lines():
         line.set_linewidth(1.0)         # Change the line width for the legend.
-    plt.savefig(ss_plot_folder+molecule+'__T'+str(T)+'__'+str(min_wn)
-                +'-'+str(max_wn)+'__'+database+'__'+abs_emi+'__sp.png', dpi=500)
+    ss_plot = (ss_plot_folder+molecule+'__'+isotopologue+'__'+ dataset+'__T'+str(T)+'__'+
+               str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__'+abs_emi+'__sp.png')
+    plt.savefig(ss_plot, dpi=500)
     plt.show()
-    print('Stick spectra plot saved.')
-
+    tp.end()
+    print('Stick spectra plot has been saved:', ss_plot)
+ 
 # Stick spectra for ExoMol database
-def exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T):
+def exomol_stick_spectra(states_part_df, T):
     print('Calculate stick spectra.')  
-    t = Timer()
-    t.start()
-    A, v, Ep, Epp, gp, Jp, Jpp, stick_qn_df = linelist_StickSpectra(states_part_df,trans_part_df, ncolumn)
+    print('Running on ', nprocess, 'cores.')
+    print('{:25s} : {:<6}'.format('Uncertainty filter is', UncFilter), u'cm\u207B\u00B9')
+    print('{:25s} : {:<6}'.format('Threshold filter is', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
+    print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
+    tot = Timer()
+    tot.start()
     Q = read_exomol_pf(read_path, T)
-    # Absorption or emission stick spectra.
-    if abs_emi == 'Ab':
-        print('Absorption stick spectra')
-        I = cal_abscoefs(T, v, gp, A, Epp, Q, abundance)
-    if abs_emi == 'Em':
-        print('Emission stick spectra')
-        I = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
-    stick_st_dic = {'v':v, 'S':I, "J'":Jp, "E'":Ep, 'J"':Jpp, 'E"':Epp}
-    stick_st_df = pd.DataFrame(stick_st_dic)
-    stick_spectra_df = pd.concat([stick_st_df, stick_qn_df], axis='columns')
-    if threshold != 'None':
-        stick_spectra_df = stick_spectra_df[stick_spectra_df['I'] >= threshold]
-    stick_spectra_df = QNfilter_linelist(stick_spectra_df, QNs_value, QNs_label)
-    stick_spectra_df = stick_spectra_df.sort_values('v')   
-       
+    if check_uncertainty == 1:
+        states_part_df.drop(columns=['unc'], inplace=True)
+    if check_lifetime == 1:
+        states_part_df.drop(columns=['tau'], inplace=True)
+    if check_gfactor == 1:
+        states_part_df.drop(columns=['gfac'], inplace=True)
+    
+    print('Reading transitions and calculating stick spectra ...')    
+    trans_filenames = get_part_transfiles(read_path)
+    
+    # Process multiple files in parallel
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        # Submit reading tasks for each file
+        futures = [executor.submit(calculate_stick_spectra,states_part_df,trans_filename,
+                                   T,Q) for trans_filename in trans_filenames]
+        stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
+        
+    if len(stick_spectra_df) == 0:
+        raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
+    else:
+        stick_spectra_df.sort_values(by=['v'], ascending=True, inplace=True) 
+    tot.end()
+    print('Finished reading transitions and calculating stick spectra!')
+    
+    print('Saving stick spectra into file ...')   
+    ts = Timer()    
+    ts.start()
     QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")
-              .replace('d','s').replace('i','s').replace('.1f','s'))
-    ss_folder = save_path + '/stick_spectra/stick/'+molecule+'/'+database+'/'
+                .replace('d','s').replace('i','s').replace('.1f','s'))
+    ss_folder = save_path + 'stick_spectra/files/'+molecule+'/'+database+'/'
     if os.path.exists(ss_folder):
         pass
     else:
         os.makedirs(ss_folder, exist_ok=True)
-    ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
-    ss_colname = stick_spectra_df.columns
-    fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f '+QNsfmf+' '+QNsfmf
+    ss_path = (ss_folder+molecule+'__'+isotopologue+'__'+ dataset+'__T'+str(T)+'__'
+               +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)
+               +'__thres'+str(threshold)+'__'+abs_emi+'.stick')
+    # ss_colname = stick_spectra_df.columns
+    if QNsfmf == '':
+        # fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
+        fmt = '%12.8E %12.8E'
+    else:
+        fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
-    
+    ts.end()
+    print('Stick spectra file has been saved:', ss_path, '\n')
+
     # Plot stick spectra and save it as .png.
     if PlotStickSpectraYN == 'Y':
         plot_stick_spectra(stick_spectra_df)
-    print('Stick spectra have been saved!\n')  
-
+    print('Stick spectra have been saved!\n')
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+    
 # Stick spectra for HITRAN database
 def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     print('Calculate stick spectra.')  
+    print('{:25s} : {:<6}'.format('Uncertainty filter is', UncFilter), u'cm\u207B\u00B9')
+    print('{:25s} : {:<6}'.format('Threshold filter is', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
+    print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
     t = Timer()
     t.start()
     A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = linelist_hitran(hitran_linelist_df)
@@ -2028,11 +2055,15 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     stick_spectra_df = hitran_linelist_df[ss_colname]
     stick_spectra_df = stick_spectra_df.sort_values('v') 
     t.end() 
-
+    print('Finished calculating stick spectra!')
+    
+    print('Saving stick spectra into file ...')   
+    ts = Timer()    
+    ts.start()    
     QN_format_noJ = [QNsformat_list[i] for i in [QNslabel_list.index(j) for j in QNs_label]]
     QNsfmf = (str(QN_format_noJ).replace("'","").replace(",","").replace("[","").replace("]","")
               .replace('d','s').replace('i','s').replace('.1f','s'))
-    ss_folder = save_path + '/stick_spectra/stick/'+molecule+'/'+database+'/'
+    ss_folder = save_path + 'stick_spectra/stick/'+molecule+'/'+database+'/'
     if os.path.exists(ss_folder):
         pass
     else:
@@ -2040,175 +2071,52 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
     fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
+    ts.end()
+    print('Stick spectra file has been saved:', ss_path)
     
     # Plot stick spectra and save it as .png.
     if PlotStickSpectraYN == 'Y':
         plot_stick_spectra(stick_spectra_df)
-    print('Stick spectra have been saved!\n')  
-      
-    
-## Cross Section
-def linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn): 
-    if ncolumn == 4:
-        if cutoff == 'None':
-            trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn, max_wn)] 
-        else:
-            trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn - cutoff, max_wn + cutoff)]      
-        id_u = trans_part_df['u'].values
-        id_s = states_part_df['id'].values
-        trans_part_df.set_index(['u'], inplace=True, drop=False)
-        id_us = list(set(id_u).intersection(set(id_s)))
-        trans_us_df = trans_part_df.loc[id_us]
-        id_l = trans_us_df['l'].values
-        id_ls = list(set(id_l).intersection(set(id_s)))
-        if id_ls != []:
-            trans_us_df.set_index(['l'], inplace=True, drop=False)
-            trans_s_df = trans_us_df.loc[id_ls]
-            trans_s_df.sort_values(by=['v'], inplace=True)
-            id_su = trans_s_df['u'].values
-            id_sl = trans_s_df['l'].values
-            states_u_df = states_part_df.loc[id_su]
-            states_l_df = states_part_df.loc[id_sl]
-            Epp = states_l_df['E'].values.astype('float')
-            gp = states_u_df['g'].values.astype('int')
-            A = trans_s_df['A'].values.astype('float')
-            v = trans_s_df['v'].values.astype('float')
-            if 'tau' in states_part_df.columns.to_list():
-                tau = states_u_df['tau'].values.astype('float')
-            else:
-                tau = np.zeros(len(gp))
-        else:
-            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
-    else:
-        id_u = trans_part_df['u'].values
-        id_s = states_part_df['id'].values
-        trans_part_df.set_index(['u'], inplace=True, drop=False)
-        id_us = list(set(id_u).intersection(set(id_s)))
-        trans_us_df = trans_part_df.loc[id_us]
-        id_l = trans_us_df['l'].values
-        id_ls = list(set(id_l).intersection(set(id_s)))
-        trans_us_df.set_index(['l'], inplace=True, drop=False)
-        trans_s_df = trans_us_df.loc[id_ls]
-        id_su = trans_s_df['u'].values
-        id_sl = trans_s_df['l'].values
-        states_u_df = states_part_df.loc[id_su]
-        states_l_df = states_part_df.loc[id_sl]
-        trans_s_df['Ep'] = states_u_df['E'].values.astype('float')
-        trans_s_df['Epp'] = states_l_df['E'].values.astype('float')
-        trans_s_df['gp'] = states_u_df['g'].values.astype('int')
-        trans_s_df['v'] = cal_v(trans_s_df['Ep'].values, trans_s_df['Epp'].values)
-        if 'tau' in states_part_df.columns.to_list():
-            trans_s_df['tau'] = states_u_df['tau'].values.astype('float')
-        else:
-            trans_s_df['tau'] = np.zeros(len(gp))
-        if cutoff == 'None':
-            trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn, max_wn)]
-        else:
-            trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn - cutoff, max_wn + cutoff)]
-        if len(trans_s_df) != 0:
-            trans_s_df.sort_values(by=['v'], inplace=True)
-            Epp = trans_s_df['Epp'].values
-            gp = trans_s_df['gp'].values
-            A = trans_s_df['A'].values
-            v = trans_s_df['v'].values
-            tau = trans_s_df['tau'].values
-            id_sl = trans_s_df['l'].values
-            states_l_df = states_part_df.loc[id_sl]
-        else:
-            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
-    gamma_L = pd.DataFrame()
-    n_air = pd.DataFrame()
-    rows = len(id_sl)
-    for i in range(nbroad):
-        if broad[i] == 'Default':
-            gamma_L[i] = np.full((1,rows),broad_dfs[i]['gamma_L'][0])[0] * ratio[i]
-            n_air[i] = np.full((1,rows),broad_dfs[i]['n_air'][0])[0] * ratio[i]
-        else:
-            gamma_L[i] = extract_broad(broad_dfs[i],states_l_df)[0] * ratio[i]
-            n_air[i] = extract_broad(broad_dfs[i],states_l_df)[1] * ratio[i]
-    return (A, v, Epp, gp, tau, gamma_L, n_air)
+    print('Stick spectra have been saved!\n') 
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
 
-def linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn):
-    if ncolumn == 4:
-        if cutoff == 'None':
-            trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn, max_wn)] 
-        else:
-            trans_part_df = trans_part_df[trans_part_df['v'].between(min_wn - cutoff, max_wn + cutoff)] 
-        id_u = trans_part_df['u'].values
-        id_s = states_part_df['id'].values
-        trans_part_df.set_index(['u'], inplace=True, drop=False)
-        id_us = list(set(id_u).intersection(set(id_s)))
-        trans_us_df = trans_part_df.loc[id_us]
-        id_l = trans_us_df['l'].values
-        id_ls = list(set(id_l).intersection(set(id_s)))
-        if id_ls != []:
-            trans_us_df.set_index(['l'], inplace=True, drop=False)
-            trans_s_df = trans_us_df.loc[id_ls]
-            trans_s_df.sort_values(by=['v'], inplace=True)
-            id_su = trans_s_df['u'].values
-            id_sl = trans_s_df['l'].values
-            states_u_df = states_part_df.loc[id_su]
-            states_l_df = states_part_df.loc[id_sl]
-            Ep = states_u_df['E'].values.astype('float')
-            gp = states_u_df['g'].values.astype('int')
-            A = trans_s_df['A'].values.astype('float')
-            v = trans_s_df['v'].values.astype('float')
-            if 'tau' in states_part_df.columns.to_list():
-                tau = states_u_df['tau'].values.astype('float')
-            else:
-                tau = np.zeros(len(gp))
-        else:
-            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
+# Cross Section
+## Line Profile
+def line_profile(profile):
+    if profile[0:3] == 'DOP':
+        profile_label = 'Doppler'
+    elif profile[0:3] == 'GAU':
+        profile_label = 'Gaussian'
+    elif profile[0:3] == 'LOR':
+        profile_label = 'Lorentzian'
+    elif 'SCI' in profile and 'W' not in profile:
+        profile_label = 'SciPy Voigt'
+    elif 'W' in profile:
+        profile_label = 'SciPy wofz Voigt'
+    elif 'H' in profile:
+        profile_label = 'Humlicek Voigt'  
+    elif 'TH' in profile:
+        profile_label = 'Thompson pseudo-Voigt'
+    elif 'K' in profile and 'H' not in profile:
+        profile_label = 'Kielkopf pseudo-Voigt'
+    elif 'OL' in profile:
+        profile_label = 'Olivero pseudo-Voigt'
+    elif 'LI' in profile or 'LL' in profile:
+        profile_label = 'Liu-Lin pseudo-Voigt'
+    elif 'RO' in profile:
+        profile_label = 'Rocco pseudo-Voigt'
+    elif 'BIN' in profile and 'DOP' in profile:
+        profile_label = 'Binned Doppler'     
+    elif 'BIN' in profile and 'GAU' in profile:
+        profile_label = 'Binned Gaussion'
+    elif 'BIN' in profile and 'LOR' in profile:
+        profile_label = 'Binned Lorentzian'
+    elif 'BIN' in profile and 'VOI' in profile:
+        profile_label = 'Binned Voigt'
     else:
-        id_u = trans_part_df['u'].values
-        id_s = states_part_df['id'].values
-        trans_part_df.set_index(['u'], inplace=True, drop=False)
-        id_us = list(set(id_u).intersection(set(id_s)))
-        trans_us_df = trans_part_df.loc[id_us]
-        id_l = trans_us_df['l'].values
-        id_ls = list(set(id_l).intersection(set(id_s)))
-        trans_us_df.set_index(['l'], inplace=True, drop=False)
-        trans_s_df = trans_us_df.loc[id_ls]
-        id_su = trans_s_df['u'].values
-        id_sl = trans_s_df['l'].values
-        states_u_df = states_part_df.loc[id_su]
-        states_l_df = states_part_df.loc[id_sl]
-        trans_s_df['Ep'] = states_u_df['E'].values.astype('float')
-        trans_s_df['Epp'] = states_l_df['E'].values.astype('float')
-        trans_s_df['gp'] = states_u_df['g'].values.astype('int')
-        trans_s_df['v'] = cal_v(trans_s_df['Ep'].values, trans_s_df['Epp'].values)
-        if 'tau' in states_part_df.columns.to_list():
-            trans_s_df['tau'] = states_u_df['tau'].values.astype('float')
-        else:
-            trans_s_df['tau'] = np.zeros(len(gp))
-        if cutoff == 'None':
-            trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn, max_wn)]
-        else:
-            trans_s_df = trans_s_df[trans_s_df['v'].between(min_wn - cutoff, max_wn + cutoff)]
-        if len(trans_s_df) != 0:
-            trans_s_df.sort_values(by=['v'], inplace=True)
-            Ep = trans_s_df['Ep'].values
-            gp = trans_s_df['gp'].values
-            A = trans_s_df['A'].values
-            v = trans_s_df['v'].values
-            tau = trans_s_df['tau'].values
-            id_sl = trans_s_df['l'].values
-            states_l_df = states_part_df.loc[id_sl]
-        else:
-            raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
-    gamma_L = pd.DataFrame()
-    n_air = pd.DataFrame()
-    rows = len(id_sl)
-    for i in range(nbroad):
-        if broad[i] == 'Default':
-            gamma_L[i] = np.full((1,rows),broad_dfs[i]['gamma_L'][0])[0] * ratio[i]
-            n_air[i] = np.full((1,rows),broad_dfs[i]['n_air'][0])[0] * ratio[i]
-        else:
-            gamma_L[i] = extract_broad(broad_dfs[i],states_l_df)[0] * ratio[i]
-            n_air[i] = extract_broad(broad_dfs[i],states_l_df)[1] * ratio[i]
-    return (A, v, Ep, gp, tau, gamma_L, n_air)
+        raise ImportError('Please choose line profile from the list.')
+    return profile_label
 
-# Line profile
 def Doppler_HWHM(v,T):
     '''Return the Doppler half-width at half-maximum (HWHM) -- alpha.'''
     # alpha = np.sqrt(2 * N_A * kB * T * np.log(2) / mass) * v / c
@@ -2238,24 +2146,32 @@ def DopplerHWHM_alpha(num_v, alpha_HWHM, v, T):
         alpha = Doppler_HWHM(v,T)
     return(alpha)
 
-def LorentzianHWHM_gamma(num_v, gamma_HWHM, broad, gamma_L, n_air, gamma_air, gamma_self, tau, T, P):
+def LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, gamma_air, gamma_self, tau, T, P):
     if gamma_HWHM != 'None':
-        gamma = np.full(num_v, gamma_HWHM)
+        gamma = np.full(num, gamma_HWHM)
+    elif database == 'ExoMol' and num > 0:
+        gamma = sum([Lorentzian_HWHM(gamma_L[i].values, n_air[i].values,T,P) for i in range(nbroad)])
+        if predissocYN == 'Y' and check_predissoc == 0 and 'VOI' in profile:
+            gamma += lifetime_broadening(tau)
+        else:
+            pass
+    elif database == 'HITRAN' and num > 0:  
+        gamma_L = gamma_air*0.7 + gamma_self*0.3
+        gamma = Lorentzian_HWHM(gamma_L, n_air,T,P) 
     else:
-        if database == 'ExoMol':
-            gamma_p = pd.DataFrame()
-            for i in range(len(broad)):
-                gamma_p[i] = Lorentzian_HWHM (gamma_L[i].values, n_air[i].values,T,P)
-            gamma_p = gamma_p.sum(axis=1).values  
-            if check_predissoc == 0 and 'LOR' not in profile:
-                gamma_tau = lifetime_broadening(tau)
-                gamma = gamma_p + gamma_tau
-            else:
-                gamma = gamma_p
-        elif database == 'HITRAN':   
-            gamma_L = gamma_air*0.7 + gamma_self*0.3
-            gamma = Lorentzian_HWHM(gamma_L, n_air,T,P) 
+        gamma = np.zeros(num)
     return(gamma)
+
+# def FWHM(alpha, gamma):
+#     '''Return the Gaussian full-width at half-maximum (FWHM)   -- fG.
+#        Return the Lorentzian full-width at half-maximum (FWHM) -- fL.
+#     '''
+#     # fG = 2 * sigma * np.sqrt(2 * np.log(2)) = 2 * alpha
+#     # fG = ne.evaluate('sigma * TwoSqrt2ln2')
+#     fG = ne.evaluate('2 * alpha')
+#     fL = ne.evaluate('2 * gamma')
+#     return (fG, fL)
+
 
 def Doppler_profile(dv, alpha):
     '''Return Doppler line profile at dv with HWHM alpha.'''
@@ -2305,7 +2221,7 @@ def HumlicekVoigt_profile(dv, alpha, gamma):
     t = ne.evaluate('y-1j*x')
     s = ne.evaluate('abs(x)+y')
     u = ne.evaluate('t**2')
-    w = np.zeros_like(alpha)
+    w = np.zeros_like(s)
     ybound = ne.evaluate('0.195*abs(x)-0.176')
     # Region 1
     humfilter1 = s >= 15
@@ -2366,7 +2282,7 @@ def PseudoOliveroVoigt(alpha, gamma):
     eta is a function of Voigt profile half width at half maximum (HWHM) parameters.
     '''
     d = ne.evaluate('(gamma-alpha)/(gamma+alpha)')
-    hV = ne.evaluate('(1-0.18121*(1-d**2)-(0.023665*exp(0.6*d)+0.00418*exp(-1.9*d))*sinPI*d)*(alpha+gamma)')
+    hV = ne.evaluate('(1-0.18121*(1-d**2)-(0.023665*exp(0.6*d)+0.00418*exp(-1.9*d))*sin(PI*d))*(alpha+gamma)')
     eta = ne.evaluate('1.36603*(gamma/hV) - 0.47719*(gamma/hV)**2 + 0.11116*(gamma/hV)**3')
     return (eta)
 
@@ -2424,697 +2340,581 @@ def BinnedVoigt_profile(w, bnormq, lorenz):
     BinnedVoigtProfile = ne.evaluate('sum(w*bnormq*lorenz)')
     return BinnedVoigtProfile
 
-# Calculate Cross Section
-def cross_section_Doppler(wn_grid, v, alpha, coef, cutoff, threshold):
+## Calculate Cross Sections
+def cross_section_Doppler(wn_grid, v, alpha, coef, cutoff):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
     Return the wavennumbers and cross sections with Doppler profile.
+    
     '''  
     xsec = np.zeros_like(wn_grid)
-    if (cutoff == 'None') & (threshold == 'None'):   
-        start = max(0,wn_grid.searchsorted(v.min())-1)
-        end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
+    if cutoff == 'None':
+        start = max(0,wn_grid.searchsorted(min(v))-1)
+        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             Doppler = Doppler_profile(dv, alpha)
-            _xsec[idx] = ne.evaluate('sum(coef * Doppler)')
-    elif (cutoff == 'None') & (threshold != 'None'):
-        filter = coef >= threshold
-        _alpha = alpha[filter]
-        if _alpha.size > 0:
-            _coef = coef[filter]
-            start = max(0,wn_grid.searchsorted(v.min())-1)
-            end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
-            _xsec = np.zeros(shape=(end-start))
-            for i in range(start,end):
-                idx = i-start
-                wn_grid_i = wn_grid[i]
-                _dv = ne.evaluate('wn_grid_i - v')[filter]
-                Doppler = Doppler_profile(_dv, _alpha)
-                _xsec[idx] = ne.evaluate('sum(_coef * Doppler)')
-    elif (cutoff != 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
+            _xsec[idx] = coef @ Doppler 
+    else:
+        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
+        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             filter = np.abs(dv) <= cutoff
-            _dv = dv[filter]
-            if _dv.size > 0:
+            if filter.sum() > 0:
+                _dv = dv[filter]
                 _alpha = alpha[filter]
                 _coef = coef[filter]
                 Doppler = Doppler_profile(_dv, _alpha)
-                _xsec[idx] = ne.evaluate('sum(_coef * Doppler)')
-    else: 
-        filter_threshold = coef >= threshold
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            filter_cutoff = np.abs(dv) <= cutoff
-            filter = filter_cutoff & filter_threshold
-            _dv = dv[filter]
-            if _dv.size > 0:
-                _alpha = alpha[filter]
-                _coef = coef[filter]
-                Doppler = Doppler_profile(_dv, _alpha)
-                _xsec[idx] = ne.evaluate('sum(_coef * Doppler)')      
+                _xsec[idx] = _coef @ Doppler  
     xsec[start:end] += _xsec
-    return (xsec)
+    return xsec
 
-def cross_section_Lorentzian(wn_grid, v, gamma, coef, cutoff, threshold):
+def cross_section_Lorentzian(wn_grid, v, gamma, coef, cutoff):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
-    Return the wavennumbers and cross sections with Lorentzian profile. 
-    '''
+    Return the wavennumbers and cross sections with Lorentzian profile.
+    
+    '''  
     xsec = np.zeros_like(wn_grid)
-    if (cutoff == 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min())-1)
-        end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
+    if cutoff == 'None':
+        start = max(0,wn_grid.searchsorted(min(v))-1)
+        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             Lorentzian = Lorentzian_profile(dv, gamma)
-            _xsec[idx] = ne.evaluate('sum(coef * Lorentzian)')       
-    elif (cutoff == 'None') & (threshold != 'None'):
-        filter = coef >= threshold
-        _gamma = gamma[filter]
-        if _gamma.size > 0:
-            _coef = coef[filter]
-            start = max(0,wn_grid.searchsorted(v.min())-1)
-            end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
-            _xsec = np.zeros(shape=(end-start))
-            for i in range(start,end):
-                idx = i-start
-                wn_grid_i = wn_grid[i]
-                _dv = ne.evaluate('wn_grid_i - v')[filter]
-                Lorentzian = Lorentzian_profile(_dv, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * Lorentzian)')       
-    elif (cutoff != 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
+            _xsec[idx] = coef @ Lorentzian
+    else:
+        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
+        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             filter = np.abs(dv) <= cutoff
-            _dv = dv[filter]
-            if _dv.size > 0:
+            if filter.sum() > 0:
+                _dv = dv[filter]
                 _gamma = gamma[filter]
                 _coef = coef[filter]
                 Lorentzian = Lorentzian_profile(_dv, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * Lorentzian)')        
-    else: 
-        filter_threshold = coef >= threshold
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            filter_cutoff = np.abs(dv) <= cutoff
-            filter = filter_cutoff & filter_threshold
-            _dv = dv[filter]
-            if _dv.size > 0:
-                _gamma = gamma[filter]
-                _coef = coef[filter]
-                Lorentzian = Lorentzian_profile(_dv, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * Lorentzian)')                
-    xsec[start:end] += _xsec
-    return (xsec)
+                _xsec[idx] = _coef @ Lorentzian
+    xsec[start:end] += _xsec   
+    return xsec
 
-def cross_section_SciPyVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold):
+def cross_section_SciPyVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
     Return the wavennumbers and cross sections with SciPy Voigt profile.
-    '''
+    
+    '''  
     xsec = np.zeros_like(wn_grid)
-    if (cutoff == 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min())-1)
-        end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
+    if cutoff == 'None':
+        start = max(0,wn_grid.searchsorted(min(v))-1)
+        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             SciPyVoigt = SciPyVoigt_profile(dv, sigma, gamma)
-            _xsec[idx] = ne.evaluate('sum(coef * SciPyVoigt)') 
-    elif (cutoff == 'None') & (threshold != 'None'):
-        filter = coef >= threshold
-        _sigma = sigma[filter]
-        if _sigma.size > 0:
-            _gamma = gamma[filter]
-            _coef = coef[filter]
-            start = max(0,wn_grid.searchsorted(v.min())-1)
-            end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
-            _xsec = np.zeros(shape=(end-start))
-            for i in range(start,end):
-                idx = i-start
-                wn_grid_i = wn_grid[i]
-                _dv = ne.evaluate('wn_grid_i - v')[filter]
-                SciPyVoigt = SciPyVoigt_profile(_dv, _sigma, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * SciPyVoigt)') 
-    elif (cutoff != 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
+            _xsec[idx] = coef @ SciPyVoigt   
+    else:
+        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
+        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             filter = np.abs(dv) <= cutoff
-            _dv = dv[filter]
-            if _dv.size > 0:
+            if filter.sum() > 0:
+                _dv = dv[filter]
                 _sigma = sigma[filter]
                 _gamma = gamma[filter]
                 _coef = coef[filter]
                 SciPyVoigt = SciPyVoigt_profile(_dv, _sigma, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * SciPyVoigt)') 
-    else: 
-        filter_threshold = coef >= threshold
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            filter_cutoff = np.abs(dv) <= cutoff
-            filter = filter_cutoff & filter_threshold
-            _dv = dv[filter]
-            if _dv.size > 0:
-                _sigma = sigma[filter]
-                _gamma = gamma[filter]
-                _coef = coef[filter]
-                SciPyVoigt = SciPyVoigt_profile(_dv, _sigma, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * SciPyVoigt)')      
+                _xsec[idx] = _coef @ SciPyVoigt   
     xsec[start:end] += _xsec
-    return (xsec)
+    return xsec
 
-def cross_section_SciPyWofzVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold):
+def cross_section_SciPyWofzVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
     Return the wavennumbers and cross sections with SciPy Wofz Voigt profile.
+
     '''
     xsec = np.zeros_like(wn_grid)
-    if (cutoff == 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min())-1)
-        end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
+    if cutoff == 'None':
+        start = max(0,wn_grid.searchsorted(min(v))-1)
+        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             SciPyWofzVoigt = SciPyWofzVoigt_profile(dv, sigma, gamma)
-            _xsec[idx] = ne.evaluate('sum(coef * SciPyWofzVoigt)')
-    elif (cutoff == 'None') & (threshold != 'None'):            
-        filter = coef >= threshold
-        _sigma = sigma[filter]
-        if _sigma.size > 0:
-            _gamma = gamma[filter]
-            _coef = coef[filter]
-            start = max(0,wn_grid.searchsorted(v.min())-1)
-            end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
-            _xsec = np.zeros(shape=(end-start))
-            for i in range(start,end):
-                idx = i-start
-                wn_grid_i = wn_grid[i]
-                _dv = ne.evaluate('wn_grid_i - v')[filter]
-                SciPyWofzVoigt = SciPyWofzVoigt_profile(_dv, _sigma, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * SciPyWofzVoigt)') 
-    elif (cutoff != 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
+            _xsec[idx] = coef @ SciPyWofzVoigt
+    else:
+        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
+        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             filter = np.abs(dv) <= cutoff
-            _dv = dv[filter]
-            if _dv.size > 0:
+            if filter.sum() > 0:
+                _dv = dv[filter]
                 _sigma = sigma[filter]
                 _gamma = gamma[filter]
                 _coef = coef[filter]
                 SciPyWofzVoigt = SciPyWofzVoigt_profile(_dv, _sigma, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * SciPyWofzVoigt)')
-    else: 
-        filter_threshold = coef >= threshold
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            filter_cutoff = np.abs(dv) <= cutoff
-            filter = filter_cutoff & filter_threshold
-            _dv = dv[filter]
-            if _dv.size > 0:
-                _sigma = sigma[filter]
-                _gamma = gamma[filter]
-                _coef = coef[filter]
-                SciPyWofzVoigt = SciPyWofzVoigt_profile(_dv, _sigma, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * SciPyWofzVoigt)')
+                _xsec[idx] = _coef @ SciPyWofzVoigt
     xsec[start:end] += _xsec
-    return (xsec)    
+    return xsec
 
-def cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff, threshold):
+def cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
     Return the wavennumbers and cross sections with Humlicek Voigt profile.
+    
     '''
     xsec = np.zeros_like(wn_grid)
-    if (cutoff == 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min())-1)
-        end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
+    if cutoff == 'None':
+        start = max(0,wn_grid.searchsorted(min(v))-1)
+        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             HumlicekVoigt = HumlicekVoigt_profile(dv, alpha, gamma)
-            _xsec[idx] = ne.evaluate('sum(coef * HumlicekVoigt)') 
-    elif (cutoff == 'None') & (threshold != 'None'):
-        filter = coef >= threshold
-        _alpha = alpha[filter]
-        if _alpha.size > 0:
-            _gamma = gamma[filter]
-            _coef = coef[filter]
-            start = max(0,wn_grid.searchsorted(v.min())-1)
-            end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
-            _xsec = np.zeros(shape=(end-start))
-            for i in range(start,end):
-                idx = i-start
-                wn_grid_i = wn_grid[i]
-                _dv = ne.evaluate('wn_grid_i - v')[filter]
-                HumlicekVoigt = HumlicekVoigt_profile(_dv, _alpha, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * HumlicekVoigt)') 
-    elif (cutoff != 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
+            _xsec[idx] = coef @ HumlicekVoigt
+    else:
+        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
+        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             filter = np.abs(dv) <= cutoff
-            _dv = dv[filter]
-            if _dv.size > 0:
+            if filter.sum() > 0:
+                _dv = dv[filter]
                 _alpha = alpha[filter]
                 _gamma = gamma[filter]
                 _coef = coef[filter]
                 HumlicekVoigt = HumlicekVoigt_profile(_dv, _alpha, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * HumlicekVoigt)') 
-    else: 
-        filter_threshold = coef >= threshold
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            filter_cutoff = np.abs(dv) <= cutoff
-            filter = filter_cutoff & filter_threshold
-            _dv = dv[filter]
-            if _dv.size > 0:
-                _alpha = alpha[filter]
-                _gamma = gamma[filter]
-                _coef = coef[filter]
-                HumlicekVoigt = HumlicekVoigt_profile(_dv, _alpha, _gamma)
-                _xsec[idx] = ne.evaluate('sum(_coef * HumlicekVoigt)')          
+                _xsec[idx] = _coef @ HumlicekVoigt
     xsec[start:end] += _xsec
-    return (xsec)
+    return xsec
 
-def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold):
+def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
     Return the wavennumbers and cross sections with Pseudo Voigt profile.
+
     '''
     xsec = np.zeros_like(wn_grid)
-    if (cutoff == 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min())-1)
-        end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
+    if cutoff == 'None':
+        start = max(0,wn_grid.searchsorted(min(v))-1)
+        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             PseudoVoigt = PseudoVoigt_profile(dv, alpha, gamma, eta)
-            _xsec[idx] = ne.evaluate('sum(coef * PseudoVoigt)')
-    elif (cutoff == 'None') & (threshold != 'None'):
-        filter = coef >= threshold
-        _alpha = alpha[filter]
-        if _alpha.size > 0:
-            _gamma = gamma[filter]
-            _eta = eta[filter]
-            _coef = coef[filter]
-            start = max(0,wn_grid.searchsorted(v.min())-1)
-            end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
-            _xsec = np.zeros(shape=(end-start))
-            for i in range(start,end):
-                idx = i-start
-                wn_grid_i = wn_grid[i]
-                _dv = ne.evaluate('wn_grid_i - v')[filter]
-                PseudoVoigt = PseudoVoigt_profile(_dv, _alpha, _gamma, _eta)
-                _xsec[idx] = ne.evaluate('sum(_coef * PseudoVoigt)')
-    elif (cutoff != 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
+            _xsec[idx] = coef @ PseudoVoigt
+    else:
+        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
+        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             filter = np.abs(dv) <= cutoff
-            _dv = dv[filter]
-            if _dv.size > 0:
+            if filter.sum() > 0:
+                _dv = dv[filter]
                 _alpha = alpha[filter]
                 _gamma = gamma[filter]
                 _eta = eta[filter]
                 _coef = coef[filter]
                 PseudoVoigt = PseudoVoigt_profile(_dv, _alpha, _gamma, _eta)
-                _xsec[idx] = ne.evaluate('sum(_coef * PseudoVoigt)')
-    else: 
-        filter_threshold = coef >= threshold
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            filter_cutoff = np.abs(dv) <= cutoff
-            filter = filter_cutoff & filter_threshold
-            _dv = dv[filter]
-            if _dv.size > 0:
-                _alpha = alpha[filter]
-                _gamma = gamma[filter]
-                _eta = eta[filter]
-                _coef = coef[filter]
-                PseudoVoigt = PseudoVoigt_profile(_dv, _alpha, _gamma, _eta)
-                _xsec[idx] = ne.evaluate('sum(_coef * PseudoVoigt)')  
-    xsec[start:end] += _xsec
-    return (xsec)       
+                _xsec[idx] = _coef @ PseudoVoigt
+    xsec[start:end] += _xsec   
+    return xsec
 
-def cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff, threshold):
+def cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
     Return the wavennumbers and cross sections with binned Gaussian profile.
+    
     '''  
     xsec = np.zeros_like(wn_grid)
-    if (cutoff == 'None') & (threshold == 'None'):   
-        start = max(0,wn_grid.searchsorted(v.min())-1)
-        end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
+    if cutoff == 'None':
+        start = max(0,wn_grid.searchsorted(min(v))-1)
+        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             BinnedGaussian = BinnedGaussian_profile(dv, alpha)
-            _xsec[idx] = ne.evaluate('sum(coef * BinnedGaussian)')
-    elif (cutoff == 'None') & (threshold != 'None'):            
-        filter = coef >= threshold
-        _alpha = alpha[filter]
-        if _alpha.size > 0:
-            _coef = coef[filter]
-            start = max(0,wn_grid.searchsorted(v.min())-1)
-            end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
-            _xsec = np.zeros(shape=(end-start))
-            for i in range(start,end):
-                idx = i-start
-                wn_grid_i = wn_grid[i]
-                _dv = ne.evaluate('wn_grid_i - v')[filter]
-                BinnedGaussian = BinnedGaussian_profile(_dv, _alpha)
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedGaussian)')
-    elif (cutoff != 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
+            _xsec[idx] = coef @ BinnedGaussian 
+    else:
+        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
+        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             filter = np.abs(dv) <= cutoff
-            _dv = dv[filter]
-            if _dv.size > 0:
+            if filter.sum() > 0:
+                _dv = dv[filter]
                 _alpha = alpha[filter]
                 _coef = coef[filter]
                 BinnedGaussian = BinnedGaussian_profile(_dv, _alpha)
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedGaussian)')
-    else: 
-        filter_threshold = coef >= threshold
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            filter_cutoff = np.abs(dv) <= cutoff
-            filter = filter_cutoff & filter_threshold
-            _dv = dv[filter]
-            if _dv.size > 0:
-                _alpha = alpha[filter]
-                _coef = coef[filter]
-                BinnedGaussian = BinnedGaussian_profile(_dv, _alpha)
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedGaussian)')     
-    xsec[start:end] += _xsec
-    xsec = ne.evaluate('xsec/binSize2')
-    return (xsec)
+                _xsec[idx] = _coef @ BinnedGaussian 
+    xsec[start:end] += _xsec / binSize2
+    return xsec
 
-def cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff, threshold):
+def cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
     Return the wavennumbers and cross sections with binned Lorentzian profile.
-    '''
+    
+    ''' 
     xsec = np.zeros_like(wn_grid)
-    if (cutoff == 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min())-1)
-        end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
+    if cutoff == 'None':
+        start = max(0,wn_grid.searchsorted(min(v))-1)
+        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         wngrid_start = wn_grid[start]
         wngrid_end = wn_grid[end-1]
-        bnormBinsize = ne.evaluate('1/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
+        bnormBinsize = ne.evaluate('PI/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             BinnedLorentzian = BinnedLorentzian_profile(dv, gamma, bnormBinsize)
-            _xsec[idx] = ne.evaluate('sum(coef * BinnedLorentzian)')        
-    elif (cutoff == 'None') & (threshold != 'None'):
-        filter = coef >= threshold
-        _gamma = gamma[filter]
-        if _gamma.size > 0:
-            _coef = coef[filter] 
-            start = max(0,wn_grid.searchsorted(v.min())-1)
-            end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
-            wngrid_start = wn_grid[start]
-            wngrid_end = wn_grid[end-1]
-            bnormBinsize = ne.evaluate('1/(arctan((wngrid_end-v)/_gamma)-arctan((wngrid_start-v)/_gamma))/bin_size')
-            _xsec = np.zeros(shape=(end-start))
-            for i in range(start,end):
-                idx = i-start
-                wn_grid_i = wn_grid[i]
-                _dv = ne.evaluate('wn_grid_i - v')[filter]
-                BinnedLorentzian = BinnedLorentzian_profile(_dv, _gamma, bnormBinsize)
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedLorentzian)')    
-    elif (cutoff != 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
+            _xsec[idx] = coef @ BinnedLorentzian
+    else:
+        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
+        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
         wngrid_start = wn_grid[start]
         wngrid_end = wn_grid[end-1]
-        bnormBinsize = ne.evaluate('1/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
+        bnormBinsize = ne.evaluate('PI/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
             filter = np.abs(dv) <= cutoff
-            _dv = dv[filter]
-            if _dv.size > 0:
+            if filter.sum() > 0:
+                _dv = dv[filter]
                 _gamma = gamma[filter]
-                _coef = coef[filter]
                 _bnormBinsize = bnormBinsize[filter]
-                BinnedLorentzian = BinnedLorentzian_profile(_dv, _gamma, _bnormBinsize)
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedLorentzian)')        
-    else: 
-        filter_threshold = coef >= threshold
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        wngrid_start = wn_grid[start]
-        wngrid_end = wn_grid[end-1]
-        bnormBinsize = ne.evaluate('1/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            filter_cutoff = np.abs(dv) <= cutoff
-            filter = filter_cutoff & filter_threshold
-            _dv = dv[filter]
-            if _dv.size > 0:
-                _gamma = gamma[filter]
                 _coef = coef[filter]
-                _bnormBinsize = bnormBinsize[filter]
                 BinnedLorentzian = BinnedLorentzian_profile(_dv, _gamma, _bnormBinsize)
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedLorentzian)')                   
-    xsec[start:end] += _xsec
-    return (xsec)
+                _xsec[idx] = _coef @ BinnedLorentzian
+    xsec[start:end] += _xsec  
+    return xsec
 
-def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold):
+def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
     '''
     Read ExoMol .states, .trans, .pf and .broad files as the input files.
     Return the wavennumbers and cross sections with binned Voigt profile.
+
     '''
     nquad = 20
-    roots, weights= roots_hermite(nquad, mu=False)
-    bnormq = []
+    roots, weights = roots_hermite(nquad, mu=False)
     xsec = np.zeros_like(wn_grid)
-    if (cutoff == 'None') & (threshold == 'None'):   
-        start = max(0,wn_grid.searchsorted(v.min())-1)
-        end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
+    if cutoff == 'None':
+        start = max(0,wn_grid.searchsorted(min(v))-1)
+        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         wngrid_start = wn_grid[start]
         wngrid_end = wn_grid[end-1]
-        for iquad in range(nquad):
-            xi = roots[iquad]   
-            bnormq.append(BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, xi))
-        bnormqT =np.transpose(np.array(bnormq))
-        _xsec = np.zeros(shape=(end-start))                
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            lorenz = []
-            for iquad in range(nquad):
-                xi = roots[iquad] 
-                lorenz.append(BinnedVoigt_lorenz(dv, sigma, gamma, xi))
-            lorenzT = np.transpose(np.array(lorenz))  
-            BinnedVoigtProfile = ne.evaluate('sum(weights*bnormqT*lorenzT)')   
-            _xsec[idx] = ne.evaluate('sum(coef * BinnedVoigtProfile)')                       
-    elif (cutoff == 'None') & (threshold != 'None'):
-        filter = coef >= threshold
-        _sigma = sigma[filter]
-        if _sigma.size > 0:
-            _gamma = gamma[filter]
-            _coef = coef[filter]
-            start = max(0,wn_grid.searchsorted(v.min())-1)
-            end = min(wn_grid.searchsorted(v.max()),len(wn_grid))
-            wngrid_start = wn_grid[start]
-            wngrid_end = wn_grid[end-1]
-            for iquad in range(nquad):
-                xi = roots[iquad]   
-                bnormq.append(BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, _sigma, _gamma, xi))
-            bnormqT =np.transpose(np.array(bnormq))
-            _xsec = np.zeros(shape=(end-start))
-            for i in range(start,end):
-                idx = i-start
-                wn_grid_i = wn_grid[i]
-                _dv = ne.evaluate('wn_grid_i - v')[filter]
-                lorenz = []
-                for iquad in range(nquad):
-                    xi = roots[iquad]  
-                    lorenz.append(BinnedVoigt_lorenz(_dv, _sigma, _gamma, xi))
-                lorenzT = np.transpose(np.array(lorenz))  
-                BinnedVoigtProfile = ne.evaluate('sum(weights*bnormqT*lorenzT)')   
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedVoigtProfile)')                    
-    elif (cutoff != 'None') & (threshold == 'None'):
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        wngrid_start = wn_grid[start]
-        wngrid_end = wn_grid[end-1]
-        for iquad in range(nquad):
-            xi = roots[iquad]   
-            bnormq.append(BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, xi))
+        bnormqT = np.transpose(np.array([BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, root) for root in roots]))
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
+            dv = wn_grid[i] - v
+            lorenzT = np.transpose(np.array([BinnedVoigt_lorenz(dv, sigma, gamma, root) for root in roots]))
+            BinnedVoigtProfile = BinnedVoigt_profile(weights,bnormqT,lorenzT)                 
+            _xsec[idx] = ne.evaluate('sum(coef * BinnedVoigtProfile)')
+    else:
+        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
+        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
+        wngrid_start = wn_grid[start]
+        wngrid_end = wn_grid[end-1]
+        bnormq = [BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, root) for root in roots]
+        _xsec = np.zeros(shape=(end-start))
+        for i in range(start,end):
+            idx = i-start
+            dv = wn_grid[i] - v
             filter = np.abs(dv) <= cutoff
-            _dv = dv[filter]
-            if _dv.size > 0:
+            if filter.sum() > 0:
+                _dv = dv[filter]
                 _sigma = sigma[filter]
                 _gamma = gamma[filter]
                 _coef = coef[filter]
-                lorenz = []
-                for iquad in range(nquad):
-                    xi = roots[iquad]  
-                    lorenz.append(BinnedVoigt_lorenz(_dv, _sigma, _gamma, xi))
-                bnormqT =np.transpose(np.array([bnormq[i][filter] for i in range(nquad)]))
-                lorenzT = np.transpose(np.array(lorenz))  
-                BinnedVoigtProfile = ne.evaluate('sum(weights*bnormqT*lorenzT)')   
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedVoigtProfile)')    
-    else: 
-        filter_threshold = coef >= threshold
-        start = max(0,wn_grid.searchsorted(v.min()-cutoff)-1)
-        end = min(wn_grid.searchsorted(v.max()+cutoff),len(wn_grid))
-        wngrid_start = wn_grid[start]
-        wngrid_end = wn_grid[end-1]
-        for iquad in range(nquad):
-            xi = roots[iquad]   
-            bnormq.append(BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, xi))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            wn_grid_i = wn_grid[i]
-            dv = ne.evaluate('wn_grid_i - v')
-            filter_cutoff = np.abs(dv) <= cutoff
-            filter = filter_cutoff & filter_threshold
-            _dv = dv[filter]
-            if _dv.size > 0:
-                _sigma = sigma[filter]
-                _gamma = gamma[filter]
-                _coef = coef[filter]
-                lorenz = []   
-                for iquad in range(nquad):
-                    xi = roots[iquad]  
-                    lorenz.append(BinnedVoigt_lorenz(_dv, _sigma, _gamma, xi))
-                bnormqT =np.transpose(np.array([bnormq[i][filter] for i in range(nquad)]))
-                lorenzT = np.transpose(np.array(lorenz))  
-                BinnedVoigtProfile = ne.evaluate('sum(weights*bnormqT*lorenzT)')   
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedVoigtProfile)')              
-    xsec[start:end] += _xsec
-    xsec = ne.evaluate('xsec*InvbinSizePIhalf')
-    return (xsec)
+                bnormqT = np.transpose(np.array([bnormq[i][filter] for i in range(nquad)]))
+                lorenzT = np.transpose(np.array([BinnedVoigt_lorenz(_dv, _sigma, _gamma, root) for root in roots]))
+                BinnedVoigtProfile = BinnedVoigt_profile(weights,bnormqT,lorenzT)    
+                _xsec[idx] = ne.evaluate('sum(_coef * BinnedVoigtProfile)')
+    xsec[start:end] += _xsec * InvbinSizePIhalf
+    return xsec
 
-# Plot and Save Results
+## Line list for calculating cross sections
+def CalculateExoMolCrossSection(states_part_df,trans_part_df,T,P,Q, 
+                                broad,ratio,nbroad,broad_dfs,profile_label):
+    merged_df = dd.merge(trans_part_df, states_part_df, left_on='u', right_on='id', 
+                         how='inner').merge(states_part_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
+    st_df = merged_df.drop(columns=["id'", 'id"'])
+    st_df['v'] = cal_v(st_df["E'"].values, st_df['E"'].values)
+    if cutoff == 'None':
+        st_df = st_df[st_df['v'].between(min_wn, max_wn)]
+    else:
+        st_df = st_df[st_df['v'].between(min_wn - cutoff, max_wn + cutoff)]
+    if len(st_df) != 0 and QNsFilter != []:
+        st_df = QNfilter_linelist(st_df, QNs_value, QNs_label)
+    if predissocYN == 'Y' and 'VOI' in profile:
+        st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'"]]
+    else:
+        st_df = st_df[['A','v',"g'","E'",'E"','J"']]
+        
+    num = len(st_df)
+    if num > 0:
+        v = st_df['v'].values
+        if abs_emi == 'Ab':
+            st_df['coef'] = cal_abscoefs(T,v,st_df["g'"].values,st_df['A'].values,st_df['E"'].values,Q,abundance)
+        elif abs_emi == 'Em':
+            st_df['coef'] = cal_emicoefs(T,v,st_df["g'"].values,st_df['A'].values,st_df["E'"].values,Q,abundance)
+        else:
+            raise ImportError("Please choose one from: 'Absorption' or 'Emission'.")  
+        st_df.drop(columns=['A',"g'","E'",'E"'], inplace=True)
+        if threshold != 'None':
+            st_df = st_df[st_df['coef'] >= threshold]  
+            v = st_df['v'].values
+            num = len(st_df)         
+        else:
+            pass  
+        if num > 0:
+            if 'DOP' not in profile and 'GAU' not in profile:
+                gamma_L = pd.DataFrame()
+                n_air = pd.DataFrame()
+                for i in range(nbroad):
+                    if broad[i] == 'Default':
+                        gamma_L[i] = np.full((1,num),broad_dfs[i]['gamma_L'][0])[0] * ratio[i]
+                        n_air[i] = np.full((1,num),broad_dfs[i]['n_air'][0])[0] * ratio[i]
+                    else:
+                        (gammaL,nair) = extract_broad(broad_dfs[i], st_df)
+                        gamma_L[i] = gammaL * ratio[i]
+                        n_air[i] = nair * ratio[i]    
+                if predissocYN == 'Y' and 'VOI' in profile:
+                    tau = st_df["tau'"].values
+                else:
+                    tau = np.array([])
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, [], [], tau, T, P)
+            else:
+                gamma = np.array([])
+            coef = st_df['coef'].values
+        
+            # Line profiles
+            if profile_label == 'Doppler':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff)
+            elif profile_label == 'Gaussian':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff)
+            elif profile_label == 'Lorentzian':
+                xsec = cross_section_Lorentzian(wn_grid, v, gamma, coef, cutoff)
+            elif profile_label == 'SciPy Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                sigma = Gaussian_standard_deviation(alpha)     
+                xsec = cross_section_SciPyVoigt(wn_grid, v, sigma, gamma, coef, cutoff)
+            elif profile_label == 'SciPy wofz Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                sigma = Gaussian_standard_deviation(alpha)     
+                xsec = cross_section_SciPyWofzVoigt(wn_grid, v, sigma, gamma, coef, cutoff)
+            elif profile_label == 'Humlicek Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                xsec = cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff)  
+            elif profile_label == 'Thompson pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                eta = PseudoThompsonVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff)       
+            elif profile_label == 'Kielkopf pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                eta = PseudoKielkopfVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff)       
+            elif profile_label == 'Olivero pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                eta = PseudoOliveroVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff)       
+            elif profile_label == 'Liu-Lin pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                eta = PseudoLiuLinVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff)       
+            elif profile_label == 'Rocco pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                eta = PseudoRoccoVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff) 
+            elif profile_label == 'Binned Doppler':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff)        
+            elif profile_label == 'Binned Gaussion':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff)
+            elif profile_label == 'Binned Lorentzian':
+                xsec = cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff)
+            elif profile_label == 'Binned Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                sigma = Gaussian_standard_deviation(alpha)     
+                xsec = cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff)           
+            else:
+                raise ImportError('Please choose line profile from the list.')  
+        else:      
+                xsec = np.zeros_like(wn_grid)
+    else:
+        xsec = np.zeros_like(wn_grid)
+    return xsec
+
+def CalculateHITRANCrossSection(hitran_linelist_df, T, P, Q, profile_label):
+    A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = linelist_hitran(hitran_linelist_df)
+    num = len(A)
+    if num > 0:
+        if abs_emi == 'Ab':
+            print('Absorption cross section') 
+            coef = cal_abscoefs(T, v, gp, A, Epp, Q, abundance)
+        elif abs_emi == 'Em':
+            print('Emission cross section') 
+            coef = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
+        else:
+            raise ImportError("Please choose one from: 'Absorption' or 'Emission'.")  
+        if threshold != 'None':
+            ll_df = pd.DataFrame({'coef':coef, 'v':v, 'n_air':n_air, 'gamma_air':gamma_air, 'gamma_self':gamma_self})
+            ll_df = ll_df[ll_df['coef'] >= threshold]  
+            coef = ll_df['coef'].values
+            v = ll_df['v'].values
+            n_air = ll_df['n_air'].values
+            gamma_air = ll_df['gamma_air'].values
+            gamma_self = ll_df['gamma_self'].values
+            num = len(ll_df)         
+        else:
+            pass   
+        if num > 0:
+            # Line profiles
+            if profile_label == 'Doppler':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff)
+            elif profile_label == 'Gaussian':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff)
+            elif profile_label == 'Lorentzian':
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)
+                xsec = cross_section_Lorentzian(wn_grid, v, gamma, coef, cutoff)
+            elif profile_label == 'SciPy Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                sigma = Gaussian_standard_deviation(alpha)    
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P) 
+                xsec = cross_section_SciPyVoigt(wn_grid, v, sigma, gamma, coef, cutoff)
+            elif profile_label == 'SciPy wofz Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                sigma = Gaussian_standard_deviation(alpha)  
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)   
+                xsec = cross_section_SciPyWofzVoigt(wn_grid, v, sigma, gamma, coef, cutoff)
+            elif profile_label == 'Humlicek Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)
+                xsec = cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff)  
+            elif profile_label == 'Thompson pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)
+                eta = PseudoThompsonVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff)       
+            elif profile_label == 'Kielkopf pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)
+                eta = PseudoKielkopfVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff)       
+            elif profile_label == 'Olivero pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)
+                eta = PseudoOliveroVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff)       
+            elif profile_label == 'Liu-Lin pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)
+                eta = PseudoLiuLinVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff)       
+            elif profile_label == 'Rocco pseudo-Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)
+                eta = PseudoRoccoVoigt(alpha, gamma)
+                xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff) 
+            elif profile_label == 'Binned Doppler':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff)        
+            elif profile_label == 'Binned Gaussion':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff)
+            elif profile_label == 'Binned Lorentzian':
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)
+                xsec = cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff)
+            elif profile_label == 'Binned Voigt':
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                sigma = Gaussian_standard_deviation(alpha)     
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, 0, [], n_air, gamma_air, gamma_self, [], T, P)
+                xsec = cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff)           
+            else:
+                raise ImportError('Please choose line profile from the list.')  
+        else:      
+                xsec = np.zeros_like(wn_grid)
+    else:
+        xsec = np.zeros_like(wn_grid)    
+    return xsec
+
+def read_part_trans(states_part_df,trans_filename,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label):   
+    print('Processeing transitions file:', trans_filename)
+    trans_part_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                                usecols=[0,1,2],names=['u','l','A'], 
+                                blocksize=None, encoding='utf-8')
+    trans_part_df = trans_part_dd.compute()
+    # chunk_size = 500000   #1024*1024
+    trans_part_df_list = [trans_part_df[i:i+chunk_size] for i in range(0,trans_part_df.shape[0],chunk_size)]
+
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        futures = [executor.submit(
+            CalculateExoMolCrossSection,states_part_df,df,
+            T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label
+            ) for df in trans_part_df_list]
+        xsecs = sum([future.result() for future in tqdm(futures)])
+    return xsecs
+
+## Plot and Save Results
 def save_xsec(wn, xsec, database, profile_label):             
-    xsecs_foldername = save_path+'/xsecs/files/'+molecule+'/'+database+'/'
+    xsecs_foldername = save_path+'xsecs/files/'+molecule+'/'+database+'/'
     if os.path.exists(xsecs_foldername):
         pass
     else:
         os.makedirs(xsecs_foldername, exist_ok=True)
+    print(profile_label,'profile')
     print('{:25s} : {:<6}'.format('Temperature selected', T), 'K')
     print('{:25s} : {:<6}'.format('Pressure selected', P), 'bar')
     
     if 'L' not in wn_wl:
         print('{:25s} : {:<6}'.format('Cutoff is', cutoff), u'cm\u207B\u00B9')
-        print('{:25s} : {:<6}'.format('Threshold is', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
+        print('{:25s} : {:<6}'.format('Uncertainty filter is', UncFilter), u'cm\u207B\u00B9')
+        print('{:25s} : {:<6}'.format('Threshold filter is', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
         print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
         # Save cross sections into .xsec file.
         xsec_df = pd.DataFrame()
         xsec_df['wavenumber'] = wn
         xsec_df['cross-section'] = xsec
-        xsec_filename = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
-                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
-        np.savetxt(xsec_filename, xsec_df, fmt="%12.6f %14.8E")
-        print('Cross sections file saved.')
+        xsec_filepath = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
+                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
+        np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
+        print('Cross sections file has been saved:', xsec_filepath, '\n')
         if PlotCrossSectionYN == 'Y':
-            plots_foldername = save_path+'/xsecs/plots/'+molecule+'/'+database+'/'
+            plots_foldername = save_path+'xsecs/plots/'+molecule+'/'+database+'/'
             if os.path.exists(plots_foldername):
                 pass
             else:
@@ -3127,8 +2927,8 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
-            plt.xlim([min_wn, max_wn])
-            plt.ylim([limitYaxisXsec, 10*max(xsec)])
+            # plt.xlim([min_wn, max_wn])
+            # plt.ylim([limitYaxisXsec, 10*max(xsec)])
             plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)   
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
@@ -3138,27 +2938,29 @@ def save_xsec(wn, xsec, database, profile_label):
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
-                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
+            xsec_plotpath = (plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
+                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png')
+            plt.savefig(xsec_plotpath, dpi=500)
             plt.show()
-            print('Cross sections plot saved.')
+            print('Cross sections plot has been saved:', xsec_plotpath, '\n')
     elif 'L' in wn_wl:
         wl = 10000 / wn
         min_wl = '%.02f' % (10000 / max_wn)
         max_wl = '%.02f' % (10000 / min_wn)
         print('{:25s} : {:<6}'.format('Cutoff is', 10000/cutoff),u'\xb5m')
-        print('{:25s} : {:<6}'.format('Threshold is',10000/threshold),u'\xb5m/(moleculeu \xb5m\u00B2)')
+        print('{:25s} : {:<6}'.format('Uncertainty filter is', 10000/UncFilter),u'\xb5m')
+        print('{:25s} : {:<6}'.format('Threshold filter is',10000/threshold),u'\xb5m/(moleculeu \xb5m\u00B2)')
         print('{:25s} : {} {} {} {}'.format('Wavelength range selected',min_wl,u'\xb5m -',max_wl,u'\xb5m'))
         # Save cross sections into .xsec file.
         xsec_df = pd.DataFrame()
         xsec_df['wavelength'] = wl
         xsec_df['cross-section'] = xsec
-        xsec_filename = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
+        xsec_filepath = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
                          +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
-        np.savetxt(xsec_filename, xsec_df, fmt="%12.6f %14.8E")
-        print('Cross sections file saved.')       
+        np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
+        print('Cross sections file has been saved:', xsec_filepath, '\n')       
         if PlotCrossSectionYN == 'Y':
-            plots_foldername = save_path+'/xsecs/plots/'+molecule+'/'+database+'/'
+            plots_foldername = save_path+'xsecs/plots/'+molecule+'/'+database+'/'
             if os.path.exists(plots_foldername):
                 pass
             else:
@@ -3182,186 +2984,127 @@ def save_xsec(wn, xsec, database, profile_label):
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            plt.savefig(plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
-                        +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png', dpi=500)
+            xsec_plotpath = (plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
+                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png')
+            plt.savefig(xsec_plotpath, dpi=500)
             plt.show()
-            print('Cross sections plot saved.')
+            print('Cross sections plot has been saved:', xsec_plotpath, '\n')
     else:
-        print('Please choose wavenumber or wavelength and type in correct format: wn or wl.')
+        raise ImportError('Please choose wavenumber or wavelength and type in correct format: wn or wl.')
 
-def get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolumn):
-    print('Calculate cross-sections.')
+# Cross sections for ExoMol database
+def exomol_cross_section(states_part_df, T, P):
+    print('Calculate cross sections.')
+    print('Running on ', nprocess, 'cores.')
+    tot = Timer()
+    tot.start()
+    broad, ratio, nbroad, broad_dfs = read_broad(read_path)
+    Q = read_exomol_pf(read_path, T)
+    profile_label = line_profile(profile)
+    
+    print('Reading transitions and calculating cross sections ...')    
+    trans_filenames = get_part_transfiles(read_path)
+    # Process multiple files in parallel
+    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+        # Submit reading tasks for each file
+        futures = [executor.submit(read_part_trans,states_part_df,trans_filename,T,P,Q,broad,ratio,
+                                   nbroad,broad_dfs,profile_label) for trans_filename in trans_filenames]
+        xsec = sum([future.result() for future in tqdm(futures)])
+        
+    if len(xsec) == 0:
+        raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")   
+    
+    tot.end()
+    print('Finished reading transitions and calculating cross sections!\n')
+    save_xsec(wn_grid, xsec, database, profile_label) 
+    print('Cross sections have been saved!\n')
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+    # return xsec
+
+# Cross sections forHITRAN database
+def hitran_cross_section(hitran_linelist_df, T, P):
+    print('Calculating cross sections ...')  
     t = Timer()
-    # ExoMol or HITRAN
-    if database == 'ExoMol':
-        gamma_air = gamma_self = []
-        broad, ratio, nbroad, broad_dfs = read_broad(read_path)
-        Q = read_exomolweb_pf(T)              # Read partition function from the ExoMol website.
-        # Q = read_exomol_pf(read_path, T)    # Read partition function from local partition function file.
-        t.start()
-        # Absorption or emission cross section
-        if abs_emi == 'Ab': 
-            print('Absorption cross section')
-            A, v, Epp, gp, tau, gamma_L, n_air = linelist_exomol_abs(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
-            coef = cal_abscoefs(T, v, gp, A, Epp, Q, abundance)
-        elif abs_emi == 'Em': 
-            print('Emission cross section')
-            A, v, Ep, gp, tau, gamma_L, n_air = linelist_exomol_emi(cutoff,broad,ratio,nbroad,broad_dfs,states_part_df,trans_part_df, ncolumn)
-            coef = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
-        else:
-            raise ImportError("Please choose one from: 'Absoption' or 'Emission'.")         
-    elif database == 'HITRAN':
-        gamma_L = []
-        broad = []
-        tau = []
-        A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = linelist_hitran(hitran_df)
-        Q = read_hitran_pf(T)
-        t.start()
-        # Absorption or emission cross section
-        if abs_emi == 'Ab': 
-            print('Absorption cross section') 
-            coef = cal_abscoefs(T, v, gp, A, Epp, Q, abundance)
-        elif abs_emi == 'Em': 
-            print('Emission cross section')
-            Ep = cal_Ep(Epp, v)
-            coef = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
-        else:
-            raise ImportError("Please choose one from: 'Absoption' or 'Emission'.") 
-    else:
-        raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")
-    # Line profile: Gaussion, Lorentzian or Voigt
-    num_v = len(v)
-    if 'LOR' not in profile:
-        alpha = DopplerHWHM_alpha(num_v, alpha_HWHM, v, T)
-    if 'DOP' not in profile and 'GAU' not in profile:
-        gamma = LorentzianHWHM_gamma(num_v, gamma_HWHM, broad, gamma_L, n_air, gamma_air, gamma_self, tau, T, P)
-    if 'SCI' in profile or 'W' in profile:
-        sigma = Gaussian_standard_deviation(alpha)     
-    if 'VOI' in profile and 'BIN' in profile:
-        sigma = Gaussian_standard_deviation(alpha)  
-    # Line profiles
-    if profile[0:3] == 'DOP':
-        print('Doppler profile')
-        profile_label = 'Doppler'
-        xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff, threshold)
-    elif profile[0:3] == 'GAU':
-        print('Gaussion profile')
-        profile_label = 'Gaussion'
-        xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff, threshold)
-    elif profile[0:3] == 'LOR':
-        print('Lorentzian profile')
-        profile_label = 'Lorentzian'
-        xsec = cross_section_Lorentzian(wn_grid, v, gamma, coef, cutoff, threshold)
-    elif 'SCI' in profile and 'W' not in profile:
-        print('SciPy Voigt profile')
-        profile_label = 'SciPy Voigt'
-        xsec = cross_section_SciPyVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
-    elif 'W' in profile:
-        print('SciPy wofz Voigt profile')
-        profile_label = 'SciPy wofz Voigt'
-        xsec = cross_section_SciPyWofzVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)
-    elif 'H' in profile:
-        print('Humlicek Voigt profile')
-        profile_label = 'Humlicek Voigt'
-        xsec = cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff, threshold)  
-    elif 'TH' in profile:
-        print('Thompson pseudo-Voigt profile')
-        profile_label = 'Thompson pseudo-Voigt'
-        eta = PseudoThompsonVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold)       
-    elif 'K' in profile and 'H' not in profile:
-        print('Kielkopf pseudo-Voigt profile')
-        profile_label = 'Kielkopf pseudo-Voigt'
-        eta = PseudoKielkopfVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold)       
-    elif 'OL' in profile:
-        print('Olivero pseudo-Voigt profile')
-        profile_label = 'Olivero pseudo-Voigt'
-        eta = PseudoOliveroVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold)       
-    elif 'LI' in profile or 'LL' in profile:
-        print('Liu-Lin pseudo-Voigt profile')
-        profile_label = 'Liu-Lin pseudo-Voigt'
-        eta = PseudoLiuLinVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold)       
-    elif 'RO' in profile:
-        print('Rocco pseudo-Voigt profile')
-        profile_label = 'Rocco pseudo-Voigt'
-        eta = PseudoRoccoVoigt(alpha, gamma)
-        xsec = cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff, threshold) 
-    elif 'BIN' in profile and 'DOP' in profile:
-        print('Binned Doppler profile')
-        profile_label = 'Binned Doppler'
-        xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff, threshold)        
-    elif 'BIN' in profile and 'GAU' in profile:
-        print('Binned Gaussion profile')
-        profile_label = 'Binned Gaussion'
-        xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff, threshold)
-    elif 'BIN' in profile and 'LOR' in profile:
-        print('Binned Lorentzian profile')
-        profile_label = 'Binned Lorentzian'
-        xsec = cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff, threshold)
-    elif 'BIN' in profile and 'VOI' in profile:
-        print('Binned Voigt profile')
-        profile_label = 'Binned Voigt'
-        xsec = cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff, threshold)           
-    else:
-        raise ImportError('Please choose line profile from the list.')
-    t.end()
-    save_xsec(wn_grid, xsec, database, profile_label)    
-    pass
+    t.start()
+
+    Q = read_hitran_pf(T)
+    profile_label = line_profile(profile)
+    print(profile_label,'profile')
+    pool = Pool(processes=nprocess) 
+    print('Running on', nprocess, 'cores.')
+    process = pool.apply_async(CalculateHITRANCrossSection,
+                               args=(hitran_linelist_df, T, P, Q, profile_label))
+    pool.close()
+    pool.join()
+    xsec = process.get()
+    if len(xsec) == 0:
+        raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
+    
+    t.end()  
+    print('Finished calculating cross sections!\n')
+    save_xsec(wn_grid, xsec, database, profile_label) 
+    print('Cross sections have been saved!\n')
+    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+    # return xsec
 
 # Get Results
 def get_results(read_path): 
     t_tot = Timer()
     t_tot.start()  
-    states_part_df = pd.DataFrame()
-    trans_part_df = pd.DataFrame() 
-    hitran_df = pd.DataFrame()
     # ExoMol or HITRAN
     if database == 'ExoMol':
         print('ExoMol database')
         print('Molecule\t:', molecule, '\nIsotopologue\t:', isotopologue, '\nDataset\t\t:', dataset)
         # All functions need whole states.
         states_df = read_all_states(read_path)
-        # Only calculating lifetimes, cooling functions and oscillator stengths need whole transitions.
-        NeedAllTrans = Lifetimes + CoolingFunctions + OscillatorStrengths
-        if NeedAllTrans != 0: 
-            (all_trans_df, ncolumn) = read_all_trans(read_path)  
-        if CrossSections == 1 and check_predissoc + check_lifetime == 0 and 'VOI' in profile:
-            if NeedAllTrans == 0:
-                (all_trans_df, ncolumn) = read_all_trans(read_path)  
-            lifetime_df = cal_lifetime(states_df, all_trans_df)
-            states_df['tau'] = lifetime_df['tau'].values  
+        # Calculate predissociation cross sections if lifetimes are not exit in the states file.
+        if CrossSections == 1 and predissocYN == 'Y' and check_predissoc+check_lifetime == 0 and 'VOI' in profile:
+            np.seterr(divide='ignore', invalid='ignore')
+            print('Calculate lifetimes.')  
+            print('Running on ', nprocess, 'cores.')
+            t = Timer()
+            t.start()
+            print('Reading all transitions and calculating lifetimes ...')
+            trans_filenames = get_transfiles(read_path)
+            # Process multiple files in parallel
+            with ProcessPoolExecutor(max_workers=nprocess) as executor:
+                # Submit reading tasks for each file
+                futures = [executor.submit(calculate_lifetime, states_df, 
+                                            trans_filename) for trans_filename in trans_filenames]
+                lifetime_result = 1 / sum(np.array([future.result() for future in tqdm(futures)]))
+                states_df['tau'] = np.array([f'{x:>12.4E}'.replace('INF','Inf') for x in lifetime_result])
+            t.end()
+            print('Finished reading all transitions and calculating lifetimes!\n')
+                
         # Only calculating stick spectra and cross sections need part of states.
         NeedPartStates = StickSpectra + CrossSections
         if NeedPartStates != 0:
-            states_part_df = read_part_states(states_df) 
-        # Conversion and calculating stick spectra and cross sections need part of transitions.
-        NeedPartTrans = Conversion + StickSpectra + CrossSections
-        if NeedPartTrans != 0:
-            (trans_part_df, ncolumn) = read_part_trans(read_path) 
+            if check_uncertainty == 1:
+                states_part_df = read_part_states(states_df) 
+            else:
+                raise ImportError("No uncertainties in states file. Please do not use uncertainty filter.")   
+            
 
         # Functions
         Nfunctions = (PartitionFunctions + SpecificHeats + Lifetimes + CoolingFunctions 
                       + OscillatorStrengths + Conversion + StickSpectra  + CrossSections)
         if Nfunctions > 0:
             if PartitionFunctions == 1:
-                exomol_partition_func(states_df, Ntemp, Tmax)
+                exomol_partition(states_df, Ntemp, Tmax)
             if SpecificHeats == 1:
                 exomol_specificheat(states_df, Ntemp, Tmax)
             if Lifetimes == 1:
-                exomol_lifetime(read_path, states_df, all_trans_df)
-            if OscillatorStrengths == 1:
-                exomol_oscillator_strength(states_df, all_trans_df, ncolumn)
+                exomol_lifetime(read_path, states_df)
             if CoolingFunctions == 1:
-                exomol_cooling_func(read_path, states_df, all_trans_df, Ntemp, Tmax, ncolumn)
+                exomol_cooling(states_df, Ntemp, Tmax)
+            if OscillatorStrengths == 1:
+                exomol_oscillator_strength(states_df)
             if (Conversion == 1 and ConversionFormat == 1):
-                conversion_exomol2hitran(read_path, states_df, trans_part_df, ncolumn)
+                conversion_exomol2hitran(states_df)
             if StickSpectra == 1:
-                exomol_stick_spectra(read_path, states_part_df, trans_part_df, ncolumn, T)
+                exomol_stick_spectra(states_part_df, T)
             if CrossSections == 1:
-                get_crosssection(read_path, states_part_df, trans_part_df, hitran_df, ncolumn) 
+                exomol_cross_section(states_part_df, T, P)
         else:   
             raise ImportError("Please choose functions which you want to calculate.")
     elif database == 'HITRAN':
@@ -3390,20 +3133,18 @@ def get_results(read_path):
             # All functions need whole states.
             states_df = read_all_states(read_hitran2exomol_path)
             if PartitionFunctions == 1:
-                exomol_partition_func(states_df, Ntemp, Tmax)
+                exomol_partition(states_df, Ntemp, Tmax)
             if SpecificHeats == 1:
                 exomol_specificheat(states_df, Ntemp, Tmax)
             if Lifetimes == 1:
-                (all_trans_df, ncolumn) = read_all_trans(read_hitran2exomol_path)
-                # hitran_lifetime(states_df, all_trans_df)
-                exomol_lifetime(read_hitran2exomol_path, states_df, all_trans_df)
+                exomol_lifetime(read_hitran2exomol_path, states_df)
         # Use HITRAN functions
         # Calculate cooling functions or oscillatore strengths.
         NeedWholeHITRAN = CoolingFunctions+OscillatorStrengths
         if NeedWholeHITRAN != 0: 
             hitran_df = read_hitran_parfile(read_path,parfile_df,min_wn,max_wn,'None','None').reset_index().drop(columns='index')
         if CoolingFunctions == 1:
-            hitran_cooling_func(hitran_df, Ntemp, Tmax)
+            hitran_cooling(hitran_df, Ntemp, Tmax)
         if OscillatorStrengths == 1:
             hitran_oscillator_strength(hitran_df)
         if (StickSpectra == 1 or CrossSections == 1):
@@ -3413,8 +3154,7 @@ def get_results(read_path):
         if StickSpectra == 1:
             hitran_stick_spectra(hitran_linelist_df, QNs_col, T)
         if CrossSections == 1:
-            ncolumn = 0
-            get_crosssection(read_path, states_part_df, trans_part_df, hitran_linelist_df, ncolumn)
+            hitran_cross_section(hitran_linelist_df, T, P)
     else:
         raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")     
     print('\nThe program total running time:')    
@@ -3422,4 +3162,8 @@ def get_results(read_path):
     print('\nFinished!')
     pass
 
-get_results(read_path)
+def main():
+    get_results(read_path)
+
+if __name__ == '__main__':
+    main()

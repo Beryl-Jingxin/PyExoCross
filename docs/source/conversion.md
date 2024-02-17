@@ -65,6 +65,11 @@ StickSpectra                            0
 CrossSections                           0
 
 
+# Cores and chunks #
+NCPU                                    32
+ChunkSize                               1000000
+
+
 # Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
 QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
@@ -106,6 +111,11 @@ Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
 CrossSections                           0
+
+
+# Cores and chunks #
+NCPU                                    32
+ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections 

@@ -1,0 +1,873 @@
+nohup: ignoring input
+Number of CPU:  256
+INFO: Pandarallel will run on 256 workers.
+INFO: Pandarallel will use Memory file system to transfer data between the main process and workers.
+ExoMol database
+Molecule	: H2O 
+Isotopologue	: 1H2-16O 
+Dataset		: POKAZATEL
+Reading states ...
+Running time on CPU       : 4.13415698 s
+Running time on system    : 4.16314697265625 s
+Finished reading states!
+
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
+Reading broadening file ...
+Broadeners 	: H2, He
+Ratios 		: 0.75, 0.15 
+
+Reading transitions and calculating cross sections ...
+Finding trans files:   0%|          | 0/412 [00:00<?, ?it/s]
+Finished reading transitions!
+
+Caculating cross sections ...
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18100-18200.trans.bz2
+  0%|          | 0/412 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14200-14300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06900-07000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22100-22200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31000-31100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14900-15000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20800-20900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02800-02900.trans.bz2
+Processeing transitions file:Processeing transitions file:Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26600-26700.trans.bz2
+  /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09000-09100.trans.bz2/mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18800-18900.trans.bz2
+
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16600-16700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04600-04700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02500-02600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05800-05900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30800-30900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26900-27000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07200-07300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15900-16000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15100-15200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08900-09000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29700-29800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39400-39500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33700-33800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14400-14500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40500-40600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38000-38100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20300-20400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03300-03400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05400-05500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36200-36300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03700-03800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19300-19400.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19600-19700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13800-13900.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24500-24600.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19900-20000.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33900-34000.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31700-31800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29000-29100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36000-36100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02400-02500.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34400-34500.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01400-01500.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18500-18600.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01900-02000.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08200-08300.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01200-01300.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00800-00900.trans.bz2
+  0%|          | 0/6 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17600-17700.trans.bz2
+  0%|          | 0/6 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28900-29000.trans.bz2
+  0%|          | 0/7 [00:00<?, ?it/s]
+  0%|          | 0/6 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35300-35400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24300-24400.trans.bz2
+  0%|          | 0/7 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15000-15100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17100-17200.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/8 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30500-30600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33300-33400.trans.bz2
+  0%|          | 0/8 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36700-36800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34200-34300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03400-03500.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24000-24100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13100-13200.trans.bz2
+  0%|          | 0/8 [00:00<?, ?it/s]
+  0%|          | 0/3 [00:00<?, ?it/s]
+  0%|          | 0/10 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27400-27500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00300-00400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21400-21500.trans.bz2
+  0%|          | 0/11 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35700-35800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27000-27100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29200-29300.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+  0%|          | 0/12 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09100-09200.trans.bz2
+  0%|          | 0/13 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09900-10000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40100-40200.trans.bz2
+  0%|          | 0/14 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32900-33000.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31500-31600.trans.bz2
+  0%|          | 0/14 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12800-12900.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06400-06500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32800-32900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26100-26200.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/9 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24700-24800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01300-01400.trans.bz2
+  0%|          | 0/15 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06100-06200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02900-03000.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24800-24900.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11000-11100.trans.bz2
+  0%|          | 0/10 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11600-11700.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04000-04100.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24100-24200.trans.bz2
+  0%|          | 0/13 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34300-34400.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27200-27300.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04300-04400.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11700-11800.trans.bz2
+  0%|          | 0/16 [00:00<?, ?it/s]
+  0%|          | 0/25 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20100-20200.trans.bz2
+  0%|          | 0/26 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26300-26400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14800-14900.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03500-03600.trans.bz2
+  0%|          | 0/28 [00:00<?, ?it/s]
+  0%|          | 0/16 [00:00<?, ?it/s]
+  0%|          | 0/31 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06200-06300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30100-30200.trans.bz2
+  0%|          | 0/32 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19100-19200.trans.bz2
+  0%|          | 0/6 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27600-27700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00600-00700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13500-13600.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17300-17400.trans.bz2
+  0%|          | 0/23 [00:00<?, ?it/s]
+  0%|          | 0/35 [00:00<?, ?it/s]
+  0%|          | 0/19 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12900-13000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23300-23400.trans.bz2
+  0%|          | 0/37 [00:00<?, ?it/s]
+  0%|          | 0/20 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16400-16500.trans.bz2
+  0%|          | 0/25 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21700-21800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32700-32800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00100-00200.trans.bz2
+  0%|          | 0/7 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08100-08200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10000-10100.trans.bz2
+  0%|          | 0/40 [00:00<?, ?it/s]
+  0%|          | 0/19 [00:00<?, ?it/s]
+  0%|          | 0/4 [00:00<?, ?it/s]
+  0%|          | 0/13 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38200-38300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40900-41000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06600-06700.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34500-34600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39900-40000.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23700-23800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25100-25200.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02000-02100.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27100-27200.trans.bz2
+  0%|          | 0/43 [00:00<?, ?it/s]
+  0%|          | 0/3 [00:00<?, ?it/s]
+  0%|          | 0/9 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38500-38600.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19000-19100.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00500-00600.trans.bz2
+  0%|          | 0/45 [00:00<?, ?it/s]  0%|          | 0/1 [00:00<?, ?it/s]
+
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09400-09500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18200-18300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__41100-41200.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37000-37100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30900-31000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25300-25400.trans.bz2
+  0%|          | 0/33 [00:00<?, ?it/s]
+  0%|          | 0/11 [00:00<?, ?it/s]
+  0%|          | 0/15 [00:00<?, ?it/s]
+  0%|          | 0/48 [00:00<?, ?it/s]
+  0%|          | 0/47 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10500-10600.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07600-07700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23900-24000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09600-09700.trans.bz2
+  0%|          | 0/34 [00:00<?, ?it/s]
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40400-40500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28500-28600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39800-39900.trans.bz2
+  0%|          | 0/49 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18700-18800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32200-32300.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28200-28300.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22400-22500.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27800-27900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27700-27800.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+  0%|          | 0/16 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00900-01000.trans.bz2
+  0%|          | 0/7 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21000-21100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09800-09900.trans.bz2
+  0%|          | 0/45 [00:00<?, ?it/s]
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17000-17100.trans.bz2
+  0%|          | 0/8 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20500-20600.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18000-18100.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32400-32500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25900-26000.trans.bz2
+  0%|          | 0/51 [00:00<?, ?it/s]
+  0%|          | 0/4 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07100-07200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13700-13800.trans.bz2
+  0%|          | 0/54 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17700-17800.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04200-04300.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+  0%|          | 0/8 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22900-23000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__41000-41100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37200-37300.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/55 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19700-19800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12600-12700.trans.bz2
+  0%|          | 0/6 [00:00<?, ?it/s]
+  0%|          | 0/42 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05100-05200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26500-26600.trans.bz2
+  0%|          | 0/57 [00:00<?, ?it/s]
+  0%|          | 0/23 [00:00<?, ?it/s]
+  0%|          | 0/47 [00:00<?, ?it/s]
+  0%|          | 0/8 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24200-24300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34800-34900.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19800-19900.trans.bz2
+  0%|          | 0/10 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40700-40800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15600-15700.trans.bz2
+  0%|          | 0/41 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00700-00800.trans.bz2
+  0%|          | 0/34 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12000-12100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16100-16200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28000-28100.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38400-38500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30000-30100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15700-15800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37300-37400.trans.bz2
+  0%|          | 0/28 [00:00<?, ?it/s]
+  0%|          | 0/3 [00:00<?, ?it/s]
+  0%|          | 0/9 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05600-05700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28800-28900.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38900-39000.trans.bz2
+  0%|          | 0/7 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28100-28200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11400-11500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25200-25300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38600-38700.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24600-24700.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/24 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07800-07900.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16500-16600.trans.bz2
+  0%|          | 0/54 [00:00<?, ?it/s]
+  0%|          | 0/21 [00:00<?, ?it/s]
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05700-05800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10700-10800.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+  0%|          | 0/7 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09700-09800.trans.bz2
+  0%|          | 0/15 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09500-09600.trans.bz2
+  0%|          | 0/59 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38700-38800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22700-22800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23100-23200.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26400-26500.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21100-21200.trans.bz2
+  0%|          | 0/24 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31200-31300.trans.bz2
+  0%|          | 0/32 [00:00<?, ?it/s]
+  0%|          | 0/44 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08500-08600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21800-21900.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32100-32200.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06300-06400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01600-01700.trans.bz2
+  0%|          | 0/11 [00:00<?, ?it/s]
+  0%|          | 0/4 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13000-13100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07000-07100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04900-05000.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]  0%|          | 0/23 [00:00<?, ?it/s]
+
+  0%|          | 0/12 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34700-34800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17200-17300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12500-12600.trans.bz2
+  0%|          | 0/12 [00:00<?, ?it/s]
+  0%|          | 0/29 [00:00<?, ?it/s]
+  0%|          | 0/17 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26000-26100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35900-36000.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12700-12800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25800-25900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36800-36900.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00400-00500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29900-30000.trans.bz2
+  0%|          | 0/10 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21600-21700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26700-26800.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16000-16100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25400-25500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31100-31200.trans.bz2
+  0%|          | 0/18 [00:00<?, ?it/s]
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08000-08100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31800-31900.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32300-32400.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06800-06900.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22300-22400.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32500-32600.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13600-13700.trans.bz2
+  0%|          | 0/9 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29800-29900.trans.bz2
+  0%|          | 0/31 [00:00<?, ?it/s]
+  0%|          | 0/19 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15300-15400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11200-11300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13900-14000.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20400-20500.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31300-31400.trans.bz2
+  0%|          | 0/21 [00:00<?, ?it/s]
+  0%|          | 0/58 [00:00<?, ?it/s]
+  0%|          | 0/16 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33000-33100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13400-13500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33500-33600.trans.bz2
+  0%|          | 0/11 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38800-38900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23800-23900.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15200-15300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30600-30700.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04500-04600.trans.bz2
+  0%|          | 0/23 [00:00<?, ?it/s]
+  0%|          | 0/51 [00:00<?, ?it/s]
+  0%|          | 0/17 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11900-12000.trans.bz2
+  0%|          | 0/24 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33800-33900.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/6 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29400-29500.trans.bz2
+  0%|          | 0/17 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34600-34700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39200-39300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36300-36400.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08800-08900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33200-33300.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23000-23100.trans.bz2
+  0%|          | 0/29 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32000-32100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40000-40100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35000-35100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10800-10900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25600-25700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38300-38400.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05000-05100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16700-16800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03000-03100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26800-26900.trans.bz2
+  0%|          | 0/41 [00:00<?, ?it/s]  0%|          | 0/38 [00:00<?, ?it/s]
+
+  0%|          | 0/27 [00:00<?, ?it/s]
+  0%|          | 0/61 [00:00<?, ?it/s]
+  0%|          | 0/12 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00200-00300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33600-33700.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]  0%|          | 0/15 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25000-25100.trans.bz2
+
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19500-19600.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09200-09300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36100-36200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20700-20800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27900-28000.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/58 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02700-02800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11500-11600.trans.bz2
+  0%|          | 0/14 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/36 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02300-02400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35100-35200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23400-23500.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04800-04900.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35800-35900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17500-17600.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22800-22900.trans.bz2
+  0%|          | 0/12 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/36 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21200-21300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11100-11200.trans.bz2
+  0%|          | 0/31 [00:00<?, ?it/s]
+  0%|          | 0/20 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29600-29700.trans.bz2
+  0%|          | 0/33 [00:00<?, ?it/s]
+  0%|          | 0/15 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37900-38000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14500-14600.trans.bz2
+  0%|          | 0/6 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31900-32000.trans.bz2
+  0%|          | 0/7 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__26200-26300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16800-16900.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]  0%|          | 0/1 [00:00<?, ?it/s]
+
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15500-15600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17400-17500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30400-30500.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/10 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01800-01900.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28400-28500.trans.bz2
+  0%|          | 0/56 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03200-03300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25500-25600.trans.bz2
+  0%|          | 0/28 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14000-14100.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23600-23700.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30200-30300.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39100-39200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35600-35700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30700-30800.trans.bz2
+  0%|          | 0/18 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11300-11400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37500-37600.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02100-02200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39500-39600.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18300-18400.trans.bz2
+  0%|          | 0/38 [00:00<?, ?it/s]
+  0%|          | 0/9 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08400-08500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24900-25000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28700-28800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12400-12500.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19400-19500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40800-40900.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/32 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40600-40700.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10100-10200.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27300-27400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39700-39800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14600-14700.trans.bz2
+  0%|          | 0/9 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04400-04500.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23500-23600.trans.bz2
+  0%|          | 0/10 [00:00<?, ?it/s]
+  0%|          | 0/21 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21300-21400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37800-37900.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37400-37500.trans.bz2
+  0%|          | 0/12 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18900-19000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10300-10400.trans.bz2
+  0%|          | 0/13 [00:00<?, ?it/s]
+  0%|          | 0/19 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10900-11000.trans.bz2
+  0%|          | 0/57 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22200-22300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__00000-00100.trans.bz2
+  0%|          | 0/8 [00:00<?, ?it/s]
+  0%|          | 0/26 [00:00<?, ?it/s]
+  0%|          | 0/7 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__11800-11900.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22500-22600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34900-35000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01100-01200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37100-37200.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21900-22000.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/14 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39300-39400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05500-05600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08300-08400.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__21500-21600.trans.bz2
+  0%|          | 0/20 [00:00<?, ?it/s]
+  0%|          | 0/25 [00:00<?, ?it/s]
+  0%|          | 0/5 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05900-06000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31600-31700.trans.bz2
+  0%|          | 0/53 [00:00<?, ?it/s]
+  0%|          | 0/4 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03800-03900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17900-18000.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__31400-31500.trans.bz2
+  0%|          | 0/7 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04700-04800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__04100-04200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13200-13300.trans.bz2
+  0%|          | 0/5 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10200-10300.trans.bz2
+  0%|          | 0/13 [00:00<?, ?it/s]
+  0%|          | 0/17 [00:00<?, ?it/s]
+  0%|          | 0/5 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14100-14200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12200-12300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29100-29200.trans.bz2
+  0%|          | 0/40 [00:00<?, ?it/s]
+  0%|          | 0/20 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36900-37000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15400-15500.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06500-06600.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20600-20700.trans.bz2
+  0%|          | 0/9 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35500-35600.trans.bz2
+  0%|          | 0/38 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14700-14800.trans.bz2
+  0%|          | 0/59 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02200-02300.trans.bz2
+  0%|          | 0/22 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__24400-24500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36400-36500.trans.bz2
+  0%|          | 0/27 [00:00<?, ?it/s]
+  0%|          | 0/19 [00:00<?, ?it/s]
+  0%|          | 0/6 [00:00<?, ?it/s]
+  0%|          | 0/21 [00:00<?, ?it/s]  0%|          | 0/1 [00:00<?, ?it/s]
+
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40300-40400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18600-18700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22600-22700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03100-03200.trans.bz2
+  0%|          | 0/22 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29500-29600.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10600-10700.trans.bz2
+  0%|          | 0/39 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12100-12200.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/16 [00:00<?, ?it/s]
+  0%|          | 0/3 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__13300-13400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__29300-29400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07500-07600.trans.bz2
+  0%|          | 0/46 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39000-39100.trans.bz2
+  0%|          | 0/14 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36600-36700.trans.bz2
+  0%|          | 0/12 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__12300-12400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06700-06800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28300-28400.trans.bz2
+  0%|          | 0/4 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34100-34200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35200-35300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05300-05400.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07900-08000.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16200-16300.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33400-33500.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07700-07800.trans.bz2
+  0%|          | 0/8 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__10400-10500.trans.bz2
+  0%|          | 0/13 [00:00<?, ?it/s]
+  0%|          | 0/18 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20200-20300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__06000-06100.trans.bz2
+  0%|          | 0/22 [00:00<?, ?it/s]
+  0%|          | 0/27 [00:00<?, ?it/s]
+  0%|          | 0/49 [00:00<?, ?it/s]
+  0%|          | 0/45 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__32600-32700.trans.bz2
+  0%|          | 0/48 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01000-01100.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08700-08800.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__15800-15900.trans.bz2
+  0%|          | 0/40 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__33100-33200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01700-01800.trans.bz2
+  0%|          | 0/11 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__17800-17900.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__01500-01600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16900-17000.trans.bz2
+  0%|          | 0/6 [00:00<?, ?it/s]
+  0%|          | 0/16 [00:00<?, ?it/s]
+  0%|          | 0/52 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__02600-02700.trans.bz2
+  0%|          | 0/36 [00:00<?, ?it/s]
+  0%|          | 0/60 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__14300-14400.trans.bz2
+  0%|          | 0/18 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03600-03700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37600-37700.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__30300-30400.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__08600-08700.trans.bz2
+  0%|          | 0/35 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__18400-18500.trans.bz2
+  0%|          | 0/17 [00:00<?, ?it/s]
+  0%|          | 0/50 [00:00<?, ?it/s]
+  0%|          | 0/21 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__35400-35500.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__27500-27600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__16300-16400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07300-07400.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__19200-19300.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__25700-25800.trans.bz2
+  0%|          | 0/2 [00:00<?, ?it/s]
+  0%|          | 0/33 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__39600-39700.trans.bz2
+  0%|          | 0/39 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__34000-34100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20900-21000.trans.bz2
+  0%|          | 0/3 [00:00<?, ?it/s]
+  0%|          | 0/9 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__05200-05300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__36500-36600.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__37700-37800.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__22000-22100.trans.bz2
+  0%|          | 0/11 [00:00<?, ?it/s]
+  0%|          | 0/43 [00:00<?, ?it/s]
+  0%|          | 0/10 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__40200-40300.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__09300-09400.trans.bz2
+  0%|          | 0/42 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__23200-23300.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__28600-28700.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20000-20100.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__38100-38200.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__07400-07500.trans.bz2
+  0%|          | 0/22 [00:00<?, ?it/s]
+  0%|          | 0/8 [00:00<?, ?it/s]
+  0%|          | 0/1 [00:00<?, ?it/s]
+  0%|          | 0/2 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__03900-04000.trans.bz2
+  0%|          | 0/7 [00:00<?, ?it/s]
+  0%|          | 0/6 [00:00<?, ?it/s]
+  0%|          | 0/14 [00:00<?, ?it/s]
+  0%|          | 0/5 [00:00<?, ?it/s]
+  0%|          | 0/4 [00:00<?, ?it/s]
+  0%|          | 0/30 [00:00<?, ?it/s]
+  0%|          | 0/11 [00:00<?, ?it/s]
+  0%|          | 0/28 [00:00<?, ?it/s]
+  0%|          | 0/6 [00:00<?, ?it/s]
+  0%|          | 0/29 [00:00<?, ?it/s]
+  0%|          | 0/32 [00:00<?, ?it/s]
+  0%|          | 0/55 [00:00<?, ?it/s]
+  0%|          | 0/61 [00:00<?, ?it/s]
+  0%|          | 0/37 [00:00<?, ?it/s]
+  0%|          | 0/26 [00:00<?, ?it/s]
+  0%|          | 0/46 [00:00<?, ?it/s]
+  0%|          | 0/50 [00:00<?, ?it/s]
+  0%|          | 0/35 [00:00<?, ?it/s]
+  0%|          | 0/26 [00:00<?, ?it/s]
+  0%|          | 0/24 [00:00<?, ?it/s]
+  0%|          | 0/30 [00:00<?, ?it/s]
+  0%|          | 0/30 [00:00<?, ?it/s]
+  0%|          | 0/44 [00:00<?, ?it/s]
+  0%|          | 0/37 [00:00<?, ?it/s]
+  0%|          | 0/48 [00:00<?, ?it/s]
+  0%|          | 0/56 [00:00<?, ?it/s]
+  0%|          | 0/53 [00:00<?, ?it/s]
+  0%|          | 0/52 [00:00<?, ?it/s]
+  0%|          | 0/42 [00:00<?, ?it/s]
+Running time on CPU       : 2.049852480000002 s
+Running time on system    : 363.63108801841736 s
+Finished reading transitions and calculating cross sections!
+
+SciPy Voigt profile
+Temperature selected      : 300    K
+Pressure selected         : 1.0    bar
+Cutoff is                 : 25.0   cm⁻¹
+Threshold is              : 1e-40  cm⁻¹/(molecule cm⁻²)
+Wavenumber range selected : 0.0 cm⁻¹ - 41200.0 cm⁻¹
+Cross sections file has been saved: /home/jingxin/data/pyexocross/xsecs/files/H2O/1H2-16O/ExoMol/H2O__1H2-16O__ExoMol__T300__Ab__SciPyVoigt__wn0.0-41200.0__BinSize0.1Npoint412001__cutoff25.0__unc0.01__threshold1e-40.xsec 
+
+Cross sections plot has been saved: /home/jingxin/data/pyexocross/xsecs/plots/H2O/1H2-16O/ExoMol/H2O__1H2-16O__ExoMol__T300__Ab__SciPyVoigt__wn0.0-41200.0__BinSize0.1Npoint412001__cutoff25.0__unc0.01__threshold1e-40.png 
+
+Cross sections have been saved!
+
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
+
+The program total running time:
+Running time on CPU       : 17.823151697000004 s
+Running time on system    : 371.11090540885925 s
+
+Finished!

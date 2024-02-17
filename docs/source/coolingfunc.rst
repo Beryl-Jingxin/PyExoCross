@@ -30,10 +30,10 @@ where :math:`Q(T)` is the partition function.
 
    # Data source #
    Database                                ExoMol
-   Molecule                                MgH
-   Isotopologue                            24Mg-1H
-   Dataset                                 XAB
-   MolIsoID                                501
+   Molecule                                H2O
+   Isotopologue                            1H2-16O
+   Dataset                                 POKAZATEL
+   MolIsoID                                11
 
 
    # File path #
@@ -51,7 +51,12 @@ where :math:`Q(T)` is the partition function.
    StickSpectra                            0
    CrossSections                           0
 
+    
+   # Cores and chunks #
+   NCPU                                    32
+   ChunkSize                               100000
+
 
    # Calculate partition, specific heats or cooling functions #
    Ntemp                                   1                         # The number of temperature steps
-   Tmax                                    5000                      # Maximal temperature in K 
+   Tmax                                    10000                     # Maximal temperature in K 

@@ -1,0 +1,87 @@
+nohup: ignoring input
+Number of CPU:  256
+INFO: Pandarallel will run on 256 workers.
+INFO: Pandarallel will use Memory file system to transfer data between the main process and workers.
+ExoMol database
+Molecule	: CO2 
+Isotopologue	: 12C-16O2 
+Dataset		: UCL-4000
+Reading states ...
+Running time on CPU       : 25.324593464 s
+Running time on system    : 25.43896245956421 s
+Finished reading states!
+
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
+Reading broadening file ...
+Broadeners 	: Default
+Ratios 		: 1.0 
+
+Reading transitions and calculating cross sections ...
+Finding trans files:   0%|          | 0/20 [00:00<?, ?it/s]
+Finished reading transitions!
+
+Caculating cross sections ...
+  0%|          | 0/20 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__03000-04000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__02000-03000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__06000-07000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__14000-15000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__18000-19000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__08000-09000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__04000-05000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__07000-08000.trans.bz2
+  0%|          | 0/101 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__17000-18000.trans.bz2
+  0%|          | 0/120 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__00000-01000.trans.bz2
+  0%|          | 0/135 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__16000-17000.trans.bz2
+  0%|          | 0/174 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__05000-06000.trans.bz2
+  0%|          | 0/190 [00:00<?, ?it/s]
+  0%|          | 0/74 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__15000-16000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__13000-14000.trans.bz2
+  0%|          | 0/205 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__10000-11000.trans.bz2
+  0%|          | 0/152 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__01000-02000.trans.bz2
+  0%|          | 0/394 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__11000-12000.trans.bz2
+  0%|          | 0/409 [00:00<?, ?it/s]
+  0%|          | 0/82 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__12000-13000.trans.bz2
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__09000-10000.trans.bz2
+  0%|          | 0/236 [00:00<?, ?it/s]
+Processeing transitions file: /mnt/data/exomol/exomol3_data/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000__19000-20000.trans.bz2
+  0%|          | 0/337 [00:00<?, ?it/s]
+  0%|          | 0/466 [00:00<?, ?it/s]
+  0%|          | 0/489 [00:00<?, ?it/s]
+  0%|          | 0/220 [00:00<?, ?it/s]
+  0%|          | 0/452 [00:00<?, ?it/s]
+  0%|          | 0/258 [00:00<?, ?it/s]
+  0%|          | 0/290 [00:00<?, ?it/s]
+  0%|          | 0/340 [00:00<?, ?it/s]
+Running time on CPU       : 0.2321983279999955 s
+Running time on system    : 670.7863655090332 s
+Finished reading transitions and calculating cross sections!
+
+SciPy Voigt profile
+Temperature selected      : 300    K
+Pressure selected         : 1.0    bar
+Cutoff is                 : 25.0   cm⁻¹
+Threshold is              : 1e-30  cm⁻¹/(molecule cm⁻²)
+Wavenumber range selected : 0.0 cm⁻¹ - 20000.0 cm⁻¹
+Cross sections file has been saved: /home/jingxin/data/pyexocross/xsecs/files/CO2/12C-16O2/ExoMol/CO2__12C-16O2__ExoMol__T300__Ab__SciPyVoigt__wn0.0-20000.0__BinSize0.1Npoint200001__cutoff25.0__unc0.01__threshold1e-30.xsec 
+
+Cross sections have been saved!
+
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
+
+The program total running time:
+Running time on CPU       : 25.996177336 s
+Running time on system    : 696.6858792304993 s
+
+Finished!

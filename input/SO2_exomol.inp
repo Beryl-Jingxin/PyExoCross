@@ -1,9 +1,9 @@
 # Data source #
 Database                                ExoMol
-Molecule                                CO
-Isotopologue                            12C-16O
-Dataset                                 Li2015
-MolIsoID                                51
+Molecule                                SO2
+Isotopologue                            32S-16O2
+Dataset                                 ExoAmes 
+MolIsoID                                91
 
 
 # File path #
@@ -14,8 +14,8 @@ SavePath                                /home/jingxin/data/pyexocross/
 # Functions #
 Conversion                              0
 PartitionFunctions                      0
-SpecificHeats                           1
-CoolingFunctions                        0
+SpecificHeats                           0
+CoolingFunctions                        1
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
@@ -23,31 +23,31 @@ CrossSections                           0
 
 
 # Cores and chunks #
-NCPU                                    32
-ChunkSize                               1000000
+NCPU                                    4
+ChunkSize                               500000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                v        kp      
-QNsformat                               %4d      %4s
+QNslabel                                Gamma_rve   Ka      Kc      v1      v2      v3  
+QNsformat                               %2s         %2d     %2d     %2d     %2d     %2d     
 
 
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    9000                      # Maximal temperature in K 
+Tmax                                    10000                      # Maximal temperature in K 
 
 
 # Calculate stick spectra or cross sections #
-Temperature                             3000
+Temperature                             1000
 Range                                   0          22000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
-Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 QNsFilter(Y/N)                          N          v[1,0;2,0;3,0;4,0;5,0]  
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   Y
+PlotStickSpectra(Y/N)                   N
 Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30
 
 

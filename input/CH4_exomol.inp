@@ -1,9 +1,9 @@
 # Data source #
 Database                                ExoMol
-Molecule                                CO2
-Isotopologue                            12C-16O2
-Dataset                                 UCL-4000
-MolIsoID                                21
+Molecule                                CH4
+Isotopologue                            12C-1H4
+Dataset                                 MM
+MolIsoID                                61
 
 
 # File path #
@@ -14,12 +14,12 @@ SavePath                                /home/jingxin/data/pyexocross/
 # Functions #
 Conversion                              0
 PartitionFunctions                      0
-SpecificHeats                           1
+SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
-CrossSections                           0
+CrossSections                           1
 
 
 # Cores and chunks #
@@ -28,49 +28,34 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                Gamma   e/f     n1      n2      l2      n3
-QNsformat                               %2s     %2s     %4i     %5i     %4i     %4i
-
-
-# Calculate partition, specific heats or cooling functions #
-Ntemp                                   1                         # The number of temperature steps
-Tmax                                    10000                      # Maximal temperature in K 
-
-
-# Calculate lifetimes #
-Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
-
-
-# Calculate oscillator strengths #
-gf/f                                    gf
-PlotOscillatorStrength(Y/N)             N    
-Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
+QNslabel                                
+QNsformat                               
 
 
 # Calculate stick spectra or cross sections #
-Temperature                             3000
-Range                                   0          20000
+Temperature                             300
+Range                                   0          12000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          N          Gamma[]  e/f[]  n1[1,0;2,0]  n2[1,;,0]  l2[]  n3[]
+QNsFilter(Y/N)                          N          
 
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
-Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30
+Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30
 
 
 # Calculate cross sections #
 Pressure                                1
 Npoints/BinSize                         BinSize   0.1
-Broadeners                              Default    
-Ratios                                  1.0        
-Profile                                 SciPyVoigt       
+Broadeners                              H2       He    
+Ratios                                  0.75     0.15        
+Profile                                 SciPyVoigt     
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 PredissocXsec(Y/N)                      N
 Cutoff(Y/N)                             Y          25             # If Y, default value 25 
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   N
-Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
+Y-axisLimitXsec                         1e-30                     # Default value is 1e-30

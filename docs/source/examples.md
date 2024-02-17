@@ -21,12 +21,17 @@ SavePath                                /home/jingxin/data/pyexocross/
 # Functions #
 Conversion                              0
 PartitionFunctions                      0
-SpecificHeats                           0
+SpecificHeats                           1
 CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
-StickSpectra                            1
+StickSpectra                            0
 CrossSections                           0
+
+
+# Cores and chunks #
+NCPU                                    32
+ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
@@ -36,7 +41,7 @@ QNsformat                               %2d     %2d     %2d     %2d     %2d     
 
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    5000                      # Maximal temperature in K 
+Tmax                                    10000                     # Maximal temperature in K 
 
 
 # Calculate lifetimes #
@@ -50,31 +55,33 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
-Temperature                             296
-Range                                   20000      20500
+Temperature                             300
+Range                                   0          41200
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
-Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          Ka[]  Kc[]  v1[1,0;2,0]  v2[1,;,0]  v3[]  Gamma_rve[]
+Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
+QNsFilter(Y/N)                          N          Ka[]  Kc[]  v1[]  v2[1,;,0]  v3[]  Gamma_rve[]
 
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
-Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30
+Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30
 
 
 # Calculate cross sections #
 Pressure                                1
-Npoints/BinSize                         Npoints    10001
-Broadeners                              Default  
-Ratios                                  1.0  
-Profile                                 Gaussian   
+Npoints/BinSize                         BinSize   0.1
+Broadeners                              H2       He  
+Ratios                                  0.75     0.15    
+Profile                                 SciPyVoigt   
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
-Cutoff(Y/N)                             Y          100            # If Y, default value 25 
-DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
+PredissocXsec(Y/N)                      N
+Cutoff(Y/N)                             Y          25             # If Y, default value 25 
+DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   Y
-Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
+PlotCrossSection(Y/N)                   N
+Y-axisLimitXsec                         1e-30                     # Default value is 1e-30
+
 ```
 
 ## Example for the HITRAN database
@@ -104,6 +111,11 @@ StickSpectra                            0
 CrossSections                           1
 
 
+# Cores and chunks #
+NCPU                                    32
+ChunkSize                               1000000
+
+
 # Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                v1     v2    v3     J     Ka    Kc    F    Sym  
 QNsformat                               %2d    %2d   %2d    %3d   %3d   %3d   %5s  %1s
@@ -112,7 +124,7 @@ QNsformat                               %2d    %2d   %2d    %3d   %3d   %3d   %5
 # Conversion #  
 ConversionFormat                        2  
 ConversionFrequncyRange                 0          1000   
-GlobalQNLabel                           v1     v2    v3       
+GlobalQNLabel                           v1     v2    v3   
 GlobalQNFormat                          %2d    %2d   %2d   
 LocalQNLabel                            J     Ka    Kc    F    Sym  
 LocalQNFormat                           %3d   %3d   %3d   %5s  %1s   

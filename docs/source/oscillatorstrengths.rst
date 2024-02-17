@@ -5,7 +5,9 @@ Weighted oscillator strength ``gf``, which is what people usually use.
 ``f`` is the actual oscillator strength and the actual value of ``f`` is ``gf`` divided by ``g"``.
 Sometimes people need oscillator strength ``f``, not ``gf``. 
 
-The ressult file have 4 columns: g', g", v and oscillator strength.
+The ressult file have 4 columns: 
+ExoMol data: upper id, lower id, oscillator strength and wavenumber v.
+HITRAN data: g', g", oscillator strength and wavenuber v.
 
 | ``gf/f``: Choose weigthed oscillator strength ``gf`` or actual oscillator strength ``f``.
 | ``PlotOscillatorStrength(Y/N)``: If you need a oscillator strength figure, please write ``Y`` here. 
@@ -43,6 +45,11 @@ The oscillator strengths equation is:
     OscillatorStrengths                     1
     StickSpectra                            0
     CrossSections                           0
+
+
+    # Cores and chunks #
+    NCPU                                    32
+    ChunkSize                               1000000
 
 
     # Calculate oscillator strengths #
