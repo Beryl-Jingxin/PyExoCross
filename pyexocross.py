@@ -1945,8 +1945,6 @@ def plot_stick_spectra(stick_spectra_df):
     else:
         os.makedirs(ss_plot_folder, exist_ok=True)
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.set_xlim([min_wn-10, max_wn+10])
-    ax.set_ylim([limitYaxisStickSpectra, 10*max(S)])
     # Create a list of line segments
     lines = [[(v[i], 0), (v[i], S[i])] for i in range(len(v))]
     # Create a LineCollection object
@@ -1955,6 +1953,8 @@ def plot_stick_spectra(stick_spectra_df):
     ax.autoscale()
     ax.margins(x=0.02, y=0.1)
     ax.semilogy()
+    ax.set_xlim([min_wn, max_wn])
+    ax.set_ylim([limitYaxisStickSpectra, 10*max(S)])
     #plt.title(database+' '+molecule+' intensity') 
     ax.set_xlabel('Wavenumber, cm$^{-1}$')
     ax.set_ylabel('Intensity, cm/molecule')
@@ -1972,8 +1972,8 @@ def plot_stick_spectra(stick_spectra_df):
 def exomol_stick_spectra(states_part_df, T):
     print('Calculate stick spectra.')  
     print('Running on ', nprocess, 'cores.')
-    print('{:25s} : {:<6}'.format('Uncertainty filter is', UncFilter), u'cm\u207B\u00B9')
-    print('{:25s} : {:<6}'.format('Threshold filter is', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
+    print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
+    print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
     print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
     tot = Timer()
     tot.start()
@@ -2034,8 +2034,8 @@ def exomol_stick_spectra(states_part_df, T):
 # Stick spectra for HITRAN database
 def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     print('Calculate stick spectra.')  
-    print('{:25s} : {:<6}'.format('Uncertainty filter is', UncFilter), u'cm\u207B\u00B9')
-    print('{:25s} : {:<6}'.format('Threshold filter is', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
+    print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
+    print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
     print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
     t = Timer()
     t.start()
@@ -2902,8 +2902,8 @@ def save_xsec(wn, xsec, database, profile_label):
     
     if 'L' not in wn_wl:
         print('{:25s} : {:<6}'.format('Cutoff is', cutoff), u'cm\u207B\u00B9')
-        print('{:25s} : {:<6}'.format('Uncertainty filter is', UncFilter), u'cm\u207B\u00B9')
-        print('{:25s} : {:<6}'.format('Threshold filter is', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
+        print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
+        print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
         print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
         # Save cross sections into .xsec file.
         xsec_df = pd.DataFrame()
@@ -2927,8 +2927,8 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
-            # plt.xlim([min_wn, max_wn])
-            # plt.ylim([limitYaxisXsec, 10*max(xsec)])
+            plt.xlim([min_wn, max_wn])
+            plt.ylim([limitYaxisXsec, 10*max(xsec)])
             plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)   
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
@@ -2948,8 +2948,8 @@ def save_xsec(wn, xsec, database, profile_label):
         min_wl = '%.02f' % (10000 / max_wn)
         max_wl = '%.02f' % (10000 / min_wn)
         print('{:25s} : {:<6}'.format('Cutoff is', 10000/cutoff),u'\xb5m')
-        print('{:25s} : {:<6}'.format('Uncertainty filter is', 10000/UncFilter),u'\xb5m')
-        print('{:25s} : {:<6}'.format('Threshold filter is',10000/threshold),u'\xb5m/(moleculeu \xb5m\u00B2)')
+        print('{:25s} : {:<6}'.format('Uncertainty filter', 10000/UncFilter),u'\xb5m')
+        print('{:25s} : {:<6}'.format('Threshold filter',10000/threshold),u'\xb5m/(moleculeu \xb5m\u00B2)')
         print('{:25s} : {} {} {} {}'.format('Wavelength range selected',min_wl,u'\xb5m -',max_wl,u'\xb5m'))
         # Save cross sections into .xsec file.
         xsec_df = pd.DataFrame()
