@@ -1939,7 +1939,7 @@ def plot_stick_spectra(stick_spectra_df):
                   'xtick.labelsize': 14,
                   'ytick.labelsize': 14}
     plt.rcParams.update(parameters)
-    ss_plot_folder = save_path + '/stick_spectra/plots/'+molecule+'/'+database+'/'
+    ss_plot_folder = save_path + 'stick_spectra/plots/'+molecule+'/'+database+'/'
     if os.path.exists(ss_plot_folder):
         pass
     else:
@@ -2901,6 +2901,8 @@ def save_xsec(wn, xsec, database, profile_label):
     print('{:25s} : {:<6}'.format('Pressure selected', P), 'bar')
     
     if 'L' not in wn_wl:
+        print('{:25s} : {:<6}'.format('Number of points is', N_point))
+        print('{:25s} : {:<6}'.format('Bin size is', bin_size), u'cm\u207B\u00B9')
         print('{:25s} : {:<6}'.format('Cutoff is', cutoff), u'cm\u207B\u00B9')
         print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
         print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
@@ -2947,6 +2949,8 @@ def save_xsec(wn, xsec, database, profile_label):
         wl = 10000 / wn
         min_wl = '%.02f' % (10000 / max_wn)
         max_wl = '%.02f' % (10000 / min_wn)
+        print('{:25s} : {:<6}'.format('Number of points is', N_point))
+        print('{:25s} : {:<6}'.format('Bin size is', 10000/bin_size), u'\xb5m')
         print('{:25s} : {:<6}'.format('Cutoff is', 10000/cutoff),u'\xb5m')
         print('{:25s} : {:<6}'.format('Uncertainty filter', 10000/UncFilter),u'\xb5m')
         print('{:25s} : {:<6}'.format('Threshold filter',10000/threshold),u'\xb5m/(moleculeu \xb5m\u00B2)')
