@@ -16,6 +16,8 @@ git clone https://github.com/Beryl-Jingxin/PyExoCross.git
 pip install -r requirements.txt
 ```
 
+Python packages version
+
 | Python packages     | Version  |
 | :------------------ | -------- |
 | argparse            | 1.1      |
