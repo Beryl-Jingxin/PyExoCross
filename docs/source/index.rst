@@ -12,6 +12,7 @@ Welcome to PyExoCross's documentation!
 
    intro.md
    command.md
+   requirements.md
    examples.md
    basicinfo.md
    conversion.md
