@@ -9,14 +9,12 @@ import argparse
 import numpy as np
 import pandas as pd
 import numexpr as ne
-import dask.array as da
-import astropy.units as au
+from tqdm import tqdm
 import dask.dataframe as dd
 import astropy.constants as ac
 import matplotlib.pyplot as plt
 from io import StringIO
 from itertools import chain
-from tqdm.notebook import tqdm
 from indexed_bzip2 import IndexedBzip2File
 from matplotlib.collections import LineCollection
 from concurrent.futures import ProcessPoolExecutor

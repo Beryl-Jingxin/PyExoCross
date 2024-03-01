@@ -1,182 +1,183 @@
 nohup: ignoring input
-INFO: Pandarallel will run on 4 workers.
+Number of CPU:  256
+INFO: Pandarallel will run on 256 workers.
 INFO: Pandarallel will use Memory file system to transfer data between the main process and workers.
 ExoMol database
-Molecule	    : MgH 
+Molecule	: MgH 
 Isotopologue	: 24Mg-1H 
-Dataset		    : XAB
+Dataset		: XAB
 Reading states ...
-Running time on CPU       : 0.07136200800000125 s
-Running time on system    : 0.022829294204711914 s
+Running time on CPU       : 0.02586314699999903 s
+Running time on system    : 0.025990009307861328 s
 Finished reading states!
 
-Reading all transitions ...
-
-Reading transitions:   0%|                                                    | 0/1 [00:00<?, ?it/s]
-Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.72it/s]
-Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.71it/s]
-Running time on CPU       : 0.17721212300000033 s
-Running time on system    : 0.178086519241333 s
-Finished reading all transitions!
-
-Reading part transitions ...
-
-Reading transitions:   0%|                                                    | 0/1 [00:00<?, ?it/s]
- /mnt/data/exomol/exomol3_data/MgH/24Mg-1H/XAB/24Mg-1H__XAB.trans.bz2
-
-Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.72it/s]
-Reading transitions: 100%|████████████████████████████████████████████| 1/1 [00:00<00:00,  5.71it/s]
-Running time on CPU       : 0.17556476600000082 s
-Running time on system    : 0.17653417587280273 s
-Finished reading part transitions!
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
 
 Calculate partition functions.
-Running time on CPU       : 0.34274687599999965 s
-Running time on system    : 0.34450721740722656 s
+Running time on CPU       : 0.24320657299999837 s
+Running time on system    : 0.2440505027770996 s
+Finished calculating partition functions!
+
+Saving partition functions into file ...
+Running time on CPU       : 0.009760818000000171 s
+Running time on system    : 0.009807109832763672 s
+Partition functions file has been saved: /home/jingxin/data/pyexocross/partition/24Mg-1H__XAB.pf 
+
 Partition functions have been saved!
 
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
 Calculate specific heats.
-Running time on CPU       : 1.1171248499999997 s
-Running time on system    : 1.12282395362854 s
+Running time on CPU       : 0.9099523309999995 s
+Running time on system    : 0.9132659435272217 s
+Finished calculating specific heats!
+
+Saving specific heats into file ...
+Running time on CPU       : 0.009996438999998247 s
+Running time on system    : 0.010032176971435547 s
+Specific heats file has been saved: /home/jingxin/data/pyexocross/specific_heat/24Mg-1H__XAB.cp 
+
 Specific heats have been saved!
 
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
 Calculate lifetimes.
-Running time on CPU       : 0.05535866099999964 s
-Running time on system    : 0.05436873435974121 s
+Running on  4 cores.
+Reading all transitions and calculating lifetimes ...
+  0%|          | 0/1 [00:00<?, ?it/s]Processeing transitions file: /mnt/data/exomol/exomol3_data/MgH/24Mg-1H/XAB/24Mg-1H__XAB.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:00<00:00, 123.49it/s]
+100%|██████████| 1/1 [00:00<00:00,  2.56it/s]100%|██████████| 1/1 [00:00<00:00,  2.56it/s]
+Running time on CPU       : 0.04363735900000165 s
+Running time on system    : 0.42685389518737793 s
+Finished reading all transitions and calculating lifetimes!
+
+Saving lifetimes into file ...
+Running time on CPU       : 0.030991614999997807 s
+Running time on system    : 0.03111743927001953 s
+Lifetimes file has been saved: /home/jingxin/data/pyexocross/lifetime/24Mg-1H__XAB.states 
+
 Lifetimes have been saved!
 
-Calculate oscillator strengths.
-Running time on CPU       : 0.37372135800000095 s
-Running time on system    : 0.3739316463470459 s
-Oscillator strengths have been saved!
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
 
 Calculate cooling functions.
+Running on  4 cores.
+Reading all transitions and calculating cooling functions ...
+  0%|          | 0/1 [00:00<?, ?it/s]Processeing transitions file: /mnt/data/exomol/exomol3_data/MgH/24Mg-1H/XAB/24Mg-1H__XAB.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]Calculating:   0%|          | 0/5000 [00:00<?, ?it/s]Calculating:   1%|          | 48/5000 [00:00<00:10, 468.71it/s]Calculating:   2%|▏         | 122/5000 [00:00<00:07, 622.59it/s]Calculating:   4%|▍         | 205/5000 [00:00<00:06, 715.39it/s]Calculating:   6%|▌         | 288/5000 [00:00<00:06, 759.08it/s]Calculating:   7%|▋         | 371/5000 [00:00<00:05, 783.70it/s]Calculating:   9%|▉         | 454/5000 [00:00<00:05, 798.71it/s]Calculating:  11%|█         | 537/5000 [00:00<00:05, 808.08it/s]Calculating:  12%|█▏        | 620/5000 [00:00<00:05, 814.58it/s]Calculating:  14%|█▍        | 703/5000 [00:00<00:05, 819.05it/s]Calculating:  16%|█▌        | 786/5000 [00:01<00:05, 821.72it/s]Calculating:  17%|█▋        | 869/5000 [00:01<00:05, 823.33it/s]Calculating:  19%|█▉        | 952/5000 [00:01<00:04, 824.94it/s]Calculating:  21%|██        | 1035/5000 [00:01<00:04, 826.03it/s]Calculating:  22%|██▏       | 1118/5000 [00:01<00:04, 826.90it/s]Calculating:  24%|██▍       | 1201/5000 [00:01<00:04, 827.53it/s]Calculating:  26%|██▌       | 1284/5000 [00:01<00:04, 827.61it/s]Calculating:  27%|██▋       | 1367/5000 [00:01<00:04, 827.41it/s]Calculating:  29%|██▉       | 1450/5000 [00:01<00:04, 827.81it/s]Calculating:  31%|███       | 1533/5000 [00:01<00:04, 827.99it/s]Calculating:  32%|███▏      | 1616/5000 [00:02<00:04, 823.99it/s]Calculating:  34%|███▍      | 1699/5000 [00:02<00:04, 824.62it/s]Calculating:  36%|███▌      | 1782/5000 [00:02<00:03, 824.41it/s]Calculating:  37%|███▋      | 1865/5000 [00:02<00:03, 825.46it/s]Calculating:  39%|███▉      | 1948/5000 [00:02<00:03, 826.41it/s]Calculating:  41%|████      | 2031/5000 [00:02<00:03, 827.00it/s]Calculating:  42%|████▏     | 2114/5000 [00:02<00:03, 827.22it/s]Calculating:  44%|████▍     | 2197/5000 [00:02<00:03, 827.32it/s]Calculating:  46%|████▌     | 2280/5000 [00:02<00:03, 827.48it/s]Calculating:  47%|████▋     | 2363/5000 [00:02<00:03, 827.90it/s]Calculating:  49%|████▉     | 2446/5000 [00:03<00:03, 827.96it/s]Calculating:  51%|█████     | 2529/5000 [00:03<00:02, 828.13it/s]Calculating:  52%|█████▏    | 2612/5000 [00:03<00:02, 827.46it/s]Calculating:  54%|█████▍    | 2695/5000 [00:03<00:02, 821.37it/s]Calculating:  56%|█████▌    | 2778/5000 [00:03<00:02, 822.60it/s]Calculating:  57%|█████▋    | 2861/5000 [00:03<00:02, 824.30it/s]Calculating:  59%|█████▉    | 2944/5000 [00:03<00:02, 825.58it/s]Calculating:  61%|██████    | 3027/5000 [00:03<00:02, 825.88it/s]Calculating:  62%|██████▏   | 3110/5000 [00:03<00:02, 826.50it/s]Calculating:  64%|██████▍   | 3193/5000 [00:03<00:02, 827.03it/s]Calculating:  66%|██████▌   | 3276/5000 [00:04<00:02, 827.44it/s]Calculating:  67%|██████▋   | 3359/5000 [00:04<00:01, 827.51it/s]Calculating:  69%|██████▉   | 3442/5000 [00:04<00:01, 827.70it/s]Calculating:  70%|███████   | 3525/5000 [00:04<00:01, 827.52it/s]Calculating:  72%|███████▏  | 3608/5000 [00:04<00:01, 827.65it/s]Calculating:  74%|███████▍  | 3691/5000 [00:04<00:01, 827.63it/s]Calculating:  75%|███████▌  | 3774/5000 [00:04<00:01, 827.10it/s]Calculating:  77%|███████▋  | 3857/5000 [00:04<00:01, 827.04it/s]Calculating:  79%|███████▉  | 3940/5000 [00:04<00:01, 826.89it/s]Calculating:  80%|████████  | 4023/5000 [00:04<00:01, 826.92it/s]Calculating:  82%|████████▏ | 4106/5000 [00:05<00:01, 827.03it/s]Calculating:  84%|████████▍ | 4189/5000 [00:05<00:00, 824.57it/s]Calculating:  85%|████████▌ | 4272/5000 [00:05<00:00, 825.00it/s]Calculating:  87%|████████▋ | 4355/5000 [00:05<00:00, 825.08it/s]Calculating:  89%|████████▉ | 4438/5000 [00:05<00:00, 825.79it/s]Calculating:  90%|█████████ | 4521/5000 [00:05<00:00, 826.35it/s]Calculating:  92%|█████████▏| 4604/5000 [00:05<00:00, 825.98it/s]Calculating:  94%|█████████▎| 4687/5000 [00:05<00:00, 826.81it/s]Calculating:  95%|█████████▌| 4770/5000 [00:05<00:00, 826.56it/s]Calculating:  97%|█████████▋| 4853/5000 [00:05<00:00, 825.92it/s]Calculating:  99%|█████████▊| 4936/5000 [00:06<00:00, 825.86it/s]Calculating: 100%|██████████| 5000/5000 [00:06<00:00, 819.08it/s]
+100%|██████████| 1/1 [00:06<00:00,  6.21s/it]100%|██████████| 1/1 [00:06<00:00,  6.21s/it]
+100%|██████████| 1/1 [00:06<00:00,  6.59s/it]100%|██████████| 1/1 [00:06<00:00,  6.59s/it]
+Running time on CPU       : 0.022420155999999025 s
+Running time on system    : 6.621494770050049 s
+Finished reading all transitions and calculating cooling functions!
 
-Calculating:   0%|          | 0/5000 [00:00<?, ?it/s]
-Calculating:   1%|          | 44/5000 [00:00<00:11, 438.87it/s]
-Calculating:   2%|▏         | 94/5000 [00:00<00:10, 473.12it/s]
-Calculating:   3%|▎         | 151/5000 [00:00<00:09, 516.60it/s]
-Calculating:   4%|▍         | 206/5000 [00:00<00:09, 527.33it/s]
-Calculating:   5%|▌         | 263/5000 [00:00<00:08, 539.64it/s]
-Calculating:   6%|▋         | 319/5000 [00:00<00:08, 543.94it/s]
-Calculating:   7%|▋         | 374/5000 [00:00<00:08, 545.15it/s]
-Calculating:   9%|▊         | 429/5000 [00:00<00:08, 545.86it/s]
-Calculating:  10%|▉         | 486/5000 [00:00<00:08, 551.43it/s]
-Calculating:  11%|█         | 543/5000 [00:01<00:08, 555.83it/s]
-Calculating:  12%|█▏        | 600/5000 [00:01<00:07, 558.52it/s]
-Calculating:  13%|█▎        | 657/5000 [00:01<00:07, 559.62it/s]
-Calculating:  14%|█▍        | 714/5000 [00:01<00:07, 560.05it/s]
-Calculating:  15%|█▌        | 771/5000 [00:01<00:07, 561.73it/s]
-Calculating:  17%|█▋        | 828/5000 [00:01<00:07, 562.54it/s]
-Calculating:  18%|█▊        | 885/5000 [00:01<00:07, 563.05it/s]
-Calculating:  19%|█▉        | 942/5000 [00:01<00:07, 563.86it/s]
-Calculating:  20%|█▉        | 999/5000 [00:01<00:07, 563.80it/s]
-Calculating:  21%|██        | 1056/5000 [00:01<00:06, 563.77it/s]
-Calculating:  22%|██▏       | 1113/5000 [00:02<00:06, 564.02it/s]
-Calculating:  23%|██▎       | 1170/5000 [00:02<00:06, 564.15it/s]
-Calculating:  25%|██▍       | 1227/5000 [00:02<00:06, 559.58it/s]
-Calculating:  26%|██▌       | 1284/5000 [00:02<00:06, 560.86it/s]
-Calculating:  27%|██▋       | 1341/5000 [00:02<00:06, 562.26it/s]
-Calculating:  28%|██▊       | 1398/5000 [00:02<00:06, 562.22it/s]
-Calculating:  29%|██▉       | 1455/5000 [00:02<00:06, 561.85it/s]
-Calculating:  30%|███       | 1512/5000 [00:02<00:06, 563.27it/s]
-Calculating:  31%|███▏      | 1569/5000 [00:02<00:06, 562.62it/s]
-Calculating:  33%|███▎      | 1626/5000 [00:02<00:05, 563.38it/s]
-Calculating:  34%|███▎      | 1683/5000 [00:03<00:05, 563.01it/s]
-Calculating:  35%|███▍      | 1740/5000 [00:03<00:05, 562.47it/s]
-Calculating:  36%|███▌      | 1797/5000 [00:03<00:05, 563.00it/s]
-Calculating:  37%|███▋      | 1854/5000 [00:03<00:05, 563.24it/s]
-Calculating:  38%|███▊      | 1911/5000 [00:03<00:05, 563.66it/s]
-Calculating:  39%|███▉      | 1968/5000 [00:03<00:05, 563.26it/s]
-Calculating:  40%|████      | 2025/5000 [00:03<00:05, 563.82it/s]
-Calculating:  42%|████▏     | 2082/5000 [00:03<00:05, 563.61it/s]
-Calculating:  43%|████▎     | 2139/5000 [00:03<00:05, 563.23it/s]
-Calculating:  44%|████▍     | 2196/5000 [00:03<00:04, 562.20it/s]
-Calculating:  45%|████▌     | 2253/5000 [00:04<00:04, 564.12it/s]
-Calculating:  46%|████▌     | 2310/5000 [00:04<00:04, 564.37it/s]
-Calculating:  47%|████▋     | 2367/5000 [00:04<00:04, 562.70it/s]
-Calculating:  48%|████▊     | 2424/5000 [00:04<00:04, 562.33it/s]
-Calculating:  50%|████▉     | 2481/5000 [00:04<00:04, 562.50it/s]
-Calculating:  51%|█████     | 2538/5000 [00:04<00:04, 561.96it/s]
-Calculating:  52%|█████▏    | 2595/5000 [00:04<00:04, 561.21it/s]
-Calculating:  53%|█████▎    | 2652/5000 [00:04<00:04, 560.96it/s]
-Calculating:  54%|█████▍    | 2709/5000 [00:04<00:04, 561.54it/s]
-Calculating:  55%|█████▌    | 2767/5000 [00:04<00:03, 564.47it/s]
-Calculating:  56%|█████▋    | 2824/5000 [00:05<00:03, 563.30it/s]
-Calculating:  58%|█████▊    | 2881/5000 [00:05<00:03, 563.00it/s]
-Calculating:  59%|█████▉    | 2938/5000 [00:05<00:03, 563.78it/s]
-Calculating:  60%|█████▉    | 2995/5000 [00:05<00:03, 564.39it/s]
-Calculating:  61%|██████    | 3052/5000 [00:05<00:03, 565.42it/s]
-Calculating:  62%|██████▏   | 3109/5000 [00:05<00:03, 566.71it/s]
-Calculating:  63%|██████▎   | 3166/5000 [00:05<00:03, 565.96it/s]
-Calculating:  64%|██████▍   | 3223/5000 [00:05<00:03, 565.22it/s]
-Calculating:  66%|██████▌   | 3280/5000 [00:05<00:03, 564.28it/s]
-Calculating:  67%|██████▋   | 3337/5000 [00:05<00:02, 564.59it/s]
-Calculating:  68%|██████▊   | 3394/5000 [00:06<00:02, 564.82it/s]
-Calculating:  69%|██████▉   | 3451/5000 [00:06<00:02, 565.53it/s]
-Calculating:  70%|███████   | 3508/5000 [00:06<00:02, 565.54it/s]
-Calculating:  71%|███████▏  | 3566/5000 [00:06<00:02, 567.20it/s]
-Calculating:  72%|███████▏  | 3623/5000 [00:06<00:02, 567.25it/s]
-Calculating:  74%|███████▎  | 3680/5000 [00:06<00:02, 566.28it/s]
-Calculating:  75%|███████▍  | 3737/5000 [00:06<00:02, 564.53it/s]
-Calculating:  76%|███████▌  | 3794/5000 [00:06<00:02, 564.99it/s]
-Calculating:  77%|███████▋  | 3852/5000 [00:06<00:02, 566.87it/s]
-Calculating:  78%|███████▊  | 3910/5000 [00:06<00:01, 567.84it/s]
-Calculating:  79%|███████▉  | 3967/5000 [00:07<00:01, 566.37it/s]
-Calculating:  80%|████████  | 4024/5000 [00:07<00:01, 565.59it/s]
-Calculating:  82%|████████▏ | 4081/5000 [00:07<00:01, 566.47it/s]
-Calculating:  83%|████████▎ | 4138/5000 [00:07<00:01, 567.25it/s]
-Calculating:  84%|████████▍ | 4195/5000 [00:07<00:01, 567.67it/s]
-Calculating:  85%|████████▌ | 4252/5000 [00:07<00:01, 566.22it/s]
-Calculating:  86%|████████▌ | 4309/5000 [00:07<00:01, 566.11it/s]
-Calculating:  87%|████████▋ | 4366/5000 [00:07<00:01, 566.88it/s]
-Calculating:  88%|████████▊ | 4423/5000 [00:07<00:01, 566.02it/s]
-Calculating:  90%|████████▉ | 4480/5000 [00:07<00:00, 564.98it/s]
-Calculating:  91%|█████████ | 4537/5000 [00:08<00:00, 564.26it/s]
-Calculating:  92%|█████████▏| 4594/5000 [00:08<00:00, 563.74it/s]
-Calculating:  93%|█████████▎| 4651/5000 [00:08<00:00, 563.56it/s]
-Calculating:  94%|█████████▍| 4708/5000 [00:08<00:00, 563.59it/s]
-Calculating:  95%|█████████▌| 4765/5000 [00:08<00:00, 563.23it/s]
-Calculating:  96%|█████████▋| 4822/5000 [00:08<00:00, 562.23it/s]
-Calculating:  98%|█████████▊| 4879/5000 [00:08<00:00, 560.49it/s]
-Calculating:  99%|█████████▊| 4936/5000 [00:08<00:00, 560.91it/s]
-Calculating: 100%|█████████▉| 4993/5000 [00:08<00:00, 560.68it/s]
-Calculating: 100%|██████████| 5000/5000 [00:08<00:00, 561.02it/s]
-Running time on CPU       : 9.013616881999997 s
-Running time on system    : 9.058928966522217 s
+Saving cooling functions into file ...
+Running time on CPU       : 0.009922670999998218 s
+Running time on system    : 0.009969711303710938 s
+Cooling functions file has been saved: /home/jingxin/data/pyexocross/cooling/24Mg-1H__XAB.cf 
+
 Cooling functions have been saved!
 
-Convert data from the ExoMol format to the HITRAN format.
-INFO: Pandarallel will run on 8 workers.
-INFO: Pandarallel will use Memory file system to transfer data between the main process and workers.
-Running time on CPU       : 1.9793513089999983 s
-Running time on system    : 2.4617083072662354 s
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
+Calculate oscillator strengths.
+Running on  4 cores.
+Reading transitions and calculating oscillator strengths ...
+  0%|          | 0/1 [00:00<?, ?it/s]Processeing transitions file: /mnt/data/exomol/exomol3_data/MgH/24Mg-1H/XAB/24Mg-1H__XAB.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:00<00:00, 10.98it/s]
+100%|██████████| 1/1 [00:00<00:00,  2.11it/s]100%|██████████| 1/1 [00:00<00:00,  2.11it/s]
+Running time on CPU       : 0.03347430900000248 s
+Running time on system    : 0.5134906768798828 s
+Finished reading all transitions and calculating oscillator strengths!
+
+Saving oscillator strengths into file ...
+Running time on CPU       : 0.1977150760000015 s
+Running time on system    : 0.1982896327972412 s
+Oscillator strengths file has been saved: /home/jingxin/data/pyexocross/oscillator_strength/files/MgH/ExoMol/24Mg-1H__XAB_f.os 
+
+Oscillator strengths plot has been saved: /home/jingxin/data/pyexocross/oscillator_strength/plots/MgH/ExoMol/MgH__24Mg-1H__ExoMol__f__os.png 
+
+Oscillator strengths have been saved!
+
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
+Convert data format from ExoMol to HITRAN.
+Running on  4 cores.
+Reading transitions and converting data format from ExoMol to HITRAN ...
+  0%|          | 0/1 [00:00<?, ?it/s]Processeing transitions file: /mnt/data/exomol/exomol3_data/MgH/24Mg-1H/XAB/24Mg-1H__XAB.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:50<00:00, 50.59s/it]100%|██████████| 1/1 [00:50<00:00, 50.59s/it]
+100%|██████████| 1/1 [00:51<00:00, 51.23s/it]100%|██████████| 1/1 [00:51<00:00, 51.23s/it]
+Running time on CPU       : 0.14963947000000388 s
+Running time on system    : 51.349194049835205 s
+Finished reading all transitions and converting data format from ExoMol to HITRAN!
+
+Saving HITRAN format data into file ...
+Running time on CPU       : 0.4296365809999969 s
+Running time on system    : 0.43102097511291504 s
 Converted par file has been saved!
 
+Finished converting data format from ExoMol to HITRAN!
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
 Calculate stick spectra.
-Absorption stick spectra
-Stick spectra plot saved.
-Running time on CPU       : 18.135451755 s
-Running time on system    : 17.670143365859985 s
+Running on  4 cores.
+Uncertainty filter        : None   cm⁻¹
+Threshold filter          : None   cm⁻¹/(molecule cm⁻²)
+Wavenumber range selected : 0.0 cm⁻¹ - 30000.0 cm⁻¹
+Reading transitions and calculating stick spectra ...
+  0%|          | 0/1 [00:00<?, ?it/s]Processeing transitions file: /mnt/data/exomol/exomol3_data/MgH/24Mg-1H/XAB/24Mg-1H__XAB.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:00<00:00, 21.46it/s]
+100%|██████████| 1/1 [00:00<00:00,  1.88it/s]100%|██████████| 1/1 [00:00<00:00,  1.88it/s]
+Running time on CPU       : 0.057141823000002034 s
+Running time on system    : 0.6087350845336914 s
+Finished reading transitions and calculating stick spectra!
+Saving stick spectra into file ...
+Running time on CPU       : 0.17723430299999876 s
+Running time on system    : 0.17780661582946777 s
+Stick spectra file has been saved: /home/jingxin/data/pyexocross/stick_spectra/files/MgH/ExoMol/MgH__24Mg-1H__XAB__T2000__0.0-30000.0__uncNone__thresNone__Ab.stick 
+
+Plotting stick spectra ...
+Running time on CPU       : 29.637540917000003 s
+Running time on system    : 20.975834846496582 s
+Stick spectra plot has been saved: /home/jingxin/data/pyexocross/stick_spectra/plots/MgH/ExoMol/MgH__24Mg-1H__XAB__T2000__0.0-30000.0__uncNone__Ab__sp.png
 Stick spectra have been saved!
 
-Calculate cross-sections.
-Broadeners  	: Default
-Ratios  		: 1.0
-Absorption cross section
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
+Calculate cross sections.
+Running on  4 cores.
+Reading broadening file ...
+Broadeners 	: Default
+Ratios 		: 1.0 
+
+Reading transitions and calculating cross sections ...
+  0%|          | 0/1 [00:00<?, ?it/s]Processeing transitions file: /mnt/data/exomol/exomol3_data/MgH/24Mg-1H/XAB/24Mg-1H__XAB.trans.bz2
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [01:01<00:00, 61.79s/it]100%|██████████| 1/1 [01:01<00:00, 61.79s/it]
+100%|██████████| 1/1 [01:02<00:00, 62.21s/it]100%|██████████| 1/1 [01:02<00:00, 62.21s/it]
+Running time on CPU       : 0.05139378399999828 s
+Running time on system    : 62.2744026184082 s
+Finished reading transitions and calculating cross sections!
+
 SciPy Voigt profile
-Temperature selected      : 300    K
+Temperature selected      : 2000   K
 Pressure selected         : 1.0    bar
-Cutoff is                 : 100.0  cm⁻¹
-Threshold is              : None   cm⁻¹/(molecule cm⁻²)
+Number of points is       : 300001
+Bin size is               : 0.1    cm⁻¹
+Cutoff is                 : 25.0   cm⁻¹
+Uncertainty filter        : None   cm⁻¹
+Threshold filter          : None   cm⁻¹/(molecule cm⁻²)
 Wavenumber range selected : 0.0 cm⁻¹ - 30000.0 cm⁻¹
-Cross sections file saved.
-Cross sections plot saved.
-Running time on CPU       : 8.170857343000002 s
-Running time on system    : 4.12583589553833 s
+Cross sections file has been saved: /home/jingxin/data/pyexocross/xsecs/files/MgH/ExoMol/MgH__T2000__wn0.0-30000.0__ExoMol__Ab__SciPyVoigt.xsec 
+
+Cross sections plot has been saved: /home/jingxin/data/pyexocross/xsecs/plots/MgH/ExoMol/MgH__T2000__wn0.0-30000.0__ExoMol__Ab__SciPyVoigt.png 
+
+Cross sections have been saved!
+
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
 
 The program total running time:
-Running time on CPU       : 39.658035405999996 s
-Running time on system    : 35.609580278396606 s
+Running time on CPU       : 55.713084247999994 s
+Running time on system    : 151.0842583179474 s
 
 Finished!

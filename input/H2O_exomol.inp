@@ -14,12 +14,12 @@ SavePath                                /home/jingxin/data/pyexocross/
 # Functions #
 Conversion                              0
 PartitionFunctions                      0
-SpecificHeats                           1
+SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
-CrossSections                           0
+CrossSections                           1
 
 
 # Cores and chunks #

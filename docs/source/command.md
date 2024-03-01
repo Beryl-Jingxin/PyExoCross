@@ -8,6 +8,12 @@ Download PyExoCross from [GitHub](https://github.com/Beryl-Jingxin/PyExoCross.gi
 git clone https://github.com/Beryl-Jingxin/PyExoCross.git
 ```
 
+## Install Python packages
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Run PyExoCross
 
 Prepare an input file *filename.inp* (see examples in the 'input' folder on GitHub) and run the program with command:
@@ -26,10 +32,10 @@ python3 pyexocross.py -p ./input/H2O_exomol.inp
 python3 pyexocross.py -p /home/username/PyExoCross/input/H2O_exomol.inp
 ```
 
-If you want to run program in conda environment, please use command:
+If you want to run program in conda environment which is named as 'exomol', please use command:
 
 ```bash
-/home/username/anaconda3/envs/exomol/bin/python pyexocross.py -p ./input/MgH_exomol.inp
+/home/username/anaconda3/envs/exomol/bin/python pyexocross.py -p ./input/H2O_exomol.inp
 ```
 
 If you need to run program in background, please use command:
