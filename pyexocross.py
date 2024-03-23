@@ -9,12 +9,13 @@ import argparse
 import numpy as np
 import pandas as pd
 import numexpr as ne
-from tqdm import tqdm
 import dask.dataframe as dd
 import astropy.constants as ac
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 from io import StringIO
 from itertools import chain
+from pandarallel import pandarallel
 from indexed_bzip2 import IndexedBzip2File
 from matplotlib.collections import LineCollection
 from concurrent.futures import ProcessPoolExecutor
@@ -33,8 +34,6 @@ freeze_support()
 num_cpus = mp.cpu_count()
 print('Number of CPU: ', num_cpus)
 
-from pandarallel import pandarallel
-pandarallel.initialize(nb_workers=num_cpus,progress_bar=False)    # Initialize.
 
 # The input file path
 def parse_args():
@@ -110,7 +109,8 @@ def inp_para(inp_filepath):
     CrossSections = int(inp_df[col0.isin(['CrossSections'])][1].iloc[0])
     
     # Cores and chunks
-    nprocess = int(inp_df[col0.isin(['NCPU'])][1].iloc[0])
+    ncputrans = int(inp_df[col0.isin(['NCPUtrans'])][1].iloc[0])
+    ncpufiles = int(inp_df[col0.isin(['NCPUfiles'])][1].iloc[0])
     chunk_size = int(inp_df[col0.isin(['ChunkSize'])][1].iloc[0])
     
     # Quantum numbers
@@ -387,7 +387,7 @@ def inp_para(inp_filepath):
             
     return (database, molecule, isotopologue, dataset, read_path, save_path, 
             Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
-            nprocess, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
+            ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
             Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
             predissocYN, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
@@ -409,13 +409,14 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
 
 (database, molecule, isotopologue, dataset, read_path, save_path, 
  Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
- nprocess, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
+ ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
  Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
  predissocYN, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
  check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
  PlotStickSpectraYN, limitYaxisStickSpectra, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
+pandarallel.initialize(nb_workers=ncputrans,progress_bar=False)    # Initialize.
 
 # Constants
 c2InvTref = c2 / Tref                 # c2 / T_ref (cm)
@@ -601,7 +602,7 @@ def read_broad(read_path):
     broad = list(i for i in broad if i==i)
     ratio = list(i for i in ratio if i==i)
     print('Broadeners \t:', str(broad).replace('[','').replace(']','').replace("'",''))
-    print('Ratios \t\t:', str(ratio).replace('[','').replace(']',''),'\n')
+    print('Ratios \t\t\t:', str(ratio).replace('[','').replace(']',''),'\n')
     return(broad, ratio, nbroad, broad_dfs)        
 
 def QNfilter_linelist(linelist_df, QNs_value, QNs_label):
@@ -1059,7 +1060,7 @@ def calculate_lifetime(states_df, trans_filename):
     # chunk_size = 10000     #500000   #1024*1024
     trans_df_list = [trans_df[i:i+chunk_size] for i in range(0,trans_df.shape[0],chunk_size)]
 
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
         futures = [executor.submit(ProcessLifetime,states_df,df) for df in trans_df_list]
         lifetime = sum(np.array([future.result() for future in tqdm(futures)]))
     return lifetime
@@ -1068,13 +1069,13 @@ def calculate_lifetime(states_df, trans_filename):
 def exomol_lifetime(read_path, states_df):
     np.seterr(divide='ignore', invalid='ignore')
     print('Calculate lifetimes.')  
-    print('Running on ', nprocess, 'cores.')
+    print('Running on ', ncputrans, 'cores.')
     t = Timer()
     t.start()
     print('Reading all transitions and calculating lifetimes ...')
     trans_filenames = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_lifetime, states_df, 
                                     trans_filename) for trans_filename in trans_filenames]
@@ -1154,7 +1155,7 @@ def calculate_cooling_func(states_df, trans_filename, Ts, Qs):
     # chunk_size = 1024*1024    #500000 
     trans_df_list = [trans_df[i:i+chunk_size] for i in range(0,trans_df.shape[0],chunk_size)]
 
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
         futures = [executor.submit(ProcessCoolingFunction,states_df,df,Ts,Qs) for df in trans_df_list]
         cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
     return cooling_func
@@ -1163,7 +1164,7 @@ def calculate_cooling_func(states_df, trans_filename, Ts, Qs):
 def exomol_cooling(states_df, Ntemp, Tmax):
     # tqdm.write('Calculate cooling functions.') 
     print('Calculate cooling functions.') 
-    print('Running on ', nprocess, 'cores.') 
+    print('Running on ', ncputrans, 'cores.') 
     t = Timer()
     t.start()
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
@@ -1173,7 +1174,7 @@ def exomol_cooling(states_df, Ntemp, Tmax):
     trans_filenames = get_transfiles(read_path)
 
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_cooling_func, states_df, trans_filename, 
                                    Ts, Qs) for trans_filename in trans_filenames]
@@ -1264,7 +1265,7 @@ def calculate_oscillator_strengths(states_df, trans_filename):
     # chunk_size = 10000    #500000   #1024*1024
     trans_df_list = [trans_df[i:i+chunk_size] for i in range(0,trans_df.shape[0],chunk_size)]
 
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
         futures = [executor.submit(ProcessOscillatorStrengths,states_df,df) for df in trans_df_list]
         oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures)])
     return oscillator_strength_df
@@ -1302,13 +1303,13 @@ def plot_oscillator_strength(oscillator_strength_df):
 # Oscillator strength for ExoMol database
 def exomol_oscillator_strength(states_df):
     print('Calculate oscillator strengths.')  
-    print('Running on ', nprocess, 'cores.')
+    print('Running on ', ncputrans, 'cores.')
     tot = Timer()
     tot.start()
     print('Reading transitions and calculating oscillator strengths ...')    
     trans_filenames = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_oscillator_strengths,states_df,
                                    trans_filename) for trans_filename in trans_filenames]
@@ -1681,20 +1682,20 @@ def ProcessExoMol2HITRAN(states_df, trans_filename):
     trans_part_df = trans_part_dd.compute()
     # chunk_size = 500000   #1024*1024
     trans_part_df_list = [trans_part_df[i:i+chunk_size] for i in range(0,trans_part_df.shape[0],chunk_size)]
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
         futures = [executor.submit(ConvertExoMol2HITRAN,states_df,df) for df in trans_part_df_list]
         hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
     return hitran_res_df
 
 def conversion_exomol2hitran(states_df):
     print('Convert data format from ExoMol to HITRAN.')  
-    print('Running on ', nprocess, 'cores.')
+    print('Running on ', ncputrans, 'cores.')
     tot = Timer()
     tot.start()
     print('Reading transitions and converting data format from ExoMol to HITRAN ...')    
     trans_filenames = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(ProcessExoMol2HITRAN,states_df,
                                    trans_filename) for trans_filename in trans_filenames]
@@ -1919,7 +1920,7 @@ def calculate_stick_spectra(states_part_df,trans_filename,T,Q):
     # chunk_size = 1024*1024    #500000  
     trans_part_df_list = [trans_part_df[i:i+chunk_size] for i in range(0,trans_part_df.shape[0],chunk_size)]
     
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
         futures = [executor.submit(ProcessStickSpectra,states_part_df,df,T,Q) for df in trans_part_df_list]
         stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
     return stick_spectra_df
@@ -1969,7 +1970,7 @@ def plot_stick_spectra(stick_spectra_df):
 # Stick spectra for ExoMol database
 def exomol_stick_spectra(states_part_df, T):
     print('Calculate stick spectra.')  
-    print('Running on ', nprocess, 'cores.')
+    print('Running on ', ncputrans, 'cores.')
     print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
     print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
     print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
@@ -1987,7 +1988,7 @@ def exomol_stick_spectra(states_part_df, T):
     trans_filenames = get_part_transfiles(read_path)
     
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_stick_spectra,states_part_df,trans_filename,
                                    T,Q) for trans_filename in trans_filenames]
@@ -2879,7 +2880,7 @@ def read_part_trans(states_part_df,trans_filename,T,P,Q,broad,ratio,nbroad,broad
     # chunk_size = 500000   #1024*1024
     trans_part_df_list = [trans_part_df[i:i+chunk_size] for i in range(0,trans_part_df.shape[0],chunk_size)]
 
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
         futures = [executor.submit(
             CalculateExoMolCrossSection,states_part_df,df,
             T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label
@@ -2997,7 +2998,7 @@ def save_xsec(wn, xsec, database, profile_label):
 # Cross sections for ExoMol database
 def exomol_cross_section(states_part_df, T, P):
     print('Calculate cross sections.')
-    print('Running on ', nprocess, 'cores.')
+    print('Running on ', ncputrans, 'cores.')
     tot = Timer()
     tot.start()
     broad, ratio, nbroad, broad_dfs = read_broad(read_path)
@@ -3007,7 +3008,7 @@ def exomol_cross_section(states_part_df, T, P):
     print('Reading transitions and calculating cross sections ...')    
     trans_filenames = get_part_transfiles(read_path)
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=nprocess) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(read_part_trans,states_part_df,trans_filename,T,P,Q,broad,ratio,
                                    nbroad,broad_dfs,profile_label) for trans_filename in trans_filenames]
@@ -3032,8 +3033,8 @@ def hitran_cross_section(hitran_linelist_df, T, P):
     Q = read_hitran_pf(T)
     profile_label = line_profile(profile)
     print(profile_label,'profile')
-    pool = Pool(processes=nprocess) 
-    print('Running on', nprocess, 'cores.')
+    pool = Pool(processes=ncputrans) 
+    print('Running on', ncputrans, 'cores.')
     process = pool.apply_async(CalculateHITRANCrossSection,
                                args=(hitran_linelist_df, T, P, Q, profile_label))
     pool.close()
@@ -3056,20 +3057,20 @@ def get_results(read_path):
     # ExoMol or HITRAN
     if database == 'ExoMol':
         print('ExoMol database')
-        print('Molecule\t:', molecule, '\nIsotopologue\t:', isotopologue, '\nDataset\t\t:', dataset)
+        print('Molecule\t\t:', molecule, '\nIsotopologue\t:', isotopologue, '\nDataset\t\t\t:', dataset)
         # All functions need whole states.
         states_df = read_all_states(read_path)
         # Calculate predissociation cross sections if lifetimes are not exit in the states file.
         if CrossSections == 1 and predissocYN == 'Y' and check_predissoc+check_lifetime == 0 and 'VOI' in profile:
             np.seterr(divide='ignore', invalid='ignore')
             print('Calculate lifetimes.')  
-            print('Running on ', nprocess, 'cores.')
+            print('Running on ', ncputrans, 'cores.')
             t = Timer()
             t.start()
             print('Reading all transitions and calculating lifetimes ...')
             trans_filenames = get_transfiles(read_path)
             # Process multiple files in parallel
-            with ProcessPoolExecutor(max_workers=nprocess) as executor:
+            with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
                 # Submit reading tasks for each file
                 futures = [executor.submit(calculate_lifetime, states_df, 
                                             trans_filename) for trans_filename in trans_filenames]

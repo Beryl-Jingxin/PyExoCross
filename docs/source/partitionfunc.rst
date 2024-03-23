@@ -47,7 +47,8 @@ The partition functions equation is:
 
 
    # Cores and chunks #
-   NCPU                                    32
+   NCPUtrans                               32
+   NCPUfiles                               32
    ChunkSize                               1000000
 
 

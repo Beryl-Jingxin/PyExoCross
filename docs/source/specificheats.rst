@@ -63,7 +63,8 @@ where the partition function :math:`Q(T)` and its first two moments are:
 
 
    # Cores and chunks #
-   NCPU                                    32
+   NCPUtrans                               32
+   NCPUfiles                               32
    ChunkSize                               1000000
 
 

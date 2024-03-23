@@ -53,7 +53,8 @@ where :math:`Q(T)` is the partition function.
 
     
    # Cores and chunks #
-   NCPU                                    32
+   NCPUtrans                               32
+   NCPUfiles                               32
    ChunkSize                               100000
 
 

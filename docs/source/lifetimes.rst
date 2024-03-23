@@ -40,7 +40,8 @@ The lifetimes equation is:
 
 
     # Cores and chunks #
-    NCPU                                    32
+    NCPUtrans                               4
+    NCPUfiles                               1 
     ChunkSize                               1000000
     
 

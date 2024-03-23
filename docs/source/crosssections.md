@@ -154,7 +154,8 @@ CrossSections                           1
 
 
 # Cores and chunks #
-NCPU                                    32
+NCPUtrans                               32
+NCPUfiles                               32
 ChunkSize                               1000000
 
 
@@ -213,7 +214,8 @@ CrossSections                           1
 
 
 # Cores and chunks #
-NCPU                                    32
+NCPUtrans                               32
+NCPUfiles                               1
 ChunkSize                               1000000
 
 

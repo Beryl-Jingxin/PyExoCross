@@ -156,7 +156,9 @@ CrossSections                           1
 
 Please provide the number of cores `NCPU` and the size of chunks `ChunkSize` of the quantum numbers when you use *PyExoCross* uses multiprocessing.
 
-`NCPU`: The program will run on different cores together. `NCPU` is the number of cores.
+The program will run on different cores together.
+`NCPUtrans`: The number of cores for processing each transitions file.
+`NCPUfiles`: The number of cores for processing different transitions files.
 
 `ChunkSize`: The program splits each transitions file to many chunks when reading and calculating. `ChunkSize` is the size of each chunk.
 
@@ -164,7 +166,8 @@ Please provide the number of cores `NCPU` and the size of chunks `ChunkSize` of 
 
 ```bash
 # Cores and chunks #
-NCPU                                    32
+NCPUtrans                               32
+NCPUfiles                               16
 ChunkSize                               1000000
 ```
 

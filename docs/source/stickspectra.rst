@@ -83,7 +83,8 @@ The intensity equation is:
 
 
     # Cores and chunks #
-    NCPU                                    32
+    NCPUtrans                               4
+    NCPUfiles                               1
     ChunkSize                               1000000
 
 
@@ -132,7 +133,8 @@ The intensity equation is:
 
 
     # Cores and chunks #
-    NCPU                                    32
+    NCPUtrans                               32
+    NCPUfiles                               1
     ChunkSize                               1000000
     
 
