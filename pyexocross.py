@@ -421,6 +421,7 @@ pandarallel.initialize(nb_workers=ncputrans,progress_bar=False)    # Initialize.
 # Constants
 c2InvTref = c2 / Tref                 # c2 / T_ref (cm)
 PI = np.pi
+hc = h * c                            # erg cm  
 ln22 = np.log(2)*2
 sinPI = np.sin(np.pi)
 SqrtPI = np.sqrt(np.pi)
@@ -1125,7 +1126,7 @@ def exomol_lifetime(read_path, states_df):
 # Cooling Function
 def calculate_cooling(A, v, Ep, gp, T, Q):
     # cooling_func = np.sum(A * h * c * v * gp * np.exp(-c2 * Ep / T)) / (4 * PI * Q) 
-    _sum = ne.evaluate('sum(A * h * c * v * gp * exp(-c2 * Ep / T))')  
+    _sum = ne.evaluate('sum(A * hc * v * gp * exp(-c2 * Ep / T))')  
     cooling_func = ne.evaluate('_sum / (4 * PI * Q)')
     return(cooling_func)
 
@@ -1473,8 +1474,8 @@ def cal_abscoefs(T, v, gp, A, Epp, Q, abundance):
 
 # Calculate emission coefficient
 def cal_emicoefs(T, v, gp, A, Ep, Q, abundance):
-    # emicoef = gp * A * v * np.exp(- c2 * Ep / T) / (4 * np.pi) / Q * abundance   
-    emicoef = ne.evaluate('gp * A * v * exp(- c2 * Ep / T) * Inv4Pi / Q * abundance')
+    # emicoef = gp * h * c * A * v * np.exp(- c2 * Ep / T) / (4 * np.pi) / Q * abundance   
+    emicoef = ne.evaluate('gp * hc * A * v * exp(- c2 * Ep / T) * Inv4Pi / Q * abundance')
     return emicoef
 
 # Uncertainty
