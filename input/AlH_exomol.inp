@@ -2,7 +2,7 @@
 Database                                ExoMol
 Molecule                                AlH
 Isotopologue                            27Al-1H
-Dataset                                 AlHambra
+Dataset                                 AloHa
 MolIsoID                                501
 
 
@@ -12,32 +12,32 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-Conversion                              0
-PartitionFunctions                      0
-SpecificHeats                           0
-CoolingFunctions                        0
-Lifetimes                               0
+Conversion                              1
+PartitionFunctions                      1
+SpecificHeats                           1
+CoolingFunctions                        1
+Lifetimes                               1
 OscillatorStrengths                     1
-StickSpectra                            0
-CrossSections                           0
+StickSpectra                            1
+CrossSections                           1
 
 
 # Cores and chunks #
-NCPUtrans                               32
-NCPUfiles                               32
+NCPUtrans                               4
+NCPUfiles                               4
 ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+QNslabel                                +/-  e/f   ElecState  v     Lambda   Sigma   Omega
+QNsformat                               %1s  %1s   %12s       %3d   %3d      %5d     %5d
 
 
 # Conversion #
 ConversionFormat                        1  
-ConversionFrequncyRange                 0                 30000      
-GlobalQNLabel                           eS       v        Omega
-GlobalQNFormat                          %9s     %2d      %4s
+ConversionFrequncyRange                 0          30000      
+GlobalQNLabel                           ElecState       v        Omega
+GlobalQNFormat                          %9s             %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
 ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
@@ -55,7 +55,7 @@ Compress(Y/N)                           N                         # If Y, save a
 
 # Calculate oscillator strengths #
 gf/f                                    f
-PlotOscillatorStrength(Y/N)             N    
+PlotOscillatorStrength(Y/N)             Y   
 Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
 
 

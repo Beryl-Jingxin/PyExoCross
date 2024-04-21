@@ -6,6 +6,7 @@ import glob
 import time
 import requests
 import argparse
+import subprocess
 import numpy as np
 import pandas as pd
 import numexpr as ne
@@ -18,8 +19,8 @@ from itertools import chain
 from pandarallel import pandarallel
 from indexed_bzip2 import IndexedBzip2File
 from matplotlib.collections import LineCollection
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import Process, Pool, freeze_support
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import Pool, freeze_support
 from scipy.special import voigt_profile, wofz, erf, roots_hermite
 
 import warnings
@@ -478,6 +479,23 @@ def cal_F(g):
 # Read Input Files
 ## Read ExoMol Database Files
 
+### Decompress Large .trans.bz2 Files
+def command_decompress(trans_filename):
+    # Directory where the decompressed .trans files will be saved
+    trans_dir = read_path+molecule+'/'+isotopologue+'/'+dataset+'/decompressed/'
+    if os.path.exists(trans_dir):
+        pass
+    else:
+        # Create the output directory if it doesn't exist
+        os.makedirs(trans_dir, exist_ok=True)
+    trans_file = os.path.join(trans_dir, trans_filename.split('/')[-1].replace('.bz2', ''))
+    if os.path.exists(trans_file):
+        pass
+    else:
+        command = f'bunzip2 < {trans_filename} > {trans_file}'
+        subprocess.run(command, shell=True)
+    return trans_file
+
 ### Read States File
 def read_all_states(read_path):
     t = Timer()
@@ -504,20 +522,7 @@ def read_all_states(read_path):
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')                
     return(states_df)
 
-### Read transitions File
-def read_trans(trans_filename):
-    file = IndexedBzip2File(trans_filename, parallelization=num_cpus)
-    lines = file.readlines()
-    file.close()
-    u, l, A = [], [], []
-    for line in lines:
-        part = line.split()
-        u.append(int(part[0]))
-        l.append(int(part[1]))
-        A.append(float(part[2]))   
-    trans_df = pd.DataFrame({'u':u, 'l':l, 'A':A})
-    return trans_df
-
+### Get transitions File
 def get_transfiles(read_path):
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
     trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*trans.bz2')
@@ -1054,16 +1059,28 @@ def ProcessLifetime(states_df, trans_df):
 
 def calculate_lifetime(states_df, trans_filename):
     print('Processeing transitions file:', trans_filename)
-    trans_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
-                        usecols=[0,1,2],names=['u','l','A'], 
-                        blocksize=None, encoding='utf-8')
-    trans_df = trans_dd.compute()
-    # chunk_size = 10000     #500000   #1024*1024
-    trans_df_list = [trans_df[i:i+chunk_size] for i in range(0,trans_df.shape[0],chunk_size)]
-
-    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
-        futures = [executor.submit(ProcessLifetime,states_df,df) for df in trans_df_list]
-        lifetime = sum(np.array([future.result() for future in tqdm(futures)]))
+    file_size_bytes = os.path.getsize(trans_filename)
+    if file_size_bytes/1024**3 < 2:
+        print("Processing file ", trans_filename, "...")
+        trans_df_chunk_list = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
+                                          iterator=True, low_memory=False, encoding='utf-8')
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ProcessLifetime,states_df,trans_df_chunk) 
+                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename.split('/')[-1])]
+            lifetime = sum(np.array([future.result() for future in tqdm(futures)]))
+    else:
+        trans_filename_decompressed = command_decompress(trans_filename)
+        decompressed_filename = trans_filename_decompressed.split('/')[-1]
+        print("Processing file ", trans_filename_decompressed, "...")
+        trans_dd = dd.read_csv(trans_filename_decompressed, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
+        trans_dd_list = trans_dd.partitions
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ProcessLifetime,states_df,trans_dd_list[i].compute(scheduler='threads')) 
+                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+decompressed_filename)]
+            lifetime = sum(np.array([future.result() for future in tqdm(futures)]))
     return lifetime
 
 # Lifetime
@@ -1076,10 +1093,10 @@ def exomol_lifetime(read_path, states_df):
     print('Reading all transitions and calculating lifetimes ...')
     trans_filenames = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
+    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_lifetime, states_df, 
-                                    trans_filename) for trans_filename in trans_filenames]
+                                   trans_filename) for trans_filename in tqdm(trans_filenames)]
         lifetime_result = 1 / sum(np.array([future.result() for future in tqdm(futures)]))
         lifetime = np.array([f'{x:>12.4E}'.replace('INF','Inf') for x in lifetime_result])
     t.end()
@@ -1131,7 +1148,7 @@ def calculate_cooling(A, v, Ep, gp, T, Q):
     return(cooling_func)
 
 # Calculate cooling function
-def ProcessCoolingFunction(states_df,trans_df,Ts,Qs):
+def ProcessCoolingFunction(states_df,Ts,Qs,trans_df):
     merged_df = dd.merge(trans_df, states_df, left_on='u', right_on='id', 
                          how='inner').merge(states_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
     cooling_func_df = merged_df[['A',"E'",'E"',"g'"]]
@@ -1147,18 +1164,30 @@ def ProcessCoolingFunction(states_df,trans_df,Ts,Qs):
         cooling_func = np.zeros(Tmax)
     return cooling_func
 
-def calculate_cooling_func(states_df, trans_filename, Ts, Qs):
+def calculate_cooling_func(states_df, Ts, Qs, trans_filename):
     print('Processeing transitions file:', trans_filename)
-    trans_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
-                        usecols=[0,1,2],names=['u','l','A'], 
-                        blocksize=None, encoding='utf-8')
-    trans_df = trans_dd.compute()
-    # chunk_size = 1024*1024    #500000 
-    trans_df_list = [trans_df[i:i+chunk_size] for i in range(0,trans_df.shape[0],chunk_size)]
-
-    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
-        futures = [executor.submit(ProcessCoolingFunction,states_df,df,Ts,Qs) for df in trans_df_list]
-        cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
+    file_size_bytes = os.path.getsize(trans_filename)
+    if file_size_bytes/1024**3 < 2:
+        print("Processing file ", trans_filename, "...")
+        trans_df_chunk_list = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
+                                          iterator=True, low_memory=False, encoding='utf-8')
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ProcessCoolingFunction,states_df,Ts,Qs,trans_df_chunk) 
+                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename.split('/')[-1])]
+            cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
+    else:
+        trans_filename_decompressed = command_decompress(trans_filename)
+        decompressed_filename = trans_filename_decompressed.split('/')[-1]
+        print("Processing file ", trans_filename_decompressed, "...")
+        trans_dd = dd.read_csv(trans_filename_decompressed, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
+        trans_dd_list = trans_dd.partitions
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ProcessCoolingFunction,states_df,Ts,Qs,trans_dd_list[i].compute(scheduler='threads')) 
+                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+decompressed_filename)]
+            cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
     return cooling_func
 
 # Cooling function for ExoMol database
@@ -1175,10 +1204,10 @@ def exomol_cooling(states_df, Ntemp, Tmax):
     trans_filenames = get_transfiles(read_path)
 
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
+    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
-        futures = [executor.submit(calculate_cooling_func, states_df, trans_filename, 
-                                   Ts, Qs) for trans_filename in trans_filenames]
+        futures = [executor.submit(calculate_cooling_func, states_df, Ts, Qs,
+                                   trans_filename) for trans_filename in tqdm(trans_filenames)]
         cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
     
     cooling_func_df = pd.DataFrame()
@@ -1259,16 +1288,28 @@ def ProcessOscillatorStrengths(states_df,trans_df):
 
 def calculate_oscillator_strengths(states_df, trans_filename):
     print('Processeing transitions file:', trans_filename)
-    trans_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
-                        usecols=[0,1,2],names=['u','l','A'], 
-                        blocksize=None, encoding='utf-8')
-    trans_df = trans_dd.compute()
-    # chunk_size = 10000    #500000   #1024*1024
-    trans_df_list = [trans_df[i:i+chunk_size] for i in range(0,trans_df.shape[0],chunk_size)]
-
-    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
-        futures = [executor.submit(ProcessOscillatorStrengths,states_df,df) for df in trans_df_list]
-        oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures)])
+    file_size_bytes = os.path.getsize(trans_filename)
+    if file_size_bytes/1024**3 < 2:
+        print("Processing file ", trans_filename, "...")
+        trans_df_chunk_list = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
+                                          iterator=True, low_memory=False, encoding='utf-8')
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ProcessOscillatorStrengths,states_df,trans_df_chunk) 
+                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename.split('/')[-1])]
+            oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures)])
+    else:
+        trans_filename_decompressed = command_decompress(trans_filename)
+        decompressed_filename = trans_filename_decompressed.split('/')[-1]
+        print("Processing file ", trans_filename_decompressed, "...")
+        trans_dd = dd.read_csv(trans_filename_decompressed, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
+        trans_dd_list = trans_dd.partitions
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ProcessOscillatorStrengths,states_df,trans_dd_list[i].compute(scheduler='threads')) 
+                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+decompressed_filename)]
+            oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures)])
     return oscillator_strength_df
 
 # Plot oscillator strength
@@ -1310,10 +1351,10 @@ def exomol_oscillator_strength(states_df):
     print('Reading transitions and calculating oscillator strengths ...')    
     trans_filenames = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
+    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_oscillator_strengths,states_df,
-                                   trans_filename) for trans_filename in trans_filenames]
+                                   trans_filename) for trans_filename in tqdm(trans_filenames)]
         oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures)])
     oscillator_strength_df.sort_values(by=['v'], ascending=True, inplace=True)  
     # oscillator_strength_df  = oscillator_strength_df.sort_values('v').reset_index(drop=True)
@@ -1677,15 +1718,28 @@ def ConvertExoMol2HITRAN(states_df, trans_part_df):
 
 def ProcessExoMol2HITRAN(states_df, trans_filename):
     print('Processeing transitions file:', trans_filename)
-    trans_part_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
-                                usecols=[0,1,2],names=['u','l','A'], 
-                                blocksize=None, encoding='utf-8')
-    trans_part_df = trans_part_dd.compute()
-    # chunk_size = 500000   #1024*1024
-    trans_part_df_list = [trans_part_df[i:i+chunk_size] for i in range(0,trans_part_df.shape[0],chunk_size)]
-    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
-        futures = [executor.submit(ConvertExoMol2HITRAN,states_df,df) for df in trans_part_df_list]
-        hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
+    file_size_bytes = os.path.getsize(trans_filename)
+    if file_size_bytes/1024**3 < 2:
+        print("Processing file ", trans_filename, "...")
+        trans_df_chunk_list = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
+                                          iterator=True, low_memory=False, encoding='utf-8')
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ConvertExoMol2HITRAN,states_df,trans_df_chunk) 
+                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename.split('/')[-1])]
+            hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
+    else:
+        trans_filename_decompressed = command_decompress(trans_filename)
+        decompressed_filename = trans_filename_decompressed.split('/')[-1]
+        print("Processing file ", trans_filename_decompressed, "...")
+        trans_dd = dd.read_csv(trans_filename_decompressed, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
+        trans_dd_list = trans_dd.partitions
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ConvertExoMol2HITRAN,states_df,trans_dd_list[i].compute(scheduler='threads')) 
+                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+decompressed_filename)]
+            hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
     return hitran_res_df
 
 def conversion_exomol2hitran(states_df):
@@ -1696,10 +1750,10 @@ def conversion_exomol2hitran(states_df):
     print('Reading transitions and converting data format from ExoMol to HITRAN ...')    
     trans_filenames = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
+    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(ProcessExoMol2HITRAN,states_df,
-                                   trans_filename) for trans_filename in trans_filenames]
+                                   trans_filename) for trans_filename in tqdm(trans_filenames)]
         hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
     hitran_res_df.sort_values(by=['v'], ascending=True, inplace=True)  
     tot.end()
@@ -1879,7 +1933,7 @@ def conversion_hitran2exomol(hitran_df):
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
 
 # Stick Spectra
-def ProcessStickSpectra(states_part_df,trans_part_df,T,Q):
+def ProcessStickSpectra(states_part_df,T,Q,trans_part_df):
     merged_df = dd.merge(trans_part_df, states_part_df, left_on='u', right_on='id', 
                          how='inner').merge(states_part_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
     stick_spectra_df = merged_df.drop(columns=["id'", 'id"','u','l'])
@@ -1912,18 +1966,30 @@ def ProcessStickSpectra(states_part_df,trans_part_df,T,Q):
     stick_spectra_df = stick_spectra_df[col_stick_spectra]
     return stick_spectra_df
 
-def calculate_stick_spectra(states_part_df,trans_filename,T,Q):   
+def calculate_stick_spectra(states_part_df,T,Q,trans_filename):   
     print('Processeing transitions file:', trans_filename)
-    trans_part_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
-                                usecols=[0,1,2],names=['u','l','A'], 
-                                blocksize=None, encoding='utf-8')
-    trans_part_df = trans_part_dd.compute()
-    # chunk_size = 1024*1024    #500000  
-    trans_part_df_list = [trans_part_df[i:i+chunk_size] for i in range(0,trans_part_df.shape[0],chunk_size)]
-    
-    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
-        futures = [executor.submit(ProcessStickSpectra,states_part_df,df,T,Q) for df in trans_part_df_list]
-        stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
+    file_size_bytes = os.path.getsize(trans_filename)
+    if file_size_bytes/1024**3 < 2:
+        print("Processing file ", trans_filename, "...")
+        trans_df_chunk_list = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
+                                          iterator=True, low_memory=False, encoding='utf-8')
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ProcessStickSpectra,states_part_df,T,Q,trans_df_chunk) 
+                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename.split('/')[-1])]
+            stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
+    else:
+        trans_filename_decompressed = command_decompress(trans_filename)
+        decompressed_filename = trans_filename_decompressed.split('/')[-1]
+        print("Processing file ", trans_filename_decompressed, "...")
+        trans_dd = dd.read_csv(trans_filename_decompressed, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
+        trans_dd_list = trans_dd.partitions
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ProcessStickSpectra,states_part_df,T,Q,trans_dd_list[i].compute(scheduler='threads')) 
+                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+decompressed_filename)]
+            stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
     return stick_spectra_df
 
 # Plot stick spectra
@@ -1989,10 +2055,10 @@ def exomol_stick_spectra(states_part_df, T):
     trans_filenames = get_part_transfiles(read_path)
     
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
+    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
-        futures = [executor.submit(calculate_stick_spectra,states_part_df,trans_filename,
-                                   T,Q) for trans_filename in trans_filenames]
+        futures = [executor.submit(calculate_stick_spectra,states_part_df,T,Q,
+                                   trans_filename) for trans_filename in tqdm(trans_filenames)]
         stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
         
     if len(stick_spectra_df) == 0:
@@ -2663,8 +2729,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
     return xsec
 
 ## Line list for calculating cross sections
-def CalculateExoMolCrossSection(states_part_df,trans_part_df,T,P,Q, 
-                                broad,ratio,nbroad,broad_dfs,profile_label):
+def CalculateExoMolCrossSection(states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label,trans_part_df):
     merged_df = dd.merge(trans_part_df, states_part_df, left_on='u', right_on='id', 
                          how='inner').merge(states_part_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
     st_df = merged_df.drop(columns=["id'", 'id"'])
@@ -2872,21 +2937,36 @@ def CalculateHITRANCrossSection(hitran_linelist_df, T, P, Q, profile_label):
         xsec = np.zeros_like(wn_grid)    
     return xsec
 
-def read_part_trans(states_part_df,trans_filename,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label):   
+def read_part_trans(states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label,trans_filename):   
     print('Processeing transitions file:', trans_filename)
-    trans_part_dd = dd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
-                                usecols=[0,1,2],names=['u','l','A'], 
-                                blocksize=None, encoding='utf-8')
-    trans_part_df = trans_part_dd.compute()
-    # chunk_size = 500000   #1024*1024
-    trans_part_df_list = [trans_part_df[i:i+chunk_size] for i in range(0,trans_part_df.shape[0],chunk_size)]
-
-    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
-        futures = [executor.submit(
-            CalculateExoMolCrossSection,states_part_df,df,
-            T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label
-            ) for df in trans_part_df_list]
-        xsecs = sum([future.result() for future in tqdm(futures)])
+    file_size_bytes = os.path.getsize(trans_filename)
+    if file_size_bytes/1024**3 < 2:
+        print("Processing file ", trans_filename, "...")
+        trans_df_chunk_list = pd.read_csv(trans_filename, compression='bz2', sep='\s+', header=None,
+                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
+                                          iterator=True, low_memory=False, encoding='utf-8')
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [
+                trans_executor.submit(CalculateExoMolCrossSection,states_part_df,T,P,Q,
+                                      broad,ratio,nbroad,broad_dfs,profile_label,trans_df_chunk) 
+                for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename.split('/')[-1])
+                ]
+            xsecs = sum([future.result() for future in tqdm(futures)])
+    else:
+        trans_filename_decompressed = command_decompress(trans_filename)
+        decompressed_filename = trans_filename_decompressed.split('/')[-1]
+        print("Processing file ", trans_filename_decompressed, "...")
+        trans_dd = dd.read_csv(trans_filename_decompressed, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
+        trans_dd_list = trans_dd.partitions
+        # Process multiple files in parallel
+        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [
+                trans_executor.submit(CalculateExoMolCrossSection,states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,
+                                      profile_label,trans_dd_list[i].compute(scheduler='threads')) 
+                for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+decompressed_filename)
+                ]
+            xsecs = sum([future.result() for future in tqdm(futures)])
     return xsecs
 
 ## Plot and Save Results
@@ -3009,10 +3089,10 @@ def exomol_cross_section(states_part_df, T, P):
     print('Reading transitions and calculating cross sections ...')    
     trans_filenames = get_part_transfiles(read_path)
     # Process multiple files in parallel
-    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
+    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
-        futures = [executor.submit(read_part_trans,states_part_df,trans_filename,T,P,Q,broad,ratio,
-                                   nbroad,broad_dfs,profile_label) for trans_filename in trans_filenames]
+        futures = [executor.submit(read_part_trans,states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,
+                                   profile_label,trans_filename) for trans_filename in tqdm(trans_filenames)]
         xsec = sum([future.result() for future in tqdm(futures)])
         
     if len(xsec) == 0:
@@ -3071,10 +3151,9 @@ def get_results(read_path):
             print('Reading all transitions and calculating lifetimes ...')
             trans_filenames = get_transfiles(read_path)
             # Process multiple files in parallel
-            with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
+            with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
                 # Submit reading tasks for each file
-                futures = [executor.submit(calculate_lifetime, states_df, 
-                                            trans_filename) for trans_filename in trans_filenames]
+                futures = [executor.submit(calculate_lifetime,states_df,trans_filename) for trans_filename in tqdm(trans_filenames)]
                 lifetime_result = 1 / sum(np.array([future.result() for future in tqdm(futures)]))
                 states_df['tau'] = np.array([f'{x:>12.4E}'.replace('INF','Inf') for x in lifetime_result])
             t.end()
