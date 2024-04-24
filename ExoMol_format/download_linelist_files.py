@@ -1,12 +1,10 @@
 # Import all what we need
 import os
-import bz2
 import sys
 import json
 import urllib3
 import requests
-import pandas as pd
-from io import StringIO
+import subprocess
 from tqdm import notebook
 urllib3.disable_warnings()
 
@@ -41,7 +39,7 @@ def read_deffile(molecule, iso_slug, dataset):
 def download_deffile(def_path):
     failed_list = [] 
     def_url = read_deffile(molecule, iso_slug, dataset)
-    for link in notebook.tqdm(def_url):
+    for link in tqdm(def_url):
         def_filename = link.split('/')[-1]
         print("Downloading file: %s" % def_filename)
         print(link)
@@ -110,15 +108,20 @@ def get_target_url(def_path):
             _iso_formula = iso_formula[i]
             _dataset = dataset[i]
             json_list = json_dict[_iso_formula]['linelist'][_dataset]['files']
+            onefile = "http://www." + json_list[0].get('url')
+            def_pf = [onefile.replace('.states.bz2','.def'), onefile.replace('.states.bz2','.pf')]
             url_show = []
             for j in range(len(json_list)):
                 link = json_list[j].get('url')
                 try:
                     if((link.endswith('states.bz2') or link.endswith('trans.bz2'))):
+                        print(link.split('/')[-1].replace('.states.bz2','.def'))
                         file_url.append("http://www." + link)
                         url_show.append("http://www." + link)
                 except KeyError:
                     print('Keyerror, keep going!')
+            file_url += def_pf
+            url_show += def_pf
         print('\nThe number of downloading files for', _iso_formula, _dataset, ': ', len(url_show))
         print("Download links:")                    
         for k in url_show:
@@ -141,6 +144,8 @@ def download_files(url_path):
     target_link = get_target_url(def_path)
     with open(url_filename, 'w') as file:
         file.write('\n'.join(target_link))
-
+    command = f'wget -d -r -i {url_filename}'
+    subprocess.run(command, shell=True)
+    
 download_deffile(def_path)
 download_files(url_path)

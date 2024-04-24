@@ -1,0 +1,227 @@
+nohup: ignoring input
+Number of CPU:  256
+INFO: Pandarallel will run on 32 workers.
+INFO: Pandarallel will use Memory file system to transfer data between the main process and workers.
+ExoMol database
+Molecule		: H2O 
+Isotopologue	: 1H2-16O 
+Dataset			: POKAZATEL
+Reading states ...
+Running time on CPU       : 4.083196336 s
+Running time on system    : 4.109179735183716 s
+Finished reading states!
+
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
+Calculate cross sections.
+Running on  32 cores.
+Reading broadening file ...
+Broadeners 	: H2, He
+Ratios 			: 0.75, 0.15 
+
+Reading transitions and calculating cross sections ...
+Finding trans files:   0%|          | 0/412 [00:00<?, ?it/s]Finding trans files: 100%|██████████| 412/412 [00:00<00:00, 463285.05it/s]
+  0%|          | 0/6 [00:00<?, ?it/s]Processeing transitions file: /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20200-20300.trans.bz2
+Processeing transitions file:Processing file   /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20100-20200.trans.bz2/mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/decompressed/1H2-16O__POKAZATEL__20200-20300.trans
+ ...
+Processeing transitions file: Processing file /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20400-20500.trans.bz2
+ Processeing transitions file:/mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/decompressed/1H2-16O__POKAZATEL__20100-20200.trans  ...
+/mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20500-20600.trans.bz2Processeing transitions file:
+Processing file   /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20300-20400.trans.bz2/mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/decompressed/1H2-16O__POKAZATEL__20400-20500.trans ...
+
+Processeing transitions file:Processing file 100%|██████████| 6/6 [00:00<00:00, 1204.97it/s]  
+/mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__20000-20100.trans.bz2/mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/decompressed/1H2-16O__POKAZATEL__20500-20600.trans
+Processing file  /mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/decompressed/1H2-16O__POKAZATEL__20300-20400.trans   0%|          | 0/6 [00:00<?, ?it/s]... 
+...
+
+Processing file Processing 1H2-16O__POKAZATEL__20100-20200.trans:   0%|          | 0/4 [00:00<?, ?it/s] [A/mnt/data/exomol/exomol3_data/H2O/1H2-16O/POKAZATEL/decompressed/1H2-16O__POKAZATEL__20000-20100.trans ...
+
+
+Processing 1H2-16O__POKAZATEL__20200-20300.trans:   0%|          | 0/4 [00:00<?, ?it/s][A[A
+
+
+Processing 1H2-16O__POKAZATEL__20400-20500.trans:   0%|          | 0/4 [00:00<?, ?it/s][A[A[A
+
+
+
+Processing 1H2-16O__POKAZATEL__20300-20400.trans:   0%|          | 0/4 [00:00<?, ?it/s][A[A[A[A
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20500-20600.trans:   0%|          | 0/4 [00:00<?, ?it/s][A[A[A[A[A
+
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20000-20100.trans:   0%|          | 0/4 [00:00<?, ?it/s][A[A[A[A[A[A
+
+
+
+Processing 1H2-16O__POKAZATEL__20300-20400.trans:  25%|██▌       | 1/4 [00:00<00:02,  1.03it/s][A[A[A[A
+
+Processing 1H2-16O__POKAZATEL__20200-20300.trans:  25%|██▌       | 1/4 [00:00<00:02,  1.01it/s][A[A
+
+
+Processing 1H2-16O__POKAZATEL__20400-20500.trans:  25%|██▌       | 1/4 [00:01<00:03,  1.12s/it][A[A[A
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20500-20600.trans:  25%|██▌       | 1/4 [00:01<00:03,  1.12s/it][A[A[A[A[A
+Processing 1H2-16O__POKAZATEL__20100-20200.trans:  25%|██▌       | 1/4 [00:01<00:03,  1.17s/it][A
+
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20000-20100.trans:  25%|██▌       | 1/4 [00:01<00:03,  1.16s/it][A[A[A[A[A[A
+
+Processing 1H2-16O__POKAZATEL__20200-20300.trans:  50%|█████     | 2/4 [00:06<00:06,  3.47s/it][A[A
+
+
+
+Processing 1H2-16O__POKAZATEL__20300-20400.trans:  50%|█████     | 2/4 [00:06<00:06,  3.50s/it][A[A[A[A
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20500-20600.trans:  50%|█████     | 2/4 [00:06<00:07,  3.71s/it][A[A[A[A[A
+
+
+Processing 1H2-16O__POKAZATEL__20400-20500.trans:  50%|█████     | 2/4 [00:06<00:07,  3.79s/it][A[A[A
+Processing 1H2-16O__POKAZATEL__20100-20200.trans:  50%|█████     | 2/4 [00:06<00:07,  3.80s/it][A
+
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20000-20100.trans:  50%|█████     | 2/4 [00:06<00:07,  3.83s/it][A[A[A[A[A[A
+
+Processing 1H2-16O__POKAZATEL__20200-20300.trans:  75%|███████▌  | 3/4 [00:10<00:04,  4.00s/it][A[A
+
+
+
+Processing 1H2-16O__POKAZATEL__20300-20400.trans:  75%|███████▌  | 3/4 [00:10<00:04,  4.01s/it][A[A[A[A
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20500-20600.trans:  75%|███████▌  | 3/4 [00:11<00:04,  4.24s/it][A[A[A[A[A
+Processing 1H2-16O__POKAZATEL__20100-20200.trans:  75%|███████▌  | 3/4 [00:11<00:04,  4.40s/it][A
+
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20000-20100.trans:  75%|███████▌  | 3/4 [00:12<00:04,  4.50s/it][A[A[A[A[A[A
+
+
+Processing 1H2-16O__POKAZATEL__20400-20500.trans:  75%|███████▌  | 3/4 [00:12<00:04,  4.52s/it][A[A[A
+
+
+
+Processing 1H2-16O__POKAZATEL__20300-20400.trans: 100%|██████████| 4/4 [00:15<00:00,  4.28s/it][A[A[A[AProcessing 1H2-16O__POKAZATEL__20300-20400.trans: 100%|██████████| 4/4 [00:15<00:00,  3.89s/it]
+
+
+
+
+  0%|          | 0/4 [00:00<?, ?it/s][A[A[A[A
+
+Processing 1H2-16O__POKAZATEL__20200-20300.trans: 100%|██████████| 4/4 [00:15<00:00,  4.43s/it][A[AProcessing 1H2-16O__POKAZATEL__20200-20300.trans: 100%|██████████| 4/4 [00:15<00:00,  3.99s/it]
+
+
+  0%|          | 0/4 [00:00<?, ?it/s][A[A
+
+ 75%|███████▌  | 3/4 [00:00<00:00,  8.40it/s][A[A
+
+
+
+ 75%|███████▌  | 3/4 [00:00<00:00,  6.10it/s][A[A[A[A
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20500-20600.trans: 100%|██████████| 4/4 [00:16<00:00,  4.63s/it][A[A[A[A[AProcessing 1H2-16O__POKAZATEL__20500-20600.trans: 100%|██████████| 4/4 [00:16<00:00,  4.19s/it]
+
+
+
+
+
+  0%|          | 0/4 [00:00<?, ?it/s][A[A[A[A[A
+Processing 1H2-16O__POKAZATEL__20100-20200.trans: 100%|██████████| 4/4 [00:16<00:00,  4.59s/it][AProcessing 1H2-16O__POKAZATEL__20100-20200.trans: 100%|██████████| 4/4 [00:16<00:00,  4.20s/it]
+
+  0%|          | 0/4 [00:00<?, ?it/s][A
+ 75%|███████▌  | 3/4 [00:00<00:00, 17.61it/s][A
+
+
+
+
+
+Processing 1H2-16O__POKAZATEL__20000-20100.trans: 100%|██████████| 4/4 [00:17<00:00,  4.64s/it][A[A[A[A[A[AProcessing 1H2-16O__POKAZATEL__20000-20100.trans: 100%|██████████| 4/4 [00:17<00:00,  4.25s/it]
+
+
+
+
+
+
+  0%|          | 0/4 [00:00<?, ?it/s][A[A[A[A[A[A
+
+
+Processing 1H2-16O__POKAZATEL__20400-20500.trans: 100%|██████████| 4/4 [00:17<00:00,  4.68s/it][A[A[AProcessing 1H2-16O__POKAZATEL__20400-20500.trans: 100%|██████████| 4/4 [00:17<00:00,  4.27s/it]
+
+
+
+  0%|          | 0/4 [00:00<?, ?it/s][A[A[A
+
+
+
+
+100%|██████████| 4/4 [00:03<00:00,  1.33it/s][A[A[A[A[A100%|██████████| 4/4 [00:03<00:00,  1.31it/s]
+
+
+
+
+100%|██████████| 4/4 [00:06<00:00,  2.16s/it][A[A[A[A100%|██████████| 4/4 [00:06<00:00,  1.71s/it]
+100%|██████████| 4/4 [00:05<00:00,  1.47s/it]
+
+
+100%|██████████| 4/4 [00:06<00:00,  2.14s/it][A[A100%|██████████| 4/4 [00:06<00:00,  1.69s/it]
+ 17%|█▋        | 1/6 [00:22<01:53, 22.73s/it]
+
+
+100%|██████████| 4/4 [00:05<00:00,  1.41s/it][A[A[A100%|██████████| 4/4 [00:05<00:00,  1.41s/it]
+
+
+
+
+
+
+100%|██████████| 4/4 [00:05<00:00,  1.45s/it][A[A[A[A[A[A100%|██████████| 4/4 [00:05<00:00,  1.45s/it]
+100%|██████████| 6/6 [00:22<00:00,  2.82s/it]100%|██████████| 6/6 [00:22<00:00,  3.81s/it]
+Running time on CPU       : 54.956750986 s
+Running time on system    : 22.898239850997925 s
+Finished reading transitions and calculating cross sections!
+
+SciPy Voigt profile
+Temperature selected      : 296    K
+Pressure selected         : 1.0    bar
+Number of points is       : 5001  
+Bin size is               : 0.1    cm⁻¹
+Cutoff is                 : 1e-27  cm⁻¹
+Uncertainty filter        : None   cm⁻¹
+Threshold filter          : 1e-40  cm⁻¹/(molecule cm⁻²)
+Wavenumber range selected : 20000.0 cm⁻¹ - 20500.0 cm⁻¹
+Cross sections file has been saved: /home/jingxin/data/pyexocross/xsecs/files/H2O/ExoMol/H2O__T296__wn20000.0-20500.0__ExoMol__Ab__SciPyVoigt.xsec 
+
+Cross sections have been saved!
+
+* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
+
+
+The program total running time:
+Running time on CPU       : 59.169418765 s
+Running time on system    : 27.137714624404907 s
+
+Finished!
