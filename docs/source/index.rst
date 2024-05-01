@@ -22,6 +22,7 @@ Welcome to PyExoCross's documentation!
    lifetimes.rst
    oscillatorstrengths.rst
    stickspectra.rst
+   nonlte.rst
    crosssections.md
    report.md
    license.md

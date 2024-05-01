@@ -26,6 +26,7 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
+Non-LTE                                 0
 CrossSections                           0
 
 
@@ -69,6 +70,15 @@ PlotStickSpectra(Y/N)                   Y
 Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30
 
 
+# Calculate non-LTE stick spectra #
+Tvib                                   2000
+Trot                                   296
+QNsVibLabel                            v,eS
+QNsRotLabel                            J,e/f            
+PlotNonLTE(Y/N)                        Y
+Y-axisLimitNonLTE                      1e-30                     # Default value is 1e-30
+
+
 # Calculate cross sections #
 Pressure                                1
 Npoints/BinSize                         BinSize   0.1
@@ -109,6 +119,7 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
+Non-LTE                                 0
 CrossSections                           1
 
 
@@ -161,6 +172,15 @@ QNsFilter(Y/N)                          Y          v1[]       v2[]       v3[1,0;
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
 Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30
+
+
+# Calculate non-LTE stick spectra #
+Tvib                                   2000
+Trot                                   296
+QNsVibLabel                            v,eS
+QNsRotLabel                            J,e/f            
+PlotNonLTE(Y/N)                        Y
+Y-axisLimitNonLTE                      1e-30                     # Default value is 1e-30
 
 
 # Calculate cross sections #

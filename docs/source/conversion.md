@@ -62,6 +62,7 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
+Non-LTE                                 0
 CrossSections                           0
 
 
@@ -111,6 +112,7 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
+Non-LTE                                 0
 CrossSections                           0
 
 

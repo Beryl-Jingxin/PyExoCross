@@ -1,7 +1,7 @@
-Stick spectra
+Non-LTE
 =============
 
-``Temperature``: Please provide temperature in unit K.
+``T``: Ignore this, you can write random value here, calculate non-LTE intensity will not use this.
 
 ``Range``: Give two values as the minimum and maximum of the wavenumber range. No ``,`` or ``;`` 
 between these two numbers, just leave blank here.
@@ -12,6 +12,14 @@ If you want a figure of corss sections, please set ``Y`` for ``PlotCrossSection(
 
 And if you want set the lower limit of y-axis for plotting, please write after ``Y-axisLimitStick``, 
 otherwise, the default lower limit y-axis is 1e-30.
+
+``Tvib``: Please provide vibrational temperature in unit K.
+
+``Trot``: Please provide rotational temperature in unit K.
+
+``QNsVibLabel``: Please provide vibrational quantum number labels seperated by ``,``.
+
+``QNsRotLabel``: Please provide rotational quantum number labels seperated by ``,``.
 
 Filters
 :::::::
@@ -44,24 +52,39 @@ If ``Threshold(Y/N)`` is yes, the value is the minimum intensity you require.
 | ``v1[1,;,0;5,5]  v2[]`` means you want quantumnumber labels v1 and v2. For v1, you want all lines with v1' = 1 , all lines with v1" = 0 and the lines with v1' = 5 and at the same time v1" = 5. Meanwhile, you want all lines for v2.
 
 
-If you need a stick spectra figure, please write ``Y`` after ``PlotStickSpectra(Y/N)``. 
+If you need a non-LTE stick spectra figure, please write ``Y`` after ``PlotNonLTE(Y/N)``. 
 
-And if you want set the lower limit of y-axis for plotting, please write after `Y-axisLimitStickSpectra`, otherwise, the default lower limit y-axis is 1e-30.
+And if you want set the lower limit of y-axis for plotting, please write after `Y-axisLimitNonLTE`, otherwise, the default lower limit y-axis is 1e-30.
+
+The state energy is the sum of the rotational and vibrational state energy:
+
+.. math::
+
+    \tilde{E}^{\textrm{tot}} = \tilde{E}^{\textrm{vib}}_{\textrm{QN}_{\textrm{vib}}} + \tilde{E}^{\textrm{rot}}_{\textrm{QN}_{\textrm{rot}}}.
+
+
+The non-LTE partition function equation is:
+
+.. math::
+
+    Q(T) = \sum_n g_n^{\textrm{tot}} e^{-c_2\tilde{E}^{\textrm{vib}}_{\textrm{QN}_{\textrm{vib}}}/T_{\textrm{vib}}} 
+    e^{-c_2\tilde{E}^{\textrm{rot}}_{\textrm{QN}_{\textrm{rot}}}/T_{\textrm{rot}}}. 
+
 
 The intensity equation is:
 
 .. math::
 
     I(f \gets i) = \frac{g'{A}_{fi}}{8 \pi c \tilde{v}^2_{fi}} 
-    \frac{e^{-c_2 \tilde{E}'' / T} (1 - e^{-c_2 \tilde{v}_{fi} 
-    / T })}{Q(T)}.
+    \frac{e^{-c_2 \tilde{E}_{\textrm{rot}}'' / T_{\textrm{rot}}} e^{-c_2 \tilde{E}_{\textrm{vib}}'' / T_{\textrm{vib}}} (1 - e^{-c_2 \tilde{v}_{fi} / T_{\textrm{vib}} })}{Q(T)}.
+
 
 The emissivity equation is:
 
 .. math::
 
-    \varepsilon (i \gets f) = \frac{g'{A}_{fi}hc}{4 \pi}\frac{e^{-c_2 \tilde{E}'/T}}{Q(T)}.
-
+    \varepsilon (i \gets f) = \frac{g'{A}_{fi}hc}{4 \pi} 
+    \frac{e^{-c_2 \tilde{E}_{\textrm{rot}}' / T_{\textrm{rot}}} e^{-c_2 \tilde{E}_{\textrm{vib}}' / T_{\textrm{vib}}}}{Q(T)}.
 
 *Example*
 
@@ -87,8 +110,8 @@ The emissivity equation is:
     CoolingFunctions                        0
     Lifetimes                               0
     OscillatorStrengths                     0
-    StickSpectra                            1
-    Non-LTE                                 0
+    StickSpectra                            0
+    Non-LTE                                 1
     CrossSections                           0
 
 
@@ -109,12 +132,17 @@ The emissivity equation is:
     Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
     UncFilter(Y/N)                          Y          0.001          # If Y, default value 0.01
     Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-    QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,1;1,0;2,;,0]  
+    QNsFilter(Y/N)                          Y          e/f[]   v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
 
 
-    # Calculate stick spectra #
-    PlotStickSpectra(Y/N)                   Y
-    Y-axisLimitStick                        1e-40                     # Default value is 1e-30
+    # Calculate non-LTE stick spectra #
+    Tvib                                   2000
+    Trot                                   296
+    QNsVibLabel                            v,eS
+    QNsRotLabel                            J,e/f            
+    PlotNonLTE(Y/N)                        Y
+    Y-axisLimitNonLTE                      1e-30                     # Default value is 1e-30
+
 
 .. code:: bash
 
@@ -138,8 +166,8 @@ The emissivity equation is:
     CoolingFunctions                        0
     Lifetimes                               0
     OscillatorStrengths                     0
-    StickSpectra                            1
-    Non-LTE                                 0
+    StickSpectra                            0
+    Non-LTE                                 1
     CrossSections                           0
 
 
@@ -163,6 +191,10 @@ The emissivity equation is:
     QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,1;1,0]  
 
 
-    # Calculate stick spectra #
-    PlotStickSpectra(Y/N)                   N
-    Y-axisLimitStick                                                  # Default value is 1e-30
+    # Calculate non-LTE stick spectra #
+    Tvib                                   2000
+    Trot                                   296
+    QNsVibLabel                            v,eS
+    QNsRotLabel                            J,e/f            
+    PlotNonLTE(Y/N)                        Y
+    Y-axisLimitNonLTE                      1e-30                     # Default value is 1e-30

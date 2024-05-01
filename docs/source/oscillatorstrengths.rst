@@ -44,6 +44,7 @@ The oscillator strengths equation is:
     Lifetimes                               0
     OscillatorStrengths                     1
     StickSpectra                            0
+    Non-LTE                                 0
     CrossSections                           0
 
 

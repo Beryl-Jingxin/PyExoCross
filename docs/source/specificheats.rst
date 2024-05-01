@@ -26,12 +26,12 @@ where the partition function :math:`Q(T)` and its first two moments are:
 
 .. math::
    
-   Q’(T) = T\frac{\mathrm{d} Q}{\mathrm{d} T} =\sum_n 
+   Q'(T) = T\frac{\mathrm{d} Q}{\mathrm{d} T} =\sum_n 
    g_n^{\textrm{tot}}\left(\frac{c_2 \tilde{E}_n}{T}\right)\exp\left(-\frac{c_2 \tilde{E}_n}{T}\right),
 
 .. math::
    
-   Q’‘(T) = T^2\frac{\mathrm{d}^2 Q}{\mathrm{d} T^2}+2Q’ =\sum_n g_n^{\textrm{tot}}
+   Q''(T) = T^2\frac{\mathrm{d}^2 Q}{\mathrm{d} T^2}+2Q' =\sum_n g_n^{\textrm{tot}}
    \left(\frac{c_2 \tilde{E}_n}{T}\right)^2\exp\left(\frac{c_2 \tilde{E}_n}{T}\right).
 
 *Example*
@@ -59,6 +59,7 @@ where the partition function :math:`Q(T)` and its first two moments are:
    Lifetimes                               0
    OscillatorStrengths                     0
    StickSpectra                            0
+   Non-LTE                                 0
    CrossSections                           0
 
 
