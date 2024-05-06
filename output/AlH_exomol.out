@@ -1,254 +1,0 @@
-nohup: ignoring input
-Number of CPU:  256
-INFO: Pandarallel will run on 4 workers.
-INFO: Pandarallel will use Memory file system to transfer data between the main process and workers.
-ExoMol database
-Molecule		: AlH 
-Isotopologue	: 27Al-1H 
-Dataset			: AloHa
-Reading states ...
-Running time on CPU       : 0.013942361000001569 s
-Running time on system    : 0.014007806777954102 s
-Finished reading states!
-
-* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
-
-Calculate partition functions.
-Running time on CPU       : 0.15482172799999816 s
-Running time on system    : 0.15534543991088867 s
-Finished calculating partition functions!
-
-Saving partition functions into file ...
-Running time on CPU       : 0.010886084999999213 s
-Running time on system    : 0.01093149185180664 s
-Partition functions file has been saved: /home/jingxin/data/pyexocross/partition/27Al-1H__AloHa.pf 
-
-Partition functions have been saved!
-
-* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
-
-Calculate specific heats.
-Running time on CPU       : 0.5892090359999997 s
-Running time on system    : 0.5914731025695801 s
-Finished calculating specific heats!
-
-Saving specific heats into file ...
-Running time on CPU       : 0.010348217999997189 s
-Running time on system    : 0.010394096374511719 s
-Specific heats file has been saved: /home/jingxin/data/pyexocross/specific_heat/27Al-1H__AloHa.cp 
-
-Specific heats have been saved!
-
-* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
-
-Calculate lifetimes.
-Running on  4 cores.
-Reading all transitions and calculating lifetimes ...
-Processeing transitions file: /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2
-Processing file  /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2 ...
-  0%|          | 0/1 [00:00<?, ?it/s]
-Processing 27Al-1H__AloHa.trans.bz2: 0it [00:00, ?it/s][AProcessing 27Al-1H__AloHa.trans.bz2: 1it [00:00, 48.37it/s]
-
-  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 324.89it/s]
-100%|██████████| 1/1 [00:00<00:00, 28.77it/s]
-Running time on CPU       : 0.0540047159999979 s
-Running time on system    : 0.04690980911254883 s
-Finished reading all transitions and calculating lifetimes!
-
-Saving lifetimes into file ...
-Running time on CPU       : 0.015103286999998744 s
-Running time on system    : 0.014765262603759766 s
-Lifetimes file has been saved: /home/jingxin/data/pyexocross/lifetime/27Al-1H__AloHa.states 
-
-Lifetimes have been saved!
-
-* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
-
-Calculate cooling functions.
-Running on  4 cores.
-Reading all transitions and calculating cooling functions ...
-Processeing transitions file:  0%|          | 0/1 [00:00<?, ?it/s] /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2
-Processing file  /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2 ...
-
-Processing 27Al-1H__AloHa.trans.bz2: 0it [00:00, ?it/s][AProcessing 27Al-1H__AloHa.trans.bz2: 1it [00:00, 48.79it/s]
-
-  0%|          | 0/1 [00:00<?, ?it/s][A
-
-Calculating:   0%|          | 0/5000 [00:00<?, ?it/s][A[A
-
-Calculating:   4%|▍         | 189/5000 [00:00<00:02, 1888.34it/s][A[A
-
-Calculating:   9%|▊         | 429/5000 [00:00<00:02, 2186.41it/s][A[A
-
-Calculating:  13%|█▎        | 669/5000 [00:00<00:01, 2282.02it/s][A[A
-
-Calculating:  18%|█▊        | 909/5000 [00:00<00:01, 2327.90it/s][A[A
-
-Calculating:  23%|██▎       | 1149/5000 [00:00<00:01, 2352.37it/s][A[A
-
-Calculating:  28%|██▊       | 1389/5000 [00:00<00:01, 2367.39it/s][A[A
-
-Calculating:  33%|███▎      | 1629/5000 [00:00<00:01, 2376.85it/s][A[A
-
-Calculating:  37%|███▋      | 1869/5000 [00:00<00:01, 2383.08it/s][A[A
-
-Calculating:  42%|████▏     | 2109/5000 [00:00<00:01, 2386.04it/s][A[A
-
-Calculating:  47%|████▋     | 2348/5000 [00:01<00:01, 2379.53it/s][A[A
-
-Calculating:  52%|█████▏    | 2588/5000 [00:01<00:01, 2384.67it/s][A[A
-
-Calculating:  57%|█████▋    | 2828/5000 [00:01<00:00, 2388.81it/s][A[A
-
-Calculating:  61%|██████▏   | 3068/5000 [00:01<00:00, 2391.14it/s][A[A
-
-Calculating:  66%|██████▌   | 3308/5000 [00:01<00:00, 2392.18it/s][A[A
-
-Calculating:  71%|███████   | 3548/5000 [00:01<00:00, 2393.56it/s][A[A
-
-Calculating:  76%|███████▌  | 3788/5000 [00:01<00:00, 2394.95it/s][A[A
-
-Calculating:  81%|████████  | 4028/5000 [00:01<00:00, 2396.17it/s][A[A
-
-Calculating:  85%|████████▌ | 4268/5000 [00:01<00:00, 2393.00it/s][A[A
-
-Calculating:  90%|█████████ | 4508/5000 [00:01<00:00, 2394.97it/s][A[A
-
-Calculating:  95%|█████████▍| 4748/5000 [00:02<00:00, 2395.06it/s][A[A
-
-Calculating: 100%|█████████▉| 4988/5000 [00:02<00:00, 2395.07it/s][A[ACalculating: 100%|██████████| 5000/5000 [00:02<00:00, 2370.18it/s]
-
-100%|██████████| 1/1 [00:02<00:00,  2.14s/it][A100%|██████████| 1/1 [00:02<00:00,  2.14s/it]
-100%|██████████| 1/1 [00:02<00:00,  2.18s/it]100%|██████████| 1/1 [00:02<00:00,  2.18s/it]
-Running time on CPU       : 2.178990142 s
-Running time on system    : 2.2152211666107178 s
-Finished reading all transitions and calculating cooling functions!
-
-Saving cooling functions into file ...
-Running time on CPU       : 0.01038989599999951 s
-Running time on system    : 0.01044321060180664 s
-Cooling functions file has been saved: /home/jingxin/data/pyexocross/cooling/27Al-1H__AloHa.cf 
-
-Cooling functions have been saved!
-
-* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
-
-Calculate oscillator strengths.
-Running on  4 cores.
-Reading transitions and calculating oscillator strengths ...
-Processeing transitions file:  0%|          | 0/1 [00:00<?, ?it/s] /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2
-Processing file  /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2 ...
-
-Processing 27Al-1H__AloHa.trans.bz2: 0it [00:00, ?it/s][AProcessing 27Al-1H__AloHa.trans.bz2: 1it [00:00, 45.22it/s]
-
-  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 27.76it/s]
-100%|██████████| 1/1 [00:00<00:00, 12.47it/s]
-Running time on CPU       : 0.08734682800000115 s
-Running time on system    : 0.0865933895111084 s
-Finished reading all transitions and calculating oscillator strengths!
-
-Saving oscillator strengths into file ...
-Running time on CPU       : 0.07419381200000075 s
-Running time on system    : 0.07443022727966309 s
-Oscillator strengths file has been saved: /home/jingxin/data/pyexocross/oscillator_strength/files/AlH/ExoMol/27Al-1H__AloHa_f.os 
-
-Oscillator strengths plot has been saved: /home/jingxin/data/pyexocross/oscillator_strength/plots/AlH/ExoMol/AlH__27Al-1H__ExoMol__f__os.png 
-
-Oscillator strengths have been saved!
-
-* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
-
-Convert data format from ExoMol to HITRAN.
-Running on  4 cores.
-Reading transitions and converting data format from ExoMol to HITRAN ...
-Processeing transitions file:  0%|          | 0/1 [00:00<?, ?it/s] /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2
-Processing file  /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2 ...
-
-Processing 27Al-1H__AloHa.trans.bz2: 0it [00:00, ?it/s][AProcessing 27Al-1H__AloHa.trans.bz2: 1it [00:00, 46.15it/s]
-
-  0%|          | 0/1 [00:00<?, ?it/s][A
-100%|██████████| 1/1 [00:02<00:00,  2.82s/it][A100%|██████████| 1/1 [00:02<00:00,  2.82s/it]
-100%|██████████| 1/1 [00:02<00:00,  2.86s/it]100%|██████████| 1/1 [00:02<00:00,  2.86s/it]
-Running time on CPU       : 2.0041955579999993 s
-Running time on system    : 2.8798365592956543 s
-Finished reading all transitions and converting data format from ExoMol to HITRAN!
-
-Saving HITRAN format data into file ...
-Running time on CPU       : 0.1605410539999994 s
-Running time on system    : 0.16192960739135742 s
-Converted par file has been saved!
-
-Finished converting data format from ExoMol to HITRAN!
-* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
-
-Calculate stick spectra.
-Running on  4 cores.
-Uncertainty filter        : 0.01   cm⁻¹
-Threshold filter          : 1e-30  cm⁻¹/(molecule cm⁻²)
-Wavenumber range selected : 0.0 cm⁻¹ - 30000.0 cm⁻¹
-Reading transitions and calculating stick spectra ...
-Processeing transitions file:  0%|          | 0/1 [00:00<?, ?it/s] /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2
-Processing file  /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2 ...
-
-Processing 27Al-1H__AloHa.trans.bz2: 0it [00:00, ?it/s][AProcessing 27Al-1H__AloHa.trans.bz2: 1it [00:00, 48.96it/s]
-
-  0%|          | 0/1 [00:00<?, ?it/s][A100%|██████████| 1/1 [00:00<00:00, 126.11it/s]
-100%|██████████| 1/1 [00:00<00:00, 20.68it/s]
-Running time on CPU       : 0.054945295999999644 s
-Running time on system    : 0.05481696128845215 s
-Finished reading transitions and calculating stick spectra!
-Saving stick spectra into file ...
-Running time on CPU       : 0.0023363409999994644 s
-Running time on system    : 0.0038607120513916016 s
-Stick spectra file has been saved: /home/jingxin/data/pyexocross/stick_spectra/files/AlH/ExoMol/AlH__27Al-1H__AloHa__T2000__0.0-30000.0__unc0.01__thres1e-30__Ab.stick 
-
-Plotting stick spectra ...
-Running time on CPU       : 9.962155568 s
-Running time on system    : 1.286529541015625 s
-Stick spectra plot has been saved: /home/jingxin/data/pyexocross/stick_spectra/plots/AlH/ExoMol/AlH__27Al-1H__AloHa__T2000__0.0-30000.0__unc0.01__Ab__sp.png
-Stick spectra have been saved!
-
-* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
-
-Calculate cross sections.
-Running on  4 cores.
-Reading broadening file ...
-Broadeners 	: Default
-Ratios 			: 1.0 
-
-Reading transitions and calculating cross sections ...
-Processeing transitions file:   0%|          | 0/1 [00:00<?, ?it/s]/mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2
-Processing file  /mnt/data/exomol/exomol3_data/AlH/27Al-1H/AloHa/27Al-1H__AloHa.trans.bz2 ...
-
-Processing 27Al-1H__AloHa.trans.bz2: 0it [00:00, ?it/s][AProcessing 27Al-1H__AloHa.trans.bz2: 1it [00:00, 44.82it/s]
-
-  0%|          | 0/1 [00:00<?, ?it/s][A
-100%|██████████| 1/1 [00:02<00:00,  2.56s/it][A100%|██████████| 1/1 [00:02<00:00,  2.56s/it]
-100%|██████████| 1/1 [00:02<00:00,  2.60s/it]100%|██████████| 1/1 [00:02<00:00,  2.60s/it]
-Running time on CPU       : 2.6315769730000014 s
-Running time on system    : 2.6081745624542236 s
-Finished reading transitions and calculating cross sections!
-
-SciPy Voigt profile
-Temperature selected      : 2000   K
-Pressure selected         : 1.0    bar
-Number of points is       : 300001
-Bin size is               : 0.1    cm⁻¹
-Cutoff is                 : 25.0   cm⁻¹
-Uncertainty filter        : 0.01   cm⁻¹
-Threshold filter          : 1e-30  cm⁻¹/(molecule cm⁻²)
-Wavenumber range selected : 0.0 cm⁻¹ - 30000.0 cm⁻¹
-Cross sections file has been saved: /home/jingxin/data/pyexocross/xsecs/files/AlH/ExoMol/AlH__T2000__wn0.0-30000.0__ExoMol__Ab__SciPyVoigt.xsec 
-
-Cross sections plot has been saved: /home/jingxin/data/pyexocross/xsecs/plots/AlH/ExoMol/AlH__T2000__wn0.0-30000.0__ExoMol__Ab__SciPyVoigt.png 
-
-Cross sections have been saved!
-
-* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *
-
-
-The program total running time:
-Running time on CPU       : 22.849858281000003 s
-Running time on system    : 14.008715629577637 s
-
-Finished!

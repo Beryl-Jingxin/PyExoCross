@@ -3401,7 +3401,8 @@ def get_results(read_path):
             if check_uncertainty == 1:
                 states_part_df = read_part_states(states_df) 
             else:
-                raise ImportError("No uncertainties in states file. Please do not use uncertainty filter.")   
+                states_part_df = states_df
+                print("No uncertainties in states file. Please do not use uncertainty filter.")   
             
 
         # Functions
