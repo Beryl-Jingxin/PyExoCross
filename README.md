@@ -1,6 +1,7 @@
 # PyExoCross
 
 See the PyExoCross ***manual*** at [https://pyexocross.readthedocs.io](https://pyexocross.readthedocs.io).
+
 See the PyExoCross &nbsp; ***paper***&nbsp; at [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016).
 
 

@@ -1,7 +1,9 @@
 # Introduction
 
 *PyExoCross* ***GitHub*** : [https://github.com/ExoMol/PyExoCross](https://github.com/ExoMol/PyExoCross)
+
 *PyExoCross* ***Manual*** : [https://pyexocross.readthedocs.io](https://pyexocross.readthedocs.io)
+
 *PyExoCross* &nbsp;***Paper*** &nbsp; : [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016)
 
 
