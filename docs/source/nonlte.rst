@@ -126,7 +126,7 @@ The emissivity equation is:
     QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
 
 
-    # Calculate stick spectra or cross sections #
+    # Calculate LTE or Non-LTE stick spectra or cross sections #
     Temperature                             300
     Range                                   0          30000
     Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -182,7 +182,7 @@ The emissivity equation is:
     QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
 
 
-    # Calculate stick spectra or cross sections #
+    # Calculate LTE or Non-LTE stick spectra or cross sections #
     Temperature                             1000
     Range                                   1000       5000
     Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'

@@ -24,20 +24,28 @@ And if you want set the lower limit of y-axis for plotting, please write after `
 *Example*
 
 ```
-# Calculate stick spectra or cross sections #
-Temperature                             300
-Range                                   0          41200
+# Calculate LTE or Non-LTE stick spectra or cross sections #
+Temperature                             2000
+Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+QNsFilter(Y/N)                          N          v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
 
 
 # Calculate cross sections #
 Pressure                                1
-Npoints/BinSize                         BinSize   0.1 
+Npoints/BinSize                         BinSize   0.1
+Broadeners                              Default    
+Ratios                                  1.0        
+Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 PredissocXsec(Y/N)                      N
-Cutoff(Y/N)                             Y          25             # If Y, default value 25 
-PlotCrossSection(Y/N)                   N
-Y-axisLimitXsec                         1e-30                     # Default value is 1e-30
+Cutoff(Y/N)                             Y          25              # If Y, default value 25 
+DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   Y
+Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
 ```
 
 ## Filters
@@ -165,7 +173,7 @@ QNslabel                                Ka      Kc      v1      v2      v3      
 QNsformat                               %2d     %2d     %2d     %2d     %2d     %2s
 
 
-# Calculate stick spectra or cross sections #
+# Calculate LTE or Non-LTE stick spectra or cross sections #
 Temperature                             300
 Range                                   0          41200
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -226,7 +234,7 @@ QNslabel                                J       X     Omega   v1      m      Sym
 QNsformat                               %5s     %2s   %3s     %2d     %1s 
 
 
-# Calculate stick spectra or cross sections #
+# Calculate LTE or Non-LTE stick spectra or cross sections #
 Temperature                             1000
 Range                                   1000       5000
 Absorption/Emission                     Emission                 # 'Absorption' or 'Emission'
@@ -242,6 +250,7 @@ Broadeners                              Air        Self
 Ratios                                  0.7        0.3   
 Profile                                 SciPyVoigt  
 Wavenumber(wn)/wavelength(wl)           wl                        # 'wn' or 'wl'
+PredissocXsec(Y/N)                      no
 Cutoff(Y/N)                             N          100            # If Y, default value 25
 DopplerHWHM(Y/N)                        n          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     n          0.5            # Set Lorentzian HWHM as a constant
