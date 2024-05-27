@@ -1459,10 +1459,12 @@ def read_part_states(states_df):
         col_unc = []
     if check_lifetime == 1:
         col_lifetime = ['tau']
+        states_part_df['tau'] = states_part_df['tau'].astype('float')
     else:
         col_lifetime = []
     if check_gfactor == 1:
         col_gfac = ['gfac']
+        states_part_df['gfac'] = states_part_df['gfac'].astype('float')
     else:
         col_gfac = []
     colname = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNslabel_list
