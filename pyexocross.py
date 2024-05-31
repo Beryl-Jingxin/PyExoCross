@@ -1446,9 +1446,12 @@ def hitran_oscillator_strength(hitran_df):
 # Process data
 def read_part_states(states_df):
     if UncFilter != 'None' :
-        states_part_df = states_df[states_df['unc'] <= UncFilter]
-        # states_part_df['id'] = pd.to_numeric(states_part_df['id'])
-        states_part_df.set_index(['id'], inplace=True, drop=False)
+        if check_uncertainty == 1:
+            states_part_df = states_df[states_df['unc'] <= UncFilter]
+            # states_part_df['id'] = pd.to_numeric(states_part_df['id'])
+            states_part_df.set_index(['id'], inplace=True, drop=False)
+        else:
+            raise ImportError("No uncertainties in states file. Please do not use uncertainty filter.")  
     else:
         states_part_df = states_df
         # states_part_df['id'] = pd.to_numeric(states_part_df['id'])
@@ -1459,12 +1462,10 @@ def read_part_states(states_df):
         col_unc = []
     if check_lifetime == 1:
         col_lifetime = ['tau']
-        states_part_df['tau'] = states_part_df['tau'].astype('float')
     else:
         col_lifetime = []
     if check_gfactor == 1:
         col_gfac = ['gfac']
-        states_part_df['gfac'] = states_part_df['gfac'].astype('float')
     else:
         col_gfac = []
     colname = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNslabel_list
@@ -1481,6 +1482,10 @@ def read_part_states(states_df):
                 else:
                     states_part_df = states_part_df[states_part_df[QNs_label[i]].isin(list_QN_value)]
     states_part_df.index.name='index'
+    if check_lifetime == 1:
+        states_part_df['tau'] = states_part_df['tau'].astype('float')
+    if check_gfactor == 1:
+        states_part_df['gfac'] = states_part_df['gfac'].astype('float')
     return(states_part_df)  
 
 def get_part_transfiles(read_path):
@@ -2072,20 +2077,21 @@ def exomol_stick_spectra(states_part_df, T):
     print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
     tot = Timer()
     tot.start()
-    Q = read_exomol_pf(read_path, T)
+    Q = read_exomol_pf(read_path, T)    
+    states_part_df_ss = states_part_df.copy()
     if check_uncertainty == 1:
-        states_part_df.drop(columns=['unc'], inplace=True)
-    if check_lifetime == 1:
-        states_part_df.drop(columns=['tau'], inplace=True)
+        states_part_df_ss.drop(columns=['unc'], inplace=True)
+    if check_lifetime == 1 or predissocYN == 'Y':
+        states_part_df_ss.drop(columns=['tau'], inplace=True)
     if check_gfactor == 1:
-        states_part_df.drop(columns=['gfac'], inplace=True)
+        states_part_df_ss.drop(columns=['gfac'], inplace=True)
     
     print('Reading transitions and calculating stick spectra ...')    
     trans_filepaths = get_part_transfiles(read_path)   
     # Process multiple files in parallel
     with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
-        futures = [executor.submit(calculate_stick_spectra,states_part_df,T,Q,
+        futures = [executor.submit(calculate_stick_spectra,states_part_df_ss,T,Q,
                                    trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
         stick_spectra_df = pd.concat([future.result() for future in futures])
         
@@ -3377,34 +3383,29 @@ def get_results(read_path):
         print('ExoMol database')
         print('Molecule\t\t:', molecule, '\nIsotopologue\t:', isotopologue, '\nDataset\t\t\t:', dataset)
         # All functions need whole states.
-        states_df = read_all_states(read_path)
-        # Calculate predissociation cross sections if lifetimes are not exit in the states file.
-        if CrossSections == 1 and predissocYN == 'Y' and check_predissoc+check_lifetime == 0 and 'VOI' in profile:
-            np.seterr(divide='ignore', invalid='ignore')
-            print('Calculate lifetimes.')  
-            print('Running on ', ncputrans, 'cores.')
-            t = Timer()
-            t.start()
-            print('Reading all transitions and calculating lifetimes ...')
-            trans_filepaths = get_transfiles(read_path)
-            # Process multiple files in parallel
-            with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
-                # Submit reading tasks for each file
-                futures = [executor.submit(calculate_lifetime, states_df, 
-                                           trans_filepath) for trans_filepath in trans_filepaths]
-                lifetime_result = 1 / sum(np.array([future.result() for future in tqdm(futures)]))
-                states_df['tau'] = np.array([f'{x:>12.4E}'.replace('INF','Inf') for x in lifetime_result])
-            t.end()
-            print('Finished reading all transitions and calculating lifetimes!\n')
-                
+        states_df = read_all_states(read_path)        
         # Only calculating stick spectra and cross sections need part of states.
         NeedPartStates = StickSpectra + CrossSections
         if NeedPartStates != 0:
-            if check_uncertainty == 1:
-                states_part_df = read_part_states(states_df) 
-            else:
-                states_part_df = states_df
-                print("No uncertainties in states file. Please do not use uncertainty filter.")   
+            states_part_df = read_part_states(states_df) 
+            # Calculate predissociation spectra and cross sections if lifetimes are not exit in the states file.
+            if predissocYN == 'Y' and check_predissoc+check_lifetime == 0 and 'VOI' in profile:
+                np.seterr(divide='ignore', invalid='ignore')
+                print('Calculate lifetimes.')  
+                print('Running on ', ncputrans, 'cores.')
+                t = Timer()
+                t.start()
+                print('Reading all transitions and calculating lifetimes ...')
+                trans_filepaths = get_transfiles(read_path)
+                # Process multiple files in parallel
+                with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
+                    # Submit reading tasks for each file
+                    futures = [executor.submit(calculate_lifetime, states_part_df, 
+                                            trans_filepath) for trans_filepath in trans_filepaths]
+                    lifetime_result = 1 / sum(np.array([future.result() for future in tqdm(futures)]))
+                    states_part_df['tau'] = np.array([f'{x:>12.4E}'.replace('INF','Inf') for x in lifetime_result]).astype(float)
+                t.end()
+                print('Finished reading all transitions and calculating lifetimes!\n')
             
 
         # Functions
