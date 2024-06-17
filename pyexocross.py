@@ -586,7 +586,7 @@ def get_transfiles(read_path):
                 trans_filepaths.append(trans_filepaths_all[i])
             elif len(split_version[0].split('-')) == 2:
                 file_size_bytes = os.path.getsize(trans_filepaths_all[i])
-                if file_size_bytes/1024**3 > 2:   
+                if file_size_bytes/1024**3 > 1:   
                     (trans_filepath, num) = command_decompress(trans_filepaths_all[i])
                     all_decompress_num += 1
                     decompress_num += num
@@ -1527,7 +1527,7 @@ def get_part_transfiles(read_path):
                     (lower >= int(min_wn) and upper <= int(max_wn)) or 
                     (lower <= int(max_wn) < upper)):
                     file_size_bytes = os.path.getsize(trans_filepaths_all[i])
-                    if file_size_bytes/1024**3 > 2:  
+                    if file_size_bytes/1024**3 > 1:  
                         (trans_filepath, num) = command_decompress(trans_filepaths_all[i])
                         all_decompress_num += 1
                         decompress_num += num

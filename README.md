@@ -2,7 +2,9 @@
 
 See the PyExoCross ***manual*** at [https://pyexocross.readthedocs.io](https://pyexocross.readthedocs.io).
 
-See the PyExoCross &nbsp; ***paper***&nbsp; at [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016).
+See the PyExoCross ***published paper*** at [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016).
+
+See the PyExoCross ***arXiv preprint*** at [https://arxiv.org/abs/2406.03977](https://arxiv.org/abs/2406.03977).
 
 
 ## Download
