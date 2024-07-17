@@ -323,31 +323,48 @@ def inp_para(inp_filepath):
         DopplerHWHMYN = inp_df[col0.isin(['DopplerHWHM(Y/N)'])][1].values[0].upper()[0]        
         if 'DOP' in profile: 
             alpha_HWHM = 'None'
+            alpha_hwhm_colid = 0
         elif 'GAU' in profile:
             if DopplerHWHMYN == 'Y':
                 alpha_HWHM = float(inp_df[col0.isin(['DopplerHWHM(Y/N)'])][2].iloc[0])
+                alpha_hwhm_colid = 0
+            elif DopplerHWHMYN == 'U':
+                alpha_HWHM = []
+                alpha_hwhm_colid = int(inp_df[col0.isin(['DopplerHWHM(Y/N)'])][2].iloc[0])
             else:
                 raise ImportError("Gaussian line profile requires a HWHM. " 
                                   + "Please choose 'Y' and give a value for Doppler HWHM in the input file. " 
+                                  + "Or 'U' and add your own Doppler HWHM values as the last column in the transitions file(s). "
                                   + "Otherwise, please choose Doppler line profile " 
                                   + "(with calculated temperature-dependent Doppler HWHM).")
         elif 'VOI' in profile:
             if DopplerHWHMYN == 'Y':
                 alpha_HWHM = float(inp_df[col0.isin(['DopplerHWHM(Y/N)'])][2].iloc[0])
+                alpha_hwhm_colid = 0
+            elif DopplerHWHMYN == 'U':
+                alpha_HWHM = []
+                alpha_hwhm_colid = int(inp_df[col0.isin(['DopplerHWHM(Y/N)'])][2].iloc[0])
             elif DopplerHWHMYN == 'N':
                 alpha_HWHM = 'None'
+                alpha_hwhm_colid = 0
             else:
-                raise ImportError("Please type the correct Doppler HWHM choice 'Y' or 'N' into the input file.")
+                raise ImportError("Please type the correct Doppler HWHM choice 'Y', 'N', or 'U' into the input file.")
         else:
             alpha_HWHM = 'None'
+            alpha_hwhm_colid = 0
         # Lorentzian HWHM 
         LorentzianHWHMYN = inp_df[col0.isin(['LorentzianHWHM(Y/N)'])][1].values[0].upper()[0]  
         if LorentzianHWHMYN == 'Y':
             gamma_HWHM = float(inp_df[col0.isin(['LorentzianHWHM(Y/N)'])][2].iloc[0])
+            gamma_hwhm_colid = 0
+        elif LorentzianHWHMYN == 'U':
+            gamma_HWHM = []
+            gamma_hwhm_colid = int(inp_df[col0.isin(['LorentzianHWHM(Y/N)'])][2].iloc[0])
         elif LorentzianHWHMYN == 'N':
             gamma_HWHM = 'None'
+            gamma_hwhm_colid = 0
         else:
-            raise ImportError("Please type the correct Lorentzian HWHM choice 'Y' or 'N' into the input file.")
+            raise ImportError("Please type the correct Lorentzian HWHM choice 'Y', 'N', or 'U' into the input file.")
         # Plot 
         PlotCrossSectionYN = inp_df[col0.isin(['PlotCrossSection(Y/N)'])][1].values[0].upper()[0]  
         if PlotCrossSectionYN == 'Y':
@@ -364,9 +381,13 @@ def inp_para(inp_filepath):
         bin_size = 'None'
         N_point = 'None'
         predissocYN = 'N'
-        cutoff = 'None'         
+        cutoff = 'None'   
+        DopplerHWHMYN = 'None'
+        LorentzianHWHMYN = 'None'      
         alpha_HWHM = 'None'        
         gamma_HWHM = 'None'
+        alpha_hwhm_colid = 0
+        gamma_hwhm_colid = 0
         broadeners = []
         ratios = np.array([])
         P = 0
@@ -417,7 +438,7 @@ def inp_para(inp_filepath):
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
             Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
             predissocYN, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
-            alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
+            DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
             check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
             PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, 
             PlotNLTEYN, limitYaxisNLTE, PlotCrossSectionYN, limitYaxisXsec)
@@ -440,7 +461,7 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
  Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
  predissocYN, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
- alpha_HWHM, gamma_HWHM, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
+ DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
  check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
  PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, 
  PlotNLTEYN, limitYaxisNLTE, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
@@ -2469,15 +2490,19 @@ def lifetime_broadening(tau):
     return gamma_tau
 
 def DopplerHWHM_alpha(num_v, alpha_HWHM, v, T):
-    if alpha_HWHM != 'None':
+    if DopplerHWHMYN == 'Y' and num_v > 0:
         alpha = np.full(num_v, alpha_HWHM)
+    elif DopplerHWHMYN == 'U':
+        alpha = alpha_HWHM
     else:
         alpha = Doppler_HWHM(v,T)
     return(alpha)
 
 def LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, gamma_air, gamma_self, tau, T, P):
-    if gamma_HWHM != 'None':
+    if LorentzianHWHMYN == 'Y' and num > 0:
         gamma = np.full(num, gamma_HWHM)
+    elif LorentzianHWHMYN == 'U':
+        gamma = gamma_HWHM
     elif database == 'ExoMol' and num > 0:
         gamma = sum([Lorentzian_HWHM(gamma_L[i].values, n_air[i].values,T,P) for i in range(nbroad)])
         if predissocYN == 'Y' and check_predissoc == 0 and 'VOI' in profile:
@@ -3003,11 +3028,33 @@ def CalculateExoMolCrossSection(states_part_df,T,P,Q,broad,ratio,nbroad,broad_df
         st_df = st_df[st_df['v'].between(min_wn - cutoff, max_wn + cutoff)]
     if len(st_df) != 0 and QNsFilter != []:
         st_df = QNfilter_linelist(st_df, QNs_value, QNs_label)
-    if predissocYN == 'Y' and 'VOI' in profile:
-        st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'"]]
-    else:
-        st_df = st_df[['A','v',"g'","E'",'E"','J"']]
         
+    global alpha_HWHM, gamma_HWHM
+    if predissocYN == 'Y' and 'VOI' in profile:
+        if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
+            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm','gamma_hwhm']]
+            alpha_HWHM = st_df['alpha_hwhm'].values
+            gamma_HWHM = st_df['gamma_hwhm'].values
+        elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
+            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm']]
+            alpha_HWHM = st_df['alpha_hwhm'].values
+        elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
+            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'gamma_hwhm']]
+            gamma_HWHM = st_df['gamma_hwhm'].values
+        else:
+            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'"]]
+    else:
+        if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
+            st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm','gamma_hwhm']]
+        elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
+            st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm']]
+            alpha_HWHM = st_df['alpha_hwhm'].values
+        elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
+            st_df = st_df[['A','v',"g'","E'",'E"','J"','gamma_hwhm']]
+            gamma_HWHM = st_df['gamma_hwhm'].values
+        else:
+            st_df = st_df[['A','v',"g'","E'",'E"','J"']]
+
     num = len(st_df)
     if num > 0:
         v = st_df['v'].values
@@ -3203,9 +3250,21 @@ def CalculateHITRANCrossSection(hitran_linelist_df, T, P, Q, profile_label):
 def xsec_part_trans(states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label,trans_filepath): 
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
+    if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
+        use_cols = [0,1,2,alpha_hwhm_colid, gamma_hwhm_colid]
+        use_names = ['u','l','A','alpha_hwhm', 'gamma_hwhm']
+    elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
+        use_cols = [0,1,2,alpha_hwhm_colid]
+        use_names = ['u','l','A','alpha_hwhm']
+    elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
+        use_cols = [0,1,2,gamma_hwhm_colid]
+        use_names = ['u','l','A','gamma_hwhm']
+    else:
+        use_cols = [0,1,2]
+        use_names = ['u','l','A']
     if trans_filepath.split('.')[-1] == 'bz2':
         trans_df_chunk_list = pd.read_csv(trans_filepath, compression='bz2', sep='\s+', header=None,
-                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
+                                          usecols=use_cols,names=use_names, chunksize=chunk_size, 
                                           iterator=True, low_memory=False, encoding='utf-8')
         # Process multiple files in parallel
         with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
@@ -3216,7 +3275,7 @@ def xsec_part_trans(states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_la
                 ]
             xsecs = sum([future.result() for future in tqdm(futures)])        
     else:
-        trans_dd = dd.read_csv(trans_filepath, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
+        trans_dd = dd.read_csv(trans_filepath, sep='\s+', header=None, usecols=use_cols,names=use_names,encoding='utf-8')
         trans_dd_list = trans_dd.partitions
         # Process multiple files in parallel
         with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
