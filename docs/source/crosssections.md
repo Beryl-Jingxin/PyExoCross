@@ -41,7 +41,7 @@ Ratios                                  1.0
 Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 PredissocXsec(Y/N)                      N
-Cutoff(Y/N)                             Y          25              # If Y, default value 25 
+Cutoff(Y/N)                             Y          25             # If Y, default value 25 
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y
@@ -122,9 +122,19 @@ Choose line profile from:
 
 `Doppler`, `Gaussian`, `Lorentzian`, `SciPyVoigt`, `SciPyWofzVoigt`, `HumlicekVoigt`, `ThompsonPseudoVoigt`, `KielkopfPseudoVoigt`, `OliveroPseudoVoigt`, `LiuLinPseudoVoigt`, `RoccoPseudoVoigt`, `BinnedDoppler`, `BinnedGaussian`, `BinnedLorentzian`, `BinnedVoigt`. Please note: no blank when you write the line profile name.
 
-Doppler profile uses Doppler HWHM calculated by program, if you want to use Doppler profile, set `N` after `DopplerHWHM(Y/N)`. If you use Gaussian profile, please set `Y` after `DopplerHWHM(Y/N)`, your Doppler HWHM value will be used for calculating Gaussian profile.
+`DopplerHWHM(Y/N)`:
 
-`LorentzianHWHM(Y/N)`: If you prefer to provide a Lorentzian HWHM as a constant, write `Y` here and give the HWHM value. If you need the program to calculate tempertaure and pressure-dependent Loretzian HWHM, please write `N` here.
+1. Doppler profile uses Doppler HWHM calculated by program, if you want to use Doppler profile, set `N` after `DopplerHWHM(Y/N)`. 
+2. If you use Gaussian profile, please set `Y` or `U` after `DopplerHWHM(Y/N)`, your Doppler HWHM value will be used for calculating Gaussian profile.
+3. If you prefer to provide a Doppler HWHM as a constant, write `Y` here and give the HWHM value. 
+4. If you want to use your own Doppler HWHM list, please add them to the transitions file(s) as a new column on the right. Write `U` here and give this new column index (count start from 0). 
+5. If you need the program to calculate tempertaure-dependent Doppler HWHM, please write `N` here.
+
+`LorentzianHWHM(Y/N)`: 
+
+1. If you prefer to provide a Lorentzian HWHM as a constant, write `Y` here and give the HWHM value. 
+2. If you want to use your own Lorentzian HWHM list, please add them to the transitions file(s) as a new column on the right. Write `U` here and give this new column index (count start from 0). 
+3. If you need the program to calculate tempertaure and pressure-dependent Loretzian HWHM, please write `N` here.
 
 *Example*
 
@@ -132,6 +142,24 @@ Doppler profile uses Doppler HWHM calculated by program, if you want to use Dopp
 Profile                                 SciPyVoigt
 DopplerHWHM(Y/N)                        Y          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
+```
+
+```bash
+Profile                                 Doppler
+DopplerHWHM(Y/N)                        N          0.3            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+```
+
+```bash
+Profile                                 Gaussian
+DopplerHWHM(Y/N)                        U          4              # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+```
+
+```bash
+Profile                                 SciPyVoigt
+DopplerHWHM(Y/N)                        U          4              # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     U          5              # Set Lorentzian HWHM as a constant
 ```
 
 *Example*
