@@ -83,3 +83,8 @@ Please write `N`, `NO`, `No`, `n`, `no` after uncertainty filter.
 ###### concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
 
 Each line list file is tooooo large when program running on many cores, so that the memory is not enough. Please change reduce the `NCPUtrans`, `NCPUfiles` and/or `ChunkSize`. If you will use very large dataset (e.g. datasets of CaOH, NaOH, CH4, H2CS, VO), please set `NCPUfiles` as `1` and make `NCPUtrans` larger (try from 32).
+
+
+##### ModuleNotFoundError: No module named 'distutils'.
+Unfortunately, you're using the newly released Python, which removed distutils after it being deprecated since Python 3.10. Try to sideload distutils from a third party source (e.g. a system package, like apt install python3-distutils), or
+downgrade to an older version of Python (3.11 or older).
