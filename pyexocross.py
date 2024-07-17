@@ -563,8 +563,6 @@ def get_transfiles(read_path):
     trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans.bz2')
     if trans_filepaths_all == []:
         trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans')
-    else:
-        raise ImportError("No such transitions files, please check the read path and filename format!")
     num_transfiles_all = len(trans_filepaths_all)    # The number of all transitions files including the older version files.
     trans_filepaths = []    # The list of the lastest transitions files.
     all_decompress_num = 0
@@ -1508,8 +1506,6 @@ def get_part_transfiles(read_path):
     trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans.bz2')
     if trans_filepaths_all == []:
         trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans')
-    else:
-        raise ImportError("No such transitions files, please check the read path and filename format!")
     num_transfiles_all = len(trans_filepaths_all)    # The number of all transitions files including the older version files.
     trans_filepaths = []    # The list of the lastest transitions files.
     all_decompress_num = 0
