@@ -513,9 +513,15 @@ def read_all_states(read_path):
     states_df = pd.DataFrame()
     states_filename = (read_path + molecule + '/' + isotopologue + '/' + dataset 
                        + '/' + isotopologue + '__' + dataset + '.states.bz2')
-    
-    chunks = pd.read_csv(states_filename, compression='bz2', sep='\s+', header=None,
-                         chunksize=100_000, iterator=True, low_memory=False, dtype=object)
+    if os.path.exists(states_filename):    
+        chunks = pd.read_csv(states_filename, compression='bz2', sep='\s+', header=None,
+                             chunksize=100_000, iterator=True, low_memory=False, dtype=object)
+    elif os.path.exists(states_filename.replace('.bz2','')):
+        chunks = pd.read_csv(states_filename.replace('.bz2',''), sep='\s+', header=None,
+                             chunksize=100_000, iterator=True, low_memory=False, dtype=object)
+    else:
+        raise ImportError("No such states file, please check the read path and states filename format!")
+
     for chunk in chunks:
         states_df = pd.concat([states_df, chunk])
     if check_uncertainty == 1:
@@ -554,7 +560,11 @@ def command_decompress(trans_filename):
 ### Get transitions File
 def get_transfiles(read_path):
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
-    trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*trans.bz2')
+    trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans.bz2')
+    if trans_filepaths_all == []:
+        trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans')
+    else:
+        raise ImportError("No such transitions files, please check the read path and filename format!")
     num_transfiles_all = len(trans_filepaths_all)    # The number of all transitions files including the older version files.
     trans_filepaths = []    # The list of the lastest transitions files.
     all_decompress_num = 0
@@ -1148,7 +1158,12 @@ def exomol_lifetime(read_path, states_df):
     ts.start()  
     states_filename = (read_path + molecule + '/' + isotopologue + '/' + dataset + 
                        '/' + isotopologue + '__' + dataset + '.states.bz2')
-    s_df = pd.read_csv(states_filename, compression='bz2', header=None, dtype=object)[0]
+    if os.path.exists(states_filename):    
+        s_df = pd.read_csv(states_filename, compression='bz2', header=None, dtype=object)[0]
+    elif os.path.exists(states_filename.replace('.bz2','')):
+        s_df = pd.read_csv(states_filename.replace('.bz2',''), header=None, dtype=object)[0]
+    else:
+        raise ImportError("No such states file, please check the read path and states filename format!")
     nrows = len(s_df)           
     new_rows = []
     if check_uncertainty == 0:
@@ -1490,7 +1505,11 @@ def read_part_states(states_df):
 
 def get_part_transfiles(read_path):
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
-    trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*trans.bz2')
+    trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans.bz2')
+    if trans_filepaths_all == []:
+        trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans')
+    else:
+        raise ImportError("No such transitions files, please check the read path and filename format!")
     num_transfiles_all = len(trans_filepaths_all)    # The number of all transitions files including the older version files.
     trans_filepaths = []    # The list of the lastest transitions files.
     all_decompress_num = 0
@@ -2051,7 +2070,8 @@ def plot_stick_spectra(stick_spectra_df):
     else:
         os.makedirs(ss_plot_folder, exist_ok=True)
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.fill_between(v, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
+    # ax.fill_between(v, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
+    ax.vlines(v, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
     ax.semilogy()
     ax.set_xlim([min_wn, max_wn])
     ax.set_ylim([limitYaxisStickSpectra, 10*max(S)])
@@ -2059,8 +2079,8 @@ def plot_stick_spectra(stick_spectra_df):
     ax.set_xlabel('Wavenumber, cm$^{-1}$')
     ax.set_ylabel('Intensity, cm/molecule')
     leg = ax.legend()                  # Get the legend object.
-    for line in leg.legend_handles:
-        line.set_height(1.5)           # Change the line width for the legend.
+    # for line in leg.legend_handles:
+    #     line.set_height(1.5)           # Change the line width for the legend.
     ss_plot = (ss_plot_folder+molecule+'__'+isotopologue+'__'+ dataset+'__T'+str(T)+'__'+
                str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__'+abs_emi+'__sp.png')
     plt.savefig(ss_plot, dpi=500)
@@ -2317,7 +2337,8 @@ def plot_NLTE(nlte_df):
     else:
         os.makedirs(ns_plot_folder, exist_ok=True)
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.fill_between(v, 0, nlteS, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
+    # ax.fill_between(v, 0, nlteS, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
+    ax.vlines(v, 0, nlteS, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
     ax.semilogy()
     ax.set_xlim([min_wn, max_wn])
     ax.set_ylim([limitYaxisNLTE, 10*max(nlteS)])
@@ -2325,8 +2346,8 @@ def plot_NLTE(nlte_df):
     ax.set_xlabel('Wavenumber, cm$^{-1}$')
     ax.set_ylabel('Non-LTE Intensity, cm/molecule')
     leg = ax.legend()                  # Get the legend object.
-    for line in leg.legend_handles:
-        line.set_height(1.5)           # Change the line width for the legend.
+    # for line in leg.legend_handles:
+    #     line.set_height(1.5)           # Change the line width for the legend.
     ns_plot = (ns_plot_folder+molecule+'__'+isotopologue+'__'+ dataset+'__Tvib'+str(Tvib)+'__Trot'+str(Trot)+'__'+
                 str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__'+abs_emi+'__nlte.png')
     plt.savefig(ns_plot, dpi=500)
