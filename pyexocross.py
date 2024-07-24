@@ -639,7 +639,7 @@ def get_transfiles(read_path):
 #     pf_content = requests.get(pf_url).text
 #     pf_col_name = ['T', 'Q']
 #     pf_df = pd.read_csv(StringIO(pf_content), sep='\\s+', names=pf_col_name, header=None)
-#     Q = pf_df['Q'][T-1]
+#     Q = pf_df[pf_df['T'].isin([T])]['Q']
 #     return(Q)
 
 # Read partition function with local partition function file
@@ -648,7 +648,7 @@ def read_exomol_pf(read_path, T):
                    + '/' + isotopologue + '__' + dataset + '.pf')
     pf_col_name = ['T', 'Q']
     pf_df = pd.read_csv(pf_filename, sep='\\s+', names=pf_col_name, header=None)
-    Q = pf_df['Q'][T-1]
+    Q = pf_df[pf_df['T'].isin([T])]['Q']
     return(Q)
 
 ### Read Broadening File
