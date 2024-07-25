@@ -3028,19 +3028,14 @@ def CalculateExoMolCrossSection(states_part_df,T,P,Q,broad,ratio,nbroad,broad_df
         st_df = st_df[st_df['v'].between(min_wn - cutoff, max_wn + cutoff)]
     if len(st_df) != 0 and QNsFilter != []:
         st_df = QNfilter_linelist(st_df, QNs_value, QNs_label)
-        
-    global alpha_HWHM, gamma_HWHM
+
     if predissocYN == 'Y' and 'VOI' in profile:
         if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
             st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm','gamma_hwhm']]
-            alpha_HWHM = st_df['alpha_hwhm'].values
-            gamma_HWHM = st_df['gamma_hwhm'].values
         elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
             st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm']]
-            alpha_HWHM = st_df['alpha_hwhm'].values
         elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
             st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'gamma_hwhm']]
-            gamma_HWHM = st_df['gamma_hwhm'].values
         else:
             st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'"]]
     else:
@@ -3048,13 +3043,11 @@ def CalculateExoMolCrossSection(states_part_df,T,P,Q,broad,ratio,nbroad,broad_df
             st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm','gamma_hwhm']]
         elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
             st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm']]
-            alpha_HWHM = st_df['alpha_hwhm'].values
         elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
             st_df = st_df[['A','v',"g'","E'",'E"','J"','gamma_hwhm']]
-            gamma_HWHM = st_df['gamma_hwhm'].values
         else:
             st_df = st_df[['A','v',"g'","E'",'E"','J"']]
-
+        
     num = len(st_df)
     if num > 0:
         v = st_df['v'].values
@@ -3068,9 +3061,30 @@ def CalculateExoMolCrossSection(states_part_df,T,P,Q,broad,ratio,nbroad,broad_df
         if threshold != 'None':
             st_df = st_df[st_df['coef'] >= threshold]  
             v = st_df['v'].values
+            
             num = len(st_df)         
         else:
             pass  
+
+        global alpha_HWHM, gamma_HWHM
+        if predissocYN == 'Y' and 'VOI' in profile:
+            if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
+                alpha_HWHM = st_df['alpha_hwhm'].values
+                gamma_HWHM = st_df['gamma_hwhm'].values
+            elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
+                alpha_HWHM = st_df['alpha_hwhm'].values
+            elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
+                gamma_HWHM = st_df['gamma_hwhm'].values
+            else:
+                pass
+        else:
+            if DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
+                alpha_HWHM = st_df['alpha_hwhm'].values
+            elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
+                gamma_HWHM = st_df['gamma_hwhm'].values
+            else:
+                pass
+
         if num > 0:
             if 'DOP' not in profile and 'GAU' not in profile:
                 gamma_L = pd.DataFrame()
