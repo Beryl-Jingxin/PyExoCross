@@ -1224,7 +1224,7 @@ def calculate_cooling(A, v, Ep, gp, T, Q):
     return(cooling_func)
 
 # Calculate cooling function
-def ProcessCoolingFunction(states_df,Ts,Qs,trans_df):
+def ProcessCoolingFunction(states_df,Ts,trans_df):
     merged_df = dd.merge(trans_df, states_df, left_on='u', right_on='id', 
                          how='inner').merge(states_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
     cooling_func_df = merged_df[['A',"E'",'E"',"g'"]]
@@ -1235,12 +1235,13 @@ def ProcessCoolingFunction(states_df,Ts,Qs,trans_df):
         v = cooling_func_df['v'].values
         Ep = cooling_func_df["E'"].values
         gp = cooling_func_df["g'"].values
-        cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), desc='Calculating')]
+        cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], read_exomol_pf(read_path, Ts[i])) 
+                        for i in tqdm(range(Tmax), desc='Calculating')]
     else:
         cooling_func = np.zeros(Tmax)
     return cooling_func
 
-def calculate_cooling_func(states_df, Ts, Qs, trans_filepath):
+def calculate_cooling_func(states_df, Ts, trans_filepath):
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
     if trans_filepath.split('.')[-1] == 'bz2':
@@ -1249,7 +1250,7 @@ def calculate_cooling_func(states_df, Ts, Qs, trans_filepath):
                                           iterator=True, low_memory=False, encoding='utf-8')
         # Process multiple files in parallel
         with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessCoolingFunction,states_df,Ts,Qs,trans_df_chunk) 
+            futures = [trans_executor.submit(ProcessCoolingFunction,states_df,Ts,trans_df_chunk) 
                        for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)]
             cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
     else:
@@ -1257,7 +1258,7 @@ def calculate_cooling_func(states_df, Ts, Qs, trans_filepath):
         trans_dd_list = trans_dd.partitions
         # Process multiple files in parallel
         with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessCoolingFunction,states_df,Ts,Qs,trans_dd_list[i].compute(scheduler='threads')) 
+            futures = [trans_executor.submit(ProcessCoolingFunction,states_df,Ts,trans_dd_list[i].compute(scheduler='threads')) 
                        for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)]
             cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
     return cooling_func
@@ -1270,13 +1271,12 @@ def exomol_cooling(states_df, Ntemp, Tmax):
     t = Timer()
     t.start()
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
-    Qs = read_exomol_pf(read_path, Ts)
     print('Reading all transitions and calculating cooling functions ...')
     trans_filepaths = get_transfiles(read_path)
     # Process multiple files in parallel
     with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
-        futures = [executor.submit(calculate_cooling_func, states_df, Ts, Qs,
+        futures = [executor.submit(calculate_cooling_func, states_df, Ts,
                                    trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
         cooling_func = sum(np.array([future.result() for future in futures]))
     
