@@ -316,8 +316,16 @@ def inp_para(inp_filepath):
         broadeners = [i for i in broadeners if i is not np.nan]
         ratios = np.array(list(inp_df[col0.isin(['Ratios'])].iloc[0])[1:], dtype=float)
         ratios = ratios[~np.isnan(ratios)]
-        wn_grid = np.linspace(min_wn, max_wn, N_point)
         wn_wl = inp_df[col0.isin(['Wavenumber(wn)/wavelength(wl)'])][1].values[0].upper()
+        if 'L' not in wn_wl:
+            wn_grid = np.linspace(min_wn, max_wn, N_point)
+        else:
+            min_wl = 10000 / max_wn
+            if min_wn == 0:
+                max_wl = 10000 / 1e-6
+            else:
+                max_wl = 10000 / min_wn
+            wn_grid = np.linspace(min_wl, max_wl, N_point)
         profile = inp_df[col0.isin(['Profile'])][1].values[0].upper().replace('PRO','')
         # Doppler HWHM
         DopplerHWHMYN = inp_df[col0.isin(['DopplerHWHM(Y/N)'])][1].values[0].upper()[0]        
@@ -3316,7 +3324,11 @@ def save_xsec(wn, xsec, database, profile_label):
         print('{:25s} : {:<6}'.format('Number of points is', N_point))
         print('{:25s} : {:<6}'.format('Bin size is', bin_size), u'cm\u207B\u00B9')
         print('{:25s} : {:<6}'.format('Cutoff is', cutoff), u'cm\u207B\u00B9')
-        print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
+        # print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
+        if UncFilter != 'None':
+            print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
+        else:
+            print('{:25s} : {:<6}'.format('Uncertainty filter ', 'None'))
         print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
         print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
         # Save cross sections into .xsec file.
@@ -3341,7 +3353,7 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
-            plt.xlim([min_wn, max_wn])
+            # plt.xlim([min_wn, max_wn])
             plt.ylim([limitYaxisXsec, 10*max(xsec)])
             plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)   
             plt.semilogy()
@@ -3358,18 +3370,21 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.show()
             print('Cross sections plot has been saved:', xsec_plotpath, '\n')
     elif 'L' in wn_wl:
-        wl = 10000 / wn
+        # wl = 10000 / wn
         min_wl = '%.02f' % (10000 / max_wn)
         max_wl = '%.02f' % (10000 / min_wn)
         print('{:25s} : {:<6}'.format('Number of points is', N_point))
-        print('{:25s} : {:<6}'.format('Bin size is', 10000/bin_size), u'\xb5m')
+        print('{:25s} : {:<6}'.format('Bin size is', bin_size), u'\xb5m')
         print('{:25s} : {:<6}'.format('Cutoff is', 10000/cutoff),u'\xb5m')
-        print('{:25s} : {:<6}'.format('Uncertainty filter', 10000/UncFilter),u'\xb5m')
+        if UncFilter != 'None':
+            print('{:25s} : {:<6}'.format('Uncertainty filter', 10000/UncFilter),u'\xb5m')
+        else:
+            print('{:25s} : {:<6}'.format('Uncertainty filter ', 'None'))
         print('{:25s} : {:<6}'.format('Threshold filter',10000/threshold),u'\xb5m/(moleculeu \xb5m\u00B2)')
         print('{:25s} : {} {} {} {}'.format('Wavelength range selected',min_wl,u'\xb5m -',max_wl,u'\xb5m'))
         # Save cross sections into .xsec file.
         xsec_df = pd.DataFrame()
-        xsec_df['wavelength'] = wl
+        xsec_df['wavelength'] = wn
         xsec_df['cross-section'] = xsec
         xsec_filepath = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
                          +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
@@ -3389,9 +3404,9 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
-            plt.xlim([min_wl, max_wl])
+            # plt.xlim([min_wl, max_wl])
             plt.ylim([limitYaxisXsec, 10*max(xsec)])
-            plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)             
+            plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)             
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.xlabel(u'Wavelength, \xb5m')
