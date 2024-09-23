@@ -58,7 +58,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 Temperature                             300
-Range                                   0          41200
+Range                                   0          41200          # Unit cm-1
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
@@ -74,7 +74,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 Tvib                                   2000
 Trot                                   296
 QNsVibLabel                            v,eS
-QNsRotLabel                            J,e/f            
+QNsRotLabel                            J,e/f  
 PlotNonLTE(Y/N)                        Y
 Y-axisLimitNonLTE                      1e-30                     # Default value is 1e-30
 
@@ -83,11 +83,11 @@ Y-axisLimitNonLTE                      1e-30                     # Default value
 Pressure                                1
 Npoints/BinSize                         BinSize   0.1
 Broadeners                              H2       He  
-Ratios                                  0.75     0.15    
+Ratios                                  0.75     0.15  
 Profile                                 SciPyVoigt   
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 PredissocXsec(Y/N)                      N
-Cutoff(Y/N)                             Y          25             # If Y, default value 25 
+Cutoff(Y/N)                             Y          25             # If Y, default value 25, unit cm-1
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   N
@@ -162,7 +162,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 Temperature                             300
-Range                                   0          1000
+Range                                   0          1000           # Unit cm-1
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
@@ -178,7 +178,7 @@ Y-axisLimitStickSpectra                 1e-40                     # Default valu
 Tvib                                   2000
 Trot                                   296
 QNsVibLabel                            v,eS
-QNsRotLabel                            J,e/f            
+QNsRotLabel                            J,e/f  
 PlotNonLTE(Y/N)                        Y
 Y-axisLimitNonLTE                      1e-30                     # Default value is 1e-30
 
@@ -190,7 +190,7 @@ Broadeners                              Air        Self
 Ratios                                  0.7        0.3   
 Profile                                 Lorentzian  
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
-Cutoff(Y/N)                             Y          25             # If Y, default value 25
+Cutoff(Y/N)                             Y          25             # If Y, default value 25, unit cm-1
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y

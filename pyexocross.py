@@ -325,7 +325,8 @@ def inp_para(inp_filepath):
                 max_wl = 10000 / 1e-6
             else:
                 max_wl = 10000 / min_wn
-            wn_grid = np.linspace(min_wl, max_wl, N_point)
+            wl_grid = np.linspace(min_wl, max_wl, N_point)
+            wn_grid = 10000 / wl_grid
         profile = inp_df[col0.isin(['Profile'])][1].values[0].upper().replace('PRO','')
         # Doppler HWHM
         DopplerHWHMYN = inp_df[col0.isin(['DopplerHWHM(Y/N)'])][1].values[0].upper()[0]        
@@ -3370,7 +3371,7 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.show()
             print('Cross sections plot has been saved:', xsec_plotpath, '\n')
     elif 'L' in wn_wl:
-        # wl = 10000 / wn
+        wl = 10000 / wn
         min_wl = '%.02f' % (10000 / max_wn)
         max_wl = '%.02f' % (10000 / min_wn)
         print('{:25s} : {:<6}'.format('Number of points is', N_point))
@@ -3380,11 +3381,11 @@ def save_xsec(wn, xsec, database, profile_label):
             print('{:25s} : {:<6}'.format('Uncertainty filter', 10000/UncFilter),u'\xb5m')
         else:
             print('{:25s} : {:<6}'.format('Uncertainty filter ', 'None'))
-        print('{:25s} : {:<6}'.format('Threshold filter',10000/threshold),u'\xb5m/(moleculeu \xb5m\u00B2)')
+        print('{:25s} : {:<6}'.format('Threshold filter', threshold),u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
         print('{:25s} : {} {} {} {}'.format('Wavelength range selected',min_wl,u'\xb5m -',max_wl,u'\xb5m'))
         # Save cross sections into .xsec file.
         xsec_df = pd.DataFrame()
-        xsec_df['wavelength'] = wn
+        xsec_df['wavelength'] = wl
         xsec_df['cross-section'] = xsec
         xsec_filepath = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
                          +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
@@ -3406,24 +3407,24 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.figure(figsize=(12, 6))
             # plt.xlim([min_wl, max_wl])
             plt.ylim([limitYaxisXsec, 10*max(xsec)])
-            plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)             
+            plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)             
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.xlabel(u'Wavelength, \xb5m')
-            plt.ylabel(u'Cross-section, \xb5m\u207B\u00B2/molecule')
+            plt.ylabel('Cross-section, cm$^{2}$/molecule')
             plt.legend()
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
             xsec_plotpath = (plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
-                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png')
+                             +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png')
             plt.savefig(xsec_plotpath, dpi=500)
             plt.show()
             print('Cross sections plot has been saved:', xsec_plotpath, '\n')
     else:
         raise ImportError('Please choose wavenumber or wavelength and type in correct format: wn or wl.')
 
-# Cross sections for ExoMol database
+
 # Cross sections for ExoMol database
 def exomol_cross_section(states_part_df, T, P):
     print('Calculate cross sections.')
@@ -3448,10 +3449,14 @@ def exomol_cross_section(states_part_df, T, P):
     
     tot.end()
     print('Finished reading transitions and calculating cross sections!\n')
-    save_xsec(wn_grid, xsec, database, profile_label) 
+    if 'L' not in wn_wl:
+        save_xsec(wn_grid, xsec, database, profile_label) 
+    else:
+        wl_grid = 10000 / wn_grid
+        save_xsec(wl_grid, xsec, database, profile_label)
     print('Cross sections have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
-    # return xsec
+    return xsec
 
 # Cross sections forHITRAN database
 def hitran_cross_section(hitran_linelist_df, T, P):
@@ -3474,10 +3479,14 @@ def hitran_cross_section(hitran_linelist_df, T, P):
     
     t.end()  
     print('Finished calculating cross sections!\n')
-    save_xsec(wn_grid, xsec, database, profile_label) 
+    if 'L' not in wn_wl:
+        save_xsec(wn_grid, xsec, database, profile_label) 
+    else:
+        wl_grid = 10000 / wn_grid
+        save_xsec(wl_grid, xsec, database, profile_label)
     print('Cross sections have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
-    # return xsec
+    return xsec
 
 # Get Results
 def get_results(read_path): 

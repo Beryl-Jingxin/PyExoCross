@@ -3,7 +3,7 @@ Cross sections
 
 `Temperature`: Please provide temperature in unit K.
 
-`Range`: Give two values as the minimum and maximum of the wavenumber range. No `,` or `;` between these two numbers, just leave blank here.
+`Range`: Give two values as the minimum and maximum of the wavenumber range in unit cm-1. No `,` or `;` between these two numbers, just leave blank here.
 
 `Absorption/Emission`: Choose `Absorption` or `Emission`.
 
@@ -15,7 +15,7 @@ Cross sections
 
 If  `PredissocXsec(Y/N)` is yes, predissociation lifetimes will be used/calculated when calculating cross sections with Voigt profile.
 
-If  `Cutoff(Y/N)` is yes, you can provide cutoff here.
+If  `Cutoff(Y/N)` is yes, you can provide cutoff here in unit cm-1.
 
 If you want a figure of corss sections, please set `Y` for `PlotCrossSection(Y/N)`.
 
@@ -26,7 +26,7 @@ And if you want set the lower limit of y-axis for plotting, please write after `
 ```
 # Calculate LTE or Non-LTE stick spectra or cross sections #
 Temperature                             2000
-Range                                   0          30000
+Range                                   0          30000          # Unit cm-1
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
@@ -41,7 +41,7 @@ Ratios                                  1.0
 Profile                                 SciPyVoigt        
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 PredissocXsec(Y/N)                      N
-Cutoff(Y/N)                             Y          25             # If Y, default value 25 
+Cutoff(Y/N)                             Y          25             # If Y, default value 25, unit cm-1 
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y
@@ -203,7 +203,7 @@ QNsformat                               %2d     %2d     %2d     %2d     %2d     
 
 # Calculate LTE or Non-LTE stick spectra or cross sections #
 Temperature                             300
-Range                                   0          41200
+Range                                   0          41200          # Unit cm-1
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
@@ -218,7 +218,7 @@ Ratios                                  0.75     0.15
 Profile                                 SciPyVoigt   
 Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 PredissocXsec(Y/N)                      N
-Cutoff(Y/N)                             Y          25             # If Y, default value 25 
+Cutoff(Y/N)                             Y          25             # If Y, default value 25, unit cm-1 
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   N
@@ -264,7 +264,7 @@ QNsformat                               %5s     %2s   %3s     %2d     %1s
 
 # Calculate LTE or Non-LTE stick spectra or cross sections #
 Temperature                             1000
-Range                                   1000       5000
+Range                                   1000       5000          # Unit cm-1
 Absorption/Emission                     Emission                 # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          No         0.01          # If Y, default value 0.01
 Threshold(Y/N)                          NO         1e-30         # If Y, default value 1e-30
@@ -279,7 +279,7 @@ Ratios                                  0.7        0.3
 Profile                                 SciPyVoigt  
 Wavenumber(wn)/wavelength(wl)           wl                        # 'wn' or 'wl'
 PredissocXsec(Y/N)                      no
-Cutoff(Y/N)                             N          100            # If Y, default value 25
+Cutoff(Y/N)                             N          100            # If Y, default value 25, unit cm-1
 DopplerHWHM(Y/N)                        n          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     n          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   NO
