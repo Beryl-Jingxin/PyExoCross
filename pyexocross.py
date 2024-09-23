@@ -3449,11 +3449,7 @@ def exomol_cross_section(states_part_df, T, P):
     
     tot.end()
     print('Finished reading transitions and calculating cross sections!\n')
-    if 'L' not in wn_wl:
-        save_xsec(wn_grid, xsec, database, profile_label) 
-    else:
-        wl_grid = 10000 / wn_grid
-        save_xsec(wl_grid, xsec, database, profile_label)
+    save_xsec(wn_grid, xsec, database, profile_label) 
     print('Cross sections have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
     return xsec
@@ -3479,11 +3475,7 @@ def hitran_cross_section(hitran_linelist_df, T, P):
     
     t.end()  
     print('Finished calculating cross sections!\n')
-    if 'L' not in wn_wl:
-        save_xsec(wn_grid, xsec, database, profile_label) 
-    else:
-        wl_grid = 10000 / wn_grid
-        save_xsec(wl_grid, xsec, database, profile_label)
+    save_xsec(wn_grid, xsec, database, profile_label) 
     print('Cross sections have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
     return xsec
