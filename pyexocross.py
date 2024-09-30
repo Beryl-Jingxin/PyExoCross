@@ -3324,8 +3324,10 @@ def save_xsec(wn, xsec, database, profile_label):
     if 'L' not in wn_wl:
         print('{:25s} : {:<6}'.format('Number of points is', N_point))
         print('{:25s} : {:<6}'.format('Bin size is', bin_size), u'cm\u207B\u00B9')
-        print('{:25s} : {:<6}'.format('Cutoff is', cutoff), u'cm\u207B\u00B9')
-        # print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
+        if cutoff != 'None':
+            print('{:25s} : {:<6}'.format('Cutoff is', cutoff), u'cm\u207B\u00B9')
+        else:
+            print('{:25s} : {:<6}'.format('Cutoff is', 'None'))
         if UncFilter != 'None':
             print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
         else:
@@ -3376,7 +3378,10 @@ def save_xsec(wn, xsec, database, profile_label):
         max_wl = '%.02f' % (10000 / min_wn)
         print('{:25s} : {:<6}'.format('Number of points is', N_point))
         print('{:25s} : {:<6}'.format('Bin size is', bin_size), u'\xb5m')
-        print('{:25s} : {:<6}'.format('Cutoff is', 10000/cutoff),u'\xb5m')
+        if cutoff != 'None':
+            print('{:25s} : {:<6}'.format('Cutoff is', 10000/cutoff),u'\xb5m')
+        else:
+            print('{:25s} : {:<6}'.format('Cutoff is', 'None'))
         if UncFilter != 'None':
             print('{:25s} : {:<6}'.format('Uncertainty filter', 10000/UncFilter),u'\xb5m')
         else:
@@ -3406,7 +3411,7 @@ def save_xsec(wn, xsec, database, profile_label):
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
             # plt.xlim([min_wl, max_wl])
-            plt.ylim([limitYaxisXsec, 10*max(xsec)])
+            # plt.ylim([limitYaxisXsec, 10*max(xsec)])
             plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)             
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
