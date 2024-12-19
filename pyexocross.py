@@ -2952,7 +2952,7 @@ def cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff):
         end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
         wngrid_start = wn_grid[start]
         wngrid_end = wn_grid[end-1]
-        bnormBinsize = ne.evaluate('PI/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
+        bnormBinsize = ne.evaluate('1/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
@@ -2964,7 +2964,7 @@ def cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff):
         end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
         wngrid_start = wn_grid[start]
         wngrid_end = wn_grid[end-1]
-        bnormBinsize = ne.evaluate('PI/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
+        bnormBinsize = ne.evaluate('1/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
