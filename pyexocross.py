@@ -2700,7 +2700,7 @@ def BinnedVoigt_lorenz(dv, sigma, gamma, x):
 
 def BinnedVoigt_profile(w, bnormq, lorenz):
     '''Return binned Voigt line profile at dv with HWHM gamma.'''
-    BinnedVoigtProfile = ne.evaluate('sum(w*bnormq*lorenz)')
+    BinnedVoigtProfile = ne.evaluate('sum(w*bnormq*lorenz,axis=1)')
     return BinnedVoigtProfile
 
 ## Calculate Cross Sections
