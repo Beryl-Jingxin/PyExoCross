@@ -298,10 +298,14 @@ def inp_para(inp_filepath):
             N_point = int((max_wn - min_wn)/bin_size+1)
         else:
             raise ImportError("Please type the correct grid choice 'Npoints' or 'BinSize' into the input file.")
-        # Predissociative cross sections
+        # Predissociation cross sections
         predissocYN = inp_df[col0.isin(['PredissocXsec(Y/N)'])][1].values[0].upper()[0]
         if predissocYN != 'Y' and predissocYN != 'N':
             raise ImportError("Please type the correct predissociative choice 'Y' or 'N' into the input file.")        
+        if predissocYN == 'Y':
+            photo = '.photo'
+        else:
+            photo = ''  
         # Cutoff
         cutoffYN = inp_df[col0.isin(['Cutoff(Y/N)'])][1].values[0].upper()[0]
         if cutoffYN == 'Y':
@@ -390,6 +394,7 @@ def inp_para(inp_filepath):
         bin_size = 'None'
         N_point = 'None'
         predissocYN = 'N'
+        photo = ''
         cutoff = 'None'   
         DopplerHWHMYN = 'None'
         LorentzianHWHMYN = 'None'      
@@ -446,7 +451,7 @@ def inp_para(inp_filepath):
             ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
             Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
-            predissocYN, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
+            predissocYN, photo, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
             check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
             PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, 
@@ -469,7 +474,7 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
  ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
  Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
- predissocYN, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
+ predissocYN, photo, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
  DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
  check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
  PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, 
@@ -2048,7 +2053,8 @@ def ProcessStickSpectra(states_part_df,T,Q,trans_part_df):
     else:
         stick_spectra_df['S'] = np.array([])
     stick_spectra_df.drop(columns=['A',"g'",'g"'], inplace=True)
-    col_main = ['v','S',"J'","E'",'J"','E"']
+    # col_main = ['v','S',"J'","E'",'J"','E"']
+    col_main = ['v','S']
     col_qn = [col for col in stick_spectra_df.columns if col not in col_main]
     col_stick_spectra = col_main + col_qn
     # col_stick_spectra = ['v','S']
@@ -2108,7 +2114,7 @@ def plot_stick_spectra(stick_spectra_df):
     # for line in leg.legend_handles:
     #     line.set_height(1.5)           # Change the line width for the legend.
     ss_plot = (ss_plot_folder+molecule+'__'+isotopologue+'__'+ dataset+'__T'+str(T)+'__'+
-               str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__'+abs_emi+'__sp.png')
+               str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__'+abs_emi+photo+'__sp.png')
     plt.savefig(ss_plot, dpi=500)
     plt.show()
     tp.end()
@@ -2121,6 +2127,10 @@ def exomol_stick_spectra(states_part_df, T):
     print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
     print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
     print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
+    if predissocYN == 'Y':
+        print('{:25s} : {:<6}'.format('Predissociation', 'Yes'))
+    else:
+        print('{:25s} : {:<6}'.format('Predissociation', 'No'))
     tot = Timer()
     tot.start()
     Q = read_exomol_pf(read_path, T)    
@@ -2160,11 +2170,12 @@ def exomol_stick_spectra(states_part_df, T):
         os.makedirs(ss_folder, exist_ok=True)
     ss_path = (ss_folder+molecule+'__'+isotopologue+'__'+ dataset+'__T'+str(T)+'__'
                +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)
-               +'__thres'+str(threshold)+'__'+abs_emi+'.stick')
+               +'__thres'+str(threshold)+'__'+abs_emi+photo+'.stick')
     # ss_colname = stick_spectra_df.columns
     if QNsfmf == '':
-        fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
-        # fmt = '%12.8E %12.8E'
+        # fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
+        fmt = '%12.8E %12.8E'
+        stick_spectra_df = stick_spectra_df[['v','S']]
     else:
         fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
@@ -2183,6 +2194,10 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
     print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
     print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
+    if predissocYN == 'Y':
+        print('{:25s} : {:<6}'.format('Predissociation', 'Yes'))
+    else:
+        print('{:25s} : {:<6}'.format('Predissociation', 'No'))
     t = Timer()
     t.start()
     A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = linelist_hitran(hitran_linelist_df)
@@ -2214,7 +2229,10 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
         pass
     else:
         os.makedirs(ss_folder, exist_ok=True)
-    ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
+    # ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
+    ss_path = (ss_folder+molecule+'__'+isotopologue+'__'+ dataset+'__T'+str(T)+'__'
+               +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)
+               +'__thres'+str(threshold)+'__'+abs_emi+photo+'.stick')
     fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
     ts.end()
@@ -2375,7 +2393,7 @@ def plot_NLTE(nlte_df):
     # for line in leg.legend_handles:
     #     line.set_height(1.5)           # Change the line width for the legend.
     ns_plot = (ns_plot_folder+molecule+'__'+isotopologue+'__'+ dataset+'__Tvib'+str(Tvib)+'__Trot'+str(Trot)+'__'+
-                str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__'+abs_emi+'__nlte.png')
+                str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__'+abs_emi+photo+'__nlte.png')
     plt.savefig(ns_plot, dpi=500)
     plt.show()
     tp.end()
@@ -2388,6 +2406,10 @@ def exomol_NLTE(states_nlte_df,Tvib,Trot,Q_nlte):
     print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
     print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
     print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
+    if predissocYN == 'Y':
+        print('{:25s} : {:<6}'.format('Predissociation', 'Yes'))
+    else:
+        print('{:25s} : {:<6}'.format('Predissociation', 'No'))    
     tot = Timer()
     tot.start()
     
@@ -2422,7 +2444,7 @@ def exomol_NLTE(states_nlte_df,Tvib,Trot,Q_nlte):
     else:
         os.makedirs(ns_folder, exist_ok=True)
     ns_path = (ns_folder+molecule+'__'+isotopologue+'__'+ dataset+'__Tvib'+str(Tvib)+'__Trot'+str(Trot)+'__'
-               +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__thres'+str(threshold)+'__'+abs_emi+'.nlte')
+               +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__thres'+str(threshold)+'__'+abs_emi+photo+'.nlte')
     if QNsfmf == '':
         fmt = '%12.8E %12.8E %7s %7s'
         # fmt = '%12.8E %12.8E'
@@ -3320,6 +3342,10 @@ def save_xsec(wn, xsec, database, profile_label):
     print(profile_label,'profile')
     print('{:25s} : {:<6}'.format('Temperature selected', T), 'K')
     print('{:25s} : {:<6}'.format('Pressure selected', P), 'bar')
+    if predissocYN == 'Y':
+        print('{:25s} : {:<6}'.format('Predissociation', 'Yes'))
+    else:
+        print('{:25s} : {:<6}'.format('Predissociation', 'No'))
     
     if 'L' not in wn_wl:
         print('{:25s} : {:<6}'.format('Number of points is', N_point))
@@ -3339,7 +3365,7 @@ def save_xsec(wn, xsec, database, profile_label):
         xsec_df['wavenumber'] = wn
         xsec_df['cross-section'] = xsec
         xsec_filepath = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
-                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
+                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+photo+'.xsec')
         np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
         print('Cross sections file has been saved:', xsec_filepath, '\n')
         if PlotCrossSectionYN == 'Y':
@@ -3368,7 +3394,7 @@ def save_xsec(wn, xsec, database, profile_label):
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
             xsec_plotpath = (plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
-                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png')
+                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+photo+'.png')
             plt.savefig(xsec_plotpath, dpi=500)
             plt.show()
             print('Cross sections plot has been saved:', xsec_plotpath, '\n')
@@ -3393,7 +3419,7 @@ def save_xsec(wn, xsec, database, profile_label):
         xsec_df['wavelength'] = wl
         xsec_df['cross-section'] = xsec
         xsec_filepath = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
-                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.xsec')
+                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+photo+'.xsec')
         np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
         print('Cross sections file has been saved:', xsec_filepath, '\n')       
         if PlotCrossSectionYN == 'Y':
@@ -3411,7 +3437,7 @@ def save_xsec(wn, xsec, database, profile_label):
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
             # plt.xlim([min_wl, max_wl])
-            # plt.ylim([limitYaxisXsec, 10*max(xsec)])
+            plt.ylim([limitYaxisXsec, 10*max(xsec)])
             plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)             
             plt.semilogy()
             #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
@@ -3422,13 +3448,13 @@ def save_xsec(wn, xsec, database, profile_label):
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
             xsec_plotpath = (plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
-                             +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+'.png')
+                             +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+photo+'.png')
             plt.savefig(xsec_plotpath, dpi=500)
             plt.show()
             print('Cross sections plot has been saved:', xsec_plotpath, '\n')
     else:
         raise ImportError('Please choose wavenumber or wavelength and type in correct format: wn or wl.')
-
+    
 
 # Cross sections for ExoMol database
 def exomol_cross_section(states_part_df, T, P):
@@ -3600,7 +3626,9 @@ def get_results(read_path):
     pass
 
 def main():
-    get_results(read_path)
+    get_results(read_path)        # PyExoCross calculation
+    # get_transfiles(read_path)       # Decompress trans.bz2 files
+    print('Done!')
 
 if __name__ == '__main__':
     main()
