@@ -196,7 +196,7 @@ def inp_para(inp_filepath):
     
     # Calculate stick spectra or cross sections or Non-LTE
     if StickSpectra + CrossSections + NonLTE != 0:
-        T = int(inp_df[col0.isin(['Temperature'])][1].iloc[0])
+        T = float(inp_df[col0.isin(['Temperature'])][1].iloc[0])
         min_wn = float(inp_df[col0.isin(['Range'])][1].iloc[0])
         max_wn = float(inp_df[col0.isin(['Range'])][2].iloc[0])
         abs_emi = inp_df[col0.isin(['Absorption/Emission'])][1].values[0].upper()[0].replace('A','Ab').replace('E','Em')
