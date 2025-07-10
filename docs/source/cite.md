@@ -1,19 +1,19 @@
-# <font color=Green>Citation
+# <font color=Green>**Citation**</font>
 
-## **Please cite PyExoCross paper~**
+## <font color=Green>**Please cite PyExoCross paper**</font> :green_heart:
 
 PyExoCross ***published paper*** : [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016)
 
 PyExoCross ***arXiv preprint*** : [https://arxiv.org/abs/2406.03977](https://arxiv.org/abs/2406.03977)
 
-***Cite***
+<font color=Green>***Cite***</font>
 
 Jingxin Zhang, Jonathan Tennyson, Sergei N Yurchenko, 
 PyExoCross: a Python program for generating spectra and cross-sections from molecular line lists, 
 *RAS Techniques and Instruments*, Volume 3, Issue 1, January 2024, Pages 257–287, 
 https://doi.org/10.1093/rasti/rzae016
 
-***Bibtex***
+<font color=Green>***Bibtex***</font>
 
 ```bash
 @article{10.1093/rasti/rzae016,
@@ -35,7 +35,8 @@ https://doi.org/10.1093/rasti/rzae016
                 a number of options are available for computing Voigt profiles which we test for speed and accuracy. 
                 PyExoCross supports importing and exporting line lists in the ExoMol and HITRAN/HITEMP formats. 
                 PyExoCross also provides conversion between the ExoMol and HITRAN data formats. 
-                In addition, PyExoCross has extra code for users to automate the batch download of line list files from the ExoMol data base.},
+                In addition, PyExoCross has extra code for users to automate the batch download of 
+                line list files from the ExoMol data base.},
     issn     = {2752-8200},
     doi      = {10.1093/rasti/rzae016},
     url      = {https://doi.org/10.1093/rasti/rzae016},
