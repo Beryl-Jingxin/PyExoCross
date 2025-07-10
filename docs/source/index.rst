@@ -11,6 +11,7 @@ Welcome to PyExoCross's documentation!
    :caption: Contents:
 
    intro.md
+   cite.md
    command.md
    requirements.md
    examples.md

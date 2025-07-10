@@ -1,0 +1,69 @@
+# Data source #
+Database                                ExoAtom
+Atom                                    Ar
+Dataset                                 NIST
+
+
+# File path #
+ReadPath                                /home/jingxin/data/NLTE/         #/mnt/data/exoatom/exoatom_data/
+SavePath                                /home/jingxin/data/pyexocross/
+
+
+# Functions #
+Conversion                              0
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+OscillatorStrengths                     0
+StickSpectra                            1
+CrossSections                           1
+
+
+# Cores and chunks #
+NCPUtrans                               1
+NCPUfiles                               1
+ChunkSize                               1000000
+
+
+# Quantum numbers for conversion, stick spectra, and cross sections#
+QNslabel                                configuration     Multiple     parity
+QNsformat                               %50s              %30s         %2s  
+
+
+# Calculate stick spectra or cross sections #
+LTE/Non-LTE                             Non-LTE                   # LTE or Non-LTE
+Temperature                             2000
+Range                                   8000       15500
+Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+QNsFilter(Y/N)                          Y          configuration[]     Multiple[]     parity[]
+
+
+# Calculate non-LTE #
+NLTEMethod                             P           /home/jingxin/data/NLTE/Ar/NIST/Ar_Ids.csv     # TvibTrot(T) or Density(D) or Population(P)
+Tvib                                   2000
+Trot                                   296
+QNsVibLabel                            v,eS
+QNsRotLabel                            J,parity          
+
+
+# Calculate stick spectra #
+PlotStickSpectra(Y/N)                   Y
+Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30
+
+
+# Calculate cross sections #
+Pressure                                1
+Npoints/BinSize                         BinSize    0.01
+Broadeners                              Default    
+Ratios                                  1.0        
+Profile                                 SciPyVoigt    
+Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'    
+PredissocXsec(Y/N)                      N
+Cutoff(Y/N)                             N          25             # If Y, default value 25 
+DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   Y
+Y-axisLimitXsec                         1e-40                     # Default value is 1e-30

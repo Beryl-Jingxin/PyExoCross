@@ -19,7 +19,6 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            1
-Non-LTE                                 0
 CrossSections                           0
 
 
@@ -35,6 +34,7 @@ QNsformat                               %2s   %3s     %2d     %1s    %3d     %1s
 
 
 # Calculate stick spectra or cross sections #
+LTE/Non-LTE                             LTE                        # LTE or Non-LTE
 Temperature                             300
 Range                                   0          5000
 Absorption/Emission                     Emission                   # 'Absorption' or 'Emission'
@@ -45,4 +45,4 @@ QNsFilter(Y/N)                          Y          v1[1,0]
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y
-Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30
+Y-axisLimitStickSpectra                 1e-40                      # Default value is 1e-30

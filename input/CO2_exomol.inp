@@ -19,7 +19,6 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
-Non-LTE                                 0
 CrossSections                           0
 
 
@@ -36,7 +35,7 @@ QNsformat                               %2s     %2s     %4i     %5i     %4i     
 
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    10000                      # Maximal temperature in K 
+Tmax                                    10000                     # Maximal temperature in K 
 
 
 # Calculate lifetimes #
@@ -50,6 +49,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
+LTE/Non-LTE                             LTE                       # LTE or Non-LTE
 Temperature                             3000
 Range                                   0          20000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'

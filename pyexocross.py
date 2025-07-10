@@ -1,6 +1,7 @@
 ## Import all what we need.
 # encoding: utf-8
 import os
+import re
 import bz2
 import glob
 import time
@@ -10,6 +11,8 @@ import subprocess
 import numpy as np
 import pandas as pd
 import numexpr as ne
+import dask.array as da
+import astropy.units as au
 import dask.dataframe as dd
 import astropy.constants as ac
 import matplotlib.pyplot as plt
@@ -66,11 +69,9 @@ class Timer:
         self.interval_sys = self.end_sys - self.start_sys
         return(self.interval_CPU, self.interval_sys)
     
-    
 ## Read Information from Input File
 class InputWarning(UserWarning):
     pass
-
 
 def inp_para(inp_filepath):
     # Find the maximum column for all the rows.
@@ -82,17 +83,25 @@ def inp_para(inp_filepath):
     col0 = inp_df[0]
     
     # Database
-    database = inp_df[col0.isin(['Database'])][1].values[0].upper().replace('EXOMOL','ExoMol')
+    database = inp_df[col0.isin(['Database'])][1].values[0].upper().replace('EXOMOL','ExoMol').replace('EXOATOM','ExoAtom')
     
     # Basic information
-    molecule = inp_df[col0.isin(['Molecule'])][1].values[0]
-    isotopologue = inp_df[col0.isin(['Isotopologue'])][1].values[0]
-    dataset = inp_df[col0.isin(['Dataset'])][1].values[0]
-    mol_iso_id = int(inp_df[col0.isin(['MolIsoID'])][1].iloc[0])
+    if database != 'ExoAtom':
+        molecule = inp_df[col0.isin(['Molecule'])][1].values[0]
+        isotopologue = inp_df[col0.isin(['Isotopologue'])][1].values[0]
+        dataset = inp_df[col0.isin(['Dataset'])][1].values[0]
+        mol_iso_id = int(inp_df[col0.isin(['MolIsoID'])][1].iloc[0])
+        data_info = [molecule, isotopologue, dataset]
+    elif database == 'ExoAtom':
+        atom = inp_df[col0.isin(['Atom'])][1].values[0]
+        dataset = inp_df[col0.isin(['Dataset'])][1].values[0]
+        data_info = [atom, dataset]
+    else:
+        raise ImportError("Please type the correct database choice 'ExoMol' or 'HITRAN' or 'ExoAtom' into the input file.")
     
     # File path
-    read_path = inp_df[col0.isin(['ReadPath'])][1].values[0]
-    save_path = inp_df[col0.isin(['SavePath'])][1].values[0]
+    read_path = (inp_df[col0.isin(['ReadPath'])][1].values[0] + '/').replace('//','/')
+    save_path = (inp_df[col0.isin(['SavePath'])][1].values[0] + '/').replace('//','/')
     if os.path.exists(save_path):
         pass
     else:
@@ -106,7 +115,6 @@ def inp_para(inp_filepath):
     OscillatorStrengths = int(inp_df[col0.isin(['OscillatorStrengths'])][1].iloc[0])
     SpecificHeats = int(inp_df[col0.isin(['SpecificHeats'])][1].iloc[0])
     StickSpectra = int(inp_df[col0.isin(['StickSpectra'])][1].iloc[0])
-    NonLTE = int(inp_df[col0.isin(['Non-LTE'])][1].iloc[0])
     CrossSections = int(inp_df[col0.isin(['CrossSections'])][1].iloc[0])
     
     # Cores and chunks
@@ -172,6 +180,7 @@ def inp_para(inp_filepath):
     # Calculate lifetimes 
     if Lifetimes != 0:
         CompressYN = inp_df[col0.isin(['Compress(Y/N)'])][1].values[0].upper()[0]
+
     else:
         CompressYN = 'N'
         
@@ -194,9 +203,10 @@ def inp_para(inp_filepath):
         PlotOscillatorStrengthYN = 'None'
         limitYaxisOS = 0
     
-    # Calculate stick spectra or cross sections or Non-LTE
-    if StickSpectra + CrossSections + NonLTE != 0:
-        T = float(inp_df[col0.isin(['Temperature'])][1].iloc[0])
+    # Calculate stick spectra or cross sections
+    if StickSpectra + CrossSections != 0:
+        LTEORNLTE = inp_df[col0.isin(['LTE/Non-LTE'])][1].values[0].upper()[0]
+        T = int(inp_df[col0.isin(['Temperature'])][1].iloc[0])
         min_wn = float(inp_df[col0.isin(['Range'])][1].iloc[0])
         max_wn = float(inp_df[col0.isin(['Range'])][2].iloc[0])
         abs_emi = inp_df[col0.isin(['Absorption/Emission'])][1].values[0].upper()[0].replace('A','Ab').replace('E','Em')
@@ -234,6 +244,7 @@ def inp_para(inp_filepath):
         else:
             raise ImportError("Please type the correct quantum number filter choice 'Y' or 'N' into the input file.")
     else:
+        LTEORNLTE = 'None'
         T = 0
         min_wn = 0
         max_wn = 1e20
@@ -245,6 +256,54 @@ def inp_para(inp_filepath):
         QNs_value = []  
         QNs_format = []
         
+    # Non-LTE
+    if LTEORNLTE == 'N':
+        # Non-LTE methods
+        NLTEMethod = inp_df[col0.isin(['NLTEMethod'])][1].values[0].upper()[0]
+        if NLTEMethod == 'T':
+            NLTEPath = 'None'
+            vib_label = inp_df[col0.isin(['QNsVibLabel'])][1].iloc[0].replace(' ','').split(',')
+            rot_label = inp_df[col0.isin(['QNsRotLabel'])][1].iloc[0].replace(' ','').split(',')
+            Tvib = int(inp_df[col0.isin(['Tvib'])][1].iloc[0])
+            Trot = int(inp_df[col0.isin(['Trot'])][1].iloc[0])
+            LTE_NLTE = '__Tvib'+str(Tvib)+'__Trot'+str(Trot)+'__2T.nlte'
+        elif NLTEMethod == 'D':
+            NLTEFile = inp_df[col0.isin(['NLTEMethod'])][2].values[0]
+            NLTEPath = read_path + '/'.join(data_info) + '/' + NLTEFile
+            NLTE_file_exist = os.path.exists(NLTEPath)   
+            if NLTE_file_exist == False:
+                NLTEPath = inp_df[col0.isin(['NLTEMethod'])][2].values[0]   
+            else:
+                pass   
+            vib_label = []
+            rot_label = []
+            Tvib = 0
+            Trot = int(inp_df[col0.isin(['Trot'])][1].iloc[0])
+            LTE_NLTE = '__Trot'+str(Trot)+'__nvib.nlte'
+        elif NLTEMethod == 'P':
+            NLTEFile = inp_df[col0.isin(['NLTEMethod'])][2].values[0]
+            NLTEPath = read_path + '/'.join(data_info) + '/' + NLTEFile
+            NLTE_file_exist = os.path.exists(NLTEPath)   
+            if NLTE_file_exist == False:
+                NLTEPath = inp_df[col0.isin(['NLTEMethod'])][2].values[0]   
+            else:
+                pass    
+            vib_label = []
+            rot_label = []
+            Tvib = 0  
+            Trot = 0      
+            LTE_NLTE = '__pop.nlte'
+        else:
+            raise ImportError("Please choose NLTE method 'TvibTrot' or 'Density' or 'Population'.")
+    else:
+        vib_label = []
+        rot_label = []
+        Tvib = 0
+        Trot = 0
+        NLTEMethod = 'L'
+        NLTEPath = 'None'
+        LTE_NLTE = ''
+
     # Stick spectra
     if StickSpectra != 0:
         PlotStickSpectraYN = inp_df[col0.isin(['PlotStickSpectra(Y/N)'])][1].values[0].upper()[0]
@@ -261,31 +320,6 @@ def inp_para(inp_filepath):
     else:
         PlotStickSpectraYN = 'None'
         limitYaxisStickSpectra = 0
-
-    # Non-LTE
-    if NonLTE != 0:
-        Tvib = int(inp_df[col0.isin(['Tvib'])][1].iloc[0])
-        Trot = int(inp_df[col0.isin(['Trot'])][1].iloc[0])
-        vib_label = inp_df[col0.isin(['QNsVibLabel'])][1].iloc[0].replace(' ','').split(',')
-        rot_label = inp_df[col0.isin(['QNsRotLabel'])][1].iloc[0].replace(' ','').split(',')
-        PlotNLTEYN = inp_df[col0.isin(['PlotNonLTE(Y/N)'])][1].values[0].upper()[0]
-        if PlotNLTEYN == 'Y':
-            _limitYaxisNLTE = inp_df[col0.isin(['Y-axisLimitNonLTE'])][1].values[0]
-            if _limitYaxisNLTE == '#':
-                limitYaxisNLTE = 1e-30
-            elif pd.isnull(_limitYaxisNLTE) == True:
-                limitYaxisNLTE = 1e-30
-            else:
-                limitYaxisNLTE = float(_limitYaxisNLTE)
-        else:
-            limitYaxisNLTE = 0
-    else:
-        Tvib = 0
-        Trot = 0
-        vib_label = []
-        rot_label = []
-        PlotNLTEYN = 'None'
-        limitYaxisNLTE = 0
         
     # Cross sections
     if CrossSections != 0:
@@ -298,10 +332,10 @@ def inp_para(inp_filepath):
             N_point = int((max_wn - min_wn)/bin_size+1)
         else:
             raise ImportError("Please type the correct grid choice 'Npoints' or 'BinSize' into the input file.")
-        # Predissociation cross sections
+        # Predissociative cross sections
         predissocYN = inp_df[col0.isin(['PredissocXsec(Y/N)'])][1].values[0].upper()[0]
         if predissocYN != 'Y' and predissocYN != 'N':
-            raise ImportError("Please type the correct predissociative choice 'Y' or 'N' into the input file.")        
+            raise ImportError("Please type the correct predissociative choice 'Y' or 'N' into the input file.")      
         if predissocYN == 'Y':
             photo = '.photo'
         else:
@@ -412,51 +446,139 @@ def inp_para(inp_filepath):
         limitYaxisXsec = 0
 
     # Molecule and isotopologue ID, abundance, mass uncertainty, lifetime and g-factor           
-    molecule_id = int(mol_iso_id/10)
-    isotopologue_id = mol_iso_id - molecule_id * 10
     if database == 'ExoMol':
-        # Read ExoMol definition file (.def) to get the mass.
-        deffile_path = (read_path+'/'+molecule+'/'+isotopologue+'/'+dataset+'/'+isotopologue+'__'+dataset+'.def')
-        def_df = pd.read_csv(deffile_path,sep='\\s+',usecols=[0,1,2,3,4],names=['0','1','2','3','4'],header=None)
+        # Read ExoMol definition file (.def.json).
+        molecule_id = 0
+        isotopologue_id = 0
+        try:
+            deffile_path = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.def.json'  
+            def_df = pd.read_json(deffile_path, orient='columns')
+            states_file_fields = def_df['dataset']['states']['states_file_fields']
+            states_file_fields_num = len(states_file_fields)
+            states_col = [states_file_fields[i]['name'] for i in range(states_file_fields_num)]
+            states_fmt = [states_file_fields[i]['cfmt'] for i in range(states_file_fields_num)]
+            abundance = 1
+            mass = def_df['isotopologue']['mass_in_Da']     # ExoMol mass (Dalton)
+            try:
+                # check_uncertainty = def_df['dataset']['states']['uncertainty_description']
+                # check_uncertainty = def_df['dataset']['states']['uncertainty_available']
+                check_uncertainty = def_df['dataset']['states']['uncertainties_available']
+            except:
+                check_uncertainty = False
+            try:
+                check_predissoc = def_df['dataset']['predis'] or False
+            except:
+                check_predissoc = False
+            try:
+                check_lifetime = def_df['dataset']['states']['lifetime_available']
+            except:
+                check_lifetime = False
+            try:
+                check_gfactor = def_df['dataset']['states']['lande_g_available']
+            except:
+                check_gfactor = False   
+        # Read ExoMol definition file (.def).
+        except:
+            deffile_path = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.def'
+            def_df = pd.read_csv(deffile_path,sep='\\s+',usecols=[0,1,2,3,4],names=['0','1','2','3','4'],header=None)
+            states_cfmt_df = def_df[def_df['3'].isin(['Format'])]
+            states_col = def_df.iloc[states_cfmt_df.index-1]['0'].tolist()
+            states_fmt = states_cfmt_df['1'].tolist()
+            abundance = 1
+            mass = float(def_df[def_df['4'].isin(['mass'])]['0'].values[0])     # ExoMol mass (Dalton)
+            try:
+                check_uncertainty = bool(int(def_df[def_df['2'].isin(['Uncertainty'])]['0'].values[0]))
+            except:
+                check_uncertainty = False
+            try:
+                check_predissoc = bool(int(def_df[def_df['2'].isin(['Predissociative'])]['0'].values[0]))
+            except:
+                check_predissoc = False
+            try:
+                check_lifetime = bool(int(def_df[def_df['2'].isin(['Lifetime'])]['0'].values[0]))
+            except:
+                check_lifetime = False
+            try:
+                check_gfactor = bool(int(def_df[def_df['3'].isin(['g-factor'])]['0'].values[0]))
+            except:
+                check_gfactor = False
+
+    elif database == 'ExoAtom':
+        # Read ExoAtom definition file (.adef.json).
+        molecule_id = 0
+        isotopologue_id = 0
+        deffile_path = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.adef.json'  
+        def_df = pd.read_json(deffile_path, orient='columns')
+        states_file_fields = def_df['dataset']['states']['states_file_fields']
+        states_file_fields_num = len(states_file_fields)
+        states_col = [states_file_fields[i]['name'] for i in range(states_file_fields_num)]
+        states_fmt = [states_file_fields[i]['cfmt'] for i in range(states_file_fields_num)]
         abundance = 1
-        mass = float(def_df[def_df['4'].isin(['mass'])]['0'].values[0])     # ExoMol mass (Dalton)
-        if def_df.to_string().find('Uncertainty') != -1:
-            check_uncertainty = int(def_df[def_df['2'].isin(['Uncertainty'])]['0'].values[0])
-        else:
-            check_uncertainty = 0
-        if def_df.to_string().find('Predissociative') != -1:
-            check_predissoc = int(def_df[def_df['2'].isin(['Predissociative'])]['0'].values[0])
-        else:
-            check_predissoc = 0
-        check_lifetime = int(def_df[def_df['2'].isin(['Lifetime'])]['0'].values[0])
-        check_gfactor = int(def_df[def_df['3'].isin(['g-factor'])]['0'].values[0])
+        mass = def_df['species']['mass_in_Da']     # ExoAtom mass (Dalton)
+        try:
+            # check_uncertainty = def_df['dataset']['states']['uncertainty_description']
+            check_uncertainty = def_df['dataset']['states']['uncertainty_available']
+        except:
+            check_uncertainty = False
+        try:
+            check_predissoc = def_df['dataset']['predis'] or False
+        except:
+            check_predissoc = False
+        try:
+            check_lifetime = def_df['dataset']['states']['lifetime_available']
+        except:
+            check_lifetime = False
+        try:
+            check_gfactor = def_df['dataset']['states']['lande_g_available']
+        except:
+            check_gfactor = False
+
     elif database == 'HITRAN':
+        molecule_id = int(mol_iso_id/10)
+        isotopologue_id = mol_iso_id - molecule_id * 10
         isometa_url = 'https://hitran.org/docs/iso-meta/'
         iso_meta_table = pd.read_html(isometa_url)[molecule_id - 1]
         iso_meta_row = iso_meta_table[iso_meta_table['local ID'].isin([isotopologue_id])]
+        states_col = []
+        states_fmt = []
         abundance = float(iso_meta_row['Abundance'][0].replace('\xa0×\xa010','E'))
         mass = float(iso_meta_row['Molar Mass /g·mol-1'])                   # HITRAN molar mass (g/mol)
-        check_uncertainty = 0
-        check_predissoc = 0
-        check_lifetime = 0
-        check_gfactor = 0
+        check_uncertainty = False
+        check_predissoc = False
+        check_lifetime = False
+        check_gfactor = False
+
     else:
         raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")
 
-    if predissocYN == 'Y' and check_predissoc == 0 and 'LOR' not in profile:
+    if predissocYN == 'Y' and check_predissoc == False and 'LOR' not in profile:
         warnings.warn('Program will cost much time on calculating predissociative lifetimes before calculating the cross sections.\n',InputWarning)
             
-    return (database, molecule, isotopologue, dataset, read_path, save_path, 
-            Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, NonLTE, CrossSections,
+    return (database, data_info, read_path, save_path, 
+            Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
             ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
             Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
-            predissocYN, photo, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
-            DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass,
+            predissocYN, photo, cutoff, threshold, UncFilter, NLTEMethod, NLTEPath, LTE_NLTE, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
+            DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, 
+            molecule_id, isotopologue_id, abundance, mass, states_col, states_fmt,
             check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
-            PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, 
-            PlotNLTEYN, limitYaxisNLTE, PlotCrossSectionYN, limitYaxisXsec)
+            PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, PlotCrossSectionYN, limitYaxisXsec)
 
+
+def print_file_info(file_name, file_col, file_fmt):
+    # Find the max width for each column for alignment
+    widths = [max(len(str(c)), len(str(f))) for c, f in zip(file_col, file_fmt)]
+    # Print header
+    print()
+    print(file_name, 'file column names  :', end=' ')
+    for c, w in zip(file_col, widths):
+        print(f'{c:<{w}}', end='  ')
+    print()
+    print(file_name, 'file column formats:', end=' ')
+    for f, w in zip(file_fmt, widths):
+        print(f'{f:<{w}}', end='  ')
+    print('\n')
 
 ## Constants and Parameters
 # Parameters for calculating
@@ -469,22 +591,21 @@ kB = ac.k_B.to('erg/K').value       # Boltzmann's const (erg/K)
 R = ac.R.to('J / (K mol)').value    # Molar gas constant (J/(K mol))
 c2 = h * c / kB                     # Second radiation constant (cm K)
 
-(database, molecule, isotopologue, dataset, read_path, save_path, 
- Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, NonLTE, CrossSections,
+(database, data_info, read_path, save_path, 
+ Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
  ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
  Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
- predissocYN, photo, cutoff, threshold, UncFilter, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
- DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, molecule_id, isotopologue_id, abundance, mass, 
+ predissocYN, photo, cutoff, threshold, UncFilter, NLTEMethod, NLTEPath, LTE_NLTE, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
+ DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, 
+ molecule_id, isotopologue_id, abundance, mass, states_col, states_fmt,
  check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
- PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, 
- PlotNLTEYN, limitYaxisNLTE, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
-pandarallel.initialize(nb_workers=ncputrans,progress_bar=False)    # Initialize.
+ PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
 
 # Constants
 c2InvTref = c2 / Tref                 # c2 / T_ref (cm)
+hc = h * c                            # erg cm
 PI = np.pi
-hc = h * c                            # erg cm  
 ln22 = np.log(2)*2
 sinPI = np.sin(np.pi)
 SqrtPI = np.sqrt(np.pi)
@@ -546,8 +667,7 @@ def read_all_states(read_path):
     t.start()
     print('Reading states ...')
     states_df = pd.DataFrame()
-    states_filename = (read_path + molecule + '/' + isotopologue + '/' + dataset 
-                       + '/' + isotopologue + '__' + dataset + '.states.bz2')
+    states_filename = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.states.bz2'
     if os.path.exists(states_filename):    
         chunks = pd.read_csv(states_filename, compression='bz2', sep='\s+', header=None,
                              chunksize=100_000, iterator=True, low_memory=False, dtype=object)
@@ -559,7 +679,7 @@ def read_all_states(read_path):
 
     for chunk in chunks:
         states_df = pd.concat([states_df, chunk])
-    if check_uncertainty == 1:
+    if check_uncertainty == True:
         states_df = states_df.rename(columns={0:'id',1:'E',2:'g',3:'J',4:'unc'})
         convert_dict = {'id':np.int32,'E':np.float64,'g':np.int32,'J':np.float16,'unc':np.float32}
         states_df = states_df.astype(convert_dict)
@@ -568,15 +688,15 @@ def read_all_states(read_path):
         convert_dict = {'id':np.int32,'E':np.float64,'g':np.int32,'J':np.float16}
         states_df = states_df.astype(convert_dict)
     t.end()     
+    print_file_info('States', states_col, states_fmt)
     print('Finished reading states!\n')       
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')                
     return(states_df)
 
-
 ### Decompress Large .trans.bz2 Files
 def command_decompress(trans_filename):
     # Directory where the decompressed .trans files will be saved
-    trans_dir = read_path+molecule+'/'+isotopologue+'/'+dataset+'/decompressed/'
+    trans_dir = read_path + '/'.join(data_info) + '/decompressed/'
     if os.path.exists(trans_dir):
         pass
     else:
@@ -595,9 +715,9 @@ def command_decompress(trans_filename):
 ### Get transitions File
 def get_transfiles(read_path):
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
-    trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans.bz2')
+    trans_filepaths_all = glob.glob((read_path + '/'.join(data_info) + '/' + '*.trans.bz2'))
     if trans_filepaths_all == []:
-        trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans')
+        trans_filepaths_all = glob.glob((read_path + '/'.join(data_info) + '/' + '*.trans'))
     num_transfiles_all = len(trans_filepaths_all)    # The number of all transitions files including the older version files.
     trans_filepaths = []    # The list of the lastest transitions files.
     all_decompress_num = 0
@@ -625,7 +745,7 @@ def get_transfiles(read_path):
         # The fourth format filenames only leave the updated date, e.g. 20170330.
         # This program only process the lastest data, so extract the filenames named by the first two format.
         if num == 1:     
-            if split_version[0] == dataset:        
+            if split_version[0] == data_info[-1]:        
                 trans_filepaths.append(trans_filepaths_all[i])
             elif len(split_version[0].split('-')) == 2:
                 file_size_bytes = os.path.getsize(trans_filepaths_all[i])
@@ -647,22 +767,34 @@ def get_transfiles(read_path):
 
 ### Read Partition Function File From ExoMol Database
 # Read partition function with online webpage
-# def read_exomolweb_pf(T):
-#     pf_url = ('http://www.exomol.com/db/' + molecule + '/' + isotopologue + '/' + dataset 
-#               + '/' + isotopologue + '__' + dataset + '.pf')
-#     pf_content = requests.get(pf_url).text
-#     pf_col_name = ['T', 'Q']
-#     pf_df = pd.read_csv(StringIO(pf_content), sep='\\s+', names=pf_col_name, header=None)
-#     Q = pf_df[pf_df['T'].isin([T])]['Q']
-#     return(Q)
+def read_exomolweb_pf(T):
+    pf_url = 'http://www.exomol.com/db/' + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.pf'
+    pf_col_name = ['T', 'Q']
+    try:
+        pf_content = requests.get(pf_url).text
+        pf_df = pd.read_csv(StringIO(pf_content), sep='\\s+', names=pf_col_name, header=None)
+    except:
+        raise ImportError('No partition function file. Please check the webpage.')
+    try:
+        Q = pf_df[pf_df['T'].isin([T])]['Q']
+    except:
+        raise ImportError('No specified temperature dependent partition funtion value.', 
+                          'Please change the temperature or calculate the partition function at first.')
+    return(Q)
 
 # Read partition function with local partition function file
 def read_exomol_pf(read_path, T):
-    pf_filename = (read_path + molecule + '/' + isotopologue + '/' + dataset 
-                   + '/' + isotopologue + '__' + dataset + '.pf')
+    pf_filename = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.pf'
     pf_col_name = ['T', 'Q']
-    pf_df = pd.read_csv(pf_filename, sep='\\s+', names=pf_col_name, header=None)
-    Q = pf_df[pf_df['T'].isin([T])]['Q']
+    try:
+        pf_df = pd.read_csv(pf_filename, sep='\\s+', names=pf_col_name, header=None)
+    except:
+        raise ImportError('No partition function file. Please check the file path.')
+    try:
+        Q = pf_df[pf_df['T'].isin([T])]['Q']
+    except:
+        raise ImportError('No specified temperature dependent partition funtion value.', 
+                          'Please change the temperature or calculate the partition function at first.')
     return(Q)
 
 ### Read Broadening File
@@ -682,7 +814,7 @@ def read_broad(read_path):
                 broad_dfs.append(broad_df)
             else:
                 broadener_name = str(broadeners[i])
-                pattern_broadener = read_path + molecule + '/**/*' + broadener_name + '.broad'
+                pattern_broadener = read_path + data_info[0] + '/**/*' + broadener_name + '.broad'
                 if glob.glob(pattern_broadener, recursive=True) != []:
                     for fname_broadener in glob.glob(pattern_broadener, recursive=True):
                         broad_df = pd.read_csv(fname_broadener, sep='\s+', header=None, engine='python')
@@ -696,8 +828,8 @@ def read_broad(read_path):
     broad = list(i for i in broad if i==i)
     ratio = list(i for i in ratio if i==i)
     print('Broadeners \t:', str(broad).replace('[','').replace(']','').replace("'",''))
-    print('Ratios \t\t\t:', str(ratio).replace('[','').replace(']',''),'\n')
-    return(broad, ratio, nbroad, broad_dfs)        
+    print('Ratios \t\t:', str(ratio).replace('[','').replace(']',''),'\n')
+    return(broad, ratio, nbroad, broad_dfs)             
 
 def QNfilter_linelist(linelist_df, QNs_value, QNs_label):
     for i in range(len(QNs_label)):
@@ -718,7 +850,7 @@ def QNfilter_linelist(linelist_df, QNs_value, QNs_label):
             QNs_value[i] = vallist+list(chain(*ulist))+list(chain(*llist))
             linelist_df = linelist_df[linelist_df[i].isin(QNs_value[i])].drop(columns=[i])   
     # linelist_df = linelist_df.sort_values('v')  
-    return(linelist_df)        
+    return(linelist_df)         
 
 ### Read HITRAN Linelist File
 def read_parfile(read_path):
@@ -746,12 +878,15 @@ def read_hitran_parfile(read_path, parfile_df, minv, maxv, unclimit, Slimit):
     hitran_df : DataFrame
         The DataFrame of HITRAN data for the molecule.
     '''    
+    print('Reading HITRAN2020 format data file ...')
+    t = Timer()
+    t.start()
     par_filename = read_path.split('/')[-1]
     if (len(str(parfile_df[0][0])) < 160):
         raise ImportError('The file ' + par_filename + ' is not a HITRAN2020 format data file.')
-    #hitran_column_name = ['M','I','v','S','Acoeff','gamma_air','gamma_self',
-    #                     'Epp','n_air','delta_air','Vp','Vpp','Qp','Qpp',
-    #                     'Ierr','Iref','flag','gp','gpp']
+    hitran_column_name = ['M','I','v','S','A','gamma_air','gamma_self',
+                          'Epp','n_air','delta_air','Vp','Vpp','Qp','Qpp',
+                          'Ierr','Iref','flag','gp','gpp']
 
     hitran_df = pd.DataFrame()
     hitran_df['M'] = pd.to_numeric(parfile_df[0].map(lambda x: x[0:2]), errors='coerce').astype('int64')                 # Molecule identification number
@@ -780,6 +915,12 @@ def read_hitran_parfile(read_path, parfile_df, minv, maxv, unclimit, Slimit):
         hitran_df = hitran_df[hitran_df['Unc'] >= int(('%e' % unclimit)[-1])]
     if Slimit != 'None':
         hitran_df = hitran_df[hitran_df['S'] >= Slimit]
+    t.end()
+    hitran_col = ['M','I','v','S','A','gamma_air','gamma_self','E"','n_air','delta_air',
+                  "V'",'V"',"Q'",'Q"','Ierr','Iref','flag',"g'",'g"']
+    hitran_fmt = ['%2d','%1d','%12.6f','%10.3e','%10.3e','%5.4f','%5.4f','%10.4f','%4.2f','%8.6f',
+                  '%15s','%15s','%15s','%15s','%6d','%12d','%1s','%7.1f','%7.1f']
+    print_file_info('HITRAN2020 format par', hitran_col, hitran_fmt)
     return(hitran_df)
 
 ### Read Partition Function File From HITRANOnline
@@ -798,7 +939,7 @@ def read_hitran_pf(T):
 
 ## Process HITRAN quantum numbers
 # Global quantum numbers
-def globalQNclasses(molecule,isotopologue):
+def globalQNclasses(data_info):
     globalQNclass1a = {'class':['CO','HF','HBr','HI','N2','NO+','NO_p','H2','CS'],
                        'label': ['none','v1'],
                        'format':['%13s','%2d']}
@@ -851,6 +992,8 @@ def globalQNclasses(molecule,isotopologue):
                      globalQNclass4a,globalQNclass4b,globalQNclass5a,globalQNclass5b,globalQNclass5c,globalQNclass5d,
                      globalQNclass6a,globalQNclass6b,globalQNclass7,globalQNclass8,globalQNclass9]
     count = 0
+    molecule = data_info[0]
+    isotopologue = data_info[1]
     for gQNclass in globalQNclass:
         if molecule in gQNclass.get('class'):
             GlobalQNLabels = gQNclass.get('label')
@@ -866,7 +1009,7 @@ def globalQNclasses(molecule,isotopologue):
     return(GlobalQNLabels,GlobalQNFormats)
 
 # Local quantum numbers
-def localQNgroups(molecule,isotopologue):
+def localQNgroups(data_info):
     localQNgroup1  = {'group':['H2O','O3','SO2','NO2','HNO3','H2CO','HOCl','H2O2','COF2','H2S','HCOOH','HO2','ClONO2','HOBr','C2H4','COCl2'],
                       'ulabel': ['J','Ka','Kc','F','Sym'],
                       'uformat':['%3d','%3d','%3d','%5s','%1s'],
@@ -926,6 +1069,8 @@ def localQNgroups(molecule,isotopologue):
                     localQNgroup4a,localQNgroup4b,localQNgroup4c,
                     localQNgroup5,localQNgroup6,localQNgroup7a,localQNgroup7b]
     count = 0
+    molecule = data_info[0]
+    isotopologue = data_info[1]
     for lQNgroup in localQNgroup:
         if molecule in lQNgroup.get('group'):
             LocalQNupperLabels = lQNgroup.get('ulabel')
@@ -948,8 +1093,6 @@ def localQNgroups(molecule,isotopologue):
 
 def separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerLabels,
                        GlobalQNFormats,LocalQNupperFormats,LocalQNlowerFormats):
-    GlobalQNLabels,GlobalQNFormats = globalQNclasses(molecule,isotopologue)
-    LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats = localQNgroups(molecule,isotopologue)
     GQN_format = [int(s) for s in str(GlobalQNFormats).replace('.1','') if s.isdigit()]
     LQNu_format = [int(s) for s in str(LocalQNupperFormats).replace('.1','') if s.isdigit()]
     LQNl_format = [int(s) for s in str(LocalQNlowerFormats).replace('.1','') if s.isdigit()]
@@ -1014,10 +1157,10 @@ def separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerL
     QNu_col = [i+"'" for i in list(QNu_df.columns)] 
     QNl_col = [i+'"' for i in list(QNl_df.columns)] 
     return(QNu_df, QNl_df, QNu_col, QNl_col)
-        
+
 def hitran_linelist_QN(hitran_df):
-    GlobalQNLabels,GlobalQNFormats = globalQNclasses(molecule,isotopologue)
-    LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats = localQNgroups(molecule,isotopologue)
+    GlobalQNLabels,GlobalQNFormats = globalQNclasses(data_info)
+    LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats = localQNgroups(data_info)
     QNu_df, QNl_df, QNu_col, QNl_col = separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerLabels,
                                                           GlobalQNFormats,LocalQNupperFormats,LocalQNlowerFormats)
     Ep_df = cal_Ep_hitran(hitran_df)
@@ -1089,12 +1232,14 @@ def exomol_partition(states_df, Ntemp, Tmax):
         pass
     else:
         os.makedirs(pf_folder, exist_ok=True)
-    pf_path = pf_folder + isotopologue + '__' + dataset + '.pf'
+    pf_path = pf_folder + '__'.join(data_info[-2:]) + '.pf'
     np.savetxt(pf_path, partition_func_df, fmt="%8.1f %15.4f")
     ts.end()
+    print_file_info('Partition functions', ['T', 'Partition function'], ['%8.1f', '%15.4f'])
     print('Partition functions file has been saved:', pf_path, '\n') 
     print('Partition functions have been saved!\n')  
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+
 
 # Specific Heat
 def calculate_specific_heats(En, gn, T):
@@ -1128,9 +1273,10 @@ def exomol_specificheat(states_df, Ntemp, Tmax):
         pass
     else:
         os.makedirs(cp_folder, exist_ok=True)  
-    cp_path = cp_folder + isotopologue + '__' + dataset + '.cp'
+    cp_path = cp_folder + '__'.join(data_info[-2:]) + '.cp'
     np.savetxt(cp_path, specificheat_func_df, fmt="%8.1f %15.4f")
     ts.end()
+    print_file_info('Specific heats', ['T', 'Specific heats'], ['%8.1f', '%15.4f'])
     print('Specific heats file has been saved:', cp_path, '\n')  
     print('Specific heats have been saved!\n')    
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
@@ -1167,6 +1313,36 @@ def calculate_lifetime(states_df, trans_filepath):
             lifetime = sum(np.array([future.result() for future in tqdm(futures)]))
     return lifetime
 
+def insert_lifetime_column(states_df, lifetime):
+    states_lifetime_df = states_df
+    if check_uncertainty == True:
+        insert_at = 5      # Default: after 'Unc' (id, E, g, J, unc, ...)
+    else:
+        insert_at = 4      # Default: after 'J' (id, E, g, J, ...)
+    if check_lifetime == True or states_lifetime_df.columns.str.contains('tau').any() == True:
+        try:
+            states_lifetime_df = states_lifetime_df.drop(columns=['tau'], axis=1)
+        except:
+            states_lifetime_df = states_lifetime_df.drop(columns=[insert_at], axis=1)
+        states_lifetime_fmt = states_fmt[:insert_at] + ['%12s'] + states_fmt[insert_at+1:] 
+    else:
+        states_lifetime_fmt = states_fmt[:insert_at] + ['%12s'] + states_fmt[insert_at:]   
+    states_lifetime_df.insert(insert_at, 'tau', lifetime)     
+    return (states_lifetime_df, states_lifetime_fmt)
+
+def convert_dtype_by_format(df, fmt_list):
+    for i, fmt in enumerate(fmt_list):
+        if i < len(df.columns):
+            col = df.columns[i]
+            
+            if re.search(r'%[\d.]*d', fmt):  
+                df[col] = df[col].astype(int)
+            elif re.search(r'%[\d.]*f', fmt):  
+                df[col] = df[col].astype(float)
+            elif re.search(r'%[\d.]*s', fmt):  
+                df[col] = df[col].astype('string')
+    return df
+
 # Lifetime
 def exomol_lifetime(read_path, states_df):
     np.seterr(divide='ignore', invalid='ignore')
@@ -1189,46 +1365,33 @@ def exomol_lifetime(read_path, states_df):
     print('Saving lifetimes into file ...')   
     ts = Timer()    
     ts.start()  
-    states_filename = (read_path + molecule + '/' + isotopologue + '/' + dataset + 
-                       '/' + isotopologue + '__' + dataset + '.states.bz2')
-    if os.path.exists(states_filename):    
-        s_df = pd.read_csv(states_filename, compression='bz2', header=None, dtype=object)[0]
-    elif os.path.exists(states_filename.replace('.bz2','')):
-        s_df = pd.read_csv(states_filename.replace('.bz2',''), header=None, dtype=object)[0]
-    else:
-        raise ImportError("No such states file, please check the read path and states filename format!")
-    nrows = len(s_df)           
-    new_rows = []
-    if check_uncertainty == 0:
-        for i in range(nrows):
-            new_rows.append(s_df[i][:41]+lifetime[i]+s_df[i][53:]+'\n')
-    if check_uncertainty == 1:
-        for i in range(nrows):
-            new_rows.append(s_df[i][:53]+lifetime[i]+s_df[i][65:]+'\n')
+    
+    # Insert lifetime column into states_df
+    (states_lifetime_df, states_lifetime_fmt) = insert_lifetime_column(states_df, lifetime)
+    states_lifetime_df = convert_dtype_by_format(states_lifetime_df, states_lifetime_fmt)
 
     lf_folder = save_path + 'lifetime/'
     if os.path.exists(lf_folder):
         pass
     else:
         os.makedirs(lf_folder, exist_ok=True)  
-       
-    if CompressYN == 'Ym':
-        lf_path = lf_folder + isotopologue + '__' + dataset + '.states.bz2'
+
+    if CompressYN == 'Y':
+        lf_path = lf_folder + '__'.join(data_info[-2:]) + '.states.bz2'
         with bz2.open(lf_path, 'wt') as f:
-            for i in range(nrows):
-                f.write(new_rows[i])
-            f.close
+            np.savetxt(f, states_lifetime_df, fmt=' '.join(states_lifetime_fmt))
     else:
-        lf_path = lf_folder + isotopologue + '__' + dataset + '.states'
-        with open(lf_path, 'wt') as f:
-            for i in range(nrows):
-                f.write(new_rows[i])
-            f.close
+        lf_path = lf_folder + '__'.join(data_info[-2:]) + '.states'
+        np.savetxt(lf_path, states_lifetime_df, fmt=' '.join(states_lifetime_fmt))
+        
     ts.end()
+    tau_idx = list(states_lifetime_df.columns).index('tau') 
+    states_lifetime_cols = states_col[:tau_idx] + ['tau'] + states_col[tau_idx:]
+    states_lifetime_fmt[tau_idx] = '%12.4E'
+    print_file_info('Lifetimes', list(dict.fromkeys(states_lifetime_cols)), states_lifetime_fmt)
     print('Lifetimes file has been saved:', lf_path, '\n') 
     print('Lifetimes have been saved!\n')    
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
-
 
 # Cooling Function
 def calculate_cooling(A, v, Ep, gp, T, Q):
@@ -1308,9 +1471,10 @@ def exomol_cooling(states_df, Ntemp, Tmax):
         pass
     else:
         os.makedirs(cf_folder, exist_ok=True)  
-    cf_path = cf_folder + isotopologue + '__' + dataset + '.cf' 
+    cf_path = cf_folder + '__'.join(data_info[-2:]) + '.cf' 
     np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20.8E")
     ts.end()
+    print_file_info('Cooling functions', ['T', 'Cooling function'], ['%8.1f','%20.8E'])
     print('Cooling functions file has been saved:', cf_path, '\n')  
     print('Cooling functions have been saved!\n')  
     # tqdm.write('Cooling functions has been saved!\n') 
@@ -1329,18 +1493,24 @@ def hitran_cooling(hitran_df, Ntemp, Tmax):
     Qs = read_hitran_pf(Ts)
     cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), desc='Calculating')]
     t.end()
-     
+    print('Finished calculating cooling functions!\n')
+
+    print('Saving cooling functions into file ...')   
+    ts = Timer()    
+    ts.start()      
     cooling_func_df = pd.DataFrame()
     cooling_func_df['T'] = Ts
     cooling_func_df['cooling function'] = cooling_func
 
-    cf_folder = save_path + '/cooling/'
+    cf_folder = save_path + 'cooling/'
     if os.path.exists(cf_folder):
         pass
     else:
         os.makedirs(cf_folder, exist_ok=True)  
-    cf_path = cf_folder + isotopologue + '__' + dataset + '.cf' 
-    np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20.8E")
+    cf_path = cf_folder + '__'.join(data_info[-2:]) + '.cf' 
+    np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20s")
+    ts.end()
+    print_file_info('Cooling functions', ['T', 'Cooling function'], ['%8.1f','%20.8E'])
     print('Cooling functions file has been saved:', cf_path, '\n')
     print('Cooling functions have been saved!\n')     
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
@@ -1401,26 +1571,26 @@ def plot_oscillator_strength(oscillator_strength_df):
                   'xtick.labelsize': 14,
                   'ytick.labelsize': 14}
     plt.rcParams.update(parameters)
-    os_plot_folder = save_path + 'oscillator_strength/plots/'+molecule+'/'+database+'/'
+    os_plot_folder = save_path + 'oscillator_strength/plots/'+data_info[0]+'/'+database+'/'
     if os.path.exists(os_plot_folder):
         pass
     else:
         os.makedirs(os_plot_folder, exist_ok=True)
     plt.figure(figsize=(12, 6))
     plt.ylim([limitYaxisOS, 10*max(osc_str)])
-    plt.plot(v, osc_str, label=molecule, linewidth=0.4)
+    plt.plot(v, osc_str, label=data_info[0], linewidth=0.4)
     plt.semilogy()
-    #plt.title(database+' '+molecule+' oscillator strengths') 
+    #plt.title(database+' '+data_info[0]+' oscillator strengths') 
     plt.xlabel('Wavenumber, cm$^{-1}$')
     plt.ylabel('Oscillator strength, ('+gfORf.lower()+')')
     plt.legend()
     leg = plt.legend()                  # Get the legend object.
     for line in leg.get_lines():
         line.set_linewidth(1.0)         # Change the line width for the legend.
-    os_plot = os_plot_folder+molecule+'__'+isotopologue+'__'+database+'__'+gfORf.lower()+'__os.png'
+    os_plot = os_plot_folder+data_info[0]+'__'+data_info[1]+'__'+database+'__'+gfORf.lower()+'__os.png'
     plt.savefig(os_plot, dpi=500)
     plt.show()
-    print('Oscillator strengths plot has been saved:', os_plot, '\n')   
+    print('Oscillator strengths plot has been saved:', os_plot)   
     
 # Oscillator strength for ExoMol database
 def exomol_oscillator_strength(states_df):
@@ -1444,21 +1614,22 @@ def exomol_oscillator_strength(states_df):
     print('Saving oscillator strengths into file ...')   
     ts = Timer()    
     ts.start()
-    os_folder = save_path + 'oscillator_strength/files/'+molecule+'/'+database+'/'
+    os_folder = save_path + 'oscillator_strength/files/'+data_info[0]+'/'+database+'/'
     if os.path.exists(os_folder):
         pass
     else:
         os.makedirs(os_folder, exist_ok=True)  
-    os_path = os_folder+isotopologue+'__'+dataset+'_'+gfORf.lower()+'.os' 
+    os_path = os_folder+'__'.join(data_info[-2:])+'_'+gfORf.lower()+'.os' 
     os_format = "%12d %12d %10.4E %15.6f"
     np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
     ts.end()
+    print_file_info('Oscillator strengths', oscillator_strength_df.columns, ['%12d', '%12d', '%10.4E', '%15.6f'])
     print('Oscillator strengths file has been saved:', os_path, '\n')  
     
     # Plot oscillator strengths and save it as .png.
     if PlotOscillatorStrengthYN == 'Y':
         plot_oscillator_strength(oscillator_strength_df)
-    print('Oscillator strengths have been saved!\n')  
+    print('\nOscillator strengths have been saved!\n')  
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
     
 # Oscillator strength for HITRAN database
@@ -1474,53 +1645,159 @@ def hitran_oscillator_strength(hitran_df):
     oscillator_strength_df['os'] = calculate_oscillator_strength(gp, gpp, A, v)
     oscillator_strength_df = oscillator_strength_df.sort_values(by=['v'])
     t.end()
-    
-    os_folder = save_path + '/oscillator_strength/'
+    print('Finished calculating oscillator strengths!\n')
+
+    print('Saving oscillator strengths into file ...')      
+    ts = Timer()    
+    ts.start()
+    os_folder = save_path + 'oscillator_strength/files/'+data_info[0]+'/'+database+'/'
     if os.path.exists(os_folder):
         pass
     else:
         os.makedirs(os_folder, exist_ok=True)  
-    os_path = os_folder + isotopologue + '__' + dataset + '.os' 
+    os_path = os_folder+'__'.join(data_info[-2:])+'_'+gfORf.lower()+'.os' 
     os_format = "%7.1f %7.1f %10.4E %15.6f"
     np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
+    ts.end()
+    print_file_info('Oscillator strengths', oscillator_strength_df.columns, ['%7.1f', '%7.1f', '%10.4E', '%15.6f'])
     print('Oscillator strengths file has been saved:', os_path, '\n')  
     
     # Plot oscillator strengths and save it as .png.
     if PlotOscillatorStrengthYN == 'Y':
         plot_oscillator_strength(oscillator_strength_df)  
-    print('Oscillator strengths have been saved!\n') 
+    print('\nOscillator strengths have been saved!\n') 
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
 
+# Intensity
+## LTE intensity
+# Calculate absorption coefficient
+def cal_abscoefs(T, v, gp, A, Epp, Q, abundance):
+    # abscoef = gp * A * np.exp(- c2 * Epp / T) * (1 - np.exp(- c2 * v / T)) / (8 * np.pi * c * v**2 * Q) * abundance  
+    abscoef = ne.evaluate('gp * A * exp(- c2 * Epp / T) * (1 - exp(- c2 * v / T)) * Inv8Pic / (v ** 2 * Q) * abundance')  
+    return abscoef
+
+# Calculate emission coefficient
+def cal_emicoefs(T, v, gp, A, Ep, Q, abundance):
+    # emicoef = gp * h * c A * v * np.exp(- c2 * Ep / T) / (4 * np.pi) / Q * abundance   
+    emicoef = ne.evaluate('gp * hc * A * v * exp(- c2 * Ep / T) * Inv4Pi / Q * abundance')
+    return emicoef
+
+## Non-LTE intensity
+### Using two temperatures
+# Calculate non-LTE partition function
+def cal_Q_nlte_2T(g, Tvib, Trot, Evib, Erot):
+    Q_nlte = ne.evaluate('sum(g * exp(-c2 * Evib / Tvib) * exp(-c2 * Erot / Trot))')
+    return Q_nlte
+
+# Calculate non-LTE absorption coefficient
+def cal_abscoefs_nlte_2T(Tvib, Trot, v, gp, A, Evib, Erot, Q_nlte, abundance):
+    # F_nlte = ne.evaluate('exp(- c2 * Evib / Tvib) * exp(- c2 * Erot / Trot) / Q_nlte')
+    abscoef_nlte = ne.evaluate('gp * A * Inv8Pic / (v ** 2) * exp(- c2 * Evib / Tvib) * exp(- c2 * Erot / Trot) / Q_nlte * (1 - exp(- c2 * v / Tvib)) * abundance')  
+    return abscoef_nlte
+
+# Calculate non-LTE emission coefficient
+def cal_emicoefs_nlte_2T(Tvib, Trot, v, gp, A, Evib, Erot, Q_nlte, abundance):
+    emicoef_nlte = ne.evaluate('gp * hc * A * v * Inv4Pi * exp(- c2 * Evib / Tvib) * exp(- c2 * Erot / Trot) / Q_nlte * abundance')
+    return emicoef_nlte
+
+### Using custom density
+# Calculate non-LTE partition function
+def cal_Q_nlte_nvib(g, nvib, Trot, Erot):
+    Q_nlte = ne.evaluate('sum(g * nvib * exp(-c2 * Erot / Trot))')
+    return Q_nlte
+
+# Calculate non-LTE absorption coefficient with density
+def cal_abscoefs_nlte_nvib(nvib, T, Trot, v, gp, A, Erot, Q_nlte, abundance):
+    # F_nlte = ne.evaluate('nvib * exp(- c2 * Erot / Trot) / Q_nlte')
+    abscoef_nlte = ne.evaluate('gp * A * Inv8Pic / (v ** 2) * nvib * exp(- c2 * Erot / Trot) / Q_nlte * (1 - exp(- c2 * v / T)) * abundance')  
+    return abscoef_nlte
+
+# Calculate non-LTE emission coefficient with density
+def cal_emicoefs_nlte_nvib(nvib, Trot, v, gp, A, Erot, Q_nlte, abundance):
+    emicoef_nlte = ne.evaluate('gp * hc * A * v * Inv4Pi * nvib * exp(- c2 * Erot / Trot) / Q_nlte * abundance')
+    return emicoef_nlte
+
+### Using custom population
+# Calculate non-LTE absorption coefficient with population
+def cal_abscoefs_nlte_pop(pop, T, v, gp, gpp, A, abundance):
+    abscoef_nlte = ne.evaluate('gp / gpp * A * Inv8Pic / (v ** 2) * pop * (1 - exp(- c2 * v / T)) * abundance')  
+    return abscoef_nlte
+
+# Calculate non-LTE emission coefficient with population
+def cal_emicoefs_nlte_pop(pop, v, A, abundance):
+    emicoef_nlte = ne.evaluate('hc * A * v * Inv4Pi * pop * abundance')
+    return emicoef_nlte
+
 # Process data
+# Read part states file for calculating LTE or non-LTE
 def read_part_states(states_df):
     if UncFilter != 'None' :
-        if check_uncertainty == 1:
-            states_part_df = states_df[states_df['unc'] <= UncFilter]
-            # states_part_df['id'] = pd.to_numeric(states_part_df['id'])
-            states_part_df.set_index(['id'], inplace=True, drop=False)
+        if check_uncertainty == True:
+            states_parts_df = states_df[states_df['unc'] <= UncFilter]
+            # states_parts_df.set_index(['id'], inplace=True, drop=False)
+            # states_parts_df['id'] = pd.to_numeric(states_parts_df['id'])
         else:
             raise ImportError("No uncertainties in states file. Please do not use uncertainty filter.")  
     else:
-        states_part_df = states_df
-        # states_part_df['id'] = pd.to_numeric(states_part_df['id'])
-        states_part_df.set_index(['id'], inplace=True, drop=False)
-    if check_uncertainty == 1:
+        states_parts_df = states_df
+        # states_parts_df.set_index(['id'], inplace=True, drop=False)
+        # states_parts_df['id'] = pd.to_numeric(states_parts_df['id'])
+    if check_uncertainty == True:
         col_unc = ['unc']
     else:
         col_unc = []
-    if check_lifetime == 1:
+    if check_lifetime == True:
         col_lifetime = ['tau']
     else:
         col_lifetime = []
-    if check_gfactor == 1:
+    if check_gfactor == True:
         col_gfac = ['gfac']
     else:
         col_gfac = []
     colname = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNslabel_list
-    states_part_df.drop(states_part_df.columns[len(colname):], axis=1, inplace=True)
-    states_part_df.columns = colname
+    # states_parts_df = states_parts_df.drop(states_parts_df.columns[len(colname):], axis=1)
+    states_parts_df.drop(states_parts_df.columns[len(colname):], axis=1, inplace=True)
+    states_parts_df.columns = colname
     QNcolumns = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNs_label
-    states_part_df = states_part_df[QNcolumns]
+
+    # LTE 
+    if NLTEMethod == 'L':
+        states_part_df = states_parts_df[QNcolumns]
+        Q = read_exomol_pf(read_path, T)
+    # Non-LTE using two temperatures
+    elif NLTEMethod == 'T':
+        QNcolumns_2Ts = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNs_label + rot_label + vib_label
+        # Remove duplicates while preserving order
+        QNcolumns_2T = list(dict.fromkeys(QNcolumns_2Ts))
+        states_parts_df = states_parts_df[QNcolumns_2T]
+        min_value_list = states_parts_df.sort_values('E').iloc[0]
+        J_min = min_value_list['J']
+        Evib_df = states_parts_df[states_parts_df[rot_label].isin(list(min_value_list[rot_label])).all(axis=1)][vib_label]
+        Evib_df['Evib'] = states_parts_df['E']
+        states_part_df = dd.merge(states_parts_df, Evib_df, left_on=vib_label, right_on=vib_label, how='left').dropna()
+        states_part_df['Erot'] = states_part_df['E'] - states_part_df['Evib']
+        states_part_df = states_part_df[QNcolumns + ['Erot', 'Evib']]
+        Q = cal_Q_nlte_2T(states_part_df['g'], Tvib, Trot, states_part_df['Evib'], states_part_df['Erot'])
+    # Non-LTE using custom density
+    elif NLTEMethod == 'D':
+        # Read density file
+        nlte_density = pd.read_csv(NLTEPath, header=None, names=['id','density'])
+        nlte_density['nvib'] = nlte_density['density'] / nlte_density['density'].sum()
+        nlte_density = nlte_density[['id','nvib']]
+        states_part_df = pd.merge(states_parts_df, nlte_density, on='id', how='inner')
+        Q_nlte = cal_Q_nlte_nvib(states_part_df['g'], states_part_df['nvib'], Trot, states_part_df['E'])
+    # Non-LTE using custom population   
+    elif NLTEMethod == 'P':
+        # Read population file
+        nlte_population = pd.read_csv(NLTEPath, header=None, names=['id','population'])
+        nlte_population['pop'] = nlte_population['population'] / nlte_population['population'].sum()
+        nlte_population = nlte_population[['id','pop']]
+        states_part_df = pd.merge(states_parts_df, nlte_population, on='id', how='inner')
+        Q = pd.DataFrame()
+    else:
+        raise ImportError("Please choose one non-LTE method from: 'T', 'D' or 'P'.")   
+    states_parts_df.set_index(['id'], inplace=True, drop=False) 
+    # Use quantum number filters
     if QNsFilter !=[]:    
         for i in range(len(QNs_label)):
             if QNs_value[i] != ['']:
@@ -1529,18 +1806,21 @@ def read_part_states(states_df):
                     states_part_df = states_part_df
                 else:
                     states_part_df = states_part_df[states_part_df[QNs_label[i]].isin(list_QN_value)]
+    else:
+        pass
     states_part_df.index.name='index'
-    if check_lifetime == 1:
+    try:
         states_part_df['tau'] = states_part_df['tau'].astype('float')
-    if check_gfactor == 1:
         states_part_df['gfac'] = states_part_df['gfac'].astype('float')
-    return(states_part_df)  
+    except:
+        pass
+    return(Q, states_part_df) 
 
 def get_part_transfiles(read_path):
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
-    trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans.bz2')
+    trans_filepaths_all = glob.glob(read_path + '/'.join(data_info) + '/' + '*.trans.bz2')
     if trans_filepaths_all == []:
-        trans_filepaths_all = glob.glob(read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + '*.trans')
+        trans_filepaths_all = glob.glob(read_path + '/'.join(data_info) + '/' + '*.trans')
     num_transfiles_all = len(trans_filepaths_all)    # The number of all transitions files including the older version files.
     trans_filepaths = []    # The list of the lastest transitions files.
     all_decompress_num = 0
@@ -1568,7 +1848,7 @@ def get_part_transfiles(read_path):
         # The fourth format filenames only leave the updated date, e.g. 20170330.
         # This program only process the lastest data, so extract the filenames named by the first two formats.
         if num == 1:     
-            if split_version[0] == dataset:        
+            if split_version[0] == data_info[-1]:        
                 trans_filepaths.append(trans_filepaths_all[i])
             elif len(split_version[0].split('-')) == 2:
                 lower = int(split_version[0].split('-')[0])
@@ -1602,19 +1882,6 @@ def extract_broad(broad_df, st_df):
     gamma_L = broad_df['gamma_L'][id_broad]
     n_air = broad_df['n_air'][id_broad]
     return(gamma_L, n_air)
-
-# Intensity
-# Calculate absorption coefficient
-def cal_abscoefs(T, v, gp, A, Epp, Q, abundance):
-    # abscoef = gp * A * np.exp(- c2 * Epp / T) * (1 - np.exp(- c2 * v / T)) / (8 * np.pi * c * v**2 * Q) * abundance  
-    abscoef = ne.evaluate('gp * A * exp(- c2 * Epp / T) * (1 - exp(- c2 * v / T)) * Inv8Pic / (v ** 2 * Q) * abundance')  
-    return abscoef
-
-# Calculate emission coefficient
-def cal_emicoefs(T, v, gp, A, Ep, Q, abundance):
-    # emicoef = gp * h * c * A * v * np.exp(- c2 * Ep / T) / (4 * np.pi) / Q * abundance   
-    emicoef = ne.evaluate('gp * hc * A * v * exp(- c2 * Ep / T) * Inv4Pi / Q * abundance')
-    return emicoef
 
 # Uncertainty
 # Calculate uncertainty
@@ -1651,15 +1918,15 @@ def read_unc_states(states_df):
         states_unc_df = states_df
         states_unc_df['id'] = pd.to_numeric(states_unc_df['id'])
         states_unc_df.set_index(['id'], inplace=True, drop=False)
-    if check_uncertainty == 1:
+    if check_uncertainty == True:
         col_unc = ['unc']
     else:
         col_unc = []
-    if check_lifetime == 1:
+    if check_lifetime == True:
         col_lifetime = ['tau']
     else:
         col_lifetime = []
-    if check_gfactor == 1:
+    if check_gfactor == True:
         col_gfac = ['gfac']
     else:
         col_gfac = []
@@ -1670,7 +1937,6 @@ def read_unc_states(states_df):
     states_unc_df = states_unc_df[colnames] 
     states_unc_df = convert_QNValues_exomol2hitran(states_unc_df, GlobalQNLabel_list, LocalQNLabel_list)
     states_unc_df.index.name='index'
-    # pd.set_option("display.max_columns",30) 
     return(states_unc_df)
 
 def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
@@ -1697,7 +1963,7 @@ def broadener_ExoMol2HITRAN(exomolst_df):
     default_broad_df = pd.DataFrame([['code', default_gamma_L, default_n_air,'Jpp']],columns=broad_col_name)
     air_broad_df = pd.DataFrame(columns=broad_col_name)
     rows = len(exomolst_df)
-    pattern_air = read_path + molecule + '/**/*air.broad'
+    pattern_air = read_path + data_info[0] + '/**/*air.broad'
     if glob.glob(pattern_air, recursive=True) != []:
         for fname_air in glob.glob(pattern_air, recursive=True):
             air_broad_df = pd.read_csv(fname_air, sep='\s+', names=broad_col_name, header=None, engine='python')
@@ -1706,7 +1972,7 @@ def broadener_ExoMol2HITRAN(exomolst_df):
     else:
         gamma_air= np.full((1,rows),default_broad_df['gamma_L'][0])[0]
         n_air = np.full((1,rows),default_broad_df['n_air'][0])[0]
-    pattern_self = read_path + molecule + '/**/*self.broad'
+    pattern_self = read_path + data_info[0] + '/**/*self.broad'
     if glob.glob(pattern_self, recursive=True) != []:
         for fname_self in glob.glob(pattern_self, recursive=True):
             self_broad_df = pd.read_csv(fname_self, sep='\s+', names=broad_col_name, header=None, engine='python')
@@ -1805,7 +2071,7 @@ def ConvertExoMol2HITRAN(states_df, trans_part_df):
     hitran_begin_dic = {'M':molecule_id, 'I':isotopologue_id, 'v':v, 'S':I, 'A':A, 
                         'gamma_air':gamma_air,'gamma_self':gamma_self,'E"':Epp,'n_air':n_air,'delta_air':delta_air}
     hitran_begin_df = pd.DataFrame(hitran_begin_dic)
-    hitran_end_dic = {'Error':unc,'Iref':iref,'*':flag,"g'":gp, 'g"':gpp}
+    hitran_end_dic = {'Ierr':unc,'Iref':iref,'flag':flag,"g'":gp, 'g"':gpp}
     hitran_end_df = pd.DataFrame(hitran_end_dic)
 
     hitran_res_df = pd.concat([hitran_begin_df, QN_df, hitran_end_df], axis='columns')
@@ -1835,7 +2101,6 @@ def ProcessExoMol2HITRAN(states_df, trans_filepath):
             hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
     return hitran_res_df
 
-
 def conversion_exomol2hitran(states_df):
     print('Convert data format from ExoMol to HITRAN.')  
     print('Running on ', ncputrans, 'cores.')
@@ -1856,17 +2121,19 @@ def conversion_exomol2hitran(states_df):
     print('Saving HITRAN format data into file ...')   
     ts = Timer()    
     ts.start()
-    conversion_folder = save_path + '/conversion/ExoMol2HITRAN/'
+    conversion_folder = save_path + 'conversion/ExoMol2HITRAN/'
     if os.path.exists(conversion_folder):
         pass
     else:
         os.makedirs(conversion_folder, exist_ok=True)  
-    conversion_path = conversion_folder + isotopologue + '__' + dataset + '.par'
+    conversion_path = conversion_folder + '__'.join(data_info[-2:]) + '.par'
     hitran_format = "%2s%1s%12.6f%10.3E%10.3E%5.3f%5.3f%10.4f%4.2f%8s%15s%15s%15s%15s%6s%12s%1s%7.1f%7.1f"
     np.savetxt(conversion_path, hitran_res_df, fmt=hitran_format)
     ts.end()
-    print('Converted par file has been saved!\n')  
-    print('Finished converting data format from ExoMol to HITRAN!')
+    hitran_fmt_list = ['%'+i for i in hitran_format.split('%')][1:]
+    print_file_info('Converted HITRAN par', hitran_res_df.columns, hitran_fmt_list)
+    print('Converted HITRAN par file has been saved!\n')  
+    print('Finished converting data format from ExoMol to HITRAN!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
 
 ## HITRAN to ExoMol
@@ -1939,6 +2206,7 @@ def convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df):
     hitran2exomol_states_df['Unc'] = (hitran2exomol_states_df['Unc'].replace(10,1e-09).replace(9,1e-08)
                                       .replace(8,1e-07).replace(7,1e-06).replace(6,1e-05).replace(5,1e-04)
                                       .replace(4,0.001).replace(3,0.01).replace(2,0.1).replace(0,10))
+    
     return(Jpp_df, hitran2exomol_states_df, hitran2exomol_trans_df)
 
 def convert_hitran2broad(hitran_df, Jpp_df):
@@ -1951,7 +2219,7 @@ def conversion_states(hitran2exomol_states_df, conversion_folder):
     print('Convert states data format from HITRAN to ExoMol.')  
     t = Timer()
     t.start()
-    conversion_states_path = conversion_folder + isotopologue + '__' + dataset + '.states.bz2'
+    conversion_states_path = conversion_folder + '__'.join(data_info[-2:]) + '.states.bz2'
     hitranQNlabels_noF = hitran2exomol_states_df.columns[5:].tolist()
     hitranQNformats = [QNsformat_list[j] for j in [QNslabel_list.index(i) for i in hitranQNlabels_noF]]
 
@@ -1963,17 +2231,20 @@ def conversion_states(hitran2exomol_states_df, conversion_folder):
                     .replace("'","").replace(",","").replace("d","s").replace("i","s"))
     np.savetxt(conversion_states_path, hitran2exomol_states_df, fmt=states_format)
     t.end()
-    print('Converted states file has been saved!\n')  
+    hitran2exomol_states_fmt_list = states_fmt[:5] + hitranQNformats
+    print_file_info('Converted ExoMol states', hitran2exomol_states_df.columns, hitran2exomol_states_fmt_list)
+    print('Converted states file has been saved!\n')   
     
 def conversion_trans(hitran2exomol_trans_df, conversion_folder): 
     print('Convert transitions data format from HITRAN to ExoMol.')  
     t = Timer()
     t.start()
-    conversion_trans_path = conversion_folder + isotopologue + '__' + dataset + '.trans.bz2'
+    conversion_trans_path = conversion_folder + '__'.join(data_info[-2:]) + '.trans.bz2'
     trans_format = "%12d %12d %10.4e %15.6f"
     np.savetxt(conversion_trans_path, hitran2exomol_trans_df, fmt=trans_format)
     t.end()
-    print('Converted transition file has been saved!\n')  
+    print_file_info('Converted ExoMol transitions', ['i', 'f', 'A', 'v'], ['%12d', '%12d', '%10.4e', '%15.6f'])
+    print('Converted transitions file has been saved!\n')  
     
 def conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_folder):
     print('Convert broadening data format from HITRAN to ExoMol.')  
@@ -1984,17 +2255,19 @@ def conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_fol
     nbroad = nair + nself
     broad_format = "%2s %6.4f %6.3f %7s"    
     if nair != 0:
-        conversion_airbroad_path = conversion_folder + isotopologue + '__air.broad'
+        conversion_airbroad_path = conversion_folder + data_info[-2] + '__air.broad'
         np.savetxt(conversion_airbroad_path, hitran2exomol_air_df, fmt=broad_format)
     else:
         print('No air broadening file.')
     if nself != 0:
-        conversion_selfbroad_path = conversion_folder + isotopologue + '__self.broad'
+        conversion_selfbroad_path = conversion_folder + data_info[-2] + '__self.broad'
         np.savetxt(conversion_selfbroad_path, hitran2exomol_self_df, fmt=broad_format)
     else:
         print('No self broadening file.')
     t.end()
     if nbroad != 0:
+        hitran2exomol_broad_fmt_list = ['%2s', '%6.4f', '%6.3f'] + [states_fmt[3]]
+        print_file_info('Converted ExoMol broadening', ['Code', 'gamma_ref', 'n_L', 'J"'], hitran2exomol_broad_fmt_list)
         print('Converted broadening files have been saved!\n')  
     else:
         print('No broadening files need to be saved!\n')  
@@ -2004,8 +2277,8 @@ def conversion_hitran2exomol(hitran_df):
     hitran_df = hitran_df[~hitran_df['Vpp'].isin([' '*15])]
     hitran_df = hitran_df[~hitran_df['Qp'].isin([' '*15])]
     hitran_df = hitran_df[~hitran_df['Qpp'].isin([' '*15])]
-    GlobalQNLabels,GlobalQNFormats = globalQNclasses(molecule,isotopologue)
-    LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats = localQNgroups(molecule,isotopologue)
+    GlobalQNLabels,GlobalQNFormats = globalQNclasses(data_info)
+    LocalQNupperLabels, LocalQNlowerLabels, LocalQNupperFormats, LocalQNlowerFormats = localQNgroups(data_info)
     QNu_df, QNl_df, QNu_col, QNl_col = separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerLabels,
                                                           GlobalQNFormats,LocalQNupperFormats,LocalQNlowerFormats)
     hitran_df['Ep'] = cal_Ep(hitran_df['Epp'].values,hitran_df['v'].values)
@@ -2014,7 +2287,7 @@ def conversion_hitran2exomol(hitran_df):
     
     hitran2exomol_air_df, hitran2exomol_self_df = convert_hitran2broad(hitran_df, Jpp_df)
     
-    conversion_folder = save_path+'/conversion/HITRAN2ExoMol/'+molecule+'/'+isotopologue+'/'+dataset+'/' 
+    conversion_folder = save_path+'conversion/HITRAN2ExoMol/'+'/'.join(data_info)+'/' 
     if os.path.exists(conversion_folder):
         pass
     else:
@@ -2027,10 +2300,11 @@ def conversion_hitran2exomol(hitran_df):
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
 
 # Stick Spectra
-def ProcessStickSpectra(states_part_df,T,Q,trans_part_df):
+# Process LTE or NLTE linelist
+def ProcessStickSpectra(states_part_df,T,Tvib,Trot,Q,trans_part_df):
     merged_df = dd.merge(trans_part_df, states_part_df, left_on='u', right_on='id', 
                          how='inner').merge(states_part_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
-    stick_spectra_df = merged_df.drop(columns=["id'", 'id"','u','l'])
+    stick_spectra_df = merged_df.drop(columns=["id'",'id"','u','l'])
     stick_spectra_df['v'] = cal_v(stick_spectra_df["E'"].values, stick_spectra_df['E"'].values)
     stick_spectra_df = stick_spectra_df[stick_spectra_df['v'].between(min_wn, max_wn)]
     if len(stick_spectra_df) != 0 and QNsFilter != []:
@@ -2039,29 +2313,61 @@ def ProcessStickSpectra(states_part_df,T,Q,trans_part_df):
     if num > 0:
         v = stick_spectra_df['v'].values
         if abs_emi == 'Ab':
-            stick_spectra_df['S'] = cal_abscoefs(T,v,stick_spectra_df["g'"].values,stick_spectra_df['A'].values,
-                                                    stick_spectra_df['E"'].values,Q,abundance)
-        elif abs_emi == 'Em':
-            stick_spectra_df['S'] = cal_emicoefs(T,v,stick_spectra_df["g'"].values,stick_spectra_df['A'].values,
-                                                    stick_spectra_df["E'"].values,Q,abundance)
+            
+            if NLTEMethod == 'L':
+                stick_spectra_df['S'] = cal_abscoefs(T,v,stick_spectra_df["g'"].values,stick_spectra_df['A'].values,
+                                                     stick_spectra_df['E"'].values,Q,abundance)
+            elif NLTEMethod == 'T':
+                stick_spectra_df['S'] = cal_abscoefs_nlte_2T(Tvib,Trot,stick_spectra_df['v'],stick_spectra_df["g'"],stick_spectra_df['A'],
+                                                             stick_spectra_df['Evib"'],stick_spectra_df['Erot"'],Q,abundance)
+            elif NLTEMethod == 'D':
+                stick_spectra_df['S'] = cal_abscoefs_nlte_nvib(stick_spectra_df['nvib"'],T,Trot,stick_spectra_df['v'],stick_spectra_df["g'"],
+                                                               stick_spectra_df['A'],stick_spectra_df['E"'],Q,abundance)
+            elif NLTEMethod == 'P':
+                stick_spectra_df['S'] = cal_abscoefs_nlte_pop(stick_spectra_df['pop"'],T,stick_spectra_df['v'],stick_spectra_df["g'"],
+                                                              stick_spectra_df['g"'],stick_spectra_df['A'],abundance)
+            else:
+                raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")
+        elif abs_emi == 'Em':   
+            if NLTEMethod == 'L':
+                stick_spectra_df['S'] = cal_emicoefs(T,v,stick_spectra_df["g'"].values,stick_spectra_df['A'].values,
+                                                     stick_spectra_df["E'"].values,Q,abundance)
+            elif NLTEMethod == 'T':
+                stick_spectra_df['S'] = cal_emicoefs_nlte_2T(Tvib,Trot,stick_spectra_df['v'],stick_spectra_df["g'"],stick_spectra_df['A'],
+                                                             stick_spectra_df["Evib'"],stick_spectra_df["Erot'"],Q,abundance)
+            elif NLTEMethod == 'D':   
+                stick_spectra_df['S'] = cal_emicoefs_nlte_nvib(stick_spectra_df["nvib'"],Trot,stick_spectra_df['v'],stick_spectra_df["g'"],
+                                                               stick_spectra_df['A'],stick_spectra_df["E'"],Q,abundance)
+            elif NLTEMethod == 'P':
+                stick_spectra_df['S'] = cal_emicoefs_nlte_pop(stick_spectra_df["pop'"],stick_spectra_df['v'],stick_spectra_df['A'],abundance)
+            else:
+                raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")
         else:
-            raise ImportError("Please choose one from: 'Absorption' or 'Emission'.")  
+            raise ImportError("Please choose one from: 'Absorption' or 'Emission'.") 
         if threshold != 'None':
             stick_spectra_df = stick_spectra_df[stick_spectra_df['S'] >= threshold]
         else:
             pass  
     else:
         stick_spectra_df['S'] = np.array([])
-    stick_spectra_df.drop(columns=['A',"g'",'g"'], inplace=True)
-    # col_main = ['v','S',"J'","E'",'J"','E"']
-    col_main = ['v','S']
+    if NLTEMethod == 'L':
+        col_list = ['A',"g'",'g"']
+    elif NLTEMethod == 'T':
+        col_list = ['A',"g'",'g"',"Evib'","Erot'",'Evib"','Erot"']
+    elif NLTEMethod == 'D':
+        col_list = ['A',"g'",'g"',"nvib'",'nvib"']
+    elif NLTEMethod == 'P':
+        col_list = ['A',"g'",'g"',"pop'",'pop"']
+    else:
+        raise ImportError("Please choose one non-LTE method from: 'T', 'D' or 'P'.")
+    stick_spectra_df.drop(columns=col_list, inplace=True)
+    col_main = ['v','S',"J'","E'",'J"','E"']
     col_qn = [col for col in stick_spectra_df.columns if col not in col_main]
     col_stick_spectra = col_main + col_qn
-    # col_stick_spectra = ['v','S']
-    stick_spectra_df = stick_spectra_df[col_stick_spectra]
+    stick_spectra_df = stick_spectra_df[col_stick_spectra]  
     return stick_spectra_df
 
-def calculate_stick_spectra(states_part_df,T,Q,trans_filepath):   
+def calculate_stick_spectra(states_part_df,T,Tvib,Trot,Q,trans_filepath):   
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
     if trans_filepath.split('.')[-1] == 'bz2':
@@ -2070,7 +2376,7 @@ def calculate_stick_spectra(states_part_df,T,Q,trans_filepath):
                                           iterator=True, low_memory=False, encoding='utf-8')
         # Process multiple files in parallel
         with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessStickSpectra,states_part_df,T,Q,trans_df_chunk) 
+            futures = [trans_executor.submit(ProcessStickSpectra,states_part_df,T,Tvib,Trot,Q,trans_df_chunk) 
                        for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)]
             stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
     else:
@@ -2078,7 +2384,7 @@ def calculate_stick_spectra(states_part_df,T,Q,trans_filepath):
         trans_dd_list = trans_dd.partitions
         # Process multiple files in parallel
         with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessStickSpectra,states_part_df,T,Q,trans_dd_list[i].compute(scheduler='threads')) 
+            futures = [trans_executor.submit(ProcessStickSpectra,states_part_df,T,Tvib,Trot,Q,trans_dd_list[i].compute(scheduler='threads')) 
                        for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)]
             stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
     return stick_spectra_df
@@ -2096,58 +2402,120 @@ def plot_stick_spectra(stick_spectra_df):
                   'xtick.labelsize': 14,
                   'ytick.labelsize': 14}
     plt.rcParams.update(parameters)
-    ss_plot_folder = save_path + 'stick_spectra/plots/'+molecule+'/'+database+'/'
+    ss_plot_folder = save_path + 'stick_spectra/plots/'+data_info[0]+'/'+database+'/'
     if os.path.exists(ss_plot_folder):
         pass
     else:
         os.makedirs(ss_plot_folder, exist_ok=True)
     fig, ax = plt.subplots(figsize=(12, 6))
     # ax.fill_between(v, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
-    ax.vlines(v, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
+    if NLTEMethod == 'L' or NLTEMethod == 'P':
+        ax.vlines(v, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
+    elif NLTEMethod == 'T':
+        ax.vlines(v, 0, S, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
+    elif NLTEMethod == 'D':
+        ax.vlines(v, 0, S, label='T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
+    else:
+        raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")
     ax.semilogy()
     ax.set_xlim([min_wn, max_wn])
     ax.set_ylim([limitYaxisStickSpectra, 10*max(S)])
-    #plt.title(database+' '+molecule+' intensity') 
+    #plt.title(database+' '+data_info[0]+' intensity') 
     ax.set_xlabel('Wavenumber, cm$^{-1}$')
     ax.set_ylabel('Intensity, cm/molecule')
     leg = ax.legend()                  # Get the legend object.
     # for line in leg.legend_handles:
     #     line.set_height(1.5)           # Change the line width for the legend.
-    ss_plot = (ss_plot_folder+molecule+'__'+isotopologue+'__'+ dataset+'__T'+str(T)+'__'+
-               str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__'+abs_emi+photo+'__sp.png')
+    ss_plot = (ss_plot_folder+'__'.join(data_info)+'__T'+str(T)+'__'+
+               str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__thres'+str(threshold)
+               +'__'+abs_emi+'__sp'+LTE_NLTE+photo+'.png')
     plt.savefig(ss_plot, dpi=500)
     plt.show()
     tp.end()
     print('Stick spectra plot has been saved:', ss_plot)
- 
+
+def print_stick_info(unc_unit, threshold_unit):
+    if QNsFilter !=[] or threshold != 'None' or UncFilter != 'None':
+        print('\nApply filters')
+    else:
+        pass
+    # If quantum number filter is applied, print the quantum number filter information.
+    if QNsFilter !=[]:  
+        if QNs_label != []:
+            # Find the max width for each column for alignment
+            widths = [max(len(str(c)), len(str(f)), len(str(v))) for c, f, v in zip(QNs_label, QNs_format, QNs_value)]
+            # Print header
+            print('Selected quantum number labels  :', end=' ')
+            for c, w in zip(QNs_label, widths):
+                print(f'{c:<{w}}', end='  ')
+            print()
+            print('Selected quantum number formats :', end=' ')
+            for f, w in zip(QNs_format, widths):
+                print(f'{f:<{w}}', end='  ')
+            print()
+            print('Selected quantum number values  :', end=' ')
+            for v, w in zip(QNs_value, widths):
+                if v == ['']:
+                    v = 'All'
+                print(f'{str(v):<{w}}', end='  ')
+            print()
+        else:
+            pass
+    # If uncertainty filter is applied, print the uncertainty filter information.
+    if UncFilter != 'None':
+        print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), unc_unit)
+    else:
+        pass
+    # If threshold filter is applied, print the threshold filter information.
+    if threshold != 'None':
+        print('{:25s} : {:<6}'.format('Threshold filter', threshold), threshold_unit)
+    else:
+        pass
+    print()
+    print('{:25s} : {:<6}'.format('Temperature selected', T), 'K')
+    print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, unc_unit, '-', max_wn, unc_unit))
+    NLTE_case = (NLTEMethod.replace('L', ' L ').replace('T', 'T')
+                 .replace(' L ', 'LTE').replace(' T ', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
+    NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
+                 .replace('T', 'Treanor distribution with Tvib and Trot')
+                 .replace('D', 'Custom vibrational density nvib and Trot')
+                 .replace('P', 'Custom rovibrational population'))
+    print('{:25s} : {}'.format(NLTE_case, NLTE_desc))
+    print('{:25s} : {}'.format('Intensity', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission')))
+    if predissocYN == 'Y':
+        print('{:25s} : {}'.format('Predissociation', 'Yes'))
+    else:
+        print('{:25s} : {}'.format('Predissociation', 'No'))
+    print()
+
 # Stick spectra for ExoMol database
-def exomol_stick_spectra(states_part_df, T):
+def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
     print('Calculate stick spectra.')  
     print('Running on ', ncputrans, 'cores.')
-    print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
-    print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
-    print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
-    if predissocYN == 'Y':
-        print('{:25s} : {:<6}'.format('Predissociation', 'Yes'))
-    else:
-        print('{:25s} : {:<6}'.format('Predissociation', 'No'))
+    print_stick_info(u'cm\u207B\u00B9', u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
     tot = Timer()
     tot.start()
-    Q = read_exomol_pf(read_path, T)    
+    # Q = read_exomol_pf(read_path, T)
     states_part_df_ss = states_part_df.copy()
-    if check_uncertainty == 1:
+    if check_uncertainty == True:
         states_part_df_ss.drop(columns=['unc'], inplace=True)
-    if check_lifetime == 1 or predissocYN == 'Y':
-        states_part_df_ss.drop(columns=['tau'], inplace=True)
-    if check_gfactor == 1:
-        states_part_df_ss.drop(columns=['gfac'], inplace=True)
+    if check_lifetime == True or predissocYN == 'Y':
+        try:
+            states_part_df_ss.drop(columns=['tau'], inplace=True)
+        except:
+            pass
+    if check_gfactor == True:
+        try:
+            states_part_df_ss.drop(columns=['gfac'], inplace=True)
+        except:
+            pass
     
     print('Reading transitions and calculating stick spectra ...')    
     trans_filepaths = get_part_transfiles(read_path)   
     # Process multiple files in parallel
     with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
-        futures = [executor.submit(calculate_stick_spectra,states_part_df_ss,T,Q,
+        futures = [executor.submit(calculate_stick_spectra,states_part_df_ss,T,Tvib,Trot,Q,
                                    trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
         stick_spectra_df = pd.concat([future.result() for future in futures])
         
@@ -2156,48 +2524,41 @@ def exomol_stick_spectra(states_part_df, T):
     else:
         stick_spectra_df.sort_values(by=['v'], ascending=True, inplace=True) 
     tot.end()
-    print('Finished reading transitions and calculating stick spectra!')
+    print('Finished reading transitions and calculating stick spectra!\n')
     
     print('Saving stick spectra into file ...')   
     ts = Timer()    
     ts.start()
     QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")
                 .replace('d','s').replace('i','s').replace('.1f','s'))
-    ss_folder = save_path + 'stick_spectra/files/'+molecule+'/'+database+'/'
+    ss_folder = save_path + 'stick_spectra/files/'+data_info[0]+'/'+database+'/'
     if os.path.exists(ss_folder):
         pass
     else:
         os.makedirs(ss_folder, exist_ok=True)
-    ss_path = (ss_folder+molecule+'__'+isotopologue+'__'+ dataset+'__T'+str(T)+'__'
+    ss_path = (ss_folder+'__'.join(data_info)+'__T'+str(T)+'__'
                +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)
-               +'__thres'+str(threshold)+'__'+abs_emi+photo+'.stick')
-    # ss_colname = stick_spectra_df.columns
+               +'__thres'+str(threshold)+'__'+abs_emi+LTE_NLTE+photo+'.stick')
     if QNsfmf == '':
-        # fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
-        fmt = '%12.8E %12.8E'
-        stick_spectra_df = stick_spectra_df[['v','S']]
+        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
+        # ss_fmt = '%12.8E %12.8E'
     else:
-        fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
-    np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
+        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
+    np.savetxt(ss_path, stick_spectra_df, fmt=ss_fmt, header='')
     ts.end()
+    print_file_info('Stick spectra', stick_spectra_df.columns, ss_fmt.split())
     print('Stick spectra file has been saved:', ss_path, '\n')
 
     # Plot stick spectra and save it as .png.
     if PlotStickSpectraYN == 'Y':
         plot_stick_spectra(stick_spectra_df)
-    print('Stick spectra have been saved!\n')
+    print('\nStick spectra have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
     
 # Stick spectra for HITRAN database
 def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     print('Calculate stick spectra.')  
-    print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
-    print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
-    print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
-    if predissocYN == 'Y':
-        print('{:25s} : {:<6}'.format('Predissociation', 'Yes'))
-    else:
-        print('{:25s} : {:<6}'.format('Predissociation', 'No'))
+    print_stick_info(u'cm\u207B\u00B9', u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
     t = Timer()
     t.start()
     A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = linelist_hitran(hitran_linelist_df)
@@ -2210,13 +2571,13 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
         print('Emission stick spectra')
         I = cal_emicoefs(T, v, gp, A, Ep, Q, abundance)
     else:
-        raise ImportError("Please choose one from: 'Absoption' or 'Emission'.")
+        raise ImportError("Please choose one from: 'Absorption' or 'Emission'.")
     
     ss_colname = ['v','S',"J'","E'",'J"','E"'] + QNs_col
     stick_spectra_df = hitran_linelist_df[ss_colname]
     stick_spectra_df = stick_spectra_df.sort_values('v') 
     t.end() 
-    print('Finished calculating stick spectra!')
+    print('Finished calculating stick spectra!\n')
     
     print('Saving stick spectra into file ...')   
     ts = Timer()    
@@ -2224,242 +2585,27 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     QN_format_noJ = [QNsformat_list[i] for i in [QNslabel_list.index(j) for j in QNs_label]]
     QNsfmf = (str(QN_format_noJ).replace("'","").replace(",","").replace("[","").replace("]","")
               .replace('d','s').replace('i','s').replace('.1f','s'))
-    ss_folder = save_path + 'stick_spectra/stick/'+molecule+'/'+database+'/'
+    ss_folder = save_path + 'stick_spectra/stick/'+data_info[0]+'/'+database+'/'
     if os.path.exists(ss_folder):
         pass
     else:
         os.makedirs(ss_folder, exist_ok=True)
-    # ss_path = ss_folder + isotopologue + '__' + dataset + '.stick'
-    ss_path = (ss_folder+molecule+'__'+isotopologue+'__'+ dataset+'__T'+str(T)+'__'
+    # ss_path = ss_folder + '__'.join(data_info[-2:]) + '.stick'
+    ss_path = (ss_folder+'__'.join(data_info)+'__T'+str(T)+'__'
                +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)
                +'__thres'+str(threshold)+'__'+abs_emi+photo+'.stick')
-    fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
-    np.savetxt(ss_path, stick_spectra_df, fmt=fmt, header='')
+
+    ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
+    np.savetxt(ss_path, stick_spectra_df, fmt=ss_fmt, header='')
     ts.end()
+    print_file_info('Stick spectra', stick_spectra_df.columns, ss_fmt.split())
     print('Stick spectra file has been saved:', ss_path)
     
     # Plot stick spectra and save it as .png.
     if PlotStickSpectraYN == 'Y':
         plot_stick_spectra(stick_spectra_df)
-    print('Stick spectra have been saved!\n') 
+    print('\nStick spectra have been saved!\n') 
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
-
-# Non-LTE
-# Calculate non-LTE partition function
-def cal_Q_nlte(g, Tvib, Trot, Evib, Erot):
-    Q_nlte = ne.evaluate('sum(g * exp(-c2 * Evib / Tvib) * exp(-c2 * Erot / Trot))')
-    return Q_nlte
-
-# Calculate non-LTE absorption coefficient
-def cal_abscoefs_nlte(Tvib, Trot, v, gp, A, Evib, Erot, Q_nlte, abundance):
-    # F_nlte = ne.evaluate('exp(- c2 * Evib / Tvib) * exp(- c2 * Erot / Trot) / Q_nlte')
-    abscoef_nlte = ne.evaluate('gp * A * Inv8Pic / (v ** 2) * exp(- c2 * Evib / Tvib) * exp(- c2 * Erot / Trot) / Q_nlte * (1 - exp(- c2 * v / Tvib)) * abundance')  
-    return abscoef_nlte
-
-# Calculate non-LTE emission coefficient
-def cal_emicoefs_nlte(Tvib, Trot, v, gp, A, Evib, Erot, Q_nlte, abundance):
-    emicoef_nlte = ne.evaluate('gp * hc * A * v * Inv4Pi * exp(- c2 * Evib / Tvib) * exp(- c2 * Erot / Trot) / Q_nlte * abundance')
-    return emicoef_nlte
-
-# Read states file for calculating non-LTE
-def read_nlte_states(states_df):
-    if check_uncertainty == 1:
-        col_unc = ['unc']
-    else:
-        col_unc = []
-    if check_lifetime == 1:
-        col_lifetime = ['tau']
-    else:
-        col_lifetime = []
-    if check_gfactor == 1:
-        col_gfac = ['gfac']
-    else:
-        col_gfac = []
-    colname = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNslabel_list
-    states_nlte_df = states_df.drop(states_df.columns[len(colname):], axis=1)
-    states_nlte_df.columns = colname
-    QNcolumns = ['id','E','g','J'] + col_unc  + rot_label + vib_label
-    # Remove duplicates while preserving order
-    QNcolumns = [x for i, x in enumerate(QNcolumns) if x not in QNcolumns[:i]]
-    states_nlte_df = states_nlte_df[QNcolumns]
-    min_value_list = states_nlte_df.sort_values('E').iloc[0]
-    J_min = min_value_list['J']
-    Evib_df = states_nlte_df[states_nlte_df[rot_label].isin(list(min_value_list[rot_label])).all(axis=1)][vib_label]
-    Evib_df['Evib'] = states_nlte_df['E']
-    states_Q_df = dd.merge(states_nlte_df, Evib_df, left_on=vib_label, right_on=vib_label, how='left').dropna()
-    states_Q_df['Erot'] = states_Q_df['E'] - states_Q_df['Evib']
-    Q_nlte = cal_Q_nlte(states_Q_df['g'], Tvib, Trot, states_Q_df['Evib'], states_Q_df['Erot'])
-    # Use uncertainty and quantum number filters
-    if UncFilter != 'None' :
-        states_nlte_df = states_Q_df[states_Q_df['unc'] <= UncFilter]
-        states_nlte_df.set_index(['id'], inplace=True, drop=False)
-    else:
-        states_nlte_df = states_Q_df
-        states_nlte_df.set_index(['id'], inplace=True, drop=False)
-
-    if QNsFilter !=[]:    
-        for i in range(len(QNs_label)):
-            if QNs_value[i] != ['']:
-                list_QN_value = str(QNs_value[i]).replace("', '",",").replace("'","").replace('[','').replace(']','').split(',')
-                if '' in list_QN_value:
-                    states_nlte_df = states_nlte_df
-                else:
-                    states_nlte_df = states_nlte_df[states_nlte_df[QNs_label[i]].isin(list_QN_value)]
-    states_nlte_df.index.name='index'
-    return(Q_nlte, states_nlte_df) 
-
-# Process NLTE linelist
-def ProcessNLTE(states_nlte_df,Tvib,Trot,Q_nlte,trans_part_df):
-    merged_df = dd.merge(trans_part_df, states_nlte_df, left_on='u', right_on='id', 
-                         how='inner').merge(states_nlte_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
-    nlte_df = merged_df.drop(columns=["id'",'id"','u','l',"unc'",'unc"'])
-    nlte_df['v'] = cal_v(nlte_df["E'"].values, nlte_df['E"'].values)
-    nlte_df = nlte_df[nlte_df['v'].between(min_wn, max_wn)]
-    if len(nlte_df) != 0 and QNsFilter != []:
-        nlte_df = QNfilter_linelist(nlte_df, QNs_value, QNs_label)
-    num = len(nlte_df)
-    if num > 0:
-        v = nlte_df['v'].values
-        if abs_emi == 'Ab':
-            nlte_df['Snlte'] = cal_abscoefs_nlte(Tvib,Trot,nlte_df['v'],nlte_df["g'"],nlte_df['A'],nlte_df['Evib"'],nlte_df['Erot"'],Q_nlte,abundance)
-        elif abs_emi == 'Em':
-            nlte_df['Snlte'] = cal_emicoefs_nlte(Tvib,Trot,nlte_df['v'],nlte_df["g'"],nlte_df['A'],nlte_df["Evib'"],nlte_df["Erot'"],Q_nlte,abundance)
-        else:
-            raise ImportError("Please choose one from: 'Absorption' or 'Emission'.") 
-        if threshold != 'None':
-            nlte_df = nlte_df[nlte_df['Snlte'] >= threshold]
-        else:
-            pass  
-    else:
-        nlte_df['Snlte'] = np.array([])
-    nlte_df.drop(columns=['A',"g'",'g"',"E'",'E"',"Evib'","Erot'",'Evib"','Erot"'], inplace=True)
-    col_main = ['v','Snlte',"J'",'J"']
-    col_qn = [col for col in nlte_df.columns if col not in col_main]
-    col_nlte = col_main + col_qn
-    nlte_df = nlte_df[col_nlte]  
-    return nlte_df
-
-# Calculate non-LTE intensity
-def calculate_NLTE(states_nlte_df,Tvib,Trot,Q_nlte,trans_filepath):   
-    trans_filename = trans_filepath.split('/')[-1]
-    print('Processeing transitions file:', trans_filename)
-    if trans_filepath.split('.')[-1] == 'bz2':
-        trans_df_chunk_list = pd.read_csv(trans_filepath, compression='bz2', sep='\s+', header=None,
-                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
-                                          iterator=True, low_memory=False, encoding='utf-8')
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessNLTE,states_nlte_df,Tvib,Trot,Q_nlte,trans_df_chunk) 
-                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)]
-            nlte_df = pd.concat([future.result() for future in tqdm(futures)])
-    else:
-        trans_dd = dd.read_csv(trans_filepath, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
-        trans_dd_list = trans_dd.partitions
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessNLTE,states_nlte_df,Tvib,Trot,Q_nlte,trans_dd_list[i].compute(scheduler='threads')) 
-                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)]
-            nlte_df = pd.concat([future.result() for future in tqdm(futures)])
-    return nlte_df
-
-# Plot non-LTE stick spectra
-def plot_NLTE(nlte_df):  
-    print('Plotting Non-LTE stick spectra ...')
-    tp = Timer()
-    tp.start()
-    v = nlte_df['v'].values
-    nlteS = nlte_df['Snlte'].values
-
-    parameters = {'axes.labelsize': 18, 
-                  'legend.fontsize': 18,
-                  'xtick.labelsize': 14,
-                  'ytick.labelsize': 14}
-    plt.rcParams.update(parameters)
-    ns_plot_folder = save_path + 'Non-LTE/plots/'+molecule+'/'+database+'/'
-    if os.path.exists(ns_plot_folder):
-        pass
-    else:
-        os.makedirs(ns_plot_folder, exist_ok=True)
-    fig, ax = plt.subplots(figsize=(12, 6))
-    # ax.fill_between(v, 0, nlteS, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
-    ax.vlines(v, 0, nlteS, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
-    ax.semilogy()
-    ax.set_xlim([min_wn, max_wn])
-    ax.set_ylim([limitYaxisNLTE, 10*max(nlteS)])
-    #plt.title(database+' '+molecule+' intensity') 
-    ax.set_xlabel('Wavenumber, cm$^{-1}$')
-    ax.set_ylabel('Non-LTE Intensity, cm/molecule')
-    leg = ax.legend()                  # Get the legend object.
-    # for line in leg.legend_handles:
-    #     line.set_height(1.5)           # Change the line width for the legend.
-    ns_plot = (ns_plot_folder+molecule+'__'+isotopologue+'__'+ dataset+'__Tvib'+str(Tvib)+'__Trot'+str(Trot)+'__'+
-                str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__'+abs_emi+photo+'__nlte.png')
-    plt.savefig(ns_plot, dpi=500)
-    plt.show()
-    tp.end()
-    print('Non-LTE stick spectra plot has been saved:', ns_plot)
-
-# Non-LTE stick spectra for ExoMol database
-def exomol_NLTE(states_nlte_df,Tvib,Trot,Q_nlte):
-    print('Calculate non-LTE stick spectra.')  
-    print('Running on ', ncputrans, 'cores.')
-    print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
-    print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
-    print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
-    if predissocYN == 'Y':
-        print('{:25s} : {:<6}'.format('Predissociation', 'Yes'))
-    else:
-        print('{:25s} : {:<6}'.format('Predissociation', 'No'))    
-    tot = Timer()
-    tot.start()
-    
-    print('Reading transitions and calculating stick spectra ...')    
-    trans_filepaths = get_part_transfiles(read_path)   
-    # Process multiple files in parallel
-    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
-        # Submit reading tasks for each file
-        futures = [executor.submit(calculate_NLTE,states_nlte_df,Tvib,Trot,Q_nlte,
-                                   trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
-        nlte_df = pd.concat([future.result() for future in futures])
-        
-    if len(nlte_df) == 0:
-        raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
-    else:
-        nlte_df.sort_values(by=['v'], ascending=True, inplace=True) 
-    tot.end()
-    print('Finished reading transitions and calculating non-LTE stick spectra!')
-    
-    print('Saving non-LTE stick spectra into file ...')   
-    ts = Timer()    
-    ts.start()
-    col_qn = nlte_df.columns[4:]
-    nlte_qn_label = [qn.replace("'","").replace('"','') for qn in col_qn][:int(len(col_qn)*0.5)]
-    nlte_QNs_format = [QNsformat_list[j] for j in [QNslabel_list.index(i) for i in nlte_qn_label]]
-    nlte_qn_label,nlte_QNs_format
-    QNsfmf = (str(nlte_QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")
-                  .replace('d','s').replace('i','s').replace('.1f','s'))
-    ns_folder = save_path + 'Non-LTE/files/'+molecule+'/'+database+'/'
-    if os.path.exists(ns_folder):
-        pass
-    else:
-        os.makedirs(ns_folder, exist_ok=True)
-    ns_path = (ns_folder+molecule+'__'+isotopologue+'__'+ dataset+'__Tvib'+str(Tvib)+'__Trot'+str(Trot)+'__'
-               +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__thres'+str(threshold)+'__'+abs_emi+photo+'.nlte')
-    if QNsfmf == '':
-        fmt = '%12.8E %12.8E %7s %7s'
-        # fmt = '%12.8E %12.8E'
-    else:
-        fmt = '%12.8E %12.8E %7s %7s ' + QNsfmf + ' ' + QNsfmf
-    np.savetxt(ns_path, nlte_df, fmt=fmt, header='')
-    ts.end()
-    print('Non-LTE stick spectra file has been saved:', ns_path, '\n')
-
-    # Plot stick spectra and save it as .png.
-    if PlotNLTEYN == 'Y':
-        plot_NLTE(nlte_df)
-    print('Non-LTE stick spectra have been saved!\n')
-    print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
-    return(nlte_df)
 
 # Cross Section
 ## Line Profile
@@ -3048,7 +3194,7 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
     return xsec
 
 ## Line list for calculating cross sections
-def CalculateExoMolCrossSection(states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label,trans_part_df):
+def CalculateExoMolCrossSection(states_part_df,T,Tvib,Trot,P,Q,broad,ratio,nbroad,broad_dfs,profile_label,trans_part_df):
     merged_df = dd.merge(trans_part_df, states_part_df, left_on='u', right_on='id', 
                          how='inner').merge(states_part_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
     st_df = merged_df.drop(columns=["id'", 'id"'])
@@ -3060,39 +3206,76 @@ def CalculateExoMolCrossSection(states_part_df,T,P,Q,broad,ratio,nbroad,broad_df
     if len(st_df) != 0 and QNsFilter != []:
         st_df = QNfilter_linelist(st_df, QNs_value, QNs_label)
 
+    if NLTEMethod == 'L':
+        extra_col = []
+    elif NLTEMethod == 'T':
+        if abs_emi == 'Ab':
+            extra_col = ['Evib"', 'Erot"']
+        else:
+            extra_col = ["Evib'", "Erot'"]
+    elif NLTEMethod == 'D':
+        if abs_emi == 'Ab':
+            extra_col = ['nvib"']
+        else:
+            extra_col = ["nvib'"]
+    elif NLTEMethod == 'P':
+        if abs_emi == 'Ab':
+            extra_col = ['pop"', 'g"']
+        else:
+            extra_col = ["pop'"]
+    else:
+        extra_col = []
+
     if predissocYN == 'Y' and 'VOI' in profile:
         if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm','gamma_hwhm']]
+            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm','gamma_hwhm']+extra_col]
         elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm']]
+            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm']+extra_col]
         elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'gamma_hwhm']]
+            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'gamma_hwhm']+extra_col]
         else:
-            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'"]]
+            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'"]+extra_col]
     else:
         if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm','gamma_hwhm']]
+            st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm','gamma_hwhm']+extra_col]
         elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm']]
+            st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm']+extra_col]
         elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"','gamma_hwhm']]
+            st_df = st_df[['A','v',"g'","E'",'E"','J"','gamma_hwhm']+extra_col]
         else:
-            st_df = st_df[['A','v',"g'","E'",'E"','J"']]
+            st_df = st_df[['A','v',"g'","E'",'E"','J"']+extra_col]
         
     num = len(st_df)
     if num > 0:
         v = st_df['v'].values
         if abs_emi == 'Ab':
-            st_df['coef'] = cal_abscoefs(T,v,st_df["g'"].values,st_df['A'].values,st_df['E"'].values,Q,abundance)
+            if NLTEMethod == 'L':
+                st_df['coef'] = cal_abscoefs(T,v,st_df["g'"].values,st_df['A'].values,st_df['E"'].values,Q,abundance)
+            elif NLTEMethod == 'T':
+                st_df['coef'] = cal_abscoefs_nlte_2T(Tvib,Trot,st_df['v'],st_df["g'"],st_df['A'],st_df['Evib"'],st_df['Erot"'],Q,abundance)
+            elif NLTEMethod == 'D':
+                st_df['coef'] = cal_abscoefs_nlte_nvib(st_df['nvib"'],T,Trot,st_df['v'],st_df["g'"],st_df['A'],st_df['E"'],Q,abundance)
+            elif NLTEMethod == 'P':
+                st_df['coef'] = cal_abscoefs_nlte_pop(st_df['pop"'],T,st_df['v'],st_df["g'"],st_df['g"'],st_df['A'],abundance)
+            else:
+                raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")
         elif abs_emi == 'Em':
-            st_df['coef'] = cal_emicoefs(T,v,st_df["g'"].values,st_df['A'].values,st_df["E'"].values,Q,abundance)
+            if NLTEMethod == 'L':
+                st_df['coef'] = cal_emicoefs(T,v,st_df["g'"].values,st_df['A'].values,st_df["E'"].values,Q,abundance)
+            elif NLTEMethod == 'T':
+                st_df['coef'] = cal_emicoefs_nlte_2T(Tvib,Trot,st_df['v'],st_df["g'"],st_df['A'],st_df["Evib'"],st_df["Erot'"],Q,abundance)
+            elif NLTEMethod == 'D':   
+                st_df['coef'] = cal_emicoefs_nlte_nvib(st_df["nvib'"],Trot,st_df['v'],st_df["g'"],st_df['A'],st_df["E'"],Q,abundance)
+            elif NLTEMethod == 'P':
+                st_df['coef'] = cal_emicoefs_nlte_pop(st_df["pop'"],st_df['v'],st_df['A'],abundance)
+            else:
+                raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")        
         else:
             raise ImportError("Please choose one from: 'Absorption' or 'Emission'.")  
         st_df.drop(columns=['A',"g'","E'",'E"'], inplace=True)
         if threshold != 'None':
             st_df = st_df[st_df['coef'] >= threshold]  
             v = st_df['v'].values
-            
             num = len(st_df)         
         else:
             pass  
@@ -3292,7 +3475,7 @@ def CalculateHITRANCrossSection(hitran_linelist_df, T, P, Q, profile_label):
         xsec = np.zeros_like(wn_grid)    
     return xsec
 
-def xsec_part_trans(states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_label,trans_filepath): 
+def xsec_part_trans(states_part_df,T,Tvib,Trot,P,Q,broad,ratio,nbroad,broad_dfs,profile_label,trans_filepath): 
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
     if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
@@ -3314,7 +3497,7 @@ def xsec_part_trans(states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_la
         # Process multiple files in parallel
         with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
             futures = [
-                trans_executor.submit(CalculateExoMolCrossSection,states_part_df,T,P,Q,
+                trans_executor.submit(CalculateExoMolCrossSection,states_part_df,T,Tvib,Trot,P,Q,
                                         broad,ratio,nbroad,broad_dfs,profile_label,trans_df_chunk) 
                 for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)
                 ]
@@ -3325,7 +3508,7 @@ def xsec_part_trans(states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_la
         # Process multiple files in parallel
         with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
             futures = [
-                trans_executor.submit(CalculateExoMolCrossSection,states_part_df,T,P,Q,
+                trans_executor.submit(CalculateExoMolCrossSection,states_part_df,T,Tvib,Trot,P,Q,
                                         broad,ratio,nbroad,broad_dfs,profile_label,trans_dd_list[i].compute(scheduler='threads')) 
                 for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)
                 ]
@@ -3333,43 +3516,96 @@ def xsec_part_trans(states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,profile_la
     return xsecs
 
 ## Plot and Save Results
+def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, unc_unit, threshold_unit):
+    # If using filter, print the filter information.
+    if QNsFilter !=[] or threshold != 'None' or UncFilter != 'None':
+        print('\nApply filters')
+    else:
+        pass
+    # If quantum number filter is applied, print the quantum number filter information.
+    if QNsFilter !=[]:  
+        if QNs_label != []:
+            # Find the max width for each column for alignment
+            widths = [max(len(str(c)), len(str(f)), len(str(v))) for c, f, v in zip(QNs_label, QNs_format, QNs_value)]
+            # Print header
+            print('Selected quantum number labels  :', end=' ')
+            for c, w in zip(QNs_label, widths):
+                print(f'{c:<{w}}', end='  ')
+            print()
+            print('Selected quantum number formats :', end=' ')
+            for f, w in zip(QNs_format, widths):
+                print(f'{f:<{w}}', end='  ')
+            print()
+            print('Selected quantum number values  :', end=' ')
+            for v, w in zip(QNs_value, widths):
+                if v == ['']:
+                    v = 'All'
+                print(f'{str(v):<{w}}', end='  ')
+            print()
+        else:
+            pass
+    # If uncertainty filter is applied, print the uncertainty filter information.
+    if UncFilter != 'None':
+        print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), unc_unit)
+    else:
+        pass
+    # If threshold filter is applied, print the threshold filter information.
+    if threshold != 'None':
+        print('{:25s} : {:<6}'.format('Threshold filter', threshold), threshold_unit)
+    else:
+        pass
+    # Print the parameters information.
+    print()
+    print(profile_label,'profile')
+    print('{:25s} : {:<6}'.format('Temperature selected', T), 'K')
+    print('{:25s} : {:<6}'.format('Pressure selected', P), 'bar')
+    if cutoff != 'None':
+        print('{:25s} : {:<6}'.format('Wing cutoff', cutoff), unc_unit)
+    else:
+        print('{:25s} : {:<6}'.format('Wing cutoff', 'None'), unc_unit)
+    print('{:25s} : {:<6}'.format('Bin size', bin_size), unc_unit)
+    print('{:25s} : {:<6}'.format('Number of points', N_point))
+    print('{:25s} : {} {} {} {} {}'.format('Wavenumber range selected', min_wnl, unc_unit, '-', max_wnl, unc_unit))
+    NLTE_case = (NLTEMethod.replace('L', ' L ').replace('T', 'T')
+                 .replace(' L ', 'LTE').replace(' T ', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
+    NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
+                 .replace('T', 'Treanor distribution with Tvib and Trot')
+                 .replace('D', 'Custom vibrational density nvib and Trot')
+                 .replace('P', 'Custom rovibrational population'))
+    print('{:25s} : {}'.format(NLTE_case, NLTE_desc))
+    print('{:25s} : {}'.format('Intensity', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission')))
+    if predissocYN == 'Y':
+        print('{:25s} : {}'.format('Predissociation', 'Yes'))
+    else:
+        print('{:25s} : {}'.format('Predissociation', 'No'))
+    print()
+
 def save_xsec(wn, xsec, database, profile_label):             
-    xsecs_foldername = save_path+'xsecs/files/'+molecule+'/'+database+'/'
+    xsecs_foldername = save_path+'xsecs/files/'+data_info[0]+'/'+database+'/'
     if os.path.exists(xsecs_foldername):
         pass
     else:
         os.makedirs(xsecs_foldername, exist_ok=True)
-    print(profile_label,'profile')
-    print('{:25s} : {:<6}'.format('Temperature selected', T), 'K')
-    print('{:25s} : {:<6}'.format('Pressure selected', P), 'bar')
-    if predissocYN == 'Y':
-        print('{:25s} : {:<6}'.format('Predissociation', 'Yes'))
-    else:
-        print('{:25s} : {:<6}'.format('Predissociation', 'No'))
-    
+
     if 'L' not in wn_wl:
-        print('{:25s} : {:<6}'.format('Number of points is', N_point))
-        print('{:25s} : {:<6}'.format('Bin size is', bin_size), u'cm\u207B\u00B9')
-        if cutoff != 'None':
-            print('{:25s} : {:<6}'.format('Cutoff is', cutoff), u'cm\u207B\u00B9')
-        else:
-            print('{:25s} : {:<6}'.format('Cutoff is', 'None'))
-        if UncFilter != 'None':
-            print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), u'cm\u207B\u00B9')
-        else:
-            print('{:25s} : {:<6}'.format('Uncertainty filter ', 'None'))
-        print('{:25s} : {:<6}'.format('Threshold filter', threshold), u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
-        print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, u'cm\u207B\u00B9 -', max_wn, 'cm\u207B\u00B9'))
+        print_xsec_info(profile_label, cutoff, UncFilter, min_wn, max_wn, 
+                        u'cm\u207B\u00B9', u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
         # Save cross sections into .xsec file.
+        print('Saving  cross sections into file ...')   
+        ts = Timer()    
+        ts.start()
         xsec_df = pd.DataFrame()
         xsec_df['wavenumber'] = wn
         xsec_df['cross-section'] = xsec
-        xsec_filepath = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
-                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+photo+'.xsec')
+        xsec_filepath = (xsecs_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
+                         +database+'__'+abs_emi+'__BinSize'+str(bin_size)+'__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.xsec')
         np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
-        print('Cross sections file has been saved:', xsec_filepath, '\n')
+        ts.end()
+        print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%12.6f', '%14.8E'])
+        print('Cross sections file has been saved:', xsec_filepath)
         if PlotCrossSectionYN == 'Y':
-            plots_foldername = save_path+'xsecs/plots/'+molecule+'/'+database+'/'
+            print('\nPlotting cross sections ...\n')
+            plots_foldername = save_path+'xsecs/plots/'+data_info[0]+'/'+database+'/'
             if os.path.exists(plots_foldername):
                 pass
             else:
@@ -3384,46 +3620,59 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.figure(figsize=(12, 6))
             # plt.xlim([min_wn, max_wn])
             plt.ylim([limitYaxisXsec, 10*max(xsec)])
-            plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)   
+            if NLTEMethod == 'L' or NLTEMethod == 'P':
+                plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)  
+            elif NLTEMethod == 'T':
+                plt.plot(wn, xsec, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4)
+            elif NLTEMethod == 'D':
+                plt.plot(wn, xsec, label='T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4) 
+            else:
+                raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")
             plt.semilogy()
-            #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
+            #plt.title(database+' '+data_info[0]+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.xlabel('Wavenumber, cm$^{-1}$')
             plt.ylabel('Cross-section, cm$^{2}$/molecule')
             plt.legend()
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            xsec_plotpath = (plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
-                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+photo+'.png')
+            xsec_plotpath = (plots_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
+                         +database+'__'+abs_emi+'__BinSize'+str(bin_size)+'__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.png')
             plt.savefig(xsec_plotpath, dpi=500)
             plt.show()
-            print('Cross sections plot has been saved:', xsec_plotpath, '\n')
+            print('\nCross sections plot has been saved:', xsec_plotpath)
+        else:
+            pass
     elif 'L' in wn_wl:
         wl = 10000 / wn
         min_wl = '%.02f' % (10000 / max_wn)
         max_wl = '%.02f' % (10000 / min_wn)
-        print('{:25s} : {:<6}'.format('Number of points is', N_point))
-        print('{:25s} : {:<6}'.format('Bin size is', bin_size), u'\xb5m')
         if cutoff != 'None':
-            print('{:25s} : {:<6}'.format('Cutoff is', 10000/cutoff),u'\xb5m')
+            cutoff_wl = 10000/cutoff
         else:
-            print('{:25s} : {:<6}'.format('Cutoff is', 'None'))
+            cutoff_wl = 'None'
         if UncFilter != 'None':
-            print('{:25s} : {:<6}'.format('Uncertainty filter', 10000/UncFilter),u'\xb5m')
+            UncFilter_wl = 10000/UncFilter
         else:
-            print('{:25s} : {:<6}'.format('Uncertainty filter ', 'None'))
-        print('{:25s} : {:<6}'.format('Threshold filter', threshold),u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
-        print('{:25s} : {} {} {} {}'.format('Wavelength range selected',min_wl,u'\xb5m -',max_wl,u'\xb5m'))
+            UncFilter_wl = 'None'
+        print_xsec_info(profile_label, cutoff_wl, UncFilter_wl, min_wl, max_wl, 
+                        u'\xb5m', u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
         # Save cross sections into .xsec file.
+        print('Saving  cross sections into file ...')   
+        ts = Timer()    
+        ts.start()
         xsec_df = pd.DataFrame()
         xsec_df['wavelength'] = wl
         xsec_df['cross-section'] = xsec
-        xsec_filepath = (xsecs_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
-                         +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+photo+'.xsec')
+        xsec_filepath = (xsecs_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
+                         +database+'__'+abs_emi+'__BinSize'+str(bin_size)+'__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.xsec')
         np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
-        print('Cross sections file has been saved:', xsec_filepath, '\n')       
+        ts.end()
+        print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%12.6f', '%14.8E'])
+        print('Cross sections file has been saved:', xsec_filepath)       
         if PlotCrossSectionYN == 'Y':
-            plots_foldername = save_path+'xsecs/plots/'+molecule+'/'+database+'/'
+            print('\nPlotting cross sections ...\n')
+            plots_foldername = save_path+'xsecs/plots/'+data_info[0]+'/'+database+'/'
             if os.path.exists(plots_foldername):
                 pass
             else:
@@ -3438,32 +3687,40 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.figure(figsize=(12, 6))
             # plt.xlim([min_wl, max_wl])
             plt.ylim([limitYaxisXsec, 10*max(xsec)])
-            plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)             
+            if NLTEMethod == 'L' or NLTEMethod == 'P':
+                plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)  
+            elif NLTEMethod == 'T':
+                plt.plot(wl, xsec, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4)
+            elif NLTEMethod == 'D':
+                plt.plot(wl, xsec, label='T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4) 
+            else:
+                raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")          
             plt.semilogy()
-            #plt.title(database+' '+molecule+' '+abs_emi+' Cross-Section with '+ profile_label) 
+            #plt.title(database+' '+data_info[0]+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.xlabel(u'Wavelength, \xb5m')
             plt.ylabel('Cross-section, cm$^{2}$/molecule')
             plt.legend()
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            xsec_plotpath = (plots_foldername+molecule+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
-                             +database+'__'+abs_emi+'__'+profile_label.replace(' ','')+photo+'.png')
+            xsec_plotpath = (plots_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
+                             +database+'__'+abs_emi+'__BinSize'+str(bin_size)+'__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.png')
             plt.savefig(xsec_plotpath, dpi=500)
             plt.show()
-            print('Cross sections plot has been saved:', xsec_plotpath, '\n')
+            print('\nCross sections plot has been saved:', xsec_plotpath)
+        else:
+            pass
     else:
         raise ImportError('Please choose wavenumber or wavelength and type in correct format: wn or wl.')
-    
 
 # Cross sections for ExoMol database
-def exomol_cross_section(states_part_df, T, P):
+def exomol_cross_section(states_part_df, T, Tvib, Trot, P, Q):
     print('Calculate cross sections.')
     print('Running on ', ncputrans, 'cores.')
     tot = Timer()
     tot.start()
     broad, ratio, nbroad, broad_dfs = read_broad(read_path)
-    Q = read_exomol_pf(read_path, T)
+    # Q = read_exomol_pf(read_path, T)
     profile_label = line_profile(profile)
     
     print('Reading transitions and calculating cross sections ...')    
@@ -3471,7 +3728,7 @@ def exomol_cross_section(states_part_df, T, P):
     # Process multiple files in parallel
     with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
-        futures = [executor.submit(xsec_part_trans,states_part_df,T,P,Q,broad,ratio,nbroad,broad_dfs,
+        futures = [executor.submit(xsec_part_trans,states_part_df,T,Tvib,Trot,P,Q,broad,ratio,nbroad,broad_dfs,
                                    profile_label,trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
         xsec = sum([future.result() for future in futures])
         
@@ -3481,7 +3738,7 @@ def exomol_cross_section(states_part_df, T, P):
     tot.end()
     print('Finished reading transitions and calculating cross sections!\n')
     save_xsec(wn_grid, xsec, database, profile_label) 
-    print('Cross sections have been saved!\n')
+    print('\nCross sections have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
     return xsec
 
@@ -3507,7 +3764,7 @@ def hitran_cross_section(hitran_linelist_df, T, P):
     t.end()  
     print('Finished calculating cross sections!\n')
     save_xsec(wn_grid, xsec, database, profile_label) 
-    print('Cross sections have been saved!\n')
+    print('\nCross sections have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
     return xsec
 
@@ -3515,16 +3772,50 @@ def hitran_cross_section(hitran_linelist_df, T, P):
 def get_results(read_path): 
     t_tot = Timer()
     t_tot.start()  
-    # ExoMol or HITRAN
+
+    # Print ExoMol, ExoAtom, and HITRAN information
     if database == 'ExoMol':
         print('ExoMol database')
-        print('Molecule\t\t:', molecule, '\nIsotopologue\t:', isotopologue, '\nDataset\t\t\t:', dataset)
-        # All functions need whole states.
-        states_df = read_all_states(read_path)        
+        print('Molecule\t:', data_info[0], '\nIsotopologue\t:', data_info[1], '\nDataset\t\t:', data_info[2])
+    if database == 'ExoAtom':
+        print('ExoAtom database')
+        print('Atom\t:', data_info[0], '\nDataset\t:', data_info[1])    
+    if database == 'HITRAN':
+        print('HITRAN database')
+        print('Molecule\t:', data_info[0], '\t\t\tMolecule ID\t:', molecule_id, 
+              '\nIsotopologue\t:', data_info[1], '\t\tIsotopologue ID\t:', isotopologue_id,
+              '\nDataset\t\t:', data_info[2])
+        
+    if database == 'ExoMol' or database == 'ExoAtom':
+        # Functions
+        Nfunctions = (PartitionFunctions + SpecificHeats + Lifetimes + CoolingFunctions 
+                      + OscillatorStrengths + Conversion + StickSpectra + CrossSections)
+        if Nfunctions > 0:
+            states_df = read_all_states(read_path)
+        else:   
+            raise ImportError("Please choose functions which you want to calculate.")
+        # These functions need whole states.
+        NeedAllStates = (PartitionFunctions + SpecificHeats + Lifetimes
+                         + CoolingFunctions + OscillatorStrengths + Conversion)
+        if NeedAllStates > 0:
+            if PartitionFunctions == 1:
+                exomol_partition(states_df, Ntemp, Tmax)
+            if SpecificHeats == 1:
+                exomol_specificheat(states_df, Ntemp, Tmax)
+            if Lifetimes == 1:
+                exomol_lifetime(read_path, states_df)
+            if CoolingFunctions == 1:
+                exomol_cooling(states_df, Ntemp, Tmax)
+            if OscillatorStrengths == 1:
+                exomol_oscillator_strength(states_df)
+            if (Conversion == 1 and ConversionFormat == 1):
+                conversion_exomol2hitran(states_df)
+
         # Only calculating stick spectra and cross sections need part of states.
         NeedPartStates = StickSpectra + CrossSections
-        if NeedPartStates != 0:
-            states_part_df = read_part_states(states_df) 
+        if NeedPartStates > 0:
+            (Q, states_part_df) = read_part_states(states_df) 
+            states_df.index.name='index'
             # Calculate predissociation spectra and cross sections if lifetimes are not exit in the states file.
             if predissocYN == 'Y' and check_predissoc+check_lifetime == 0 and 'VOI' in profile:
                 np.seterr(divide='ignore', invalid='ignore')
@@ -3543,38 +3834,12 @@ def get_results(read_path):
                     states_part_df['tau'] = np.array([f'{x:>12.4E}'.replace('INF','Inf') for x in lifetime_result]).astype(float)
                 t.end()
                 print('Finished reading all transitions and calculating lifetimes!\n')
-            
-
-        # Functions
-        Nfunctions = (PartitionFunctions + SpecificHeats + Lifetimes + CoolingFunctions 
-                      + OscillatorStrengths + Conversion + StickSpectra + NonLTE + CrossSections)
-        if Nfunctions > 0:
-            if PartitionFunctions == 1:
-                exomol_partition(states_df, Ntemp, Tmax)
-            if SpecificHeats == 1:
-                exomol_specificheat(states_df, Ntemp, Tmax)
-            if Lifetimes == 1:
-                exomol_lifetime(read_path, states_df)
-            if CoolingFunctions == 1:
-                exomol_cooling(states_df, Ntemp, Tmax)
-            if OscillatorStrengths == 1:
-                exomol_oscillator_strength(states_df)
-            if (Conversion == 1 and ConversionFormat == 1):
-                conversion_exomol2hitran(states_df)
             if StickSpectra == 1:
-                exomol_stick_spectra(states_part_df, T)
-            if NonLTE == 1:
-                (Q_nlte, states_nlte_df) = read_nlte_states(states_df)
-                exomol_NLTE(states_nlte_df,Tvib,Trot,Q_nlte)
+                exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q)
             if CrossSections == 1:
-                exomol_cross_section(states_part_df, T, P)
-        else:   
-            raise ImportError("Please choose functions which you want to calculate.")
+                exomol_cross_section(states_part_df, T, Tvib, Trot, P, Q)
+                    
     elif database == 'HITRAN':
-        print('HITRAN database')
-        print('Molecule\t:', molecule, '\t\t\tMolecule ID\t:', molecule_id, 
-              '\nIsotopologue\t:', isotopologue, '\t\tIsotopologue ID\t:', isotopologue_id,
-              '\nDataset\t\t:', dataset)
         parfile_df = read_parfile(read_path)
         if (Conversion == 1 and ConversionFormat == 2):
             hitran_df = read_hitran_parfile(read_path,parfile_df,ConversionMinFreq,ConversionMaxFreq,
@@ -3585,15 +3850,15 @@ def get_results(read_path):
         if NuseExoMolFunc > 0:
             read_hitran2exomol_path = save_path + 'conversion/HITRAN2ExoMol/'
             if ConversionFormat != 2:
-                conversion_foldername = read_hitran2exomol_path+molecule+'/'+isotopologue+'/'+dataset+'/'
+                conversion_foldername = read_hitran2exomol_path+'/'.join(data_info)+'/'
                 if os.path.exists(conversion_foldername):
-                    states_list = glob.glob(conversion_foldername + isotopologue + '__' + dataset + '.states.bz2')
-                    trans_list = glob.glob(conversion_foldername + isotopologue + '__' + dataset + '*.trans.bz2')
+                    states_list = glob.glob(conversion_foldername + '__'.join(data_info[-2:]) + '.states.bz2')
+                    trans_list = glob.glob(conversion_foldername + '__'.join(data_info[-2:]) + '*.trans.bz2')
                     if (states_list == [] and trans_list == []):
                         hitran_df = read_hitran_parfile(read_path,parfile_df,ConversionMinFreq,ConversionMaxFreq,
                                                         'None','None').reset_index().drop(columns='index')
                         conversion_hitran2exomol(hitran_df)
-            # All functions need whole states.
+            # These functions need whole states.
             states_df = read_all_states(read_hitran2exomol_path)
             if PartitionFunctions == 1:
                 exomol_partition(states_df, Ntemp, Tmax)
@@ -3619,14 +3884,14 @@ def get_results(read_path):
         if CrossSections == 1:
             hitran_cross_section(hitran_linelist_df, T, P)
     else:
-        raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")     
+        raise ImportError("Please add the name of the database 'ExoMol' or 'ExoAtom' or 'HITRAN' into the input file.")     
     print('\nThe program total running time:')    
     t_tot.end()
     print('\nFinished!')
     pass
 
 def main():
-    get_results(read_path)        # PyExoCross calculation
+    get_results(read_path)            # PyExoCross calculation
     # get_transfiles(read_path)       # Decompress trans.bz2 files
     print('Done!')
 
