@@ -123,8 +123,8 @@ https://doi.org/10.1093/rasti/rzae016
 
 ## Support databases
 
-- [X] ExoMol
-- [X] ExoAtom
-- [X] HITRAN
-- [X] HITEMP
-- [ ] ExoMolHR
+* [X] ExoMol
+* [X] ExoAtom
+* [X] HITRAN
+* [X] HITEMP
+* [ ] ExoMolHR
