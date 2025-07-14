@@ -52,7 +52,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
-    'myst_parser',
 ]
 
 intersphinx_mapping = {
