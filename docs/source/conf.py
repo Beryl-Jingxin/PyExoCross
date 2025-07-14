@@ -52,6 +52,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
     'sphinx.ext.napoleon',
+    'myst_parser',
 ]
 
 intersphinx_mapping = {
@@ -212,3 +213,4 @@ epub_exclude_files = ['search.html']
 html_favicon = 'favicon.ico'
 
 # -- Extension configuration -------------------------------------------------
+mathjax_path = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
