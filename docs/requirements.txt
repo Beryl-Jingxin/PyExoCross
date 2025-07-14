@@ -55,3 +55,4 @@ urllib3==1.26.13
 recommonmark==0.7.1
 sphinx-markdown-tables==0.0.17
 commonmark==0.9.1
+myst_parser==3.0.1
