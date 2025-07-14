@@ -37,6 +37,7 @@ version = '1.0'
 # ones.
 extensions = [
     'recommonmark',
+    'myst_parser',
     'sphinx_markdown_tables',
     'sphinx.ext.duration',
     'sphinx.ext.doctest',

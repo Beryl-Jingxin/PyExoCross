@@ -1,6 +1,6 @@
 # <font color=Green>**Citation**</font>
 
-## <font color=Green>**Please cite PyExoCross paper ~**</font> 
+## <font color=Green>**Please cite PyExoCross paper &#x1F49A;**</font> 
 
 PyExoCross ***published paper*** : [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016)
 

@@ -81,7 +81,7 @@ nohup /home/username/anaconda3/envs/exomol/bin/python -u pyexocross.py -p ./inpu
 
 # <font color=Green>**Citation**</font>
 
-## <font color=Green>**Please cite PyExoCross paper**</font> :green_heart:
+## <font color=Green>**Please cite PyExoCross paper**</font> &#x1F49A;
 
 <font color=Green>***Cite***</font>
 
