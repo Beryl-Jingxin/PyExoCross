@@ -1,30 +1,34 @@
-Cross sections
-==============
+# Cross sections
+
+`LTE/Non-LTE`: Choose `LTE` or `Non-LTE`. \
+If you choose `LTE`, please ignore `# Calculate non-LTE #` section. \
+If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://pyexocross.readthedocs.io/en/latest/nonlte.html`).
 
 `Temperature`: Please provide temperature in unit K.
 
-`Range`: Give two values as the minimum and maximum of the wavenumber range in unit cm-1. No `,` or `;` between these two numbers, just leave blank here.
+`Range`: Give two values as the minimum and maximum of the wavenumber range in unit $\textrm{cm}^{-1}$. Don't use `,` or `;` between these two numbers, just leave blank here.
 
 `Absorption/Emission`: Choose `Absorption` or `Emission`.
 
 `Pressure`: Please provide pressure in unit bar.
 
-`Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSiza` is the interval size of the grid.
+`Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSiza` is the interval size of the grid , in unit $\textrm{cm}^{-1}$.
 
 `Wavenumber(wn)/wavelength(wl)`: Choose `wn` or `wl`.
 
-If  `PredissocXsec(Y/N)` is yes, predissociation lifetimes will be used/calculated when calculating cross sections with Voigt profile.
+`PredissocXsec(Y/N)`: If `PredissocXsec(Y/N)` is yes, predissociation lifetimes will be used or calculated when calculating cross sections with Voigt profile.
 
-If  `Cutoff(Y/N)` is yes, you can provide cutoff here in unit cm-1.
+`Cutoff(Y/N)`: If `Cutoff(Y/N)` is yes, you can provide wing cutoff here in unit $\textrm{cm}^{-1}$.
 
-If you want a figure of corss sections, please set `Y` for `PlotCrossSection(Y/N)`.
+`PlotCrossSection(Y/N)`: If you want a figure of corss sections, please set `Y`, otherwise, please write `N`.
 
-And if you want set the lower limit of y-axis for plotting, please write after `Y-axisLimitXsec`, otherwise, the default lower limit y-axis is 1e-30.
+`Y-axisLimitXsec`: If you want set the lower limit of y-axis for plotting, please write after `Y-axisLimitXsec`, otherwise, the default lower limit y-axis is 1e-30 ($=10^{-30}$).
 
 *Example*
 
-```
-# Calculate LTE or Non-LTE stick spectra or cross sections #
+```bash
+# Calculate stick spectra or cross sections #
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             2000
 Range                                   0          30000          # Unit cm-1
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -50,43 +54,7 @@ Y-axisLimitXsec                         1e-40                     # Default valu
 
 ## Filters
 
-`Y/N`: `Y`, `YES`, `Yes`, `yes` and `N`, `NO`, `No`, `no` all can work. If you don't use it, write `N` here. You don't need to change the content behind it.
-If after using filters, the program gets an empty result, then you will receive an warning to ask you write new filter values to icrease the range.
-
-If `UncFilter(Y/N)` is yes, the value is the maximum uncertainty you require.
-
-If `Threshold(Y/N)` is yes, the value is the minimum intensity you require.
-
-If `QNsFilter(Y/N)` is yes, program will do filter on quantum numbers.
-Write the quantum number labels required here, the spelling of the quantum number labels must be the same as `QNslabel`.
-The other quantum number labels which are in `QNslabel` but not in `QNsFilter(Y/N)` will not be stored in the result file.
-Write the quantum number values required after each label in `[]` and seperated by `,` and `;`, don't leave blank between different values inside the `[]`.
-Leave blank between different quantum number labels, don't write `,`.
-If you need all values of a quantum number label, write this label and wirte nothing inside the `[]`. Note, don't write any blank inside `[]`, you should write `[]`, not `[ ]`.
-Inside `[]` use `,` and `;` don't write any blank inside the `[]`. Outside `[]`, use blank , don't write any `,` or `;` outside `[]`.
-For one quantum number label, write in one `[]`, you can provide the quantum number values for upper and lower states, and seperated by `,`.
-For one quantum number label, write in one `[]`, you can provide more than one pair of values, and seperated by `;`.
-
-*Example*
-
-`v1[]` means you want quantum number label v1 and you want all quantum number values of this label v1.`v1[1,0]` means you want quantum number label v1 and you want the upper QN = 1 and lower QN = 0. So v1' = 1 and v1" = 0.`v1[,0]` means you want quantum number label v1 and you want all upper QN but the lower QN = 0. So v1' = 0, 1, 2, 3, 4, ... and v1" = 0. `v1[3,]` means you want quantum number label v1 and you want all lower QN but the upper QN = 3. So v1' = 3 and v1" = 0, 1, 2, 3, 4, ... `v1[1,1;2,2]` means you want quantum number label v1 and you want when v1' = 1, v1" = 1; when v1' = 2, v1" = 2.`v1[1,;,0;5,5]  v2[]` means you want quantumnumber labels v1 and v2. For v1, you want all lines with v1' = 1 , all lines with v1" = 0 and the lines with v1' = 5 and at the same time v1" = 5. Meanwhile, you want all lines for v2.
-
-* The definition file `.def` of ExoMol database (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
-* HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
-
-**Note**
-
-You can define the quantum number column name by yourself, but please make sure it has letters without any spaces.
-e.g. 'c1', 'c2', 'v1', 'v2', 'electronicState', 'electronic_state', '1v', '2v', 'M/E/C'.
-Wrong format of the quantum number column nams: '1', '2', 'electronic state'.
-
-*Example*
-
-```bash
-UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
-Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          N          par[]   e/f[]   v[1,;2,2;2,1;,0]  
-```
+``UncFilter(Y/N)``, ``Threshold(Y/N)``, and ``QNsFilter(Y/N)`` are filters, please see [**Filters**](`https://pyexocross.readthedocs.io/en/latest/filters.html`).
 
 ## Broadeners
 
@@ -186,7 +154,6 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
-Non-LTE                                 0
 CrossSections                           1
 
 
@@ -201,7 +168,8 @@ QNslabel                                Ka      Kc      v1      v2      v3      
 QNsformat                               %2d     %2d     %2d     %2d     %2d     %2s
 
 
-# Calculate LTE or Non-LTE stick spectra or cross sections #
+# Calculate stick spectra or cross sections #
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             300
 Range                                   0          41200          # Unit cm-1
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -247,7 +215,6 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
-Non-LTE                                 0
 CrossSections                           1
 
 
@@ -262,7 +229,8 @@ QNslabel                                J       X     Omega   v1      m      Sym
 QNsformat                               %5s     %2s   %3s     %2d     %1s 
 
 
-# Calculate LTE or Non-LTE stick spectra or cross sections #
+# Calculate stick spectra or cross sections #
+LTE/Non-LTE                             LTE                      # 'LTE' or 'Non-LTE'
 Temperature                             1000
 Range                                   1000       5000          # Unit cm-1
 Absorption/Emission                     Emission                 # 'Absorption' or 'Emission'

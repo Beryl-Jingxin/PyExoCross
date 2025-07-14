@@ -36,10 +36,10 @@ QNsformat                               %2d    %2d   %2d    %3d   %3d   %3d   %5
 # Conversion #  
 ConversionFormat                        2  
 ConversionFrequncyRange                 0          1000   
-GlobalQNLabel                           v1     v2    v3               
-GlobalQNFormat                          %2d    %2d   %2d         
-LocalQNLabel                            J     Ka    Kc    F    Sym          
-LocalQNFormat                           %3d   %3d   %3d   %5s  %1s     
+GlobalQNLabel                           v1     v2     v3               
+GlobalQNFormat                          %2d    %2d    %2d         
+LocalQNLabel                            J      Ka     Kc    F    Sym          
+LocalQNFormat                           %3d    %3d    %3d   %5s  %1s     
 ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.01
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30     
       
@@ -60,13 +60,21 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             LTE                       # LTE or Non-LTE
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             300
 Range                                   0          1000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          v1[]       v2[]       v3[1,0;2,]
+QNsFilter(Y/N)                          Y          v1[]    v2[]    v3[1,0;2,]    
+
+
+# Calculate non-LTE stick spectra #
+NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                    2000
+Trot                                    296
+QNsVibLabel                             v1,v2,v3
+QNsRotLabel                             J,Ka,Kc
 
 
 # Calculate stick spectra #

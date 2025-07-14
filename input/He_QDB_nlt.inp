@@ -35,18 +35,18 @@ QNsformat                               %50s              %30s   %2s
 LTE/Non-LTE                             Non-LTE                   # LTE or Non-LTE
 Temperature                             2000
 Range                                   0          197208
-Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 QNsFilter(Y/N)                          Y          configuration[]  LS[]  parity[]
 
 
 # Calculate non-LTE #
-NLTEMethod                             P           He_Ids.csv     # TvibTrot(T) or Density(D) or Population(P)
-Tvib                                   2000
-Trot                                   296
-QNsVibLabel                            v,eS
-QNsRotLabel                            J,e/f            
+NLTEMethod                              P           He_Ids.csv    # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                    2000
+Trot                                    296
+QNsVibLabel                             v,eS
+QNsRotLabel                             J,e/f            
 
 
 # Calculate stick spectra #

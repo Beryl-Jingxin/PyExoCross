@@ -32,21 +32,21 @@ QNsformat                               %50s              %30s         %2s
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             Non-LTE                   # LTE or Non-LTE
+LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
 Temperature                             2000
 Range                                   8000       15500
-Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
 QNsFilter(Y/N)                          Y          configuration[]     Multiple[]     parity[]
 
 
 # Calculate non-LTE #
-NLTEMethod                             P           /home/jingxin/data/NLTE/Ar/NIST/Ar_Ids.csv     # TvibTrot(T) or Density(D) or Population(P)
-Tvib                                   2000
-Trot                                   296
-QNsVibLabel                            v,eS
-QNsRotLabel                            J,parity          
+NLTEMethod                              P           /home/jingxin/data/NLTE/Ar/NIST/Ar_Ids.csv     # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                    2000
+Trot                                    296
+QNsVibLabel                             v,eS
+QNsRotLabel                             J,parity          
 
 
 # Calculate stick spectra #

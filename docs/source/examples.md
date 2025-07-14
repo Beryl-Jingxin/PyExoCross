@@ -1,16 +1,16 @@
 # Examples
 
-The examples of the whole input files for the ExoMol and HITRAN databases.
+The examples of the whole input files for databases can be obtained from the `input` folder of *PyExoCross*'s ***GitHub*** : [https://github.com/ExoMol/PyExoCross](https://github.com/ExoMol/PyExoCross).
 
 ## Example for the ExoMol database
 
 ```bash
 # Data source #
 Database                                ExoMol
-Molecule                                H2O
-Isotopologue                            1H2-16O
-Dataset                                 POKAZATEL
-MolIsoID                                11
+Molecule                                MgH
+Isotopologue                            24Mg-1H
+Dataset                                 XAB
+MolIsoID                                666  
 
 
 # File path #
@@ -19,50 +19,69 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 
 # Functions #
-Conversion                              0
-PartitionFunctions                      0
+Conversion                              1
+PartitionFunctions                      1
 SpecificHeats                           1
-CoolingFunctions                        0
-Lifetimes                               0
-OscillatorStrengths                     0
-StickSpectra                            0
-Non-LTE                                 0
-CrossSections                           0
+CoolingFunctions                        1
+Lifetimes                               1
+OscillatorStrengths                     1
+StickSpectra                            1
+CrossSections                           1
 
 
 # Cores and chunks #
-NCPUtrans                               32
-NCPUfiles                               32
+NCPUtrans                               4
+NCPUfiles                               1
 ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                Ka      Kc      v1      v2      v3      Gamma_rve
-QNsformat                               %2d     %2d     %2d     %2d     %2d     %2s
+QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
+QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
 
 
-# Calculate partition, specific heats or cooling functions #
+# Conversion #
+ConversionFormat                        1  
+ConversionFrequncyRange                 0         30000      
+GlobalQNLabel                           eS      v      Omega
+GlobalQNFormat                          %9s     %2d    %4s
+LocalQNLabel                            J       e/f
+LocalQNFormat                           %5.1f   %2s
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
+                           
+
+# Calculate partition functions, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    10000                     # Maximal temperature in K 
+Tmax                                    5000                      # Maximal temperature in K 
 
 
 # Calculate lifetimes #
-Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
+Compress(Y/N)                           N                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 
 
 # Calculate oscillator strengths #
-gf/f                                    gf
-PlotOscillatorStrength(Y/N)             N  
+gf/f                                    f
+PlotOscillatorStrength(Y/N)             Y    
 Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
 
 
 # Calculate stick spectra or cross sections #
-Temperature                             300
-Range                                   0          41200          # Unit cm-1
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
+Temperature                             2000
+Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          N          Ka[]  Kc[]  v1[]  v2[1,;,0]  v3[]  Gamma_rve[]
+QNsFilter(Y/N)                          N          par[]  e/f  eS[]  v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
+
+
+# Calculate non-LTE #
+NLTEMethod                             T                          # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                   2000
+Trot                                   296
+QNsVibLabel                            v,eS
+QNsRotLabel                            J,e/f            
 
 
 # Calculate stick spectra #
@@ -70,32 +89,115 @@ PlotStickSpectra(Y/N)                   Y
 Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30
 
 
-# Calculate non-LTE stick spectra #
-Tvib                                   2000
-Trot                                   296
-QNsVibLabel                            v,eS
-QNsRotLabel                            J,e/f  
-PlotNonLTE(Y/N)                        Y
-Y-axisLimitNonLTE                      1e-30                     # Default value is 1e-30
+# Calculate cross sections #
+Pressure                                1
+Npoints/BinSize                         BinSize   0.1
+Broadeners                              Default    
+Ratios                                  1.0        
+Profile                                 SciPyVoigt    
+Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'    
+PredissocXsec(Y/N)                      N
+Cutoff(Y/N)                             Y          25             # If Y, default value 25 
+DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   Y
+Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
+```
+
+## Example for the ExoAtom database
+
+```bash
+# Data source #
+Database                                ExoAtom
+Atom                                    Li
+Dataset                                 NIST
+
+
+# File path #
+ReadPath                                /mnt/data/exoatom/exoatom_data/
+SavePath                                /home/jingxin/data/pyexocross/
+
+
+# Functions #
+Conversion                              1
+PartitionFunctions                      1
+SpecificHeats                           1
+CoolingFunctions                        1
+Lifetimes                               1
+OscillatorStrengths                     1
+StickSpectra                            1
+CrossSections                           1
+
+
+# Cores and chunks #
+NCPUtrans                               1
+NCPUfiles                               1
+ChunkSize                               10000
+
+
+# Quantum numbers for conversion, stick spectra and cross sections #
+QNslabel                                configuration     LS       parity  
+QNsformat                               %30s              %30s     %2s      
+
+
+# Conversion #
+ConversionFormat                        1  
+ConversionFrequncyRange                 0          43000      
+GlobalQNLabel                           configuration     LS       
+GlobalQNFormat                          %30s              %30s     
+LocalQNLabel                            J       parity
+LocalQNFormat                           %5.1f   %2s
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
+
+
+# Calculate partition functions, specific heats or cooling functions #
+Ntemp                                   1                         # The number of temperature steps
+Tmax                                    5000                      # Maximal temperature in K 
+
+
+# Calculate lifetimes #
+Compress(Y/N)                           N                         # If Y, save as .states.bz2 file; otherwise, save as .states file
+
+
+# Calculate oscillator strengths #
+gf/f                                    f
+PlotOscillatorStrength(Y/N)             Y    
+Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
+
+
+# Calculate stick spectra or cross sections #
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
+Temperature                             2000
+Range                                   0          43000
+Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
+Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
+QNsFilter(Y/N)                          N                   
+
+
+# Calculate stick spectra #
+PlotStickSpectra(Y/N)                   Y
+Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30
 
 
 # Calculate cross sections #
 Pressure                                1
 Npoints/BinSize                         BinSize   0.1
-Broadeners                              H2       He  
-Ratios                                  0.75     0.15  
-Profile                                 SciPyVoigt   
-Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
+Broadeners                              Default    
+Ratios                                  1.0        
+Profile                                 SciPyVoigt    
+Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'    
 PredissocXsec(Y/N)                      N
-Cutoff(Y/N)                             Y          25             # If Y, default value 25, unit cm-1
+Cutoff(Y/N)                             Y          25             # If Y, default value 25 
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   N
+PlotCrossSection(Y/N)                   Y
 Y-axisLimitXsec                         1e-30                     # Default value is 1e-30
-
 ```
 
-## Example for the HITRAN database
+
+## Example for the HITRAN and HITEMP databases
 
 ```bash
 # Data source #
@@ -119,7 +221,6 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
-Non-LTE                                 0
 CrossSections                           1
 
 
@@ -137,10 +238,10 @@ QNsformat                               %2d    %2d   %2d    %3d   %3d   %3d   %5
 # Conversion #  
 ConversionFormat                        2  
 ConversionFrequncyRange                 0          1000   
-GlobalQNLabel                           v1     v2    v3   
-GlobalQNFormat                          %2d    %2d   %2d   
-LocalQNLabel                            J     Ka    Kc    F    Sym  
-LocalQNFormat                           %3d   %3d   %3d   %5s  %1s   
+GlobalQNLabel                           v1     v2     v3   
+GlobalQNFormat                          %2d    %2d    %2d   
+LocalQNLabel                            J      Ka     Kc    F    Sym  
+LocalQNFormat                           %3d    %3d    %3d   %5s  %1s   
 ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.01
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30   
   
@@ -161,12 +262,13 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             300
-Range                                   0          1000           # Unit cm-1
+Range                                   0          1000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          Y          v1[]       v2[]       v3[1,0;2,]
+QNsFilter(Y/N)                          Y          v1[]    v2[]    v3[1,0;2,]             
 
 
 # Calculate stick spectra #
@@ -175,12 +277,11 @@ Y-axisLimitStickSpectra                 1e-40                     # Default valu
 
 
 # Calculate non-LTE stick spectra #
+NLTEMethod                             T                          # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
 Tvib                                   2000
 Trot                                   296
-QNsVibLabel                            v,eS
-QNsRotLabel                            J,e/f  
-PlotNonLTE(Y/N)                        Y
-Y-axisLimitNonLTE                      1e-30                     # Default value is 1e-30
+QNsVibLabel                            v1,v2,v3
+QNsRotLabel                            J,Ka,Kc
 
 
 # Calculate cross sections #

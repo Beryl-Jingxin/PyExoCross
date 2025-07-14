@@ -33,11 +33,11 @@ QNsformat                               %30s              %30s     %2s
 
 # Conversion #
 ConversionFormat                        1  
-ConversionFrequncyRange                 0                 43000      
-GlobalQNLabel                           configuration       LS       
-GlobalQNFormat                          %30s                %30s     
-LocalQNLabel                            J        parity
-LocalQNFormat                           %5.1f    %2s
+ConversionFrequncyRange                 0          43000      
+GlobalQNLabel                           configuration     LS       
+GlobalQNFormat                          %30s              %30s     
+LocalQNLabel                            J       parity
+LocalQNFormat                           %5.1f   %2s
 ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
 
@@ -58,7 +58,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             LTE                       # LTE or Non-LTE
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             2000
 Range                                   0          43000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'

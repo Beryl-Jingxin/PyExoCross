@@ -41,7 +41,7 @@ Compress(Y/N)                           N                         # If Y, save a
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             LTE                       # LTE or Non-LTE
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             1000
 Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'

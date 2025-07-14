@@ -60,7 +60,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             LTE                       # LTE or Non-LTE
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             2000
 Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -70,11 +70,11 @@ QNsFilter(Y/N)                          N          par[]   e/f[,e]   v[1,0;2,0;3
 
 
 # Calculate non-LTE #
-NLTEMethod                             T                          # TvibTrot(T) or Density(D) or Population(P)
-Tvib                                   2000
-Trot                                   296
-QNsVibLabel                            v,eS
-QNsRotLabel                            J,e/f    
+NLTEMethod                              T                          # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                    2000
+Trot                                    296
+QNsVibLabel                             v,eS
+QNsRotLabel                             J,e/f    
 
 
 # Calculate stick spectra #

@@ -34,7 +34,7 @@ QNsformat
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             Non-LTE                   # LTE or Non-LTE
+LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
 Temperature                             296
 Range                                   5000       5299
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -44,11 +44,11 @@ QNsFilter(Y/N)                          N
 
 
 # Calculate non-LTE #
-NLTEMethod                             T                          # TvibTrot(T) or Density(D) or Population(P)
-Tvib                                   2000
-Trot                                   296
-QNsVibLabel                            v,eS
-QNsRotLabel                            J,e/f  
+NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                    2000
+Trot                                    296
+QNsVibLabel                             v,eS
+QNsRotLabel                             J,e/f  
 
 
 # Calculate stick spectra #

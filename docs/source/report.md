@@ -52,9 +52,9 @@ Please check this xxx broadening file is in the correct folder, otherwise, you c
 
 Please check this xxx input file is in the correct folder and provide the correct input file path.
 
-###### The file xxx is not a HITRAN2020 format data file.
+###### The file xxx is not a HITRAN2004 format data file.
 
-If you use HITRAN database to do the calculations, please check your HITRAN data format. Only HITRAN2020 standard format can be read, otherwise, you need to convert your data format before using *PyExoCross*.
+If you use HITRAN database to do the calculations, please check your HITRAN data format. Only HITRAN2004 standard format can be read, otherwise, you need to convert your data format before using *PyExoCross*.
 
 ###### Please choose functions which you want to calculate.
 
@@ -82,7 +82,7 @@ Please write `N`, `NO`, `No`, `n`, `no` after uncertainty filter.
 
 ###### concurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.
 
-Each line list file is tooooo large when program running on many cores, so that the memory is not enough. Please change reduce the `NCPUtrans`, `NCPUfiles` and/or `ChunkSize`. If you will use very large dataset (e.g. datasets of CaOH, NaOH, CH4, H2CS, VO), please set `NCPUfiles` as `1` and make `NCPUtrans` larger (try from 32).
+Each line list file is tooooo large when program running on many cores, so that the memory is not enough. Please reduce the `NCPUtrans`, `NCPUfiles` and/or `ChunkSize`. If you will use very large dataset (e.g. datasets of CaOH, NaOH, CH4, H2CS, VO), please set `NCPUfiles` as `1` and make `NCPUtrans` larger (try from 32).
 
 
 ##### ModuleNotFoundError: No module named 'distutils'.

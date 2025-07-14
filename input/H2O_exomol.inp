@@ -49,7 +49,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             LTE                       # LTE or Non-LTE
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             300
 Range                                   0          41200
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'

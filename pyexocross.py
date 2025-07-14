@@ -83,7 +83,8 @@ def inp_para(inp_filepath):
     col0 = inp_df[0]
     
     # Database
-    database = inp_df[col0.isin(['Database'])][1].values[0].upper().replace('EXOMOL','ExoMol').replace('EXOATOM','ExoAtom')
+    database = (inp_df[col0.isin(['Database'])][1].values[0].upper()
+                .replace('EXOMOL','ExoMol').replace('EXOATOM','ExoAtom'))
     
     # Basic information
     if database != 'ExoAtom':
@@ -97,7 +98,7 @@ def inp_para(inp_filepath):
         dataset = inp_df[col0.isin(['Dataset'])][1].values[0]
         data_info = [atom, dataset]
     else:
-        raise ImportError("Please type the correct database choice 'ExoMol' or 'HITRAN' or 'ExoAtom' into the input file.")
+        raise ImportError("Please type the correct database choice 'ExoMol', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")
     
     # File path
     read_path = (inp_df[col0.isin(['ReadPath'])][1].values[0] + '/').replace('//','/')
@@ -533,7 +534,7 @@ def inp_para(inp_filepath):
         except:
             check_gfactor = False
 
-    elif database == 'HITRAN':
+    elif database == 'HITRAN' or database == 'HITEMP':
         molecule_id = int(mol_iso_id/10)
         isotopologue_id = mol_iso_id - molecule_id * 10
         isometa_url = 'https://hitran.org/docs/iso-meta/'
@@ -549,7 +550,7 @@ def inp_para(inp_filepath):
         check_gfactor = False
 
     else:
-        raise ImportError("Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.")
+        raise ImportError("Please add the name of the database 'ExoMol', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")
 
     if predissocYN == 'Y' and check_predissoc == False and 'LOR' not in profile:
         warnings.warn('Program will cost much time on calculating predissociative lifetimes before calculating the cross sections.\n',InputWarning)
@@ -867,7 +868,7 @@ def read_parfile(read_path):
 def read_hitran_parfile(read_path, parfile_df, minv, maxv, unclimit, Slimit):
     '''
     Read the parameters of the molecular absorption features
-    of HITRAN2020 format text file.
+    of HITRAN2004 format text file.
     
     Parameters
     ----------
@@ -878,12 +879,12 @@ def read_hitran_parfile(read_path, parfile_df, minv, maxv, unclimit, Slimit):
     hitran_df : DataFrame
         The DataFrame of HITRAN data for the molecule.
     '''    
-    print('Reading HITRAN2020 format data file ...')
+    print('Reading HITRAN2004 format data file ...')
     t = Timer()
     t.start()
     par_filename = read_path.split('/')[-1]
     if (len(str(parfile_df[0][0])) < 160):
-        raise ImportError('The file ' + par_filename + ' is not a HITRAN2020 format data file.')
+        raise ImportError('The file ' + par_filename + ' is not a HITRAN2004 format data file.')
     hitran_column_name = ['M','I','v','S','A','gamma_air','gamma_self',
                           'Epp','n_air','delta_air','Vp','Vpp','Qp','Qpp',
                           'Ierr','Iref','flag','gp','gpp']
@@ -920,7 +921,7 @@ def read_hitran_parfile(read_path, parfile_df, minv, maxv, unclimit, Slimit):
                   "V'",'V"',"Q'",'Q"','Ierr','Iref','flag',"g'",'g"']
     hitran_fmt = ['%2d','%1d','%12.6f','%10.3e','%10.3e','%5.4f','%5.4f','%10.4f','%4.2f','%8.6f',
                   '%15s','%15s','%15s','%15s','%6d','%12d','%1s','%7.1f','%7.1f']
-    print_file_info('HITRAN2020 format par', hitran_col, hitran_fmt)
+    print_file_info('HITRAN2004 format par', hitran_col, hitran_fmt)
     return(hitran_df)
 
 ### Read Partition Function File From HITRANOnline
@@ -2680,13 +2681,13 @@ def LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, gamma_air, gam
         gamma = np.full(num, gamma_HWHM)
     elif LorentzianHWHMYN == 'U':
         gamma = gamma_HWHM
-    elif database == 'ExoMol' and num > 0:
+    elif database == 'ExoMol' or database == 'ExoAtom' and num > 0:
         gamma = sum([Lorentzian_HWHM(gamma_L[i].values, n_air[i].values,T,P) for i in range(nbroad)])
         if predissocYN == 'Y' and check_predissoc == 0 and 'VOI' in profile:
             gamma += lifetime_broadening(tau)
         else:
             pass
-    elif database == 'HITRAN' and num > 0:  
+    elif database == 'HITRAN' or database == 'HITEMP' and num > 0:  
         gamma_L = gamma_air*0.7 + gamma_self*0.3
         gamma = Lorentzian_HWHM(gamma_L, n_air,T,P) 
     else:
@@ -3780,8 +3781,8 @@ def get_results(read_path):
     if database == 'ExoAtom':
         print('ExoAtom database')
         print('Atom\t:', data_info[0], '\nDataset\t:', data_info[1])    
-    if database == 'HITRAN':
-        print('HITRAN database')
+    if database == 'HITRAN' or database == 'HITEMP':
+        print(database, 'database')
         print('Molecule\t:', data_info[0], '\t\t\tMolecule ID\t:', molecule_id, 
               '\nIsotopologue\t:', data_info[1], '\t\tIsotopologue ID\t:', isotopologue_id,
               '\nDataset\t\t:', data_info[2])
@@ -3839,7 +3840,7 @@ def get_results(read_path):
             if CrossSections == 1:
                 exomol_cross_section(states_part_df, T, Tvib, Trot, P, Q)
                     
-    elif database == 'HITRAN':
+    elif database == 'HITRAN' or database == 'HITEMP':
         parfile_df = read_parfile(read_path)
         if (Conversion == 1 and ConversionFormat == 2):
             hitran_df = read_hitran_parfile(read_path,parfile_df,ConversionMinFreq,ConversionMaxFreq,
@@ -3884,7 +3885,7 @@ def get_results(read_path):
         if CrossSections == 1:
             hitran_cross_section(hitran_linelist_df, T, P)
     else:
-        raise ImportError("Please add the name of the database 'ExoMol' or 'ExoAtom' or 'HITRAN' into the input file.")     
+        raise ImportError("Please add the name of the database 'ExoMol', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")     
     print('\nThe program total running time:')    
     t_tot.end()
     print('\nFinished!')

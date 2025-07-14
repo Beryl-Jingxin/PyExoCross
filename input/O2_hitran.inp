@@ -34,7 +34,7 @@ QNsformat                               %2s   %3s     %2d     %1s    %3d     %1s
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             LTE                        # LTE or Non-LTE
+LTE/Non-LTE                             LTE                        # 'LTE' or 'Non-LTE'
 Temperature                             300
 Range                                   0          5000
 Absorption/Emission                     Emission                   # 'Absorption' or 'Emission'

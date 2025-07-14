@@ -34,12 +34,12 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 
 
 # Conversion #
-ConversionFormat                        1  
-ConversionFrequncyRange                 0                 30000      
-GlobalQNLabel                           eS       v        Omega
-GlobalQNFormat                          %9s     %2d      %4s
-LocalQNLabel                            J        e/f
-LocalQNFormat                           %5.1f    %2s
+ConversionFormat                        1     
+ConversionFrequncyRange                 0         30000      
+GlobalQNLabel                           eS      v      Omega
+GlobalQNFormat                          %9s     %2d    %4s
+LocalQNLabel                            J       e/f
+LocalQNFormat                           %5.1f   %2s
 ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
                            
@@ -60,21 +60,21 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             LTE                       # LTE or Non-LTE
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             2000
 Range                                   0          30000
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          N          v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
+QNsFilter(Y/N)                          N          par[]  e/f  eS[]  v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
 
 
 # Calculate non-LTE #
-NLTEMethod                             T                          # TvibTrot(T) or Density(D) or Population(P)
-Tvib                                   2000
-Trot                                   296
-QNsVibLabel                            v,eS
-QNsRotLabel                            J,e/f            
+NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                    2000
+Trot                                    296
+QNsVibLabel                             v,eS
+QNsRotLabel                             J,e/f            
 
 
 # Calculate stick spectra #

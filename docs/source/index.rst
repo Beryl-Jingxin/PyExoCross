@@ -17,14 +17,15 @@ Welcome to PyExoCross's documentation!
    examples.md
    basicinfo.md
    conversion.md
-   partitionfunc.rst
-   specificheats.rst
-   coolingfunc.rst
-   lifetimes.rst
-   oscillatorstrengths.rst
-   stickspectra.rst
-   nonlte.rst
+   partitionfunc.md
+   specificheats.md
+   coolingfunc.md
+   lifetimes.md
+   oscillatorstrengths.md
+   stickspectra.md
    crosssections.md
+   nonlte.md
+   filters.md
    report.md
    license.md
 

@@ -1,6 +1,13 @@
 # Conversion
 
-*PyExoCross* can convert data format between the ExoMol and HITRAN formats.
+*PyExoCross* can convert data format between the ExoMol and HITRAN (HITRAN 2004 edition 160-character records) formats.
+
+| Database | ExoMol format | HITRAN format |
+| :------: | :-----------: | :-----------: |
+| ExoMol   | &#x2705;      |               |
+| ExoAtom  | &#x2705;      |               |
+| HITRAN   |               | &#x2705;      |
+| HITEMP   |               | &#x2705;      |
 
 ## Data format
 
@@ -34,11 +41,13 @@ For 3 different symmetry indices and inversional parity labels, please write wri
 
 Here, the quantum number formats are the formats of quantum numbers you want to save in the output file.
 
-In the standard HITRAN format, both global and local quantum numbers have 15 characters.
+In the standard HITRAN2004 format, both global and local quantum numbers have 15 characters.
+
+## Convert data format from ExoMol to HITRAN
+
+**For ExoMol database**
 
 *Example*
-
-Convert data format from ExoMol to HITRAN.
 
 ```bash
 # Data source #
@@ -62,7 +71,6 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
-Non-LTE                                 0
 CrossSections                           0
 
 
@@ -79,7 +87,7 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 
 # Conversion #
 ConversionFormat                        1  
-ConversionFrequncyRange                 0                 30000  
+ConversionFrequncyRange                 0          30000  
 GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %9s      %2d      %4s
 LocalQNLabel                            J        e/f
@@ -88,7 +96,60 @@ ConvUncFilter(Y/N)                      Y          0.01           # If Y, defaul
 ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30
 ```
 
-Convert data from HITRAN to ExoMol.
+**For ExoAtom database**
+
+*Example*
+
+```bash
+# Data source #
+Database                                ExoAtom
+Atom                                    Li
+Dataset                                 NIST
+
+
+# File path #
+ReadPath                                /mnt/data/exoatom/exoatom_data/
+SavePath                                /home/jingxin/data/pyexocross/
+
+
+# Functions #
+Conversion                              1
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+OscillatorStrengths                     0
+StickSpectra                            0
+CrossSections                           0
+
+
+# Cores and chunks #
+NCPUtrans                               1
+NCPUfiles                               1
+ChunkSize                               10000
+
+
+# Quantum numbers for conversion, stick spectra and cross sections #
+QNslabel                                configuration     LS       parity  
+QNsformat                               %30s              %30s     %2s      
+
+
+# Conversion #
+ConversionFormat                        1  
+ConversionFrequncyRange                 0          43000      
+GlobalQNLabel                           configuration     LS       
+GlobalQNFormat                          %30s              %30s     
+LocalQNLabel                            J       parity
+LocalQNFormat                           %5.1f   %2s
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
+```
+
+## Convert data format from HITRAN to ExoMol
+
+**For HITRAN and HITEMP databases**
+
+*Example*
 
 ```bash
 # Data source #
@@ -112,7 +173,6 @@ CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
-Non-LTE                                 0
 CrossSections                           0
 
 
@@ -140,5 +200,5 @@ ConvThreshold(Y/N)                      N          1e-30          # If Y, defaul
 
 **Note**
 
-1. ExoMol definition file `.def` (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
+1. ExoMol format definition files `.def`, `.def.json`, and `.adef.json` (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
 2. HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
