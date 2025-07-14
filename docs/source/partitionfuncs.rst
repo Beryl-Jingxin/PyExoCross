@@ -12,6 +12,8 @@ for reference.
 
 The temperatures are start from 1 K to ``Tmax`` K in the output file.
 
+Try unit in :math:`\mathrm{cm}^{-1}`.
+
 The partition functions equation is:
 
 .. math::
