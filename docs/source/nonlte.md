@@ -199,6 +199,7 @@ Y-axisLimitXsec                         1e-30                     # Default valu
 ## Custom Vibrational density
 
 The sum of the custom vibrational density $n_{\textrm{vib}}$ is normalized to one.
+
 $$
     \sum_i n_i^{\textrm{vib}} = 1
 $$

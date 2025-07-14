@@ -87,4 +87,4 @@ Each line list file is tooooo large when program running on many cores, so that 
 
 ##### ModuleNotFoundError: No module named 'distutils'.
 Unfortunately, you're using the newly released Python, which removed distutils after it being deprecated since Python 3.10. Try to sideload distutils from a third party source (e.g. a system package, like apt install python3-distutils), or
-downgrade to an older version of Python (3.11 or older).
+downgrade to an older version of Python (3.10 or older). Recommend version 3.9 and 3.10.

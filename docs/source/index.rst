@@ -18,6 +18,7 @@ Welcome to PyExoCross's documentation!
    basicinfo.md
    conversion.md
    partitionfunc.md
+   partitionfunc.rst
    specificheats.md
    coolingfunc.md
    lifetimes.md
