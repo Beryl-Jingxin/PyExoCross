@@ -98,8 +98,8 @@ pygments_style = None
 #
 # html_sidebars = {}
 
-import markdown
-md = markdown.Markdown(extensions=['pymdownx.arithmatex'])
+# import markdown
+# md = markdown.Markdown(extensions=['pymdownx.arithmatex'])
 
 # -- Options for HTML output -------------------------------------------------
 
