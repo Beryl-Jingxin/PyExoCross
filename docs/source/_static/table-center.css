@@ -1,0 +1,4 @@
+/* table-center.css */
+.docutils td, .docutils th {
+    text-align: center !important;
+}
