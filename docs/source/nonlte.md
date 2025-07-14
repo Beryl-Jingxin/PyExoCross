@@ -2,13 +2,11 @@
 
 `NLTEMethod`: 
 
-Case 1: `T` means Treanor distribution using two different temperatures `Tvib` and `Trot`. 
+`T`: Treanor distribution using two different temperatures `Tvib` and `Trot`. 
 
-Case 2: `D` means vibronic distribution using `Trot` and custom vibrational density $n_{\textrm{vib}}$. After `D`, please give the custom vibrational density file path. Ignore `Tvib`.
-$$
-    \sum_i n_i^{\textrm{vib}} = 1
-$$
-Case 3: `P` means using custom rovibrational population. After `P`, please give the custom rovibrational population file path.  Ignore `Tvib` and `Trot`.
+`D`: Vibronic distribution using `Trot` and custom vibrational density $n_{\textrm{vib}}$. After `D`, please give the custom vibrational density file path. Ignore `Tvib`.
+
+`P`: Using custom rovibrational population. After `P`, please give the custom rovibrational population file path.  Ignore `Tvib` and `Trot`.
 
 ``Tvib``: Please provide vibrational temperature in unit K.
 
@@ -17,6 +15,8 @@ Case 3: `P` means using custom rovibrational population. After `P`, please give 
 ``QNsVibLabel``: Please provide vibrational quantum number labels seperated by ``,``.
 
 ``QNsRotLabel``: Please provide rotational quantum number labels seperated by ``,``.
+
+## Two temperature Treanor distribution
 
 The state energy is the sum of the rotational and vibrational state energy:
 
@@ -48,8 +48,6 @@ $$
 $$
 
 *Example*
-
-**Case 1**
 
 ```bash
 # Data source #
@@ -198,7 +196,14 @@ PlotCrossSection(Y/N)                   Y
 Y-axisLimitXsec                         1e-30                     # Default value is 1e-30
 ```
 
-**Case 2**
+## Custom Vibrational density
+
+The sum of the custom vibrational density $n_{\textrm{vib}}$ is normalized to one.
+$$
+    \sum_i n_i^{\textrm{vib}} = 1
+$$
+
+*Example*
 
 ```bash
 # Data source #
@@ -272,7 +277,9 @@ PlotCrossSection(Y/N)                   Y
 Y-axisLimitXsec                         1e-40                     # Default value is 1e-30
 ```
 
-**Case 3**
+## Custom rovibrational population
+
+*Example*
 
 ```bash
 # Data source #
