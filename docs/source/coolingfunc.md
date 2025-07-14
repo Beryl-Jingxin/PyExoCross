@@ -14,13 +14,13 @@ The temperatures are start from 1 K to ``Tmax`` K in the output file.
 The cooling functions equation is:
 
 $$ 
-   W(T) = \frac{1}{4 \pi Q(T)} \sum_{f,i} A_{fi} h c \tilde{v}_{fi} g' e^{-c_2 \tilde{E}' / T}, 
+W(T) = \frac{1}{4 \pi Q(T)} \sum_{f,i} A_{fi} h c \tilde{v}_{fi} g' e^{-c_2 \tilde{E}' / T}, 
 $$
 
 where $Q(T)$ is the partition function.
 
 $$ 
-   Q(T)=\sum_n g_n^{\textrm{tot}} e^{-c_2\tilde{E}_n/T}. 
+Q(T)=\sum_n g_n^{\textrm{tot}} e^{-c_2\tilde{E}_n/T}. 
 $$
 
 *Example*

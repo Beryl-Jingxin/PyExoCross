@@ -38,7 +38,7 @@ version = '1.0'
 extensions = [
     # 'recommonmark',
     'myst_parser',
-    'sphinx_markdown_tables',
+    # 'sphinx_markdown_tables',
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',
