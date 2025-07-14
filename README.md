@@ -120,3 +120,11 @@ https://doi.org/10.1093/rasti/rzae016
     eprint   = {https://academic.oup.com/rasti/article-pdf/3/1/257/61224370/rzae016.pdf},
 }
 ```
+
+## Support databases
+
+- [X] ExoMol
+- [X] ExoAtom
+- [X] HITRAN
+- [X] HITEMP
+- [ ] ExoMolHR

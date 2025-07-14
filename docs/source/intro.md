@@ -14,8 +14,8 @@ PyExoCross ***arXiv preprint*** : [https://arxiv.org/abs/2406.03977](https://arx
 
 ## Support databases
 
-* [X] ExoMol
-* [X] ExoAtom
-* [X] HITRAN
-* [X] HITEMP
-* [ ] ExoMolHR
+- [X] ExoMol
+- [X] ExoAtom
+- [X] HITRAN
+- [X] HITEMP
+- [ ] ExoMolHR
