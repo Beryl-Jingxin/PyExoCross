@@ -6,9 +6,11 @@
 
 *PyExoCross* ***Wiki*** : [https://github.com/Beryl-Jingxin/PyExoCross/wiki](https://github.com/Beryl-Jingxin/PyExoCross/wiki)
 
-*PyExoCross* ***published paper*** : [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016)
+*PyExoCross* ***Published*** Paper : [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016)
 
-*PyExoCross* ***arXiv preprint*** : [https://arxiv.org/abs/2406.03977](https://arxiv.org/abs/2406.03977)
+*PyExoCross* ***arXiv*** Preprint : [https://arxiv.org/abs/2406.03977](https://arxiv.org/abs/2406.03977)
+
+*PyExoCross* ***NASA EMAC*** Link : [https://emac.gsfc.nasa.gov?cid=2407-003](https://emac.gsfc.nasa.gov?cid=2407-003)
 
 [*PyExoCross*](https://github.com/ExoMol/PyExoCross "PyExoCross") is a Python adaptation of the [*ExoCross*](https://github.com/ExoMol/ExoCross "ExoCross") Fortran application.
 

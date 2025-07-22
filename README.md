@@ -1,13 +1,14 @@
 # PyExoCross
 
-See the PyExoCross ***manual*** at [https://pyexocross.readthedocs.io](https://pyexocross.readthedocs.io).
+PyExoCross ***Manual*** : [https://pyexocross.readthedocs.io](https://pyexocross.readthedocs.io)
 
-See the PyExoCross ***Wiki*** at [https://github.com/Beryl-Jingxin/PyExoCross/wiki](https://github.com/Beryl-Jingxin/PyExoCross/wiki).
+PyExoCross ***Wiki*** : [https://github.com/Beryl-Jingxin/PyExoCross/wiki](https://github.com/Beryl-Jingxin/PyExoCross/wiki)
 
-See the PyExoCross ***published paper*** at [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016).
+PyExoCross ***Published*** Paper : [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016)
 
-See the PyExoCross ***arXiv preprint*** at [https://arxiv.org/abs/2406.03977](https://arxiv.org/abs/2406.03977).
+PyExoCross ***arXiv*** Preprint : [https://arxiv.org/abs/2406.03977](https://arxiv.org/abs/2406.03977)
 
+PyExoCross ***NASA EMAC*** Link : [https://emac.gsfc.nasa.gov?cid=2407-003](https://emac.gsfc.nasa.gov?cid=2407-003)
 
 ## Download
 
