@@ -15,7 +15,7 @@ HITRAN data: g', g", oscillator strength and wavenuber v.
 The oscillator strengths equation is:
 
 $$
-    gf=\frac{g^{'}_\textrm{tot}A_{fi}}{(c\tilde{v}_{fi})^2}.
+    gf=\frac{g_\textrm{tot}' A_{fi}}{(c \tilde{v}_{fi})^2}.
 $$
 
 *Example*

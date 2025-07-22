@@ -461,8 +461,6 @@ def inp_para(inp_filepath):
             abundance = 1
             mass = def_df['isotopologue']['mass_in_Da']     # ExoMol mass (Dalton)
             try:
-                # check_uncertainty = def_df['dataset']['states']['uncertainty_description']
-                # check_uncertainty = def_df['dataset']['states']['uncertainty_available']
                 check_uncertainty = def_df['dataset']['states']['uncertainties_available']
             except:
                 check_uncertainty = False

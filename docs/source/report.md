@@ -85,6 +85,6 @@ Please write `N`, `NO`, `No`, `n`, `no` after uncertainty filter.
 Each line list file is tooooo large when program running on many cores, so that the memory is not enough. Please reduce the `NCPUtrans`, `NCPUfiles` and/or `ChunkSize`. If you will use very large dataset (e.g. datasets of CaOH, NaOH, CH4, H2CS, VO), please set `NCPUfiles` as `1` and make `NCPUtrans` larger (try from 32).
 
 
-##### ModuleNotFoundError: No module named 'distutils'.
+###### ModuleNotFoundError: No module named 'distutils'.
 Unfortunately, you're using the newly released Python, which removed distutils after it being deprecated since Python 3.10. Try to sideload distutils from a third party source (e.g. a system package, like apt install python3-distutils), or
 downgrade to an older version of Python (3.10 or older). Recommend version 3.9 and 3.10.

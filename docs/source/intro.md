@@ -4,6 +4,8 @@
 
 *PyExoCross* ***Manual*** : [https://pyexocross.readthedocs.io](https://pyexocross.readthedocs.io)
 
+See the PyExoCross ***Wiki*** at [https://github.com/Beryl-Jingxin/PyExoCross/wiki](https://github.com/Beryl-Jingxin/PyExoCross/wiki)
+
 PyExoCross ***published paper*** : [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016)
 
 PyExoCross ***arXiv preprint*** : [https://arxiv.org/abs/2406.03977](https://arxiv.org/abs/2406.03977)
