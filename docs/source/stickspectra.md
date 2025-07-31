@@ -1,7 +1,5 @@
 # Stick spectra
 
-`Absorption/Emission`: Choose `Absorption` or `Emission`.
-
 `LTE/Non-LTE`: Choose `LTE` or `Non-LTE`. \
 If you choose `LTE`, please ignore `# Calculate non-LTE #` section. \
 If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://pyexocross.readthedocs.io/en/latest/nonlte.html`).

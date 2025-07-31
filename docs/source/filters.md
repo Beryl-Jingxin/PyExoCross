@@ -6,11 +6,11 @@ If after using filters, the program gets an empty result, then you will receive 
 
 ## Uncertainty filters
 
-If `UncFilter(Y/N)` is yes, the value is the maximum uncertainty you require, in unit cm⁻¹. 
+If `UncFilter(Y/N)` is yes, the value is the maximum uncertainty you require, in unit of cm⁻¹. 
 
 ## Threshold filters
 
-If `Threshold(Y/N)` is yes, the value is the minimum intensity you require, in unit cm/molecule.
+If `Threshold(Y/N)` is yes, the value is the minimum intensity you require, in unit of cm/molecule.
 
 ## Quantum number filters
 

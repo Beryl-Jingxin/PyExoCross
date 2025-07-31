@@ -8,9 +8,9 @@
 
 `P`: Using custom rovibrational population. After `P`, please give the custom rovibrational population file path.  Ignore `Tvib` and `Trot`.
 
-``Tvib``: Please provide vibrational temperature in unit K.
+``Tvib``: Please provide vibrational temperature in unit of K.
 
-``Trot``: Please provide rotational temperature in unit K.
+``Trot``: Please provide rotational temperature in unit of K.
 
 ``QNsVibLabel``: Please provide vibrational quantum number labels seperated by ``,``.
 

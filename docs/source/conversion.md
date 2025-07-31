@@ -9,6 +9,8 @@
 | HITRAN   |               | &#x2705;      |
 | HITEMP   |               | &#x2705;      |
 
+`ConversionFrequncyRange`: Provide the wavenumber range in unit of cm⁻¹.
+
 ## Data format
 
 `ConversionFormat`
@@ -42,6 +44,12 @@ For 3 different symmetry indices and inversional parity labels, please write wri
 Here, the quantum number formats are the formats of quantum numbers you want to save in the output file.
 
 In the standard HITRAN2004 format, both global and local quantum numbers have 15 characters.
+
+## Filters
+
+`ConvUncFilter(Y/N)`: If it is yes, the value is the maximum uncertainty you require, in unit of cm⁻¹. 
+
+`ConvThreshold(Y/N)`: If it is yes, the value is the minimum intensity you require, in unit of cm/molecule.
 
 ## Convert data format from ExoMol to HITRAN
 
@@ -87,13 +95,13 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 
 # Conversion #
 ConversionFormat                        1  
-ConversionFrequncyRange                 0          30000  
+ConversionFrequncyRange                 0          30000          # Wavenumber in unit of cm-1    
 GlobalQNLabel                           eS       v        Omega
 GlobalQNFormat                          %9s      %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
-ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.01
-ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30
+ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.01 cm-1
+ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30 cm/molecule
 ```
 
 **For ExoAtom database**
@@ -136,13 +144,13 @@ QNsformat                               %30s              %30s     %2s
 
 # Conversion #
 ConversionFormat                        1  
-ConversionFrequncyRange                 0          43000      
+ConversionFrequncyRange                 0          43000          # Wavenumber in unit of cm-1          
 GlobalQNLabel                           configuration     LS       
 GlobalQNFormat                          %30s              %30s     
 LocalQNLabel                            J       parity
 LocalQNFormat                           %5.1f   %2s
-ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
-ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01 cm-1
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule
 ```
 
 ## Convert data format from HITRAN to ExoMol
@@ -189,13 +197,13 @@ QNsformat                               %2s   %3s     %2d     %1s    %2s   %1s  
 
 # Conversion # 
 ConversionFormat                        2  
-ConversionFrequncyRange                 0          63000   
+ConversionFrequncyRange                 0          63000          # Wavenumber in unit of cm-1       
 GlobalQNLabel                           X       Omega    v1  
 GlobalQNFormat                          %2s     %3s      %2d   
 LocalQNLabel                            m       Br       Sym     F   
 LocalQNFormat                           %1s     %2s      %1s     %5s   
-ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01
-ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30  
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01 cm-1
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule
 ```
 
 **Note**
