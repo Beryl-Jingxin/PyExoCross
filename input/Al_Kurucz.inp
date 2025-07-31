@@ -42,15 +42,17 @@ Compress(Y/N)                           N                         # If Y, save a
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             1000
-Range                                   0          30000
+Temperature                             1000                      # Temperature in unit of K
+WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
+Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.1            # If Y, default value 0.01
-Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
+UncFilter(Y/N)                          N          0.1            # If Y, default value 0.01 cm-1
+Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          Y          Configuration[]     LS[]
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   Y
-Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30
-
+PlotStickSpectra(Y/N)                   Y          
+PlotStickSpectraMethod                  log                       # Plot in linear (lin) or logarithm (log)
+PlotStickSpectraWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
+Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30 cm/molecule

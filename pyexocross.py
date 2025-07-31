@@ -188,7 +188,10 @@ def inp_para(inp_filepath):
     # Calculate oscillator strengths
     if OscillatorStrengths != 0:
         gfORf = inp_df[col0.isin(['gf/f'])][1].values[0].upper()
-        PlotOscillatorStrengthYN = inp_df[col0.isin(['PlotOscillatorStrength(Y/N)'])][1].values[0].upper() 
+        PlotOscillatorStrengthYN = inp_df[col0.isin(['PlotOscillatorStrength(Y/N)'])][1].values[0].upper()[0]
+        PlotOscillatorStrengthMethod = inp_df[col0.isin(['PlotOscillatorStrengthMethod'])][1].values[0].upper()
+        PlotOscillatorStrengthWnWl = inp_df[col0.isin(['PlotOscillatorStrengthWnWl'])][1].values[0].upper()
+        PlotOscillatorStrengthUnit = inp_df[col0.isin(['PlotOscillatorStrengthWnWl'])][2].values[0].lower()
         if PlotOscillatorStrengthYN == 'Y':
             _limitYaxisOS = inp_df[col0.isin(['Y-axisLimitOscillatorStrength'])][1].values[0]
             if _limitYaxisOS == '#':
@@ -202,14 +205,36 @@ def inp_para(inp_filepath):
     else:
         gfORf = 'GF'
         PlotOscillatorStrengthYN = 'None'
+        PlotOscillatorStrengthMethod = 'None'
+        PlotOscillatorStrengthWnWl = 'None'
+        PlotOscillatorStrengthUnit = 'None'
         limitYaxisOS = 0
     
     # Calculate stick spectra or cross sections
     if StickSpectra + CrossSections != 0:
         LTEORNLTE = inp_df[col0.isin(['LTE/Non-LTE'])][1].values[0].upper()[0]
         T = int(inp_df[col0.isin(['Temperature'])][1].iloc[0])
-        min_wn = float(inp_df[col0.isin(['Range'])][1].iloc[0])
-        max_wn = float(inp_df[col0.isin(['Range'])][2].iloc[0])
+        wn_wl = inp_df[col0.isin(['WnWlUnit'])][1].values[0].upper()
+        wn_wl_unit = inp_df[col0.isin(['WnWlUnit'])][2].values[0].lower()
+        min_wnl = float(inp_df[col0.isin(['Range'])][1].iloc[0])
+        max_wnl = float(inp_df[col0.isin(['Range'])][2].iloc[0])
+        if wn_wl == 'WN':
+            min_wn = min_wnl
+            max_wn = max_wnl
+        elif wn_wl == 'WL' and wn_wl_unit == 'um':
+            min_wn = 1e4 / max_wnl
+            try:
+                max_wn = 1e4 / min_wnl
+            except:
+                max_wn = 1e4 / 1e-6
+        elif wn_wl == 'WL' and wn_wl_unit == 'nm':
+            min_wn = 1e7 / max_wnl
+            try:
+                max_wn = 1e7 / min_wnl
+            except:
+                max_wn = 1e7 / 1e-6
+        else:
+            raise ImportError("Please type the correct wavenumber or wavelength choice 'wn' or 'wl' and give the unit of wavelength in the input file.")
         abs_emi = inp_df[col0.isin(['Absorption/Emission'])][1].values[0].upper()[0].replace('A','Ab').replace('E','Em')
         # Uncertainty filter
         UncFilterYN = inp_df[col0.isin(['UncFilter(Y/N)'])][1].values[0].upper()[0]
@@ -247,6 +272,10 @@ def inp_para(inp_filepath):
     else:
         LTEORNLTE = 'None'
         T = 0
+        wn_wl = 'None'
+        wn_wl_unit = 'None'
+        min_wnl = 0
+        max_wnl = 1e20
         min_wn = 0
         max_wn = 1e20
         abs_emi = 'None'
@@ -308,6 +337,9 @@ def inp_para(inp_filepath):
     # Stick spectra
     if StickSpectra != 0:
         PlotStickSpectraYN = inp_df[col0.isin(['PlotStickSpectra(Y/N)'])][1].values[0].upper()[0]
+        PlotStickSpectraMethod = inp_df[col0.isin(['PlotStickSpectraMethod'])][1].values[0].upper()
+        PlotStickSpectraWnWl = inp_df[col0.isin(['PlotStickSpectraWnWl'])][1].values[0].upper()
+        PlotStickSpectraUnit = inp_df[col0.isin(['PlotStickSpectraWnWl'])][2].values[0].lower()
         if PlotStickSpectraYN == 'Y':
             _limitYaxisStickSpectra = inp_df[col0.isin(['Y-axisLimitStickSpectra'])][1].values[0]
             if _limitYaxisStickSpectra == '#':
@@ -320,6 +352,9 @@ def inp_para(inp_filepath):
             limitYaxisStickSpectra = 0
     else:
         PlotStickSpectraYN = 'None'
+        PlotStickSpectraMethod = 'None'
+        PlotStickSpectraWnWl = 'None'
+        PlotStickSpectraUnit = 'None'
         limitYaxisStickSpectra = 0
         
     # Cross sections
@@ -327,10 +362,10 @@ def inp_para(inp_filepath):
         NpointsORBinSize = inp_df[col0.isin(['Npoints/BinSize'])][1].values[0].upper()
         if 'POI' in NpointsORBinSize:
             N_point = int(inp_df[col0.isin(['Npoints/BinSize'])][2].iloc[0])
-            bin_size = float((max_wn - min_wn)/(N_point-1))
+            bin_size = float(np.abs(max_wnl - min_wnl)/(N_point-1))
         elif 'BIN' in NpointsORBinSize or 'SIZ' in NpointsORBinSize:
             bin_size = float(inp_df[col0.isin(['Npoints/BinSize'])][2].iloc[0])
-            N_point = int((max_wn - min_wn)/bin_size+1)
+            N_point = int(np.abs(max_wnl - min_wnl)/bin_size+1)
         else:
             raise ImportError("Please type the correct grid choice 'Npoints' or 'BinSize' into the input file.")
         # Predissociative cross sections
@@ -355,17 +390,6 @@ def inp_para(inp_filepath):
         broadeners = [i for i in broadeners if i is not np.nan]
         ratios = np.array(list(inp_df[col0.isin(['Ratios'])].iloc[0])[1:], dtype=float)
         ratios = ratios[~np.isnan(ratios)]
-        wn_wl = inp_df[col0.isin(['Wavenumber(wn)/wavelength(wl)'])][1].values[0].upper()
-        if 'L' not in wn_wl:
-            wn_grid = np.linspace(min_wn, max_wn, N_point)
-        else:
-            min_wl = 10000 / max_wn
-            if min_wn == 0:
-                max_wl = 10000 / 1e-6
-            else:
-                max_wl = 10000 / min_wn
-            wl_grid = np.linspace(min_wl, max_wl, N_point)
-            wn_grid = 10000 / wl_grid
         profile = inp_df[col0.isin(['Profile'])][1].values[0].upper().replace('PRO','')
         # Doppler HWHM
         DopplerHWHMYN = inp_df[col0.isin(['DopplerHWHM(Y/N)'])][1].values[0].upper()[0]        
@@ -425,6 +449,23 @@ def inp_para(inp_filepath):
                 limitYaxisXsec = float(_limitYaxisXsec)
         else:
             limitYaxisXsec = 0
+        PlotCrossSectionMethod = inp_df[col0.isin(['PlotCrossSectionMethod'])][1].values[0].upper()
+        PlotCrossSectionWnWl = inp_df[col0.isin(['PlotCrossSectionWnWl'])][1].values[0].upper()
+        PlotCrossSectionUnit = inp_df[col0.isin(['PlotCrossSectionWnWl'])][2].values[0].lower() 
+        if 'L' not in wn_wl:
+            wn_grid = np.linspace(min_wnl, max_wnl, N_point)
+        else:
+            if wn_wl_unit == 'um':
+                unit_change = 1e4
+            elif wn_wl_unit == 'nm':
+                unit_change = 1e7
+            else:
+                raise ImportError("Please wirte the unit of wavelength in the input file: um or nm.")
+            if min_wnl == 0:
+                raise ImportError("Please set the minimum wavenumber greater than 0 in the input file.")
+            wl_grid = np.linspace(min_wnl, max_wnl, N_point)
+            wn_grid = unit_change / wl_grid
+
     else:
         bin_size = 'None'
         N_point = 'None'
@@ -442,15 +483,17 @@ def inp_para(inp_filepath):
         P = 0
         wn_grid = np.linspace(0,1,1)
         profile = 'None'
-        wn_wl = 'None'
         PlotCrossSectionYN = 'None'
+        PlotCrossSectionMethod = 'None'
+        PlotCrossSectionWnWl = 'None'
+        PlotCrossSectionUnit = 'None'
         limitYaxisXsec = 0
 
     # Molecule and isotopologue ID, abundance, mass uncertainty, lifetime and g-factor           
     if database == 'ExoMol':
         # Read ExoMol definition file (.def.json).
-        molecule_id = 0
-        isotopologue_id = 0
+        molecule_id = int(mol_iso_id/10)
+        isotopologue_id = mol_iso_id - molecule_id * 10
         try:
             deffile_path = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.def.json'  
             def_df = pd.read_json(deffile_path, orient='columns')
@@ -461,6 +504,7 @@ def inp_para(inp_filepath):
             abundance = 1
             mass = def_df['isotopologue']['mass_in_Da']     # ExoMol mass (Dalton)
             try:
+                # check_uncertainty = def_df['dataset']['states']['uncertainty_description']
                 check_uncertainty = def_df['dataset']['states']['uncertainties_available']
             except:
                 check_uncertainty = False
@@ -557,13 +601,14 @@ def inp_para(inp_filepath):
             Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
             ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
-            Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+            Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, wn_wl, wn_wl_unit, min_wnl, max_wnl, min_wn, max_wn, N_point, bin_size, wn_grid, 
             predissocYN, photo, cutoff, threshold, UncFilter, NLTEMethod, NLTEPath, LTE_NLTE, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
-            DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, 
+            DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, 
             molecule_id, isotopologue_id, abundance, mass, states_col, states_fmt,
-            check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
-            PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, PlotCrossSectionYN, limitYaxisXsec)
-
+            check_uncertainty, check_lifetime, check_gfactor, check_predissoc, 
+            PlotOscillatorStrengthYN, PlotOscillatorStrengthMethod, PlotOscillatorStrengthWnWl, PlotOscillatorStrengthUnit, limitYaxisOS,
+            PlotStickSpectraYN, PlotStickSpectraMethod, PlotStickSpectraWnWl, PlotStickSpectraUnit, limitYaxisStickSpectra, 
+            Tvib, Trot, vib_label, rot_label, PlotCrossSectionYN, PlotCrossSectionMethod, PlotCrossSectionWnWl, PlotCrossSectionUnit, limitYaxisXsec)
 
 def print_file_info(file_name, file_col, file_fmt):
     # Find the max width for each column for alignment
@@ -594,12 +639,14 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
  Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
  ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
- Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, min_wn, max_wn, N_point, bin_size, wn_grid, 
+ Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T, P, wn_wl, wn_wl_unit, min_wnl, max_wnl, min_wn, max_wn, N_point, bin_size, wn_grid, 
  predissocYN, photo, cutoff, threshold, UncFilter, NLTEMethod, NLTEPath, LTE_NLTE, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
- DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, wn_wl, 
+ DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, 
  molecule_id, isotopologue_id, abundance, mass, states_col, states_fmt,
- check_uncertainty, check_lifetime, check_gfactor, check_predissoc, PlotOscillatorStrengthYN, limitYaxisOS,
- PlotStickSpectraYN, limitYaxisStickSpectra, Tvib, Trot, vib_label, rot_label, PlotCrossSectionYN, limitYaxisXsec) = inp_para(inp_filepath)
+ check_uncertainty, check_lifetime, check_gfactor, check_predissoc, 
+ PlotOscillatorStrengthYN, PlotOscillatorStrengthMethod, PlotOscillatorStrengthWnWl, PlotOscillatorStrengthUnit, limitYaxisOS,
+ PlotStickSpectraYN, PlotStickSpectraMethod, PlotStickSpectraWnWl, PlotStickSpectraUnit, limitYaxisStickSpectra, 
+ Tvib, Trot, vib_label, rot_label, PlotCrossSectionYN, PlotCrossSectionMethod, PlotCrossSectionWnWl, PlotCrossSectionUnit, limitYaxisXsec) = inp_para(inp_filepath)
 
 # Constants
 c2InvTref = c2 / Tref                 # c2 / T_ref (cm)
@@ -759,7 +806,7 @@ def get_transfiles(read_path):
                 pass
         else:
             pass
-    print('Number of all transitions files \t\t:', num_transfiles_all)
+    print('Number of all transitions files \t\t\t:', num_transfiles_all)
     print('Number of all decompressed transitions files \t:', all_decompress_num)
     print('Number of new decompressed transitions files \t:', decompress_num)
     return trans_filepaths    
@@ -1563,6 +1610,11 @@ def calculate_oscillator_strengths(states_df, trans_filepath):
 
 # Plot oscillator strength
 def plot_oscillator_strength(oscillator_strength_df):
+    print('Plotting oscillator strength ...')
+    tp = Timer()
+    tp.start()
+    oscillator_strength_df = oscillator_strength_df[np.isfinite(oscillator_strength_df['os'])]
+    oscillator_strength_df = oscillator_strength_df.reset_index(drop=True)
     v = oscillator_strength_df['v']
     osc_str = oscillator_strength_df['os']
     parameters = {'axes.labelsize': 18, 
@@ -1576,19 +1628,33 @@ def plot_oscillator_strength(oscillator_strength_df):
     else:
         os.makedirs(os_plot_folder, exist_ok=True)
     plt.figure(figsize=(12, 6))
-    plt.ylim([limitYaxisOS, 10*max(osc_str)])
-    plt.plot(v, osc_str, label=data_info[0], linewidth=0.4)
-    plt.semilogy()
+    if PlotOscillatorStrengthMethod == 'LOG':
+        plt.ylim([limitYaxisOS, 10*max(osc_str)])
+        plt.semilogy()
+    else:
+        plt.ylim([limitYaxisOS, 1.05*max(osc_str)])
     #plt.title(database+' '+data_info[0]+' oscillator strengths') 
-    plt.xlabel('Wavenumber, cm$^{-1}$')
+    if PlotOscillatorStrengthWnWl == 'WN':
+        plt.plot(v, osc_str, label=data_info[0], linewidth=0.4)
+        plt.xlabel('Wavenumber, cm⁻¹')
+    elif PlotOscillatorStrengthWnWl == 'WL' and PlotOscillatorStrengthUnit == 'um':
+        plt.plot(1e4/v, osc_str, label=data_info[0], linewidth=0.4)
+        plt.xlabel('Wavelength, μm')
+    elif PlotOscillatorStrengthWnWl == 'WL' and PlotOscillatorStrengthUnit == 'nm':
+        plt.plot(1e7/v, osc_str, label=data_info[0], linewidth=0.4)
+        plt.xlabel('Wavelength, nm') 
+    else:
+        raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')       
     plt.ylabel('Oscillator strength, ('+gfORf.lower()+')')
     plt.legend()
     leg = plt.legend()                  # Get the legend object.
     for line in leg.get_lines():
         line.set_linewidth(1.0)         # Change the line width for the legend.
-    os_plot = os_plot_folder+data_info[0]+'__'+data_info[1]+'__'+database+'__'+gfORf.lower()+'__os.png'
+    os_plot = (os_plot_folder+data_info[0]+'__'+data_info[1]+'__'+database+'__'+gfORf.lower()
+               +'__'+PlotOscillatorStrengthWnWl.lower()+'__'+PlotOscillatorStrengthUnit.lower()+'__os.png')
     plt.savefig(os_plot, dpi=500)
     plt.show()
+    tp.end()
     print('Oscillator strengths plot has been saved:', os_plot)   
     
 # Oscillator strength for ExoMol database
@@ -1623,6 +1689,7 @@ def exomol_oscillator_strength(states_df):
     np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
     ts.end()
     print_file_info('Oscillator strengths', oscillator_strength_df.columns, ['%12d', '%12d', '%10.4E', '%15.6f'])
+    print('Wavenumber in unit of cm⁻¹')
     print('Oscillator strengths file has been saved:', os_path, '\n')  
     
     # Plot oscillator strengths and save it as .png.
@@ -1659,6 +1726,7 @@ def hitran_oscillator_strength(hitran_df):
     np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
     ts.end()
     print_file_info('Oscillator strengths', oscillator_strength_df.columns, ['%7.1f', '%7.1f', '%10.4E', '%15.6f'])
+    print('Wavenumber in unit of cm⁻¹')
     print('Oscillator strengths file has been saved:', os_path, '\n')  
     
     # Plot oscillator strengths and save it as .png.
@@ -1867,7 +1935,7 @@ def get_part_transfiles(read_path):
                 pass
         else:
             pass
-    print('Number of all transitions files \t\t:', num_transfiles_all)
+    print('Number of all transitions files \t\t\t:', num_transfiles_all)
     print('Number of selected transitions files \t\t:', len(trans_filepaths))
     print('Number of all decompressed transitions files \t:', all_decompress_num)
     print('Number of new decompressed transitions files \t:', decompress_num)
@@ -1889,6 +1957,58 @@ def cal_uncertainty(unc_u, unc_l):
     return unc
 
 # Conversion
+# Print conversion information
+def print_conversion_info(ConversionMinFreq, ConversionMaxFreq, GlobalQNLabel_list, GlobalQNFormat_list, 
+                          LocalQNLabel_list, LocalQNFormat_list, ConversionUnc, ConversionThreshold):
+    # Print conversion wavenumber range.
+    print('{:25s} : {} {} {} {} {}'.format('Wavenumber range selected', ConversionMinFreq, 'cm⁻¹', '-', ConversionMaxFreq, 'cm⁻¹'))
+    # Extract global quantum numbers, print the global quantum numbers information.
+    if GlobalQNLabel_list !=[]:  
+        # Find the max width for each column for alignment
+        widths = [max(len(str(c)), len(str(f))) for c, f in zip(GlobalQNLabel_list, GlobalQNFormat_list)]
+        # Print header
+        print('Selected global quantum number labels \t:', end=' ')
+        for c, w in zip(GlobalQNLabel_list, widths):
+            print(f'{c:<{w}}', end='  ')
+        print()
+        print('Selected global quantum number formats \t:', end=' ')
+        for f, w in zip(GlobalQNFormat_list, widths):
+            print(f'{f:<{w}}', end='  ')
+        print()
+    else:
+        pass
+    # Extract local quantum numbers, print the local quantum numbers information.
+    if LocalQNLabel_list !=[]:  
+        # Find the max width for each column for alignment
+        widths = [max(len(str(c)), len(str(f))) for c, f in zip(LocalQNLabel_list, LocalQNFormat_list)]
+        # Print header
+        print('Selected local quantum number labels \t\t:', end=' ')
+        for c, w in zip(LocalQNLabel_list, widths):
+            print(f'{c:<{w}}', end='  ')
+        print()
+        print('Selected local quantum number formats \t:', end=' ')
+        for f, w in zip(LocalQNFormat_list, widths):
+            print(f'{f:<{w}}', end='  ')
+        print()
+    else:
+        pass   
+    # If using filter, print the filter information.
+    if ConversionUnc != 'None' or ConversionThreshold != 'None':
+        print('\nApply filters')
+    else:
+        pass
+    # If uncertainty filter is applied, print the uncertainty filter information.
+    if ConversionUnc != 'None':
+        print('{:25s} : {:<6}'.format('Uncertainty filter', ConversionUnc), 'cm⁻¹')
+    else:
+        pass
+    # If threshold filter is applied, print the threshold filter information.
+    if ConversionThreshold != 'None':
+        print('{:25s} : {:<6}'.format('Threshold filter', ConversionThreshold), 'cm/molecule')
+    else:
+        pass
+    print()
+
 ## ExoMol to HITRAN
 def convert_QNValues_exomol2hitran(states_unc_df, GlobalQNLabel_list, LocalQNLabel_list):
     QNLabel_list = GlobalQNLabel_list+LocalQNLabel_list
@@ -1941,9 +2061,8 @@ def read_unc_states(states_df):
 def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
     merged_df = dd.merge(trans_part_df, states_unc_df, left_on='u', right_on='id', 
                          how='inner').merge(states_unc_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
-
     merged_df['v'] = cal_v(merged_df["E'"].values, merged_df['E"'].values)
-    merged_df = merged_df[merged_df['v'].between(min_wn, max_wn)]
+    merged_df = merged_df[merged_df['v'].between(ConversionMinFreq, ConversionMaxFreq)]
     v = merged_df['v']
     A = merged_df['A'].values
     Epp = merged_df['E"'].values
@@ -2001,11 +2120,11 @@ def convert_QNFormat_exomol2hitran(exomolst_df, GlobalQNLabel_list, GlobalQNForm
                 exomolst_df[gQN_label+"'"] = pd.Series(exomolst_df[gQN_label+"'"].str.replace('(','').str.replace(')','')).map(gQN_format.format)
                 exomolst_df[gQN_label+'"'] = pd.Series(exomolst_df[gQN_label+'"'].str.replace('(','').str.replace(')','')).map(gQN_format.format)
     try:
-        globalQNp = exomolst_df[[GlobalQNLabel_list[i]+"'" for i in range(n_gQN)]].sum(axis=1).parallel_map('{: >15}'.format)  
-        globalQNpp = exomolst_df[[GlobalQNLabel_list[i]+'"' for i in range(n_gQN)]].sum(axis=1).parallel_map('{: >15}'.format)            
+        globalQNp = exomolst_df[[GlobalQNLabel_list[i]+"'" for i in range(n_gQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)  
+        globalQNpp = exomolst_df[[GlobalQNLabel_list[i]+'"' for i in range(n_gQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)    
     except:
-        globalQNp = exomolst_df[[GlobalQNLabel_list[i]+"'" for i in range(n_gQN)]].sum(axis=1).map('{: >15}'.format)  
-        globalQNpp = exomolst_df[[GlobalQNLabel_list[i]+'"' for i in range(n_gQN)]].sum(axis=1).map('{: >15}'.format)     
+        globalQNp = exomolst_df[[GlobalQNLabel_list[i]+"'" for i in range(n_gQN)]].astype(str).sum(axis=1).map('{: >15}'.format)  
+        globalQNpp = exomolst_df[[GlobalQNLabel_list[i]+'"' for i in range(n_gQN)]].astype(str).sum(axis=1).map('{: >15}'.format)     
                 
     n_lQN = len(LocalQNLabel_list)
     for i in range(n_lQN):
@@ -2026,11 +2145,11 @@ def convert_QNFormat_exomol2hitran(exomolst_df, GlobalQNLabel_list, GlobalQNForm
                 exomolst_df[lQN_label+"'"] = pd.Series(exomolst_df[lQN_label+"'"].str.replace('(','').str.replace(')','')).map(lQN_format.format)
                 exomolst_df[lQN_label+'"'] = pd.Series(exomolst_df[lQN_label+'"'].str.replace('(','').str.replace(')','')).map(lQN_format.format)
     try:
-        localQNp = exomolst_df[[LocalQNLabel_list[i]+"'" for i in range(n_lQN)]].sum(axis=1).parallel_map('{: >15}'.format)  
-        localQNpp = exomolst_df[[LocalQNLabel_list[i]+'"' for i in range(n_lQN)]].sum(axis=1).parallel_map('{: >15}'.format)            
+        localQNp = exomolst_df[[LocalQNLabel_list[i]+"'" for i in range(n_lQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)  
+        localQNpp = exomolst_df[[LocalQNLabel_list[i]+'"' for i in range(n_lQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)            
     except:
-        localQNp = exomolst_df[[LocalQNLabel_list[i]+"'" for i in range(n_lQN)]].sum(axis=1).map('{: >15}'.format)  
-        localQNpp = exomolst_df[[LocalQNLabel_list[i]+'"' for i in range(n_lQN)]].sum(axis=1).map('{: >15}'.format)    
+        localQNp = exomolst_df[[LocalQNLabel_list[i]+"'" for i in range(n_lQN)]].astype(str).sum(axis=1).map('{: >15}'.format)  
+        localQNpp = exomolst_df[[LocalQNLabel_list[i]+'"' for i in range(n_lQN)]].astype(str).sum(axis=1).map('{: >15}'.format)    
     QN_df = pd.concat([globalQNp,globalQNpp,localQNp,localQNpp],axis='columns')
     QN_df.columns = ["V'", 'V"', "Q'", 'Q"'] 
     return QN_df
@@ -2067,7 +2186,7 @@ def ConvertExoMol2HITRAN(states_df, trans_part_df):
                           'E"','n_air','delta_air','Vp','Vpp','Qp','Qpp',
                           'Ierr','Iref','flag','gp','gpp']
     '''
-    hitran_begin_dic = {'M':molecule_id, 'I':isotopologue_id, 'v':v, 'S':I, 'A':A, 
+    hitran_begin_dic = {'M':str(molecule_id), 'I':str(isotopologue_id), 'v':v, 'S':I, 'A':A, 
                         'gamma_air':gamma_air,'gamma_self':gamma_self,'E"':Epp,'n_air':n_air,'delta_air':delta_air}
     hitran_begin_df = pd.DataFrame(hitran_begin_dic)
     hitran_end_dic = {'Ierr':unc,'Iref':iref,'flag':flag,"g'":gp, 'g"':gpp}
@@ -2076,6 +2195,7 @@ def ConvertExoMol2HITRAN(states_df, trans_part_df):
     hitran_res_df = pd.concat([hitran_begin_df, QN_df, hitran_end_df], axis='columns')
     if ConversionThreshold != 'None':
         hitran_res_df = hitran_res_df[hitran_res_df['S'] >= ConversionThreshold]
+    # hitran_res_df = hitran_res_df.sort_values('v')
     return(hitran_res_df)
 
 def ProcessExoMol2HITRAN(states_df, trans_filepath):
@@ -2103,6 +2223,8 @@ def ProcessExoMol2HITRAN(states_df, trans_filepath):
 def conversion_exomol2hitran(states_df):
     print('Convert data format from ExoMol to HITRAN.')  
     print('Running on ', ncputrans, 'cores.')
+    print_conversion_info(ConversionMinFreq, ConversionMaxFreq, GlobalQNLabel_list, GlobalQNFormat_list, 
+                          LocalQNLabel_list, LocalQNFormat_list, ConversionUnc, ConversionThreshold)
     tot = Timer()
     tot.start()
     print('Reading transitions and converting data format from ExoMol to HITRAN ...')    
@@ -2131,6 +2253,7 @@ def conversion_exomol2hitran(states_df):
     ts.end()
     hitran_fmt_list = ['%'+i for i in hitran_format.split('%')][1:]
     print_file_info('Converted HITRAN par', hitran_res_df.columns, hitran_fmt_list)
+    print('Converted HITRAN par file has been saved:', conversion_path)
     print('Converted HITRAN par file has been saved!\n')  
     print('Finished converting data format from ExoMol to HITRAN!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
@@ -2232,6 +2355,7 @@ def conversion_states(hitran2exomol_states_df, conversion_folder):
     t.end()
     hitran2exomol_states_fmt_list = states_fmt[:5] + hitranQNformats
     print_file_info('Converted ExoMol states', hitran2exomol_states_df.columns, hitran2exomol_states_fmt_list)
+    print('Converted states file has been saved:', conversion_states_path)
     print('Converted states file has been saved!\n')   
     
 def conversion_trans(hitran2exomol_trans_df, conversion_folder): 
@@ -2243,6 +2367,7 @@ def conversion_trans(hitran2exomol_trans_df, conversion_folder):
     np.savetxt(conversion_trans_path, hitran2exomol_trans_df, fmt=trans_format)
     t.end()
     print_file_info('Converted ExoMol transitions', ['i', 'f', 'A', 'v'], ['%12d', '%12d', '%10.4e', '%15.6f'])
+    print('Converted transitions file has been saved:', conversion_trans_path)
     print('Converted transitions file has been saved!\n')  
     
 def conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_folder):
@@ -2256,11 +2381,13 @@ def conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_fol
     if nair != 0:
         conversion_airbroad_path = conversion_folder + data_info[-2] + '__air.broad'
         np.savetxt(conversion_airbroad_path, hitran2exomol_air_df, fmt=broad_format)
+        print('Converted air broadening file have been saved:', conversion_airbroad_path)
     else:
         print('No air broadening file.')
     if nself != 0:
         conversion_selfbroad_path = conversion_folder + data_info[-2] + '__self.broad'
         np.savetxt(conversion_selfbroad_path, hitran2exomol_self_df, fmt=broad_format)
+        print('Converted self broadening file have been saved:', conversion_selfbroad_path)
     else:
         print('No self broadening file.')
     t.end()
@@ -2290,8 +2417,11 @@ def conversion_hitran2exomol(hitran_df):
     if os.path.exists(conversion_folder):
         pass
     else:
-        os.makedirs(conversion_folder, exist_ok=True)      
-    
+        os.makedirs(conversion_folder, exist_ok=True)    
+    print('Convert data format from HITRAN to ExoMol.')  
+    print('Running on ', ncputrans, 'cores.')
+    print_conversion_info(ConversionMinFreq, ConversionMaxFreq, GlobalQNLabel_list, GlobalQNFormat_list, 
+                          LocalQNLabel_list, LocalQNFormat_list, ConversionUnc, ConversionThreshold)
     conversion_states(hitran2exomol_states_df, conversion_folder)
     conversion_trans(hitran2exomol_trans_df, conversion_folder)
     conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_folder)
@@ -2393,8 +2523,12 @@ def plot_stick_spectra(stick_spectra_df):
     print('Plotting stick spectra ...')
     tp = Timer()
     tp.start()
+    stick_spectra_df = stick_spectra_df[np.isfinite(stick_spectra_df['S'])]
+    stick_spectra_df = stick_spectra_df.reset_index(drop=True)
     v = stick_spectra_df['v'].values
     S = stick_spectra_df['S'].values
+    min_v = min(v)
+    max_v = max(v)
     
     parameters = {'axes.labelsize': 18, 
                   'legend.fontsize': 18,
@@ -2408,26 +2542,74 @@ def plot_stick_spectra(stick_spectra_df):
         os.makedirs(ss_plot_folder, exist_ok=True)
     fig, ax = plt.subplots(figsize=(12, 6))
     # ax.fill_between(v, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
+    if PlotStickSpectraMethod == 'LOG':
+        ax.semilogy()
+        ax.set_ylim([limitYaxisStickSpectra, 10*max(S)])
+    else:
+        ax.set_ylim([limitYaxisStickSpectra, 1.05*max(S)])
+    if PlotStickSpectraWnWl == 'WN':
+        ax.set_xlabel('Wavenumber, cm⁻¹')
+        unit_fn = 'cm-1__'
+        if wn_wl == 'WN':
+            ax.set_xlim([min_v, max_v])
+            v_value = v
+        elif wn_wl == 'WL' and wn_wl_unit == 'um':
+            ax.set_xlim([1e4/max_v, 1e4/min_v])
+            v_value = 1e4/v
+        elif wn_wl == 'WL' and wn_wl_unit == 'nm':
+            ax.set_xlim([1e7/max_v, 1e7/min_v])
+            v_value = 1e7/v
+        else:
+            raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')
+    elif PlotStickSpectraWnWl == 'WL' and PlotStickSpectraUnit == 'um':
+        ax.set_xlabel('Wavelength, μm')
+        unit_fn = 'um__'
+        if wn_wl == 'WN':
+            ax.set_xlim([1e4/max_v, 1e4/min_v])
+            v_value = 1e4/v
+        elif wn_wl == 'WL' and wn_wl_unit == 'um':
+            ax.set_xlim([min_v, max_v])
+            v_value = v
+        elif wn_wl == 'WL' and wn_wl_unit == 'nm':
+            ax.set_xlim([min_v/1e3, max_v/1e3])
+            v_value = v/1e3
+        else:
+            raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')
+    elif PlotStickSpectraWnWl == 'WL' and PlotStickSpectraUnit == 'nm':
+        ax.set_xlabel('Wavelength, nm')
+        unit_fn = 'nm__'
+        if wn_wl == 'WN':
+            ax.set_xlim([1e7/max_v, 1e7/min_v])
+            v_value = 1e7/v
+        elif wn_wl == 'WL' and wn_wl_unit == 'um':
+            ax.set_xlim([min_v*1e3, max_v*1e3])
+            v_value = v*1e3
+        elif wn_wl == 'WL' and wn_wl_unit == 'nm':
+            ax.set_xlim([min_v, max_v])
+            v_value = v
+        else:
+            raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')
+    else:
+        raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')      
+    ax.set_ylabel('Intensity, cm/molecule')
     if NLTEMethod == 'L' or NLTEMethod == 'P':
-        ax.vlines(v, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
+        ax.vlines(v_value, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
     elif NLTEMethod == 'T':
-        ax.vlines(v, 0, S, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
+        ax.vlines(v_value, 0, S, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
     elif NLTEMethod == 'D':
-        ax.vlines(v, 0, S, label='T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
+        ax.vlines(v_value, 0, S, label='T$_{rot}$ = '+str(Trot)+' K', linewidth=1.5, alpha=1)
     else:
         raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")
-    ax.semilogy()
-    ax.set_xlim([min_wn, max_wn])
-    ax.set_ylim([limitYaxisStickSpectra, 10*max(S)])
     #plt.title(database+' '+data_info[0]+' intensity') 
-    ax.set_xlabel('Wavenumber, cm$^{-1}$')
-    ax.set_ylabel('Intensity, cm/molecule')
     leg = ax.legend()                  # Get the legend object.
     # for line in leg.legend_handles:
     #     line.set_height(1.5)           # Change the line width for the legend.
-    ss_plot = (ss_plot_folder+'__'.join(data_info)+'__T'+str(T)+'__'+
-               str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)+'__thres'+str(threshold)
-               +'__'+abs_emi+'__sp'+LTE_NLTE+photo+'.png')
+    str_min_wnl = str(int(np.floor(min_v)))
+    str_max_wnl = str(int(np.ceil(max_v)))
+    ss_plot = (ss_plot_folder+'__'.join(data_info)+'__T'+str(T)+'__'+PlotStickSpectraWnWl.lower()
+               +str_min_wnl+'-'+str_max_wnl+unit_fn
+               +'unc'+str(UncFilter)+'__thres'+str(threshold)
+               +'__'+database+'__'+abs_emi+'__sp'+LTE_NLTE+photo+'.png')
     plt.savefig(ss_plot, dpi=500)
     plt.show()
     tp.end()
@@ -2472,7 +2654,14 @@ def print_stick_info(unc_unit, threshold_unit):
         pass
     print()
     print('{:25s} : {:<6}'.format('Temperature selected', T), 'K')
-    print('{:25s} : {} {} {} {}'.format('Wavenumber range selected', min_wn, unc_unit, '-', max_wn, unc_unit))
+    if wn_wl == 'WN':
+        print('{:25s} : {} {} {} {} {}'.format('Wavenumber range selected', min_wn, unc_unit, '-', max_wn, unc_unit))
+    elif wn_wl == 'WL' and wn_wl_unit == 'um':
+        print('{:25s} : {} {} {} {} {}'.format('Wavelength range selected', min_wnl, 'μm', '-', max_wnl, 'μm'))
+    elif wn_wl == 'WL' and wn_wl_unit == 'nm':
+        print('{:25s} : {} {} {} {} {}'.format('Wavelength range selected', min_wnl, 'nm', '-', max_wnl, 'nm'))
+    else:
+        raise ImportError("Please type the correct wavenumber or wavelength choice 'wn' or 'wl' into the input file and give the unit of wavelength in the input file.")
     NLTE_case = (NLTEMethod.replace('L', ' L ').replace('T', 'T')
                  .replace(' L ', 'LTE').replace(' T ', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
     NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
@@ -2491,7 +2680,7 @@ def print_stick_info(unc_unit, threshold_unit):
 def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
     print('Calculate stick spectra.')  
     print('Running on ', ncputrans, 'cores.')
-    print_stick_info(u'cm\u207B\u00B9', u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
+    print_stick_info('cm⁻¹', 'cm/molecule')
     tot = Timer()
     tot.start()
     # Q = read_exomol_pf(read_path, T)
@@ -2521,7 +2710,21 @@ def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
     if len(stick_spectra_df) == 0:
         raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
     else:
+        if wn_wl == 'WN':
+            print_unit_str = 'Wavenumber in unit of cm⁻¹'
+            unit_fn = 'cm-1__'
+        elif wn_wl == 'WL' and wn_wl_unit == 'um':
+            stick_spectra_df['v'] = 1e4/stick_spectra_df['v']
+            print_unit_str = 'Wavelength in unit of μm'
+            unit_fn = 'um__'
+        elif wn_wl == 'WL' and wn_wl_unit == 'nm':
+            stick_spectra_df['v'] = 1e7/stick_spectra_df['v']
+            print_unit_str = 'Wavelength in unit of nm'
+            unit_fn = 'nm__'
+        else:
+            raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')      
         stick_spectra_df.sort_values(by=['v'], ascending=True, inplace=True) 
+        # stick_spectra_df = stick_spectra_df.fillna('')
     tot.end()
     print('Finished reading transitions and calculating stick spectra!\n')
     
@@ -2535,9 +2738,12 @@ def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
         pass
     else:
         os.makedirs(ss_folder, exist_ok=True)
-    ss_path = (ss_folder+'__'.join(data_info)+'__T'+str(T)+'__'
-               +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)
-               +'__thres'+str(threshold)+'__'+abs_emi+LTE_NLTE+photo+'.stick')
+    str_min_wnl = str(int(np.floor(min_wnl)))
+    str_max_wnl = str(int(np.ceil(max_wnl)))
+    ss_path = (ss_folder+'__'.join(data_info)+'__T'+str(T)+'__'+wn_wl.lower()
+               +str_min_wnl+'-'+str_max_wnl+unit_fn
+               +'unc'+str(UncFilter)+'__thres'+str(threshold)
+               +'__'+database+'__'+abs_emi+LTE_NLTE+photo+'.stick')
     if QNsfmf == '':
         ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
         # ss_fmt = '%12.8E %12.8E'
@@ -2546,6 +2752,7 @@ def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
     np.savetxt(ss_path, stick_spectra_df, fmt=ss_fmt, header='')
     ts.end()
     print_file_info('Stick spectra', stick_spectra_df.columns, ss_fmt.split())
+    print(print_unit_str)
     print('Stick spectra file has been saved:', ss_path, '\n')
 
     # Plot stick spectra and save it as .png.
@@ -2557,7 +2764,7 @@ def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
 # Stick spectra for HITRAN database
 def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     print('Calculate stick spectra.')  
-    print_stick_info(u'cm\u207B\u00B9', u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
+    print_stick_info('cm⁻¹', 'cm/molecule')
     t = Timer()
     t.start()
     A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = linelist_hitran(hitran_linelist_df)
@@ -2574,7 +2781,24 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     
     ss_colname = ['v','S',"J'","E'",'J"','E"'] + QNs_col
     stick_spectra_df = hitran_linelist_df[ss_colname]
-    stick_spectra_df = stick_spectra_df.sort_values('v') 
+    if len(stick_spectra_df) == 0:
+        raise ImportError("Empty result with the input filter values. Please type new filter values in the input file.")  
+    else:
+        if wn_wl == 'WN':
+            print_unit_str = 'Wavenumber in unit of cm⁻¹'
+            unit_fn = 'cm-1__'
+        elif wn_wl == 'WL' and wn_wl_unit == 'um':
+            stick_spectra_df['v'] = 1e4/stick_spectra_df['v']
+            print_unit_str = 'Wavelength in unit of μm'
+            unit_fn = 'um__'
+        elif wn_wl == 'WL' and wn_wl_unit == 'nm':
+            stick_spectra_df['v'] = 1e7/stick_spectra_df['v']
+            print_unit_str = 'Wavelength in unit of nm'
+            unit_fn = 'nm__'
+        else:
+            raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')      
+        stick_spectra_df.sort_values(by=['v'], ascending=True, inplace=True) 
+        # stick_spectra_df = stick_spectra_df.fillna('')
     t.end() 
     print('Finished calculating stick spectra!\n')
     
@@ -2590,14 +2814,18 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     else:
         os.makedirs(ss_folder, exist_ok=True)
     # ss_path = ss_folder + '__'.join(data_info[-2:]) + '.stick'
-    ss_path = (ss_folder+'__'.join(data_info)+'__T'+str(T)+'__'
-               +str(min_wn)+'-'+str(max_wn)+'__unc'+str(UncFilter)
-               +'__thres'+str(threshold)+'__'+abs_emi+photo+'.stick')
+    str_min_wnl = str(int(np.floor(min_wnl)))
+    str_max_wnl = str(int(np.ceil(max_wnl)))
+    ss_path = (ss_folder+'__'.join(data_info)+'__T'+str(T)+'__'+wn_wl.lower()
+               +str_min_wnl+'-'+str_max_wnl+unit_fn
+               +'unc'+str(UncFilter)+'__thres'+str(threshold)
+               +'__'+database+'__'+abs_emi+LTE_NLTE+photo+'.stick')
 
     ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
     np.savetxt(ss_path, stick_spectra_df, fmt=ss_fmt, header='')
     ts.end()
     print_file_info('Stick spectra', stick_spectra_df.columns, ss_fmt.split())
+    print(print_unit_str)
     print('Stick spectra file has been saved:', ss_path)
     
     # Plot stick spectra and save it as .png.
@@ -3514,11 +3742,10 @@ def xsec_part_trans(states_part_df,T,Tvib,Trot,P,Q,broad,ratio,nbroad,broad_dfs,
             xsecs = sum([future.result() for future in tqdm(futures)])   
     return xsecs
 
-## Plot and Save Results
 def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, unc_unit, threshold_unit):
     # If using filter, print the filter information.
     if QNsFilter !=[] or threshold != 'None' or UncFilter != 'None':
-        print('\nApply filters')
+        print('Apply filters')
     else:
         pass
     # If quantum number filter is applied, print the quantum number filter information.
@@ -3562,9 +3789,18 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, unc_unit
         print('{:25s} : {:<6}'.format('Wing cutoff', cutoff), unc_unit)
     else:
         print('{:25s} : {:<6}'.format('Wing cutoff', 'None'), unc_unit)
-    print('{:25s} : {:<6}'.format('Bin size', bin_size), unc_unit)
     print('{:25s} : {:<6}'.format('Number of points', N_point))
-    print('{:25s} : {} {} {} {} {}'.format('Wavenumber range selected', min_wnl, unc_unit, '-', max_wnl, unc_unit))
+    if wn_wl == 'WN':
+        print('{:25s} : {:<6}'.format('Bin size', bin_size), unc_unit)
+        print('{:25s} : {} {} {} {} {}'.format('Wavenumber range selected', min_wn, unc_unit, '-', max_wn, unc_unit))
+    elif wn_wl == 'WL' and wn_wl_unit == 'um':
+        print('{:25s} : {:<6}'.format('Bin size', bin_size), 'μm')
+        print('{:25s} : {} {} {} {} {}'.format('Wavelength range selected', min_wnl, 'μm', '-', max_wnl, 'μm'))
+    elif wn_wl == 'WL' and wn_wl_unit == 'nm':
+        print('{:25s} : {:<6}'.format('Bin size', bin_size), 'nm')
+        print('{:25s} : {} {} {} {} {}'.format('Wavelength range selected', min_wnl, 'nm', '-', max_wnl, 'nm'))
+    else:
+        raise ImportError("Please type the correct wavenumber or wavelength choice 'wn' or 'wl' into the input file and give the unit of wavelength in the input file.")
     NLTE_case = (NLTEMethod.replace('L', ' L ').replace('T', 'T')
                  .replace(' L ', 'LTE').replace(' T ', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
     NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
@@ -3579,16 +3815,18 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, unc_unit
         print('{:25s} : {}'.format('Predissociation', 'No'))
     print()
 
+# Plot and Save Results
 def save_xsec(wn, xsec, database, profile_label):             
     xsecs_foldername = save_path+'xsecs/files/'+data_info[0]+'/'+database+'/'
     if os.path.exists(xsecs_foldername):
         pass
     else:
         os.makedirs(xsecs_foldername, exist_ok=True)
-
+    print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, 
+                    'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)')
+    min_v = min(wn)
+    max_v = max(wn)
     if 'L' not in wn_wl:
-        print_xsec_info(profile_label, cutoff, UncFilter, min_wn, max_wn, 
-                        u'cm\u207B\u00B9', u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
         # Save cross sections into .xsec file.
         print('Saving  cross sections into file ...')   
         ts = Timer()    
@@ -3596,14 +3834,21 @@ def save_xsec(wn, xsec, database, profile_label):
         xsec_df = pd.DataFrame()
         xsec_df['wavenumber'] = wn
         xsec_df['cross-section'] = xsec
-        xsec_filepath = (xsecs_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
-                         +database+'__'+abs_emi+'__BinSize'+str(bin_size)+'__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.xsec')
+        str_min_wn = str(int(np.floor(min_v)))
+        str_max_wn = str(int(np.ceil(max_v)))
+        xsec_filepath = (xsecs_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()
+                         +str_min_wn+'-'+str_max_wn+'cm-1__unc'+str(UncFilter)
+                         +'__thres'+str(threshold)+'__'+database+'__'+abs_emi
+                         +'__BinSize'+str(bin_size)+'cm-1__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.xsec')
         np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
         ts.end()
         print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%12.6f', '%14.8E'])
+        print('Wavenumber in unit of cm⁻¹')
         print('Cross sections file has been saved:', xsec_filepath)
         if PlotCrossSectionYN == 'Y':
-            print('\nPlotting cross sections ...\n')
+            print('\nPlotting cross sections ...')
+            tp = Timer()
+            tp.start()
             plots_foldername = save_path+'xsecs/plots/'+data_info[0]+'/'+database+'/'
             if os.path.exists(plots_foldername):
                 pass
@@ -3617,45 +3862,76 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
-            # plt.xlim([min_wn, max_wn])
-            plt.ylim([limitYaxisXsec, 10*max(xsec)])
+            if PlotCrossSectionWnWl == 'WN':
+                plt.xlabel('Wavenumber, cm⁻¹')
+                unit_fn = 'cm-1__'
+                min_v_value = min_v
+                max_v_value = max_v
+                plt.xlim([min_v_value, max_v_value])
+                v_value = wn                
+            elif PlotCrossSectionWnWl == 'WL' and PlotCrossSectionUnit == 'um':
+                plt.xlabel('Wavelength, μm')
+                unit_fn = 'um__'
+                min_v_value = 1e4/max_v
+                max_v_value = 1e4/min_v
+                plt.xlim([min_v_value, max_v_value])
+                v_value = 1e4/wn
+            elif PlotCrossSectionWnWl == 'WL' and PlotCrossSectionUnit == 'nm':
+                plt.xlabel('Wavelength, nm')
+                unit_fn = 'nm__'
+                min_v_value = 1e7/max_v
+                max_v_value = 1e7/min_v
+                plt.xlim([min_v_value, max_v_value])
+                v_value = 1e7/wn
+            else:
+                raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')  
             if NLTEMethod == 'L' or NLTEMethod == 'P':
-                plt.plot(wn, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)  
+                plt.plot(v_value, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)  
             elif NLTEMethod == 'T':
-                plt.plot(wn, xsec, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4)
+                plt.plot(v_value, xsec, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4)
             elif NLTEMethod == 'D':
-                plt.plot(wn, xsec, label='T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4) 
+                plt.plot(v_value, xsec, label='T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4) 
             else:
                 raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")
-            plt.semilogy()
+            if PlotCrossSectionMethod == 'LOG':
+                plt.ylim([limitYaxisXsec, 10*max(xsec)])
+                plt.semilogy()
+            else:
+                plt.ylim([limitYaxisXsec, 1.05*max(xsec)])
             #plt.title(database+' '+data_info[0]+' '+abs_emi+' Cross-Section with '+ profile_label) 
-            plt.xlabel('Wavenumber, cm$^{-1}$')
             plt.ylabel('Cross-section, cm$^{2}$/molecule')
             plt.legend()
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            xsec_plotpath = (plots_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wn)+'-'+str(max_wn)+'__'
-                         +database+'__'+abs_emi+'__BinSize'+str(bin_size)+'__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.png')
+            str_min_wnl = str(int(np.floor(min_v_value)))
+            str_max_wnl = str(int(np.ceil(max_v_value)))
+            xsec_plotpath = (plots_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()
+                             +str_min_wnl+'-'+str_max_wnl+unit_fn+'unc'+str(UncFilter)
+                             +'__thres'+str(threshold)+'__'+database+'__'+abs_emi
+                             +'__BinSize'+str(bin_size)+'cm-1__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.png')
             plt.savefig(xsec_plotpath, dpi=500)
             plt.show()
+            tp.end()
             print('\nCross sections plot has been saved:', xsec_plotpath)
         else:
             pass
     elif 'L' in wn_wl:
-        wl = 10000 / wn
-        min_wl = '%.02f' % (10000 / max_wn)
-        max_wl = '%.02f' % (10000 / min_wn)
-        if cutoff != 'None':
-            cutoff_wl = 10000/cutoff
+        if wn_wl_unit == 'um':
+            unit_change = 1e4
+            unit_str = 'μm'
+            unit_ffn = 'um__'
+        elif wn_wl_unit == 'nm':
+            unit_change = 1e7
+            unit_str = 'nm'
+            unit_ffn = 'nm__'
         else:
-            cutoff_wl = 'None'
-        if UncFilter != 'None':
-            UncFilter_wl = 10000/UncFilter
-        else:
-            UncFilter_wl = 'None'
-        print_xsec_info(profile_label, cutoff_wl, UncFilter_wl, min_wl, max_wl, 
-                        u'\xb5m', u'cm\u207B\u00B9/(molecule cm\u207B\u00B2)')
+            raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')   
+        wl = unit_change / wn
+        min_wl = min(wl)
+        max_wl = max(wl)
+        # min_wl = '%.02f' % min(wl)
+        # max_wl = '%.02f' % max(wl)
         # Save cross sections into .xsec file.
         print('Saving  cross sections into file ...')   
         ts = Timer()    
@@ -3663,14 +3939,21 @@ def save_xsec(wn, xsec, database, profile_label):
         xsec_df = pd.DataFrame()
         xsec_df['wavelength'] = wl
         xsec_df['cross-section'] = xsec
-        xsec_filepath = (xsecs_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
-                         +database+'__'+abs_emi+'__BinSize'+str(bin_size)+'__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.xsec')
+        str_min_wl = str(int(np.floor(min_wl)))
+        str_max_wl = str(int(np.ceil(max_wl)))
+        xsec_filepath = (xsecs_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()
+                         +str_min_wl+'-'+str_max_wl+unit_ffn+'unc'+str(UncFilter)
+                         +'__thres'+str(threshold)+'__'+database+'__'+abs_emi+
+                         '__BinSize'+str(bin_size)+unit_ffn+profile_label.replace(' ','')+LTE_NLTE+photo+'.xsec')
         np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
         ts.end()
         print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%12.6f', '%14.8E'])
+        print('Wavelength in unit of', unit_str)
         print('Cross sections file has been saved:', xsec_filepath)       
         if PlotCrossSectionYN == 'Y':
-            print('\nPlotting cross sections ...\n')
+            print('\nPlotting cross sections ...')
+            tp = Timer()
+            tp.start()
             plots_foldername = save_path+'xsecs/plots/'+data_info[0]+'/'+database+'/'
             if os.path.exists(plots_foldername):
                 pass
@@ -3684,28 +3967,58 @@ def save_xsec(wn, xsec, database, profile_label):
             plt.rcParams.update(parameters)
             # Plot cross sections and save it as .png.
             plt.figure(figsize=(12, 6))
-            # plt.xlim([min_wl, max_wl])
-            plt.ylim([limitYaxisXsec, 10*max(xsec)])
+            if PlotCrossSectionWnWl == 'WN':
+                unit_pfn = 'cm-1__'
+                plot_unit_str = 'Wavenumber, cm⁻¹'
+                min_v_value = min_v
+                max_v_value = max_v
+                plt.xlim([min_v_value, max_v_value])
+                v_value = wn
+            elif PlotCrossSectionWnWl == 'WL' and PlotCrossSectionUnit == 'um':
+                unit_pfn = 'um__'
+                plot_unit_str = 'Wavelength, μm'
+                min_v_value = 1e4/max_v
+                max_v_value = 1e4/min_v
+                plt.xlim([min_v_value, max_v_value])
+                v_value = 1e4/wn
+            elif PlotCrossSectionWnWl == 'WL' and PlotCrossSectionUnit == 'nm':
+                unit_pfn = 'nm__'
+                plot_unit_str = 'Wavelength, nm'
+                min_v_value = 1e7/max_v
+                max_v_value = 1e7/min_v
+                plt.xlim([min_v_value, max_v_value])
+                v_value = 1e7/wn
+            else:
+                raise ImportError('Please wirte the unit of wavelength in the input file: um or nm.')   
             if NLTEMethod == 'L' or NLTEMethod == 'P':
-                plt.plot(wl, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)  
+                plt.plot(v_value, xsec, label='T = '+str(T)+' K, '+profile_label, linewidth=0.4)  
             elif NLTEMethod == 'T':
-                plt.plot(wl, xsec, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4)
+                plt.plot(v_value, xsec, label='T$_{vib}$ = '+str(Tvib)+' K, T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4)
             elif NLTEMethod == 'D':
-                plt.plot(wl, xsec, label='T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4) 
+                plt.plot(v_value, xsec, label='T$_{rot}$ = '+str(Trot)+' K, '+profile_label, linewidth=0.4) 
             else:
                 raise ImportError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")          
-            plt.semilogy()
+            if PlotCrossSectionMethod == 'LOG':
+                plt.ylim([limitYaxisXsec, 10*max(xsec)])
+                plt.semilogy()
+            else:
+                plt.ylim([limitYaxisXsec, 1.05*max(xsec)])
             #plt.title(database+' '+data_info[0]+' '+abs_emi+' Cross-Section with '+ profile_label) 
-            plt.xlabel(u'Wavelength, \xb5m')
+            plt.xlabel(plot_unit_str)
             plt.ylabel('Cross-section, cm$^{2}$/molecule')
             plt.legend()
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
                 line.set_linewidth(1.0)         # Change the line width for the legend.
-            xsec_plotpath = (plots_foldername+data_info[0]+'__T'+str(T)+'__'+wn_wl.lower()+str(min_wl)+'-'+str(max_wl)+'__'
-                             +database+'__'+abs_emi+'__BinSize'+str(bin_size)+'__'+profile_label.replace(' ','')+LTE_NLTE+photo+'.png')
+            str_min_wnl = str(int(np.floor(min_v_value)))
+            str_max_wnl = str(int(np.ceil(max_v_value)))
+            xsec_plotpath = (plots_foldername+data_info[0]+'__T'+str(T)+'__'+PlotCrossSectionWnWl.lower()
+                             +str_min_wnl+'-'+str_max_wnl+unit_pfn+'unc'+str(UncFilter)
+                             +'__thres'+str(threshold)+'__'+database+'__'+abs_emi 
+                             +'__BinSize'+str(bin_size)+unit_ffn+profile_label.replace(' ','')+LTE_NLTE+photo+'.png')
             plt.savefig(xsec_plotpath, dpi=500)
             plt.show()
+            tp.end()
             print('\nCross sections plot has been saved:', xsec_plotpath)
         else:
             pass
@@ -3775,28 +4088,30 @@ def get_results(read_path):
     # Print ExoMol, ExoAtom, and HITRAN information
     if database == 'ExoMol':
         print('ExoMol database')
-        print('Molecule\t:', data_info[0], '\nIsotopologue\t:', data_info[1], '\nDataset\t\t:', data_info[2])
+        print('Molecule\t\t\t:', data_info[0], '\nIsotopologue\t:', data_info[1], '\nDataset\t\t\t\t:', data_info[2])
     if database == 'ExoAtom':
         print('ExoAtom database')
-        print('Atom\t:', data_info[0], '\nDataset\t:', data_info[1])    
+        print('Atom\t\t:', data_info[0], '\nDataset\t:', data_info[1])    
     if database == 'HITRAN' or database == 'HITEMP':
         print(database, 'database')
-        print('Molecule\t:', data_info[0], '\t\t\tMolecule ID\t:', molecule_id, 
+        print('Molecule\t\t\t:', data_info[0], '\t\t\tMolecule ID\t\t:', molecule_id, 
               '\nIsotopologue\t:', data_info[1], '\t\tIsotopologue ID\t:', isotopologue_id,
-              '\nDataset\t\t:', data_info[2])
+              '\nDataset\t\t\t\t:', data_info[2])
         
     if database == 'ExoMol' or database == 'ExoAtom':
         # Functions
-        Nfunctions = (PartitionFunctions + SpecificHeats + Lifetimes + CoolingFunctions 
-                      + OscillatorStrengths + Conversion + StickSpectra + CrossSections)
+        Nfunctions = (Conversion + PartitionFunctions + SpecificHeats + Lifetimes 
+                      + CoolingFunctions + OscillatorStrengths + StickSpectra + CrossSections)
         if Nfunctions > 0:
             states_df = read_all_states(read_path)
         else:   
             raise ImportError("Please choose functions which you want to calculate.")
         # These functions need whole states.
-        NeedAllStates = (PartitionFunctions + SpecificHeats + Lifetimes
-                         + CoolingFunctions + OscillatorStrengths + Conversion)
+        NeedAllStates = (Conversion + PartitionFunctions + SpecificHeats
+                         + Lifetimes + CoolingFunctions + OscillatorStrengths)
         if NeedAllStates > 0:
+            if (Conversion == 1 and ConversionFormat == 1):
+                conversion_exomol2hitran(states_df)
             if PartitionFunctions == 1:
                 exomol_partition(states_df, Ntemp, Tmax)
             if SpecificHeats == 1:
@@ -3807,8 +4122,6 @@ def get_results(read_path):
                 exomol_cooling(states_df, Ntemp, Tmax)
             if OscillatorStrengths == 1:
                 exomol_oscillator_strength(states_df)
-            if (Conversion == 1 and ConversionFormat == 1):
-                conversion_exomol2hitran(states_df)
 
         # Only calculating stick spectra and cross sections need part of states.
         NeedPartStates = StickSpectra + CrossSections
@@ -3884,7 +4197,7 @@ def get_results(read_path):
             hitran_cross_section(hitran_linelist_df, T, P)
     else:
         raise ImportError("Please add the name of the database 'ExoMol', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")     
-    print('\nThe program total running time:')    
+    print('The program total running time:')    
     t_tot.end()
     print('\nFinished!')
     pass

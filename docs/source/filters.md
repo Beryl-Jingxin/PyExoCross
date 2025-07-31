@@ -6,7 +6,7 @@ If after using filters, the program gets an empty result, then you will receive 
 
 ## Uncertainty filters
 
-If `UncFilter(Y/N)` is yes, the value is the maximum uncertainty you require, in unit $\textrm{cm}^{-1}$. 
+If `UncFilter(Y/N)` is yes, the value is the maximum uncertainty you require, in unit cm⁻¹. 
 
 ## Threshold filters
 
@@ -50,8 +50,18 @@ Wrong format of the quantum number column nams: '1', '2', 'electronic state'.
 
 *Example*
 
+Save all of `par`, all of `e/f`, and part of `v` (v'=1 and v"=any + v'=2 and v"=2 + v'=2 and v"=1 + v'=amy and v"=0) quantum numbers into the result file.
+
 ```bash
-UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
-Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30
-QNsFilter(Y/N)                          N          par[]   e/f[]   v[1,;2,2;2,1;,0]  
+UncFilter(Y/N)                          y          0.01           # If Y, default value 0.01 cm-1
+Threshold(Y/N)                          yes        1e-30          # If Y, default value 1e-30 cm/molecule
+QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,;2,2;2,1;,0]  
+```
+
+Don't use uncertainty and threshold filters. Don't save quantum numbers into the result file.
+
+```bash
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01 cm-1
+Threshold(Y/N)                          No         1e-30          # If Y, default value 1e-30 cm/molecule
+QNsFilter(Y/N)                          no
 ```

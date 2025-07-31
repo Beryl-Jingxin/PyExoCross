@@ -35,11 +35,12 @@ QNsformat
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
-Temperature                             296
-Range                                   5000       5299
+Temperature                             296                       # Temperature in unit of K
+WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
+Range                                   5000       5299           # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01
-Threshold(Y/N)                          Y          1e-40          # If Y, default value 1e-30
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01 cm-1
+Threshold(Y/N)                          Y          1e-40          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          
 
 
@@ -52,20 +53,23 @@ QNsRotLabel                             J,e/f
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   Y
-Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30
+PlotStickSpectra(Y/N)                   Y          
+PlotStickSpectraMethod                  log                       # Plot in linear (lin) or logarithm (log)
+PlotStickSpectraWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
+Y-axisLimitStickSpectra                 1e-40                     # Default value is 1e-30 cm/molecule
 
 
 # Calculate cross sections #
-Pressure                                1
-Npoints/BinSize                         BinSize   0.1
+Pressure                                1                         # Pressure in unit bar
+Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              H2       He    
 Ratios                                  0.75     0.15        
 Profile                                 SciPyVoigt     
-Wavenumber(wn)/wavelength(wl)           wn                        # 'wn' or 'wl'
 PredissocXsec(Y/N)                      N
-Cutoff(Y/N)                             Y          1e-27          # If Y, default value 25 
+Cutoff(Y/N)                             N          1e-27          # If Y, default value 25 cm-1
 DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
-PlotCrossSection(Y/N)                   N
-Y-axisLimitXsec                         1e-30                     # Default value is 1e-30
+PlotCrossSection(Y/N)                   Y          
+PlotCrossSectionMethod                  log                       # Plot in linear (lin) or logarithm (log)
+PlotCrossSectionWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
+Y-axisLimitXsec                         1e-30                     # Default value is 1e-30 cm2/molecule

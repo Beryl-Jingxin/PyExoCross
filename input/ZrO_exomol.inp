@@ -22,8 +22,8 @@ StickSpectra                            0
 CrossSections                           0
 
 
-NCPUtrans                               32
-NCPUfiles                               32
+NCPUtrans                               4
+NCPUfiles                               4
 ChunkSize                               1000000
 
 
@@ -34,10 +34,10 @@ QNsformat                               %1s  %1s   %12s     %3d   %3d      %3d  
 
 # Conversion #
 ConversionFormat                        1  
-ConversionFrequncyRange                 0                 30000      
+ConversionFrequncyRange                 0          30000            # Wavenumber in unit of cm-1      
 GlobalQNLabel                           State   v        Omega
 GlobalQNFormat                          %9s     %3d      %3d
 LocalQNLabel                            J        +/-      e/f
 LocalQNFormat                           %5.1f    %1s      %1s
-ConvUncFilter(Y/N)                      Y          0.01             # If Y, default value 0.01
-ConvThreshold(Y/N)                      N          1e-30            # If Y, default value 1e-30
+ConvUncFilter(Y/N)                      Y          0.01             # If Y, default value 0.01 cm-1
+ConvThreshold(Y/N)                      N          1e-30            # If Y, default value 1e-30 cm/molecule

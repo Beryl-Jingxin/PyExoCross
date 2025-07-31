@@ -23,8 +23,8 @@ CrossSections                           0
 
 
 # Cores and chunks #
-NCPUtrans                               32
-NCPUfiles                               32
+NCPUtrans                               4
+NCPUfiles                               8
 ChunkSize                               1000000
 
 
