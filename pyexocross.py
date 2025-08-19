@@ -236,6 +236,7 @@ def inp_para(inp_filepath):
         else:
             raise ImportError("Please type the correct wavenumber or wavelength choice 'wn' or 'wl' and give the unit of wavelength in the input file.")
         abs_emi = inp_df[col0.isin(['Absorption/Emission'])][1].values[0].upper()[0].replace('A','Ab').replace('E','Em')
+        abundance = float(inp_df[col0.isin(['Abundance'])][1].iloc[0])
         # Uncertainty filter
         UncFilterYN = inp_df[col0.isin(['UncFilter(Y/N)'])][1].values[0].upper()[0]
         if UncFilterYN == 'Y':
@@ -279,6 +280,7 @@ def inp_para(inp_filepath):
         min_wn = 0
         max_wn = 1e20
         abs_emi = 'None'
+        abundance = 1
         UncFilter = 'None'
         threshold = 'None'
         QNsFilter = []
@@ -501,7 +503,6 @@ def inp_para(inp_filepath):
             states_file_fields_num = len(states_file_fields)
             states_col = [states_file_fields[i]['name'] for i in range(states_file_fields_num)]
             states_fmt = [states_file_fields[i]['cfmt'] for i in range(states_file_fields_num)]
-            abundance = 1
             mass = def_df['isotopologue']['mass_in_Da']     # ExoMol mass (Dalton)
             try:
                 # check_uncertainty = def_df['dataset']['states']['uncertainty_description']
@@ -527,7 +528,6 @@ def inp_para(inp_filepath):
             states_cfmt_df = def_df[def_df['3'].isin(['Format'])]
             states_col = def_df.iloc[states_cfmt_df.index-1]['0'].tolist()
             states_fmt = states_cfmt_df['1'].tolist()
-            abundance = 1
             mass = float(def_df[def_df['4'].isin(['mass'])]['0'].values[0])     # ExoMol mass (Dalton)
             try:
                 check_uncertainty = bool(int(def_df[def_df['2'].isin(['Uncertainty'])]['0'].values[0]))
@@ -556,7 +556,6 @@ def inp_para(inp_filepath):
         states_file_fields_num = len(states_file_fields)
         states_col = [states_file_fields[i]['name'] for i in range(states_file_fields_num)]
         states_fmt = [states_file_fields[i]['cfmt'] for i in range(states_file_fields_num)]
-        abundance = 1
         mass = def_df['species']['mass_in_Da']     # ExoAtom mass (Dalton)
         try:
             # check_uncertainty = def_df['dataset']['states']['uncertainty_description']
@@ -577,6 +576,7 @@ def inp_para(inp_filepath):
             check_gfactor = False
 
     elif database == 'HITRAN' or database == 'HITEMP':
+        read_path = read_path.rstrip('/')
         molecule_id = int(mol_iso_id/10)
         isotopologue_id = mol_iso_id - molecule_id * 10
         isometa_url = 'https://hitran.org/docs/iso-meta/'
@@ -585,7 +585,7 @@ def inp_para(inp_filepath):
         states_col = []
         states_fmt = []
         abundance = float(iso_meta_row['Abundance'][0].replace('\xa0×\xa010','E'))
-        mass = float(iso_meta_row['Molar Mass /g·mol-1'])                   # HITRAN molar mass (g/mol)
+        mass = float(iso_meta_row['Molar Mass /g·mol-1'].iloc[0])                   # HITRAN molar mass (g/mol)
         check_uncertainty = False
         check_predissoc = False
         check_lifetime = False
@@ -4094,7 +4094,7 @@ def get_results(read_path):
         print('Atom\t\t:', data_info[0], '\nDataset\t:', data_info[1])    
     if database == 'HITRAN' or database == 'HITEMP':
         print(database, 'database')
-        print('Molecule\t\t\t:', data_info[0], '\t\t\tMolecule ID\t\t:', molecule_id, 
+        print('Molecule\t\t\t:', data_info[0], '\t\t\t\t\tMolecule ID\t\t\t:', molecule_id, 
               '\nIsotopologue\t:', data_info[1], '\t\tIsotopologue ID\t:', isotopologue_id,
               '\nDataset\t\t\t\t:', data_info[2])
         

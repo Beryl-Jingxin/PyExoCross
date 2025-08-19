@@ -12,6 +12,8 @@ If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://p
 
 `Absorption/Emission`: Choose `Absorption` or `Emission`.
 
+`Abundance`: Write the custom abundance of isotopologue for ExoMol and ExoAtom databases. The program can obtain the abundance of HITRAN and HITEMP databases from their website directly. The default abundance value is `1`. Your abundance value here should no more than 1.
+
 The LTE intensity equation is:
 
 $$
@@ -52,6 +54,7 @@ Temperature                             300                       # Temperature 
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Abundance                               0.993974                  # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          par[]   e/f[]  eS[]  v[1,1;1,0;2,;,0]  
@@ -74,6 +77,7 @@ Temperature                             300                       # Temperature 
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Abundance                               1                         # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          Y          par[]   e/f[]  eS[]  v[]  
@@ -96,6 +100,7 @@ Temperature                             300                       # Temperature 
 WnWlUnit                                wl         um             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Abundance                               0.993974                  # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          Y          par[]   e/f[]  eS[]  v[]  
@@ -152,6 +157,7 @@ Temperature                             300                       # Temperature 
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Abundance                               1                         # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          par[]   e/f[]  eS[]  v[1,1;1,0;2,;,0]  
@@ -206,6 +212,7 @@ Temperature                             2000                      # Temperature 
 WnWlUnit                                wl         nm             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   150        1000           # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
+Abundance                               0.993974                  # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          Y          State[]  v[]  Lambda[]  Sigma[]  Omega[]
@@ -244,7 +251,7 @@ CrossSections                           0
 
 
 # Cores and chunks #
-NCPUtrans                               32
+NCPUtrans                               4
 NCPUfiles                               1
 ChunkSize                               1000000
 
@@ -257,17 +264,18 @@ QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             1000                      # Temperature in unit of K
-WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
-Range                                   1000       5000           # Same unit as WnWlUnit
+WnWlUnit                                wl         nm             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
+Range                                   1700       1900           # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
+Abundance                               0.993974                  # Default value is 1
 UncFilter(Y/N)                          N          0.005          # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,1;1,0]  
+QNsFilter(Y/N)                          Y          J[]   X[]    Omega[]
 
 
 # Calculate stick spectra #
-PlotStickSpectra(Y/N)                   N          
-PlotStickSpectraMethod                  log                       # Plot in linear (lin) or logarithm (log)
-PlotStickSpectraWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
+PlotStickSpectra(Y/N)                   Y          
+PlotStickSpectraMethod                  lin                       # Plot in linear (lin) or logarithm (log)
+PlotStickSpectraWnWl                    wl         nm             # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
 Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30 cm/molecule
 ```

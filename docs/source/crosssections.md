@@ -12,6 +12,8 @@ If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://p
 
 `Absorption/Emission`: Choose `Absorption` or `Emission`.
 
+`Abundance`: Write the custom abundance of isotopologue for ExoMol and ExoAtom databases. The program can obtain the abundance of HITRAN and HITEMP databases from their website directly. The default abundance value is `1`. Your abundance value here should no more than 1.
+
 `Pressure`: Please provide pressure in unit bar.
 
 `Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSiza` is the interval size of the grid , use the same unit as `WnWlUnit`.
@@ -120,6 +122,7 @@ Temperature                             2000                      # Temperature 
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Abundance                               0.993974                  # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
@@ -151,6 +154,7 @@ Temperature                             2000                      # Temperature 
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Abundance                               0.993974                  # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
@@ -182,6 +186,7 @@ Temperature                             2000                      # Temperature 
 WnWlUnit                                wl         um             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   6          10             # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Abundance                               1                         # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          
@@ -247,6 +252,7 @@ Temperature                             300                       # Temperature 
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          41200          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+Abundance                               0.997317                  # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          Ka[]  Kc[]  v1[]  v2[1,;,0]  v3[]  Gamma_rve[]
@@ -310,6 +316,7 @@ Temperature                             2000                      # Temperature 
 WnWlUnit                                wl         nm             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   150        1000           # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
+Abundance                               0.993974                  # Default value is 1
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          State[]  v[]  Lambda[]  Sigma[]  Omega[]
@@ -373,6 +380,7 @@ Temperature                             1000                     # Temperature i
 WnWlUnit                                wn         cm-1          # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   1000       5000          # Same unit as WnWlUnit
 Absorption/Emission                     Emission                 # 'Absorption' or 'Emission'
+Abundance                               0.993974                  # Default value is 1
 UncFilter(Y/N)                          No         0.01          # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          NO         1e-30         # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,;2,;,0;4,4;4,3]  

@@ -19,6 +19,8 @@ pip install -r requirements.txt
 Prepare an input file *filename.inp* (see examples in the 'input' folder on GitHub) and run the program with command:
 
 ```bash
+python pyexocross.py -p input_filepath
+# OR
 python3 pyexocross.py -p input_filepath
 ```
 
@@ -27,9 +29,9 @@ python3 pyexocross.py -p input_filepath
 If the input filepath is `/home/username/PyExoCross/input/H2O_exomol.inp`.
 
 ```bash
-python3 pyexocross.py -p ./input/H2O_exomol.inp
+python pyexocross.py -p ./input/H2O_exomol.inp
 # OR 
-python3 pyexocross.py -p /home/username/PyExoCross/input/H2O_exomol.inp
+python pyexocross.py -p /home/username/PyExoCross/input/H2O_exomol.inp
 ```
 
 If you want to run program in conda environment which is named as 'exomol', please use command:
@@ -41,7 +43,7 @@ If you want to run program in conda environment which is named as 'exomol', plea
 If you need to run program in background, please use command:
 
 ```bash
-nohup python3 -u pyexocross.py -p ./input/H2O_exomol.inp > ./output/H2O_exomol.out 2>&1 &
+nohup python -u pyexocross.py -p ./input/H2O_exomol.inp > ./output/H2O_exomol.out 2>&1 &
 # OR 
 nohup /home/username/anaconda3/envs/exomol/bin/python -u pyexocross.py -p ./input/H2O_exomol.inp > ./output/H2O_exomol.out 2>&1 &
 ```

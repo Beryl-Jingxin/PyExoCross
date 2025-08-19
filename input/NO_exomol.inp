@@ -7,16 +7,16 @@ MolIsoID                                81
 
 
 # File path #
-ReadPath                                /mnt/data/exomol/exomol3_data/
-SavePath                                /home/jingxin/data/pyexocross/
+ReadPath                                D:\LHD\Program\CompareNO\data\ExoMol\
+SavePath                                D:\LHD\Program\CompareNO\data\result\
 
 
 # Functions #
-Conversion                              1
+Conversion                              0
 PartitionFunctions                      1
 SpecificHeats                           1
 CoolingFunctions                        1
-Lifetimes                               1
+Lifetimes                               0
 OscillatorStrengths                     1
 StickSpectra                            1
 CrossSections                           1
@@ -57,7 +57,7 @@ Compress(Y/N)                           Y                         # If Y, save a
 gf/f                                    f
 PlotOscillatorStrength(Y/N)             Y         
 PlotOscillatorStrengthMethod            log                       # Plot in linear (lin) or logarithm (log)
-PlotOscillatorStrengthWnWl              wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[um or nm])
+PlotOscillatorStrengthWnWl              wl         nm             # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[um or nm])
 Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
 
 
@@ -65,17 +65,18 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperature                             2000                      # Temperature in unit of K
 WnWlUnit                                wl         nm             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
-Range                                   150        1000           # Same unit as WnWlUnit
+Range                                   0          63000          # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
+Abundance                               0.993974                  # Default value is 1
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          Y          State[]  v[]  Lambda[]  Sigma[]  Omega[]
+QNsFilter(Y/N)                          Y          +/-[]    e/f[]     State[]  v[]  Lambda[]  Sigma[]  Omega[]
 
 
 # Calculate stick spectra #
 PlotStickSpectra(Y/N)                   Y          
 PlotStickSpectraMethod                  log                       # Plot in linear (lin) or logarithm (log)
-PlotStickSpectraWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
+PlotStickSpectraWnWl                    wl         nm             # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
 Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30 cm/molecule
 
 
@@ -86,7 +87,7 @@ Broadeners                              air
 Ratios                                  1.0        
 Profile                                 Gaussian       
 PredissocXsec(Y/N)                      N
-Cutoff(Y/N)                             Y          100            # If Y, default value 25 cm-1
+Cutoff(Y/N)                             N          100            # If Y, default value 25 cm-1
 DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y          

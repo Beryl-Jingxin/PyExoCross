@@ -37,6 +37,7 @@ Temperature                             2000                      # Temperature 
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   8000       15500          # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
+Abundance                               1                         # Default value is 1
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          Y          configuration[]     Multiple[]     parity[]

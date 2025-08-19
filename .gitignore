@@ -133,7 +133,6 @@ dmypy.json
 # Test folder
 .input/
 .output/
-output/
 
 # Test code
 .pyexocross.ipynb
