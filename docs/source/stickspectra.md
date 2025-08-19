@@ -12,7 +12,7 @@ If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://p
 
 `Absorption/Emission`: Choose `Absorption` or `Emission`.
 
-`Abundance`: Write the custom abundance of isotopologue for ExoMol and ExoAtom databases. The program can obtain the abundance of HITRAN and HITEMP databases from their website directly. The default abundance value is `1`. Your abundance value here should no more than 1.
+`Abundance`: Write the custom abundance of isotopologue for ExoMol and ExoAtom databases. The program can obtain the abundance of HITRAN and HITEMP databases from their website directly. The default abundance value is `1`. Your abundance value here should be no more than 1.
 
 The LTE intensity equation is:
 
@@ -44,8 +44,8 @@ $$
 
 *Example*
 
-Save wavenumber in unit of cm⁻¹ in the file and 
-plot logarithm stick spectra in unit of cm/molecule and wavenumber in unit of cm⁻¹.
+Save wavenumber in unit of cm⁻¹ in the file. \
+Plot logarithm stick spectra in unit of cm/molecule and wavenumber in unit of cm⁻¹.
 
 ```bash
 # Calculate stick spectra or cross sections #
@@ -67,8 +67,8 @@ PlotStickSpectraWnWl                    wn         cm-1           # Wavenumber (
 Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30 cm/molecule
 ```
 
-Save wavenumber in unit of cm⁻¹ in the file and 
-plot logarithm stick spectra in unit of cm/molecule and wavelength in unit of nm.
+Save wavenumber in unit of cm⁻¹ in the file. \
+Plot logarithm stick spectra in unit of cm/molecule and wavelength in unit of nm.
 
 ```bash
 # Calculate stick spectra or cross sections #
@@ -90,8 +90,8 @@ PlotStickSpectraWnWl                    wl         nm             # Wavenumber (
 Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30 cm/molecule
 ```
 
-Save wavenumber in unit of μm in the file and 
-plot linear stick spectra in unit of cm/molecule and wavelength in unit of nm.
+Save wavenumber in unit of μm in the file. \
+Plot linear stick spectra in unit of cm/molecule and wavelength in unit of nm.
 
 ```bash
 # Calculate stick spectra or cross sections #

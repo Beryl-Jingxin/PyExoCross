@@ -12,7 +12,7 @@ If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://p
 
 `Absorption/Emission`: Choose `Absorption` or `Emission`.
 
-`Abundance`: Write the custom abundance of isotopologue for ExoMol and ExoAtom databases. The program can obtain the abundance of HITRAN and HITEMP databases from their website directly. The default abundance value is `1`. Your abundance value here should no more than 1.
+`Abundance`: Write the custom abundance of isotopologue for ExoMol and ExoAtom databases. The program can obtain the abundance of HITRAN and HITEMP databases from their website directly. The default abundance value is `1`. Your abundance value here should be no more than 1.
 
 `Pressure`: Please provide pressure in unit bar.
 
@@ -112,8 +112,8 @@ LorentzianHWHM(Y/N)                     U          5              # Set Lorentzi
 
 *Example*
 
-Save wavenumber in unit of cm⁻¹ in the file and 
-plot logarithm cross sections in unit of cm²/molecule and wavenumber in unit of cm⁻¹.
+Save wavenumber in unit of cm⁻¹ in the file. \
+Plot logarithm cross sections in unit of cm²/molecule and wavenumber in unit of cm⁻¹.
 
 ```bash
 # Calculate stick spectra or cross sections #
@@ -144,8 +144,8 @@ PlotCrossSectionWnWl                    wn         cm-1           # Wavenumber (
 Y-axisLimitXsec                         1e-25                     # Default value is 1e-30 cm2/molecule
 ```
 
-Save wavenumber in unit of cm⁻¹ in the file and 
-plot logarithm cross sections in unit of cm²/molecule and wavelength in unit of nm.
+Save wavenumber in unit of cm⁻¹ in the file. \
+Plot logarithm cross sections in unit of cm²/molecule and wavelength in unit of nm.
 
 ```bash
 # Calculate stick spectra or cross sections #
@@ -176,8 +176,8 @@ PlotCrossSectionWnWl                    wl         nm             # Wavenumber (
 Y-axisLimitXsec                         1e-25                     # Default value is 1e-30 cm2/molecule
 ```
 
-Save wavelength in unit of μm in the file and 
-plot linear cross sections in unit of cm²/molecule and wavelength in unit of nm.
+Save wavelength in unit of μm in the file. \
+Plot linear cross sections in unit of cm²/molecule and wavelength in unit of nm.
 
 ```bash
 # Calculate stick spectra or cross sections #
