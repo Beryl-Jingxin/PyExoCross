@@ -1455,7 +1455,7 @@ def ProcessCoolingFunction(states_df,Ts,trans_df):
     num = len(cooling_func_df)
     if num > 0:
         A = cooling_func_df['A'].values
-        v = cooling_func_df['v'].values
+        v = np.abs(cooling_func_df['v'].values)
         Ep = cooling_func_df["E'"].values
         gp = cooling_func_df["g'"].values
         cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], read_exomol_pf(read_path, Ts[i])) 

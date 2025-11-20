@@ -138,6 +138,9 @@ output/
 # Test code
 .pyexocross.ipynb
 .pyexocross.py
+pyexocross_process_dias.py
+pyexocross_process_exoweb.py
+pyexocross_update.py
 
 # Workspace
-PyExoCross/code-workspace
+code-workspace
