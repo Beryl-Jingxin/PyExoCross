@@ -131,6 +131,7 @@ dmypy.json
 .vscode/settings.json
 
 # Test folder
+.old/
 .input/
 .output/
 output/
