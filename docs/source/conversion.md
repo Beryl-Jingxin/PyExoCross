@@ -69,6 +69,7 @@ MolIsoID                                501
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/MgH_ExoMol_toHITRAN.log
 
 
 # Functions #
@@ -118,6 +119,7 @@ Dataset                                 NIST
 # File path #
 ReadPath                                /mnt/data/exoatom/exoatom_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/Li_ExoAtom_toHITRAN.log
 
 
 # Functions #
@@ -171,6 +173,7 @@ MolIsoID                                81
 # File path #
 ReadPath                                /home/jingxin/data/HITRAN/NO.par
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/NO_HITRAN_toExoMol.log
 
 
 # Functions #
@@ -208,5 +211,5 @@ ConvThreshold(Y/N)                      N          1e-30          # If Y, defaul
 
 **Note**
 
-1. ExoMol format definition files `.def`, `.def.json`, and `.adef.json` (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
+1. ExoMol format definition files `.def`, `.def.json`, and `.adef.json` (available at [exomol.com](https://www.exomol.com/)) provide the labels and formats of the quantum numbers for each species for reference.
 2. HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.

@@ -41,6 +41,9 @@ If you want to run program in conda environment which is named as 'exomol', plea
 If you need to run program in background, please use command:
 
 ```bash
+# Recommended: Without log file (the program will record log automatically)
+nohup python3 -u pyexocross.py -p ./input/H2O_exomol.inp > /dev/null 2>&1
+# Save log file
 nohup python3 -u pyexocross.py -p ./input/H2O_exomol.inp > ./output/H2O_exomol.out 2>&1 &
 # OR 
 nohup /home/username/anaconda3/envs/exomol/bin/python -u pyexocross.py -p ./input/H2O_exomol.inp > ./output/H2O_exomol.out 2>&1 &

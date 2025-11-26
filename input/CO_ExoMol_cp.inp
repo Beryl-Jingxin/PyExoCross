@@ -1,20 +1,21 @@
 # Data source #
 Database                                ExoMol
-Molecule                                H3_p
-Isotopologue                            1H3_p
-Dataset                                 MiZATeP
-MolIsoID                                111
+Molecule                                CO
+Isotopologue                            12C-16O
+Dataset                                 Li2015
+MolIsoID                                51
 
 
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/CO_ExoMol_cp.log
 
 
 # Functions #
 Conversion                              0
-PartitionFunctions                      1
-SpecificHeats                           0
+PartitionFunctions                      0
+SpecificHeats                           1
 CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
@@ -29,10 +30,10 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                +/-  e/f   ElecState  v     Lambda   Sigma   Omega
-QNsformat                               %1s  %1s   %12s       %3d   %3d      %5d     %5d
-                           
+QNslabel                                v        kp      
+QNsformat                               %4d      %4s
 
-# Calculate partition functions, specific heats or cooling functions #
+
+# Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    5000                      # Maximal temperature in K 
+Tmax                                    9000                      # Maximal temperature in K 

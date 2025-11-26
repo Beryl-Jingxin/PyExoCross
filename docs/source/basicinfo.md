@@ -84,13 +84,17 @@ Dataset                                 Kurucz
 
 File path section records the file path for both reading and saving.
 
-`ReadPath` and `SavePath` should start with `/`, but don't need wnd with `/`.
+`ReadPath` and `SavePath` are folder paths and should start with `/`, but don't need to end with `/`.
+
+`LogFilePath` is the file path of the log file, not the folder path.
 
 &#x2705; /aaa/bbb/ccc
 
 &#x2705; /aaa/bbb/ccc/
 
 &#x2705; /aaa/bbb/ccc/ddd.par
+
+&#x2705; /aaa/bbb/ccc/ddd.log
 
 **For ExoMol database**
 
@@ -133,12 +137,15 @@ File path section records the file path for both reading and saving.
 
 `SavePath` is the folder path for saving all results obtained by the PyExoCross program.
 
+`LogFilePath` is the file path of the log file, the program can record the log output automatically.
+
 *Example*
 
 ```bash
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/MgH_ExoMol.log
 ```
 
 **For ExoAtom database**
@@ -150,6 +157,8 @@ SavePath                                /home/jingxin/data/pyexocross/
 <font color=Orange>/mnt/data/exoatom/exoatom_data</font>/<font color=SkyBlue>Li</font>/<font color=YellowGreen>NIST</font>/<font color=SkyBlue>Li</font><font color=Brown>__</font><font color=YellowGreen>NIST</font><font color=Brown>.states</font></font>
 
 `SavePath` is the folder path for saving all results obtained by the PyExoCross program.
+
+`LogFilePath` is the file path of the log file, the program can record the log output automatically.
 
 ```
 └── exoatom_data
@@ -187,6 +196,7 @@ SavePath                                /home/jingxin/data/pyexocross/
 # File path #
 ReadPath                                /mnt/data/exoatom/exoatom_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/Li_NIST.log
 ```
 
 **For HITRAN and HITEMP databases**
@@ -199,12 +209,15 @@ SavePath                                /home/jingxin/data/pyexocross/
 
 `SavePath` is the folder path for saving all results obtained by the PyExoCross program.
 
+`LogFilePath` is the file path of the log file, the program can record the log output automatically.
+
 *Example*
 
 ```bash
 # File path #
 ReadPath                                /home/jingxin/data/HITRAN/CO2.par
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/CO2_HITRAN.log
 ```
 
 ## Functions

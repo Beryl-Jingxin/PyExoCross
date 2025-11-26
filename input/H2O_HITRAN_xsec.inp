@@ -1,45 +1,57 @@
 # Data source #
-Database                                ExoMol
-Molecule                                CO2
-Isotopologue                            12C-16O2
-Dataset                                 UCL-4000
-MolIsoID                                21
+Database                                HITRAN
+Molecule                                H2O
+Isotopologue                            1H2-16O
+Dataset                                 H2O-HITRAN
+MolIsoID                                11
 
 
 # File path #
-ReadPath                                /mnt/data/exomol/exomol3_data/
+ReadPath                                /home/jingxin/data/HITRAN/H2O.par
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/H2O_HITRAN_xsec.log
 
 
 # Functions #
 Conversion                              0
 PartitionFunctions                      0
-SpecificHeats                           1
+SpecificHeats                           0
 CoolingFunctions                        0
 Lifetimes                               0
 OscillatorStrengths                     0
 StickSpectra                            0
-CrossSections                           0
+CrossSections                           1
 
 
 # Cores and chunks #
-NCPUtrans                               4
-NCPUfiles                               4
+NCPUtrans                               8
+NCPUfiles                               1
 ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                Gamma   e/f     n1      n2      l2      n3
-QNsformat                               %2s     %2s     %4i     %5i     %4i     %4i
+QNslabel                                v1     v2    v3     J     Ka    Kc    F    Sym  
+QNsformat                               %2d    %2d   %2d    %3d   %3d   %3d   %5s  %1s
 
 
-# Calculate partition, specific heats or cooling functions #
+# Conversion #  
+ConversionFormat                        2  
+ConversionFrequncyRange                 0          1000           # Wavenumber in unit of cm-1  
+GlobalQNLabel                           v1     v2     v3               
+GlobalQNFormat                          %2d    %2d    %2d         
+LocalQNLabel                            J      Ka     Kc    F    Sym          
+LocalQNFormat                           %3d    %3d    %3d   %5s  %1s     
+ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.01 cm-1
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule
+      
+
+# Calculate partition functions, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    10000                     # Maximal temperature in K 
+Tmax                                    5000                      # Maximal temperature in K 
 
 
 # Calculate lifetimes #
-Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
+Compress(Y/N)                           N                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 
 
 # Calculate oscillator strengths #
@@ -52,13 +64,21 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             3000                      # Temperature in unit of K
+Temperature                             300                       # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
-Range                                   0          20000          # Same unit as WnWlUnit
+Range                                   0          1000           # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          N          Gamma[]  e/f[]  n1[1,0;2,0]  n2[1,;,0]  l2[]  n3[]
+QNsFilter(Y/N)                          Y          v1[]    v2[]    v3[1,0;2,]    
+
+
+# Calculate non-LTE stick spectra #
+NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                    2000
+Trot                                    296
+QNsVibLabel                             v1,v2,v3
+QNsRotLabel                             J,Ka,Kc
 
 
 # Calculate stick spectra #
@@ -70,13 +90,13 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 # Calculate cross sections #
 Pressure                                1                         # Pressure in unit bar
-Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
-Broadeners                              Default    
-Ratios                                  1.0        
-Profile                                 SciPyVoigt       
+Npoints/BinSize                         Npoints    10001          # Same unit as WnWlUnit
+Broadeners                              Air        Self 
+Ratios                                  0.7        0.3     
+Profile                                 Lorentzian        
 PredissocXsec(Y/N)                      N
 Cutoff(Y/N)                             Y          25             # If Y, default value 25 cm-1
-DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
+DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y          
 PlotCrossSectionMethod                  log                       # Plot in linear (lin) or logarithm (log)

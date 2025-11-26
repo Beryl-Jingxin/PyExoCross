@@ -61,6 +61,7 @@ MolIsoID                                501
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/MgH_ExoMol_nlte.log
 
 
 # Functions #
@@ -85,7 +86,8 @@ QNslabel                                par  e/f   eS    v     Lambda   Sigma   
 QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
 
 
-# Calculate LTE or Non-LTE stick spectra or cross sections #
+# Calculate stick spectra or cross sections #
+LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
 Temperature                             300                       # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
@@ -95,7 +97,7 @@ Threshold(Y/N)                          Y          1e-30          # If Y, defaul
 QNsFilter(Y/N)                          N          e/f[]   v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
 
 
-# Calculate non-LTE stick spectra #
+# Calculate non-LTE #
 NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
 Tvib                                    2000
 Trot                                    296
@@ -138,6 +140,8 @@ MolIsoID                                81
 # File path #
 ReadPath                                /home/jingxin/data/HITRAN/NO.par
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/NO_HITRAN_nlte.log
+
 
 
 # Functions #
@@ -225,6 +229,7 @@ Dataset                                 NIST
 # File path #
 ReadPath                                /home/jingxin/data/NLTE/         #/mnt/data/exoatom/exoatom_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/Ar_QDB_nlte_density.log
 
 
 # Functions #
@@ -305,6 +310,7 @@ Dataset                                 NIST
 # File path #
 ReadPath                                /home/jingxin/data/NLTE/         #/mnt/data/exoatom/exoatom_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/Ar_QDB_nlte_pop.log
 
 
 # Functions #

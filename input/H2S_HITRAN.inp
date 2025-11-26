@@ -1,59 +1,61 @@
 # Data source #
-Database                                ExoAtom
-Atom                                    Li
-Dataset                                 NIST
+Database                                HITRAN
+Molecule                                H2S
+Isotopologue                            1H2-32S
+Dataset                                 H2S-HITRAN
+MolIsoID                                311
 
 
 # File path #
-ReadPath                                /mnt/data/exoatom/exoatom_data/
+ReadPath                                /home/jingxin/data/HITRAN/H2S.par
 SavePath                                /home/jingxin/data/pyexocross/
-LogFilePath                             /home/jingxin/data/pyexocross/log/Li_NIST.log
+LogFilePath                             /home/jingxin/data/pyexocross/log/H2S_HITRAN.log
 
 
 # Functions #
 Conversion                              1
-PartitionFunctions                      1
-SpecificHeats                           1
-CoolingFunctions                        1
-Lifetimes                               1
-OscillatorStrengths                     1
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+OscillatorStrengths                     0
 StickSpectra                            1
 CrossSections                           1
 
 
 # Cores and chunks #
-NCPUtrans                               1
+NCPUtrans                               8
 NCPUfiles                               1
-ChunkSize                               10000
+ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                configuration     LS       parity  
-QNsformat                               %30s              %30s     %2s      
+QNslabel                                v1     v2    v3     Ka     Kc    F     Sym
+QNsformat                               %2d    %2d   %2d    %3d    %3d   %5s   %1s  
 
 
 # Conversion #
-ConversionFormat                        1  
-ConversionFrequncyRange                 0          43000          # Wavenumber in unit of cm-1      
-GlobalQNLabel                           configuration     LS       
-GlobalQNFormat                          %30s              %30s     
-LocalQNLabel                            J       parity
-LocalQNFormat                           %5.1f   %2s
-ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01 cm-1
-ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule
+ConversionFormat                        2  
+ConversionFrequncyRange                 0          12000          # Wavenumber in unit of cm-1      
+GlobalQNLabel                           v1       v2       v3
+GlobalQNFormat                          %2d      %2d      %2d
+LocalQNLabel                            J        Ka       Kc      F      Sym
+LocalQNFormat                           %3d      %3d      %3d     %5s    %1s
+ConvUncFilter(Y/N)                      N          0.005          # If Y, default value 0.01 cm-1
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule                
 
 
-# Calculate partition functions, specific heats or cooling functions #
+# Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    5000                      # Maximal temperature in K 
+Tmax                                    3000                      # Maximal temperature in K 
 
 
 # Calculate lifetimes #
-Compress(Y/N)                           N                         # If Y, save as .states.bz2 file; otherwise, save as .states file
+Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 
 
 # Calculate oscillator strengths #
-gf/f                                    f
+gf/f                                    gf
 PlotOscillatorStrength(Y/N)             Y         
 PlotOscillatorStrengthMethod            log                       # Plot in linear (lin) or logarithm (log)
 PlotOscillatorStrengthWnWl              wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[um or nm])
@@ -62,13 +64,13 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperature                             300                       # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
-Range                                   0          43000          # Same unit as WnWlUnit
+Range                                   0          12000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          N          
+QNsFilter(Y/N)                          Y          v1[1,]   v2[1,]   v3[1,0;1,1] 
 
 
 # Calculate stick spectra #
@@ -80,13 +82,13 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 # Calculate cross sections #
 Pressure                                1                         # Pressure in unit bar
-Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
-Broadeners                              Default    
-Ratios                                  1.0        
-Profile                                 SciPyVoigt    
+Npoints/BinSize                         Npoints    10001          # Same unit as WnWlUnit
+Broadeners                              Default
+Ratios                                  1.0
+Profile                                 Gaussian        
 PredissocXsec(Y/N)                      N
 Cutoff(Y/N)                             Y          25             # If Y, default value 25 cm-1
-DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
+DopplerHWHM(Y/N)                        Y          0.321          # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y          
 PlotCrossSectionMethod                  log                       # Plot in linear (lin) or logarithm (log)

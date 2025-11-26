@@ -28,6 +28,7 @@ Python packages version
 
 | Python packages     | Version     |
 | :------------------ | ----------- |
+| python_version      | [3.8, 3.10] |
 | argparse            | 1.1         |
 | astropy             | 6.0.0       |
 | dask                | 2024.1.0    |
@@ -38,13 +39,10 @@ Python packages version
 | numpy               | 1.22.3      |
 | pandarallel         | 1.6.5       |
 | pandas              | 2.0.3       |
-| python_version      | [3.8, 3.10] |
 | requests            | 2.31.0      |
 | scipy               | 1.11.4      |
 | tqdm                | 4.66.1      |
 | urllib3             | 1.26.13     |
-| version-information | 1.0.4       |
-| Watermark           | 2.4.3       |
 
 ## Run PyExoCross
 
@@ -71,6 +69,9 @@ If you want to run program in conda environment which is named as 'exomol', plea
 If you need to run program in background, please use command:
 
 ```bash
+# Recommended: Without log file (the program will record log automatically)
+nohup python3 -u pyexocross.py -p ./input/H2O_exomol.inp > /dev/null 2>&1
+# Save log file
 nohup python3 -u pyexocross.py -p ./input/H2O_exomol.inp > ./output/H2O_exomol.out 2>&1 &
 # OR 
 nohup /home/username/anaconda3/envs/exomol/bin/python -u pyexocross.py -p ./input/H2O_exomol.inp > ./output/H2O_exomol.out 2>&1 &

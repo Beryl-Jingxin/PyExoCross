@@ -7,6 +7,7 @@ Dataset                                 Kurucz
 # File path #
 ReadPath                                /mnt/data/exoatom/exoatom_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/Al_Kurucz.log
 
 
 # Functions #

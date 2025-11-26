@@ -9,6 +9,7 @@ MolIsoID                                61
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/CH4_ExoMol_nlte_xsec.log
 
 
 # Functions #

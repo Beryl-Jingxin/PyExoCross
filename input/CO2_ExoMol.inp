@@ -1,52 +1,42 @@
 # Data source #
 Database                                ExoMol
-Molecule                                NO
-Isotopologue                            14N-16O
-Dataset                                 XABC
-MolIsoID                                81
+Molecule                                CO2
+Isotopologue                            12C-16O2
+Dataset                                 UCL-4000
+MolIsoID                                21
 
 
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/CO2_ExoMol.log
 
 
 # Functions #
-Conversion                              1
-PartitionFunctions                      1
+Conversion                              0
+PartitionFunctions                      0
 SpecificHeats                           1
-CoolingFunctions                        1
-Lifetimes                               1
-OscillatorStrengths                     1
-StickSpectra                            1
-CrossSections                           1
+CoolingFunctions                        0
+Lifetimes                               0
+OscillatorStrengths                     0
+StickSpectra                            0
+CrossSections                           0
 
 
 # Cores and chunks #
 NCPUtrans                               4
-NCPUfiles                               1
+NCPUfiles                               4
 ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                +/-    e/f     State    v     Lambda   Sigma    Omega
-QNsformat                               %1s    %1s     %12s     %3d   %3d      %5.1f    %5.1f
-
-
-# Conversion #
-ConversionFormat                        1     
-ConversionFrequncyRange                 0          63000          # Wavenumber in unit of cm-1      
-GlobalQNLabel                           State      v       
-GlobalQNFormat                          %12s       %3d     
-LocalQNLabel                            J          e/f
-LocalQNFormat                           %7.1f      %1s
-ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.01 cm-1
-ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule
+QNslabel                                Gamma   e/f     n1      n2      l2      n3
+QNsformat                               %2s     %2s     %4i     %5i     %4i     %4i
 
 
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
-Tmax                                    5000                      # Maximal temperature in K 
+Tmax                                    10000                     # Maximal temperature in K 
 
 
 # Calculate lifetimes #
@@ -54,7 +44,7 @@ Compress(Y/N)                           Y                         # If Y, save a
 
 
 # Calculate oscillator strengths #
-gf/f                                    f
+gf/f                                    gf
 PlotOscillatorStrength(Y/N)             Y         
 PlotOscillatorStrengthMethod            log                       # Plot in linear (lin) or logarithm (log)
 PlotOscillatorStrengthWnWl              wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[um or nm])
@@ -63,13 +53,13 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
-WnWlUnit                                wl         nm             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
-Range                                   150        1000           # Same unit as WnWlUnit
-Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
+Temperature                             3000                      # Temperature in unit of K
+WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
+Range                                   0          20000          # Same unit as WnWlUnit
+Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          Y          State[]  v[]  Lambda[]  Sigma[]  Omega[]
+QNsFilter(Y/N)                          N          Gamma[]  e/f[]  n1[1,0;2,0]  n2[1,;,0]  l2[]  n3[]
 
 
 # Calculate stick spectra #
@@ -82,14 +72,14 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 # Calculate cross sections #
 Pressure                                1                         # Pressure in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
-Broadeners                              air    
+Broadeners                              Default    
 Ratios                                  1.0        
-Profile                                 Gaussian       
+Profile                                 SciPyVoigt       
 PredissocXsec(Y/N)                      N
-Cutoff(Y/N)                             Y          100            # If Y, default value 25 cm-1
-DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant 
+Cutoff(Y/N)                             Y          25             # If Y, default value 25 cm-1
+DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant 
 LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y          
-PlotCrossSectionMethod                  lin                       # Plot in linear (lin) or logarithm (log)
-PlotCrossSectionWnWl                    wl         nm             # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
+PlotCrossSectionMethod                  log                       # Plot in linear (lin) or logarithm (log)
+PlotCrossSectionWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
 Y-axisLimitXsec                         1e-30                     # Default value is 1e-30 cm2/molecule

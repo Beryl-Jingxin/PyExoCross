@@ -9,6 +9,7 @@ MolIsoID                                71
 # File path #
 ReadPath                                /home/jingxin/data/HITRAN/O2.par
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/O2_HITRAN.log
 
 
 # Functions #

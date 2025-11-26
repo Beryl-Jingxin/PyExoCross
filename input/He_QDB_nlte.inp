@@ -7,6 +7,7 @@ Dataset                                 NIST
 # File path #
 ReadPath                                /home/jingxin/data/NLTE/            #/mnt/data/exoatom/exoatom_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/He_QDB_nlte.log
 
 
 # Functions #

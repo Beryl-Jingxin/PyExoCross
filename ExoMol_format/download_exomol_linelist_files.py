@@ -11,7 +11,7 @@ urllib3.disable_warnings()
 ################## Could be changed ! ##################
 url_path = '/home/jingxin/data/ExoMol/url/api__urls.txt'
 file_path = '/home/jingxin/data/ExoMol/'
-molecules = ['MgH']
+molecules = ['MgH','NO']
 ########################################################
 
 # Get API URLs

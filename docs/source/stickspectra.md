@@ -122,6 +122,7 @@ MolIsoID                                666
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/MgH_ExoMol_stick_Ab.log
 
 
 # Functions #
@@ -176,6 +177,7 @@ MolIsoID                                81
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/NO_HITRAN_stick_Em_T2000_wl150-1000.log
 
 
 # Functions #
@@ -230,6 +232,7 @@ MolIsoID                                81
 # File path #
 ReadPath                                /home/jingxin/data/HITRAN/NO.par
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/NO_HITRAN_stick_Em_T1000_wn1000-5000.log
 
 
 # Functions #

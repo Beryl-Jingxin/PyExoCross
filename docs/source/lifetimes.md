@@ -25,6 +25,7 @@ MolIsoID                                501
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/MgH_ExoMol_lifetime.log
 
 
 # Functions #

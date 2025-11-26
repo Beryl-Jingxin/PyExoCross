@@ -9,6 +9,7 @@ MolIsoID                                231
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/HCN_ExoMol_pfcpcf.log
 
 
 # Functions #

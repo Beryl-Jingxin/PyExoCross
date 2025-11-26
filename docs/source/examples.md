@@ -16,6 +16,7 @@ MolIsoID                                666
 # File path #
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/MgH_ExoMol.log
 
 
 # Functions #
@@ -122,6 +123,7 @@ Dataset                                 NIST
 # File path #
 ReadPath                                /mnt/data/exoatom/exoatom_data/
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/Li_ExoAtom.log
 
 
 # Functions #
@@ -223,6 +225,7 @@ MolIsoID                                11
 # File path #
 ReadPath                                /home/jingxin/data/HITRAN/H2O.par
 SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/H2O_HITRAN_xsec.log
 
 
 # Functions #

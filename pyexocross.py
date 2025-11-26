@@ -3,8 +3,10 @@
 import os
 import re
 import bz2
+import sys
 import glob
 import time
+import atexit
 import requests
 import argparse
 import subprocess
@@ -19,11 +21,16 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from io import StringIO
 from itertools import chain
+from tabulate import tabulate
 from pandarallel import pandarallel
 from matplotlib.collections import LineCollection
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, as_completed
+from functools import partial
 from multiprocessing import Pool, freeze_support
 from scipy.special import voigt_profile, wofz, erf, roots_hermite
+
+import datetime
+print('Date:', datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 import warnings
 warnings.simplefilter("ignore", np.ComplexWarning)
@@ -35,8 +42,217 @@ mpl.rcParams['agg.path.chunksize'] = 10000
 import multiprocessing as mp
 freeze_support()
 num_cpus = mp.cpu_count()
-print('Number of CPU: ', num_cpus)
+print('Number of CPU on system:', num_cpus)
+used_cpus = min(num_cpus, ncpufiles * ncputrans)
+print('Number of CPU in used  :', used_cpus)
 
+_ORIGINAL_STDOUT = sys.stdout
+_ORIGINAL_STDERR = sys.stderr
+_LOG_FILE_HANDLE = None
+
+class TeeStream:
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, data):
+        for stream in self.streams:
+            stream.write(data)
+        self.flush()
+
+    def flush(self):
+        for stream in self.streams:
+            stream.flush()
+
+    def isatty(self):
+        return any(getattr(stream, 'isatty', lambda: False)() for stream in self.streams)
+
+def _close_log_file():
+    global _LOG_FILE_HANDLE
+    if _LOG_FILE_HANDLE is not None:
+        _LOG_FILE_HANDLE.flush()
+        _LOG_FILE_HANDLE.close()
+        _LOG_FILE_HANDLE = None
+
+def setup_logging(log_file_path, data_info):
+    global _LOG_FILE_HANDLE
+    log_dir = os.path.dirname(log_file_path)
+    log_base = os.path.splitext(os.path.basename(log_file_path))[0]
+    log_ext = os.path.splitext(log_file_path)[1] or '.log'
+    date_suffix = datetime.datetime.now().strftime('%Y%m%d')
+    dated_name = f'{log_base}_{date_suffix}{log_ext}'
+    final_log_path = os.path.join(log_dir, dated_name)
+    # Always overwrite existing log for this date instead of appending
+    _LOG_FILE_HANDLE = open(final_log_path, 'w', buffering=1, encoding='utf-8')
+    sys.stdout = TeeStream(_ORIGINAL_STDOUT, _LOG_FILE_HANDLE)
+    sys.stderr = TeeStream(_ORIGINAL_STDERR, _LOG_FILE_HANDLE)
+    atexit.register(_close_log_file)
+    print(f'Logging to file: {final_log_path}')
+
+class _ProgressLogger:
+    def __init__(self, iterable, total=None, desc=''):
+        self.iterable = iterable
+        self.total = total
+        self.desc = desc
+        self.count = 0
+        self.next_pct = 0 if total else None
+        self.bar_length = 10
+        self.log_streams = []
+        if _LOG_FILE_HANDLE:
+            self.log_streams.append(_LOG_FILE_HANDLE)
+        if not _ORIGINAL_STDOUT.isatty():
+            self.log_streams.append(sys.stdout)
+        # remove duplicates while preserving order
+        seen = []
+        for stream in self.log_streams:
+            if stream not in seen:
+                seen.append(stream)
+        self.log_streams = seen
+        if self.total and self.next_pct == 0 and self.log_streams:
+            self._print_pct(0)
+            self.next_pct = 10
+
+    def _print_pct(self, pct):
+        prefix = f'{self.desc} ' if self.desc else ''
+        filled = min(self.bar_length, pct // 10)
+        bar = '█' * filled + ' ' * (self.bar_length - filled)
+        line = f'{prefix}[{bar}] {pct:3d}%\n'
+        for stream in self.log_streams:
+            stream.write(line)
+            stream.flush()
+
+    def __iter__(self):
+        for item in self.iterable:
+            self.count += 1
+            if self.total and self.log_streams:
+                pct = int(self.count * 100 / self.total)
+                while self.next_pct is not None and pct >= self.next_pct:
+                    self._print_pct(min(self.next_pct, 100))
+                    self.next_pct += 10
+                    if self.next_pct > 100:
+                        self.next_pct = None
+            yield item
+        if self.total and self.next_pct is not None and self.log_streams:
+            self._print_pct(100)
+
+def log_tqdm(iterable, *args, **kwargs):
+    desc = kwargs.get('desc', '')
+    total = kwargs.get('total')
+    if total is None:
+        try:
+            total = len(iterable)
+        except TypeError:
+            total = None
+    interactive_iterable = iterable
+    if _ORIGINAL_STDOUT.isatty():
+        tqdm_kwargs = dict(kwargs)
+        tqdm_kwargs.setdefault('leave', False)
+        tqdm_kwargs.setdefault('dynamic_ncols', True)
+        tqdm_kwargs.setdefault('ascii', ' █')
+        interactive_iterable = tqdm(iterable, *args, file=_ORIGINAL_STDOUT, **tqdm_kwargs)
+    return _ProgressLogger(interactive_iterable, total=total, desc=desc)
+
+# Ensure print writes are flushed immediately for real-time nohup logs
+try:
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
+except Exception:
+    pass
+
+# Determine whether the folder exists or not.
+def ensure_dir(path):
+    # If the folder exists, save files directory,otherwise, create it.
+    if os.path.exists(path):
+        pass
+    else:
+        # Create the folder.
+        os.makedirs(path, exist_ok=True)
+
+DEFAULT_CHUNK_SIZE = 100_000  # fallback before user input is parsed
+LARGE_TRANS_FILE_BYTES = 1024 ** 3  # 1 GB threshold for large .trans files
+MAX_LARGE_FILE_WORKERS = 2
+MAX_INFLIGHT_MULTIPLIER = 2
+LARGE_WRITE_CHUNK_ROWS = 200_000
+
+def is_large_trans_file(trans_filepath):
+    try:
+        return os.path.getsize(trans_filepath) >= LARGE_TRANS_FILE_BYTES
+    except OSError:
+        return False
+
+def read_trans_chunks(trans_filepath, usecols, names, chunk_sz=None):
+    if chunk_sz is None:
+        chunk_sz = globals().get('chunk_size', DEFAULT_CHUNK_SIZE)
+    read_kwargs = dict(sep='\s+', header=None, usecols=usecols, names=names,
+                       chunksize=chunk_sz, iterator=True, low_memory=False, encoding='utf-8')
+    if trans_filepath.endswith('.bz2'):
+        read_kwargs['compression'] = 'bz2'
+    return pd.read_csv(trans_filepath, **read_kwargs)
+
+def process_large_chunks(trans_reader, handler, combine_fn, zero_factory, desc,
+                         max_workers=MAX_LARGE_FILE_WORKERS, max_inflight=None, reducer=None):
+    if max_inflight is None:
+        max_inflight = max_workers * MAX_INFLIGHT_MULTIPLIER
+    results = [] if reducer is None else None
+    accumulator = None
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = set()
+        for trans_df_chunk in tqdm(trans_reader, desc=desc):
+            futures.add(executor.submit(handler, trans_df_chunk))
+            if len(futures) >= max_inflight:
+                done, futures = wait(futures, return_when=FIRST_COMPLETED)
+                for done_future in done:
+                    result = done_future.result()
+                    if reducer is None:
+                        results.append(result)
+                    else:
+                        accumulator = result if accumulator is None else reducer(accumulator, result)
+        for future in as_completed(futures):
+            result = future.result()
+            if reducer is None:
+                results.append(result)
+            else:
+                accumulator = result if accumulator is None else reducer(accumulator, result)
+    if reducer is None:
+        return combine_fn(results) if results else zero_factory()
+    return accumulator if accumulator is not None else zero_factory()
+
+def _prepare_array_writer(data):
+    if isinstance(data, pd.DataFrame):
+        total_rows = len(data)
+        def getter(start, end):
+            return data.iloc[start:end].to_numpy()
+    else:
+        arr = np.asarray(data)
+        if arr.ndim == 1:
+            arr = arr.reshape(-1, 1)
+        total_rows = arr.shape[0]
+        def getter(start, end):
+            return arr[start:end]
+    return total_rows, getter
+
+def save_large_txt(filepath_or_buffer, data, fmt, header=None, comments='', chunk_rows=LARGE_WRITE_CHUNK_ROWS, mode='w'):
+    total_rows, getter = _prepare_array_writer(data)
+    if hasattr(filepath_or_buffer, 'write'):
+        f = filepath_or_buffer
+        close_after = False
+    else:
+        f = open(filepath_or_buffer, mode)
+        close_after = True
+    try:
+        if header is not None and header != '':
+            f.write((comments or '') + header + '\n')
+        if total_rows == 0:
+            np.savetxt(f, np.empty((0, 1)), fmt=fmt)
+            return
+        for start in range(0, total_rows, chunk_rows):
+            end = min(start + chunk_rows, total_rows)
+            chunk = getter(start, end)
+            if chunk.size == 0:
+                continue
+            np.savetxt(f, chunk, fmt=fmt)
+    finally:
+        if close_after:
+            f.close()
 
 # The input file path
 def parse_args():
@@ -103,10 +319,17 @@ def inp_para(inp_filepath):
     # File path
     read_path = (inp_df[col0.isin(['ReadPath'])][1].values[0] + '/').replace('//','/')
     save_path = (inp_df[col0.isin(['SavePath'])][1].values[0] + '/').replace('//','/')
-    if os.path.exists(save_path):
-        pass
-    else:
-        os.makedirs(save_path, exist_ok=True)
+    logs_path_raw = inp_df[col0.isin(['LogFilePath'])][1].values[0]
+    logs_path_raw = logs_path_raw.replace('//','/').strip()
+    if logs_path_raw == '':
+        raise ImportError("LogFilePath cannot be empty.")
+    log_dir = os.path.dirname(logs_path_raw)
+    log_name = os.path.basename(logs_path_raw)
+    if log_dir == '':
+        log_dir = os.getcwd()
+    ensure_dir(save_path)
+    ensure_dir(log_dir + '/')
+    logs_path = os.path.join(log_dir, log_name)
         
     # Functions 
     Conversion = int(inp_df[col0.isin(['Conversion'])][1].iloc[0])
@@ -597,7 +820,7 @@ def inp_para(inp_filepath):
     if predissocYN == 'Y' and check_predissoc == False and 'LOR' not in profile:
         warnings.warn('Program will cost much time on calculating predissociative lifetimes before calculating the cross sections.\n',InputWarning)
             
-    return (database, data_info, read_path, save_path, 
+    return (database, data_info, read_path, save_path, logs_path,
             Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
             ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
@@ -635,7 +858,7 @@ kB = ac.k_B.to('erg/K').value       # Boltzmann's const (erg/K)
 R = ac.R.to('J / (K mol)').value    # Molar gas constant (J/(K mol))
 c2 = h * c / kB                     # Second radiation constant (cm K)
 
-(database, data_info, read_path, save_path, 
+(database, data_info, read_path, save_path, logs_path,
  Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
  ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
  GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
@@ -647,6 +870,8 @@ c2 = h * c / kB                     # Second radiation constant (cm K)
  PlotOscillatorStrengthYN, PlotOscillatorStrengthMethod, PlotOscillatorStrengthWnWl, PlotOscillatorStrengthUnit, limitYaxisOS,
  PlotStickSpectraYN, PlotStickSpectraMethod, PlotStickSpectraWnWl, PlotStickSpectraUnit, limitYaxisStickSpectra, 
  Tvib, Trot, vib_label, rot_label, PlotCrossSectionYN, PlotCrossSectionMethod, PlotCrossSectionWnWl, PlotCrossSectionUnit, limitYaxisXsec) = inp_para(inp_filepath)
+
+setup_logging(logs_path, data_info)
 
 # Constants
 c2InvTref = c2 / Tref                 # c2 / T_ref (cm)
@@ -743,11 +968,7 @@ def read_all_states(read_path):
 def command_decompress(trans_filename):
     # Directory where the decompressed .trans files will be saved
     trans_dir = read_path + '/'.join(data_info) + '/decompressed/'
-    if os.path.exists(trans_dir):
-        pass
-    else:
-        # Create the output directory if it doesn't exist
-        os.makedirs(trans_dir, exist_ok=True)
+    ensure_dir(trans_dir)
     trans_file = os.path.join(trans_dir, trans_filename.split('/')[-1].replace('.bz2', ''))
     if os.path.exists(trans_file):
         num = 0
@@ -791,24 +1012,24 @@ def get_transfiles(read_path):
         # The fourth format filenames only leave the updated date, e.g. 20170330.
         # This program only process the lastest data, so extract the filenames named by the first two format.
         if num == 1:     
-            if split_version[0] == data_info[-1]:        
-                trans_filepaths.append(trans_filepaths_all[i])
+            original_path = trans_filepaths_all[i]
+            file_size_bytes = os.path.getsize(original_path)
+            trans_filepath = original_path
+            if original_path.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
+                (trans_filepath, num_dec) = command_decompress(original_path)
+                all_decompress_num += 1
+                decompress_num += num_dec
+            if split_version[0] == data_info[-1]:
+                trans_filepaths.append(trans_filepath)
             elif len(split_version[0].split('-')) == 2:
-                file_size_bytes = os.path.getsize(trans_filepaths_all[i])
-                if file_size_bytes/1024**3 > 1:   
-                    (trans_filepath, num) = command_decompress(trans_filepaths_all[i])
-                    all_decompress_num += 1
-                    decompress_num += num
-                else:
-                    trans_filepath = trans_filepaths_all[i]
                 trans_filepaths.append(trans_filepath)
             else:
                 pass
         else:
             pass
-    print('Number of all transitions files \t\t\t:', num_transfiles_all)
-    print('Number of all decompressed transitions files \t:', all_decompress_num)
-    print('Number of new decompressed transitions files \t:', decompress_num)
+    print('{:45s} : {}'.format('Number of all transitions files', num_transfiles_all))
+    print('{:45s} : {}'.format('Number of all decompressed transitions files', all_decompress_num))
+    print('{:45s} : {}'.format('Number of new decompressed transitions files', decompress_num))
     return trans_filepaths    
 
 ### Read Partition Function File From ExoMol Database
@@ -873,8 +1094,8 @@ def read_broad(read_path):
     nbroad = len(broad)
     broad = list(i for i in broad if i==i)
     ratio = list(i for i in ratio if i==i)
-    print('Broadeners \t:', str(broad).replace('[','').replace(']','').replace("'",''))
-    print('Ratios \t\t:', str(ratio).replace('[','').replace(']',''),'\n')
+    print('{:10s} : {}'.format('Broadeners', str(broad).replace('[','').replace(']','').replace("'",'')))
+    print('{:10s} : {}\n'.format('Ratios', str(ratio).replace('[','').replace(']','')))
     return(broad, ratio, nbroad, broad_dfs)             
 
 def QNfilter_linelist(linelist_df, QNs_value, QNs_label):
@@ -1274,10 +1495,7 @@ def exomol_partition(states_df, Ntemp, Tmax):
     partition_func_df['partition function'] = partition_func
     
     pf_folder = save_path + 'partition/'
-    if os.path.exists(pf_folder):
-        pass
-    else:
-        os.makedirs(pf_folder, exist_ok=True)
+    ensure_dir(pf_folder)
     pf_path = pf_folder + '__'.join(data_info[-2:]) + '.pf'
     np.savetxt(pf_path, partition_func_df, fmt="%8.1f %15.4f")
     ts.end()
@@ -1315,10 +1533,7 @@ def exomol_specificheat(states_df, Ntemp, Tmax):
     specificheat_func_df['specific heat'] = specificheat_func 
     
     cp_folder = save_path + 'specific_heat/'
-    if os.path.exists(cp_folder):
-        pass
-    else:
-        os.makedirs(cp_folder, exist_ok=True)  
+    ensure_dir(cp_folder)
     cp_path = cp_folder + '__'.join(data_info[-2:]) + '.cp'
     np.savetxt(cp_path, specificheat_func_df, fmt="%8.1f %15.4f")
     ts.end()
@@ -1340,23 +1555,18 @@ def ProcessLifetime(states_df, trans_df):
 def calculate_lifetime(states_df, trans_filepath):
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
-    if trans_filepath.split('.')[-1] == 'bz2':
-        trans_df_chunk_list = pd.read_csv(trans_filepath, compression='bz2', sep='\s+', header=None,
-                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
-                                          iterator=True, low_memory=False, encoding='utf-8')
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessLifetime,states_df,trans_df_chunk) 
-                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)]
-            lifetime = sum(np.array([future.result() for future in tqdm(futures)]))
+    use_cols = [0,1,2]
+    use_names = ['u','l','A']
+    trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
+    desc = 'Processing ' + trans_filename
+    trans_chunks = list(trans_reader)
+    if len(trans_chunks) == 0:
+        lifetime = np.zeros(len(states_df))
     else:
-        trans_dd = dd.read_csv(trans_filepath, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
-        trans_dd_list = trans_dd.partitions
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessLifetime,states_df,trans_dd_list[i].compute(scheduler='threads')) 
-                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)]
-            lifetime = sum(np.array([future.result() for future in tqdm(futures)]))
+        with ProcessPoolExecutor(max_workers=ncputrans) as trans_executor:
+            futures = [trans_executor.submit(ProcessLifetime, states_df, chunk)
+                        for chunk in tqdm(trans_chunks, desc=desc)]
+            lifetime = np.sum([future.result() for future in tqdm(futures, desc='Combining '+trans_filename)], axis=0)
     return lifetime
 
 def insert_lifetime_column(states_df, lifetime):
@@ -1393,13 +1603,13 @@ def convert_dtype_by_format(df, fmt_list):
 def exomol_lifetime(read_path, states_df):
     np.seterr(divide='ignore', invalid='ignore')
     print('Calculate lifetimes.')  
-    print('Running on ', ncputrans, 'cores.')
+    print('Running on', used_cpus, 'cores.')
     t = Timer()
     t.start()
     print('Reading all transitions and calculating lifetimes ...')
     trans_filepaths = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_lifetime, states_df, 
                                    trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
@@ -1417,10 +1627,7 @@ def exomol_lifetime(read_path, states_df):
     states_lifetime_df = convert_dtype_by_format(states_lifetime_df, states_lifetime_fmt)
 
     lf_folder = save_path + 'lifetime/'
-    if os.path.exists(lf_folder):
-        pass
-    else:
-        os.makedirs(lf_folder, exist_ok=True)  
+    ensure_dir(lf_folder)
 
     if CompressYN == 'Y':
         lf_path = lf_folder + '__'.join(data_info[-2:]) + '.states.bz2'
@@ -1448,59 +1655,93 @@ def calculate_cooling(A, v, Ep, gp, T, Q):
 
 # Calculate cooling function
 def ProcessCoolingFunction(states_df,Ts,trans_df):
-    merged_df = dd.merge(trans_df, states_df, left_on='u', right_on='id', 
-                         how='inner').merge(states_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
-    cooling_func_df = merged_df[['A',"E'",'E"',"g'"]]
-    cooling_func_df['v'] = cal_v(cooling_func_df["E'"].values, cooling_func_df['E"'].values)
-    num = len(cooling_func_df)
+    # Optimized: use indexed lookup instead of two merges to reduce memory
+    if isinstance(states_df, dd.DataFrame):
+        states_df = states_df.compute()
+    if isinstance(trans_df, dd.DataFrame):
+        trans_df = trans_df.compute()
+    
+    # Set index for fast lookup (more memory efficient than merge)
+    states_indexed = states_df.set_index('id')
+    
+    # Filter trans_df to only include transitions where both states exist
+    valid_mask = trans_df['u'].isin(states_indexed.index) & trans_df['l'].isin(states_indexed.index)
+    trans_df = trans_df[valid_mask]
+    
+    if len(trans_df) == 0:
+        return  np.zeros(len(range(Ntemp, Tmax + 1, Ntemp)))
+    
+    # Use vectorized lookup instead of merge (much faster and less memory)
+    Ep = states_indexed.loc[trans_df['u'], 'E'].values
+    Epp = states_indexed.loc[trans_df['l'], 'E'].values
+    gp = states_indexed.loc[trans_df['u'], 'g'].values
+    A = trans_df['A'].values
+    
+    v = cal_v(Ep, Epp)
+    # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
+    valid_v_mask = v >= 0
+    if not valid_v_mask.any():
+        return np.zeros(len(range(Ntemp, Tmax + 1, Ntemp)))
+    
+    # Apply filter to all arrays
+    Ep = Ep[valid_v_mask]
+    Epp = Epp[valid_v_mask]
+    gp = gp[valid_v_mask]
+    A = A[valid_v_mask]
+    v = v[valid_v_mask]
+    
+    num = len(v)
     if num > 0:
-        A = cooling_func_df['A'].values
-        v = np.abs(cooling_func_df['v'].values)
-        Ep = cooling_func_df["E'"].values
-        gp = cooling_func_df["g'"].values
         cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], read_exomol_pf(read_path, Ts[i])) 
-                        for i in tqdm(range(Tmax), desc='Calculating')]
+                        for i in log_tqdm(range(Tmax), desc='Calculating')]
     else:
-        cooling_func = np.zeros(Tmax)
+        cooling_func = np.zeros(len(range(Ntemp, Tmax + 1, Ntemp)))
     return cooling_func
 
 def calculate_cooling_func(states_df, Ts, trans_filepath):
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
-    if trans_filepath.split('.')[-1] == 'bz2':
-        trans_df_chunk_list = pd.read_csv(trans_filepath, compression='bz2', sep='\s+', header=None,
-                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
-                                          iterator=True, low_memory=False, encoding='utf-8')
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessCoolingFunction,states_df,Ts,trans_df_chunk) 
-                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)]
-            cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
+    use_cols = [0,1,2]
+    use_names = ['u','l','A']
+    large_file = is_large_trans_file(trans_filepath)
+    trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
+    desc = 'Processing ' + trans_filename + (' (streaming)' if large_file else '')
+    if large_file:
+        print('Large transition file detected (>1 GB). Streaming chunks sequentially to reduce memory usage.')
+        cooling_accum = None
+        for trans_df_chunk in log_tqdm(trans_reader, desc=desc):
+            chunk_cf = ProcessCoolingFunction(states_df, Ts, trans_df_chunk)
+            cooling_accum = chunk_cf if cooling_accum is None else cooling_accum + chunk_cf
+        if cooling_accum is None:
+            cooling_func = np.zeros(len(range(Ntemp, Tmax + 1, Ntemp)))
+        else:
+            cooling_func = cooling_accum
     else:
-        trans_dd = dd.read_csv(trans_filepath, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
-        trans_dd_list = trans_dd.partitions
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessCoolingFunction,states_df,Ts,trans_dd_list[i].compute(scheduler='threads')) 
-                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)]
-            cooling_func = sum(np.array([future.result() for future in tqdm(futures)]))
+        trans_chunks = list(trans_reader)
+        if len(trans_chunks) == 0:
+            cooling_func = np.zeros(len(range(Ntemp, Tmax + 1, Ntemp)))
+        else:
+            with ProcessPoolExecutor(max_workers=ncputrans) as trans_executor:
+                futures = [trans_executor.submit(ProcessCoolingFunction, states_df, Ts, chunk)
+                           for chunk in log_tqdm(trans_chunks, desc=desc)]
+                cooling_func = np.sum([future.result() for future in log_tqdm(futures, desc='Combining '+trans_filename)], axis=0)
     return cooling_func
 
 # Cooling function for ExoMol database
 def exomol_cooling(states_df, Ntemp, Tmax):
     # tqdm.write('Calculate cooling functions.') 
     print('Calculate cooling functions.') 
-    print('Running on ', ncputrans, 'cores.') 
+    print('Running on', used_cpus, 'cores.') 
     t = Timer()
     t.start()
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     print('Reading all transitions and calculating cooling functions ...')
     trans_filepaths = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_cooling_func, states_df, Ts,
-                                   trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
+                                   trans_filepath) for trans_filepath in log_tqdm(trans_filepaths, desc='Cooling files')]
         cooling_func = sum(np.array([future.result() for future in futures]))
     
     cooling_func_df = pd.DataFrame()
@@ -1513,10 +1754,7 @@ def exomol_cooling(states_df, Ntemp, Tmax):
     ts = Timer()    
     ts.start()     
     cf_folder = save_path + 'cooling/'
-    if os.path.exists(cf_folder):
-        pass
-    else:
-        os.makedirs(cf_folder, exist_ok=True)  
+    ensure_dir(cf_folder)
     cf_path = cf_folder + '__'.join(data_info[-2:]) + '.cf' 
     np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20.8E")
     ts.end()
@@ -1537,7 +1775,8 @@ def hitran_cooling(hitran_df, Ntemp, Tmax):
     gp = hitran_df['gp'].values
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     Qs = read_hitran_pf(Ts)
-    cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) for i in tqdm(range(Tmax), desc='Calculating')]
+    cooling_func = [calculate_cooling(A, v, Ep, gp, Ts[i], Qs[i]) 
+                    for i in log_tqdm(range(Tmax), desc='Calculating')]
     t.end()
     print('Finished calculating cooling functions!\n')
 
@@ -1549,10 +1788,7 @@ def hitran_cooling(hitran_df, Ntemp, Tmax):
     cooling_func_df['cooling function'] = cooling_func
 
     cf_folder = save_path + 'cooling/'
-    if os.path.exists(cf_folder):
-        pass
-    else:
-        os.makedirs(cf_folder, exist_ok=True)  
+    ensure_dir(cf_folder)
     cf_path = cf_folder + '__'.join(data_info[-2:]) + '.cf' 
     np.savetxt(cf_path, cooling_func_df, fmt="%8.1f %20s")
     ts.end()
@@ -1574,38 +1810,81 @@ def calculate_oscillator_strength(gp, gpp, A, v):
 
 # Calculate oscillator strength
 def ProcessOscillatorStrengths(states_df,trans_df):
-    merged_df = dd.merge(trans_df, states_df, left_on='u', right_on='id', 
-                         how='inner').merge(states_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
-    oscillator_strength_df = merged_df[['u','l','A',"E'",'E"',"g'",'g"']]
-    v = cal_v(oscillator_strength_df["E'"].values, oscillator_strength_df['E"'].values)
-    A = oscillator_strength_df['A'].values
-    gp = oscillator_strength_df["g'"].values
-    gpp = oscillator_strength_df['g"'].values
-    oscillator_strength_df['os'] = calculate_oscillator_strength(gp, gpp, A, v)    
-    oscillator_strength_df['v'] = v
-    oscillator_strength_df = oscillator_strength_df[['u','l','os','v']]
+    # Optimized: use indexed lookup instead of two merges to reduce memory
+    if isinstance(states_df, dd.DataFrame):
+        states_df = states_df.compute()
+    if isinstance(trans_df, dd.DataFrame):
+        trans_df = trans_df.compute()
+    
+    # Set index for fast lookup (more memory efficient than merge)
+    states_indexed = states_df.set_index('id')
+    
+    # Filter trans_df to only include transitions where both states exist
+    valid_mask = trans_df['u'].isin(states_indexed.index) & trans_df['l'].isin(states_indexed.index)
+    trans_df = trans_df[valid_mask]
+    
+    if len(trans_df) == 0:
+        return pd.DataFrame(columns=['u','l','os','v'])
+    
+    # Use vectorized lookup instead of merge (much faster and less memory)
+    Ep = states_indexed.loc[trans_df['u'], 'E'].values
+    Epp = states_indexed.loc[trans_df['l'], 'E'].values
+    gp = states_indexed.loc[trans_df['u'], 'g'].values
+    gpp = states_indexed.loc[trans_df['l'], 'g'].values
+    A = trans_df['A'].values
+    
+    v = cal_v(Ep, Epp)
+    # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
+    valid_v_mask = v >= 0
+    if not valid_v_mask.any():
+        return pd.DataFrame(columns=['u','l','os','v'])
+    
+    # Apply filter to all arrays
+    gp = gp[valid_v_mask]
+    gpp = gpp[valid_v_mask]
+    A = A[valid_v_mask]
+    v = v[valid_v_mask]
+    u_values = trans_df['u'].values[valid_v_mask]
+    l_values = trans_df['l'].values[valid_v_mask]
+    
+    oscillator_strength = calculate_oscillator_strength(gp, gpp, A, v)
+    
+    oscillator_strength_df = pd.DataFrame({
+        'u': u_values,
+        'l': l_values,
+        'os': oscillator_strength,
+        'v': v
+    })
     return (oscillator_strength_df)
 
 def calculate_oscillator_strengths(states_df, trans_filepath):
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
-    if trans_filepath.split('.')[-1] == 'bz2':
-        trans_df_chunk_list = pd.read_csv(trans_filepath, compression='bz2', sep='\s+', header=None,
-                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
-                                          iterator=True, low_memory=False, encoding='utf-8')
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessOscillatorStrengths,states_df,trans_df_chunk) 
-                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)]
-            oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures)])
+    use_cols = [0,1,2]
+    use_names = ['u','l','A']
+    large_file = is_large_trans_file(trans_filepath)
+    trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
+    desc = 'Processing ' + trans_filename + (' (streaming)' if large_file else '')
+    if large_file:
+        print('Large transition file detected (>1 GB). Streaming chunks sequentially to reduce memory usage.')
+        result_frames = []
+        for trans_df_chunk in tqdm(trans_reader, desc=desc):
+            chunk_df = ProcessOscillatorStrengths(states_df, trans_df_chunk)
+            if not chunk_df.empty:
+                result_frames.append(chunk_df)
+        if result_frames:
+            oscillator_strength_df = pd.concat(result_frames, ignore_index=True)
+        else:
+            oscillator_strength_df = pd.DataFrame(columns=['u','l','os','v'])
     else:
-        trans_dd = dd.read_csv(trans_filepath, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
-        trans_dd_list = trans_dd.partitions
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessOscillatorStrengths,states_df,trans_dd_list[i].compute(scheduler='threads')) 
-                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)]
-            oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures)])
+        trans_chunks = list(trans_reader)
+        if len(trans_chunks) == 0:
+            oscillator_strength_df = pd.DataFrame(columns=['u','l','os','v'])
+        else:
+            with ProcessPoolExecutor(max_workers=ncputrans) as trans_executor:
+                futures = [trans_executor.submit(ProcessOscillatorStrengths, states_df, chunk)
+                           for chunk in tqdm(trans_chunks, desc=desc)]
+                oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures, desc='Combining '+trans_filename)])
     return oscillator_strength_df
 
 # Plot oscillator strength
@@ -1623,10 +1902,7 @@ def plot_oscillator_strength(oscillator_strength_df):
                   'ytick.labelsize': 14}
     plt.rcParams.update(parameters)
     os_plot_folder = save_path + 'oscillator_strength/plots/'+data_info[0]+'/'+database+'/'
-    if os.path.exists(os_plot_folder):
-        pass
-    else:
-        os.makedirs(os_plot_folder, exist_ok=True)
+    ensure_dir(os_plot_folder)
     plt.figure(figsize=(12, 6))
     if PlotOscillatorStrengthMethod == 'LOG':
         plt.ylim([limitYaxisOS, 10*max(osc_str)])
@@ -1660,13 +1936,13 @@ def plot_oscillator_strength(oscillator_strength_df):
 # Oscillator strength for ExoMol database
 def exomol_oscillator_strength(states_df):
     print('Calculate oscillator strengths.')  
-    print('Running on ', ncputrans, 'cores.')
+    print('Running on', used_cpus, 'cores.')
     tot = Timer()
     tot.start()
     print('Reading transitions and calculating oscillator strengths ...')    
     trans_filepaths = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_oscillator_strengths,states_df,
                                    trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
@@ -1680,13 +1956,10 @@ def exomol_oscillator_strength(states_df):
     ts = Timer()    
     ts.start()
     os_folder = save_path + 'oscillator_strength/files/'+data_info[0]+'/'+database+'/'
-    if os.path.exists(os_folder):
-        pass
-    else:
-        os.makedirs(os_folder, exist_ok=True)  
+    ensure_dir(os_folder)
     os_path = os_folder+'__'.join(data_info[-2:])+'_'+gfORf.lower()+'.os' 
     os_format = "%12d %12d %10.4E %15.6f"
-    np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
+    save_large_txt(os_path, oscillator_strength_df, fmt=os_format)
     ts.end()
     print_file_info('Oscillator strengths', oscillator_strength_df.columns, ['%12d', '%12d', '%10.4E', '%15.6f'])
     print('Wavenumber in unit of cm⁻¹')
@@ -1717,10 +1990,7 @@ def hitran_oscillator_strength(hitran_df):
     ts = Timer()    
     ts.start()
     os_folder = save_path + 'oscillator_strength/files/'+data_info[0]+'/'+database+'/'
-    if os.path.exists(os_folder):
-        pass
-    else:
-        os.makedirs(os_folder, exist_ok=True)  
+    ensure_dir(os_folder)
     os_path = os_folder+'__'.join(data_info[-2:])+'_'+gfORf.lower()+'.os' 
     os_format = "%7.1f %7.1f %10.4E %15.6f"
     np.savetxt(os_path, oscillator_strength_df, fmt=os_format)
@@ -1924,21 +2194,20 @@ def get_part_transfiles(read_path):
                     (lower >= int(min_wn) and upper <= int(max_wn)) or 
                     (lower <= int(max_wn) < upper)):
                     file_size_bytes = os.path.getsize(trans_filepaths_all[i])
-                    if file_size_bytes/1024**3 > 1:  
-                        (trans_filepath, num) = command_decompress(trans_filepaths_all[i])
+                    trans_filepath = trans_filepaths_all[i]
+                    if trans_filepath.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
+                        (trans_filepath, num_dec) = command_decompress(trans_filepaths_all)
                         all_decompress_num += 1
-                        decompress_num += num
-                    else:
-                        trans_filepath = trans_filepaths_all[i]
+                        decompress_num += num_dec
                     trans_filepaths.append(trans_filepath)
             else:
                 pass
         else:
             pass
-    print('Number of all transitions files \t\t\t:', num_transfiles_all)
-    print('Number of selected transitions files \t\t:', len(trans_filepaths))
-    print('Number of all decompressed transitions files \t:', all_decompress_num)
-    print('Number of new decompressed transitions files \t:', decompress_num)
+    print('{:45s} : {}'.format('Number of all transitions files', num_transfiles_all))
+    print('{:45s} : {}'.format('Number of selected transitions files', len(trans_filepaths)))
+    print('{:45s} : {}'.format('Number of all decompressed transitions files', all_decompress_num))
+    print('{:45s} : {}'.format('Number of new decompressed transitions files', decompress_num))
     return(trans_filepaths)
 
 def extract_broad(broad_df, st_df):
@@ -1967,11 +2236,11 @@ def print_conversion_info(ConversionMinFreq, ConversionMaxFreq, GlobalQNLabel_li
         # Find the max width for each column for alignment
         widths = [max(len(str(c)), len(str(f))) for c, f in zip(GlobalQNLabel_list, GlobalQNFormat_list)]
         # Print header
-        print('Selected global quantum number labels \t:', end=' ')
+        print('Selected global quantum number labels :', end=' ')
         for c, w in zip(GlobalQNLabel_list, widths):
             print(f'{c:<{w}}', end='  ')
         print()
-        print('Selected global quantum number formats \t:', end=' ')
+        print('Selected global quantum number formats:', end=' ')
         for f, w in zip(GlobalQNFormat_list, widths):
             print(f'{f:<{w}}', end='  ')
         print()
@@ -1982,11 +2251,11 @@ def print_conversion_info(ConversionMinFreq, ConversionMaxFreq, GlobalQNLabel_li
         # Find the max width for each column for alignment
         widths = [max(len(str(c)), len(str(f))) for c, f in zip(LocalQNLabel_list, LocalQNFormat_list)]
         # Print header
-        print('Selected local quantum number labels \t\t:', end=' ')
+        print('Selected  local quantum number labels :', end=' ')
         for c, w in zip(LocalQNLabel_list, widths):
             print(f'{c:<{w}}', end='  ')
         print()
-        print('Selected local quantum number formats \t:', end=' ')
+        print('Selected  local quantum number formats:', end=' ')
         for f, w in zip(LocalQNFormat_list, widths):
             print(f'{f:<{w}}', end='  ')
         print()
@@ -2059,16 +2328,49 @@ def read_unc_states(states_df):
     return(states_unc_df)
 
 def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
-    merged_df = dd.merge(trans_part_df, states_unc_df, left_on='u', right_on='id', 
-                         how='inner').merge(states_unc_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
+    # Optimized: use indexed lookup instead of two merges to reduce memory
+    if isinstance(states_unc_df, dd.DataFrame):
+        states_unc_df = states_unc_df.compute()
+    if isinstance(trans_part_df, dd.DataFrame):
+        trans_part_df = trans_part_df.compute()
+    
+    # Set index for fast lookup (more memory efficient than merge)
+    states_indexed = states_unc_df.set_index('id')
+    
+    # Filter trans_df to only include transitions where both states exist
+    valid_mask = trans_part_df['u'].isin(states_indexed.index) & trans_part_df['l'].isin(states_indexed.index)
+    trans_part_df = trans_part_df[valid_mask]
+    
+    if len(trans_part_df) == 0:
+        return (pd.DataFrame(), pd.Series(dtype=float), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]))
+    
+    # Get upper and lower state data using vectorized lookup
+    u_states = states_indexed.loc[trans_part_df['u']].reset_index(drop=True)
+    l_states = states_indexed.loc[trans_part_df['l']].reset_index(drop=True)
+    
+    # Rename columns with suffixes (id column is already dropped by reset_index)
+    u_states.columns = [col + "'" for col in u_states.columns]
+    l_states.columns = [col + '"' for col in l_states.columns]
+    
+    # Combine trans and states data
+    merged_df = pd.concat([
+        trans_part_df[['A']].reset_index(drop=True),
+        u_states,
+        l_states
+    ], axis=1)
+    
     merged_df['v'] = cal_v(merged_df["E'"].values, merged_df['E"'].values)
+    # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
+    merged_df = merged_df[merged_df['v'] >= 0]
+    if len(merged_df) == 0:
+        return (pd.DataFrame(), pd.Series(dtype=float), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]))
     merged_df = merged_df[merged_df['v'].between(ConversionMinFreq, ConversionMaxFreq)]
     v = merged_df['v']
     A = merged_df['A'].values
     Epp = merged_df['E"'].values
     gp = merged_df["g'"].values
     gpp = merged_df['g"'].values
-    exomolst_df = merged_df.drop(columns=["id'", 'id"','u','l','A',"E'",'E"','v',"g'",'g"'])
+    exomolst_df = merged_df.drop(columns=['A',"E'",'E"','v',"g'",'g"'])
     unc = cal_uncertainty(exomolst_df["unc'"], exomolst_df['unc"'])
     exomolst_df.drop(columns=["unc'",'unc"'], inplace=True)
     return (exomolst_df, v, A, Epp, gp, gpp, unc)
@@ -2201,28 +2503,41 @@ def ConvertExoMol2HITRAN(states_df, trans_part_df):
 def ProcessExoMol2HITRAN(states_df, trans_filepath):
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
-    if trans_filepath.split('.')[-1] == 'bz2':
-        trans_df_chunk_list = pd.read_csv(trans_filepath, compression='bz2', sep='\s+', header=None,
-                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
-                                          iterator=True, low_memory=False, encoding='utf-8')
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ConvertExoMol2HITRAN,states_df,trans_df_chunk) 
-                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)]
-            hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
+    use_cols = [0,1,2]
+    use_names = ['u','l','A']
+    large_file = is_large_trans_file(trans_filepath)
+    trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
+    desc = 'Processing ' + trans_filename + (' (limited streaming)' if large_file else '')
+    zero_factory = lambda: pd.DataFrame()
+    def combine_fn(results):
+        if not results:
+            return zero_factory()
+        return pd.concat(results, ignore_index=True)
+    handler = partial(ConvertExoMol2HITRAN, states_df)
+    if large_file:
+        print('Large transition file detected (>1 GB). Using bounded parallel streaming to reduce memory usage.')
+        hitran_res_df = process_large_chunks(
+            trans_reader,
+            handler,
+            combine_fn,
+            zero_factory,
+            desc,
+            max_workers=max(1, min(ncputrans, MAX_LARGE_FILE_WORKERS))
+        )
     else:
-        trans_dd = dd.read_csv(trans_filepath, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
-        trans_dd_list = trans_dd.partitions
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ConvertExoMol2HITRAN,states_df,trans_dd_list[i].compute(scheduler='threads')) 
-                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)]
-            hitran_res_df = pd.concat([future.result() for future in tqdm(futures)])
+        trans_chunks = list(trans_reader)
+        if len(trans_chunks) == 0:
+            hitran_res_df = zero_factory()
+        else:
+            with ProcessPoolExecutor(max_workers=ncputrans) as trans_executor:
+                futures = [trans_executor.submit(ConvertExoMol2HITRAN, states_df, chunk)
+                           for chunk in tqdm(trans_chunks, desc=desc)]
+                hitran_res_df = combine_fn([future.result() for future in tqdm(futures, desc='Combining '+trans_filename)])
     return hitran_res_df
 
 def conversion_exomol2hitran(states_df):
     print('Convert data format from ExoMol to HITRAN.')  
-    print('Running on ', ncputrans, 'cores.')
+    print('Running on', used_cpus, 'cores.')
     print_conversion_info(ConversionMinFreq, ConversionMaxFreq, GlobalQNLabel_list, GlobalQNFormat_list, 
                           LocalQNLabel_list, LocalQNFormat_list, ConversionUnc, ConversionThreshold)
     tot = Timer()
@@ -2230,7 +2545,7 @@ def conversion_exomol2hitran(states_df):
     print('Reading transitions and converting data format from ExoMol to HITRAN ...')    
     trans_filepaths = get_transfiles(read_path)
     # Process multiple files in parallel
-    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(ProcessExoMol2HITRAN,states_df,
                                    trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
@@ -2243,13 +2558,10 @@ def conversion_exomol2hitran(states_df):
     ts = Timer()    
     ts.start()
     conversion_folder = save_path + 'conversion/ExoMol2HITRAN/'
-    if os.path.exists(conversion_folder):
-        pass
-    else:
-        os.makedirs(conversion_folder, exist_ok=True)  
+    ensure_dir(conversion_folder) 
     conversion_path = conversion_folder + '__'.join(data_info[-2:]) + '.par'
     hitran_format = "%2s%1s%12.6f%10.3E%10.3E%5.3f%5.3f%10.4f%4.2f%8s%15s%15s%15s%15s%6s%12s%1s%7.1f%7.1f"
-    np.savetxt(conversion_path, hitran_res_df, fmt=hitran_format)
+    save_large_txt(conversion_path, hitran_res_df, fmt=hitran_format)
     ts.end()
     hitran_fmt_list = ['%'+i for i in hitran_format.split('%')][1:]
     print_file_info('Converted HITRAN par', hitran_res_df.columns, hitran_fmt_list)
@@ -2364,7 +2676,7 @@ def conversion_trans(hitran2exomol_trans_df, conversion_folder):
     t.start()
     conversion_trans_path = conversion_folder + '__'.join(data_info[-2:]) + '.trans.bz2'
     trans_format = "%12d %12d %10.4e %15.6f"
-    np.savetxt(conversion_trans_path, hitran2exomol_trans_df, fmt=trans_format)
+    save_large_txt(conversion_trans_path, hitran2exomol_trans_df, fmt=trans_format)
     t.end()
     print_file_info('Converted ExoMol transitions', ['i', 'f', 'A', 'v'], ['%12d', '%12d', '%10.4e', '%15.6f'])
     print('Converted transitions file has been saved:', conversion_trans_path)
@@ -2414,12 +2726,9 @@ def conversion_hitran2exomol(hitran_df):
     hitran2exomol_air_df, hitran2exomol_self_df = convert_hitran2broad(hitran_df, Jpp_df)
     
     conversion_folder = save_path+'conversion/HITRAN2ExoMol/'+'/'.join(data_info)+'/' 
-    if os.path.exists(conversion_folder):
-        pass
-    else:
-        os.makedirs(conversion_folder, exist_ok=True)    
+    ensure_dir(conversion_folder)
     print('Convert data format from HITRAN to ExoMol.')  
-    print('Running on ', ncputrans, 'cores.')
+    print('Running on', used_cpus, 'cores.')
     print_conversion_info(ConversionMinFreq, ConversionMaxFreq, GlobalQNLabel_list, GlobalQNFormat_list, 
                           LocalQNLabel_list, LocalQNFormat_list, ConversionUnc, ConversionThreshold)
     conversion_states(hitran2exomol_states_df, conversion_folder)
@@ -2431,10 +2740,47 @@ def conversion_hitran2exomol(hitran_df):
 # Stick Spectra
 # Process LTE or NLTE linelist
 def ProcessStickSpectra(states_part_df,T,Tvib,Trot,Q,trans_part_df):
-    merged_df = dd.merge(trans_part_df, states_part_df, left_on='u', right_on='id', 
-                         how='inner').merge(states_part_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
-    stick_spectra_df = merged_df.drop(columns=["id'",'id"','u','l'])
+    # Optimized: use indexed lookup instead of two merges to reduce memory
+    if isinstance(states_part_df, dd.DataFrame):
+        states_part_df = states_part_df.compute()
+    if isinstance(trans_part_df, dd.DataFrame):
+        trans_part_df = trans_part_df.compute()
+    
+    # Set index for fast lookup (more memory efficient than merge)
+    states_indexed = states_part_df.set_index('id')
+    
+    # Filter trans_df to only include transitions where both states exist
+    valid_mask = trans_part_df['u'].isin(states_indexed.index) & trans_part_df['l'].isin(states_indexed.index)
+    trans_part_df = trans_part_df[valid_mask]
+    
+    if len(trans_part_df) == 0:
+        states_cols = [col for col in states_part_df.columns if col != 'id']
+        u_cols = [col + "'" for col in states_cols]
+        l_cols = [col + '"' for col in states_cols]
+        combined_cols = ['A'] + u_cols + l_cols
+        col_main = ['v','S',"J'","E'",'J"','E"']
+        col_qn = [col for col in combined_cols if col not in col_main]
+        col_stick_spectra = col_main + col_qn
+        return pd.DataFrame(columns=col_stick_spectra)
+    
+    # Get upper and lower state data using vectorized lookup
+    u_states = states_indexed.loc[trans_part_df['u']].reset_index(drop=True)
+    l_states = states_indexed.loc[trans_part_df['l']].reset_index(drop=True)
+    
+    # Rename columns with suffixes (id column is already dropped by reset_index)
+    u_states.columns = [col + "'" for col in u_states.columns]
+    l_states.columns = [col + '"' for col in l_states.columns]
+    
+    # Combine trans and states data
+    stick_spectra_df = pd.concat([
+        trans_part_df[['A']].reset_index(drop=True),
+        u_states,
+        l_states
+    ], axis=1)
+    
     stick_spectra_df['v'] = cal_v(stick_spectra_df["E'"].values, stick_spectra_df['E"'].values)
+    # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
+    stick_spectra_df = stick_spectra_df[stick_spectra_df['v'] >= 0]
     stick_spectra_df = stick_spectra_df[stick_spectra_df['v'].between(min_wn, max_wn)]
     if len(stick_spectra_df) != 0 and QNsFilter != []:
         stick_spectra_df = QNfilter_linelist(stick_spectra_df, QNs_value, QNs_label)
@@ -2499,23 +2845,36 @@ def ProcessStickSpectra(states_part_df,T,Tvib,Trot,Q,trans_part_df):
 def calculate_stick_spectra(states_part_df,T,Tvib,Trot,Q,trans_filepath):   
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
-    if trans_filepath.split('.')[-1] == 'bz2':
-        trans_df_chunk_list = pd.read_csv(trans_filepath, compression='bz2', sep='\s+', header=None,
-                                          usecols=[0,1,2],names=['u','l','A'], chunksize=chunk_size, 
-                                          iterator=True, low_memory=False, encoding='utf-8')
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessStickSpectra,states_part_df,T,Tvib,Trot,Q,trans_df_chunk) 
-                       for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)]
-            stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
+    use_cols = [0,1,2]
+    use_names = ['u','l','A']
+    large_file = is_large_trans_file(trans_filepath)
+    trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
+    desc = 'Processing ' + trans_filename + (' (limited streaming)' if large_file else '')
+    zero_factory = lambda: pd.DataFrame(columns=['v','S',"J'","E'",'J"','E"'])
+    def combine_fn(results):
+        if not results:
+            return zero_factory()
+        return pd.concat(results, ignore_index=True)
+    handler = partial(ProcessStickSpectra, states_part_df, T, Tvib, Trot, Q)
+    if large_file:
+        print('Large transition file detected (>1 GB). Using bounded parallel streaming to reduce memory usage.')
+        stick_spectra_df = process_large_chunks(
+            trans_reader,
+            handler,
+            combine_fn,
+            zero_factory,
+            desc,
+            max_workers=max(1, min(ncputrans, MAX_LARGE_FILE_WORKERS))
+        )
     else:
-        trans_dd = dd.read_csv(trans_filepath, sep='\s+', header=None, usecols=[0,1,2],names=['u','l','A'],encoding='utf-8')
-        trans_dd_list = trans_dd.partitions
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [trans_executor.submit(ProcessStickSpectra,states_part_df,T,Tvib,Trot,Q,trans_dd_list[i].compute(scheduler='threads')) 
-                       for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)]
-            stick_spectra_df = pd.concat([future.result() for future in tqdm(futures)])
+        trans_chunks = list(trans_reader)
+        if len(trans_chunks) == 0:
+            stick_spectra_df = zero_factory()
+        else:
+            with ProcessPoolExecutor(max_workers=ncputrans) as trans_executor:
+                futures = [trans_executor.submit(ProcessStickSpectra, states_part_df, T, Tvib, Trot, Q, chunk)
+                           for chunk in log_tqdm(trans_chunks, desc=desc)]
+                stick_spectra_df = combine_fn([future.result() for future in log_tqdm(futures, desc='Combining '+trans_filename)])
     return stick_spectra_df
 
 # Plot stick spectra
@@ -2536,10 +2895,7 @@ def plot_stick_spectra(stick_spectra_df):
                   'ytick.labelsize': 14}
     plt.rcParams.update(parameters)
     ss_plot_folder = save_path + 'stick_spectra/plots/'+data_info[0]+'/'+database+'/'
-    if os.path.exists(ss_plot_folder):
-        pass
-    else:
-        os.makedirs(ss_plot_folder, exist_ok=True)
+    ensure_dir(ss_plot_folder)
     fig, ax = plt.subplots(figsize=(12, 6))
     # ax.fill_between(v, 0, S, label='T = '+str(T)+' K', linewidth=1.5, alpha=1)
     if PlotStickSpectraMethod == 'LOG':
@@ -2679,7 +3035,7 @@ def print_stick_info(unc_unit, threshold_unit):
 # Stick spectra for ExoMol database
 def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
     print('Calculate stick spectra.')  
-    print('Running on ', ncputrans, 'cores.')
+    print('Running on', used_cpus, 'cores.')
     print_stick_info('cm⁻¹', 'cm/molecule')
     tot = Timer()
     tot.start()
@@ -2701,10 +3057,10 @@ def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
     print('Reading transitions and calculating stick spectra ...')    
     trans_filepaths = get_part_transfiles(read_path)   
     # Process multiple files in parallel
-    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(calculate_stick_spectra,states_part_df_ss,T,Tvib,Trot,Q,
-                                   trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
+                                   trans_filepath) for trans_filepath in log_tqdm(trans_filepaths, desc='Stick files')]
         stick_spectra_df = pd.concat([future.result() for future in futures])
         
     if len(stick_spectra_df) == 0:
@@ -2734,10 +3090,7 @@ def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
     QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")
                 .replace('d','s').replace('i','s').replace('.1f','s'))
     ss_folder = save_path + 'stick_spectra/files/'+data_info[0]+'/'+database+'/'
-    if os.path.exists(ss_folder):
-        pass
-    else:
-        os.makedirs(ss_folder, exist_ok=True)
+    ensure_dir(ss_folder)
     str_min_wnl = str(int(np.floor(min_wnl)))
     str_max_wnl = str(int(np.ceil(max_wnl)))
     ss_path = (ss_folder+'__'.join(data_info)+'__T'+str(T)+'__'+wn_wl.lower()
@@ -2749,7 +3102,7 @@ def exomol_stick_spectra(states_part_df, T, Tvib, Trot, Q):
         # ss_fmt = '%12.8E %12.8E'
     else:
         ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
-    np.savetxt(ss_path, stick_spectra_df, fmt=ss_fmt, header='')
+    save_large_txt(ss_path, stick_spectra_df, fmt=ss_fmt)
     ts.end()
     print_file_info('Stick spectra', stick_spectra_df.columns, ss_fmt.split())
     print(print_unit_str)
@@ -2809,11 +3162,7 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
     QNsfmf = (str(QN_format_noJ).replace("'","").replace(",","").replace("[","").replace("]","")
               .replace('d','s').replace('i','s').replace('.1f','s'))
     ss_folder = save_path + 'stick_spectra/stick/'+data_info[0]+'/'+database+'/'
-    if os.path.exists(ss_folder):
-        pass
-    else:
-        os.makedirs(ss_folder, exist_ok=True)
-    # ss_path = ss_folder + '__'.join(data_info[-2:]) + '.stick'
+    ensure_dir(ss_folder)
     str_min_wnl = str(int(np.floor(min_wnl)))
     str_max_wnl = str(int(np.ceil(max_wnl)))
     ss_path = (ss_folder+'__'.join(data_info)+'__T'+str(T)+'__'+wn_wl.lower()
@@ -2822,7 +3171,7 @@ def hitran_stick_spectra(hitran_linelist_df, QNs_col, T):
                +'__'+database+'__'+abs_emi+LTE_NLTE+photo+'.stick')
 
     ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
-    np.savetxt(ss_path, stick_spectra_df, fmt=ss_fmt, header='')
+    save_large_txt(ss_path, stick_spectra_df, fmt=ss_fmt)
     ts.end()
     print_file_info('Stick spectra', stick_spectra_df.columns, ss_fmt.split())
     print(print_unit_str)
@@ -3422,10 +3771,40 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
 
 ## Line list for calculating cross sections
 def CalculateExoMolCrossSection(states_part_df,T,Tvib,Trot,P,Q,broad,ratio,nbroad,broad_dfs,profile_label,trans_part_df):
-    merged_df = dd.merge(trans_part_df, states_part_df, left_on='u', right_on='id', 
-                         how='inner').merge(states_part_df, left_on='l', right_on='id', how='inner', suffixes=("'", '"'))
-    st_df = merged_df.drop(columns=["id'", 'id"'])
+    # Optimized: use indexed lookup instead of two merges to reduce memory
+    if isinstance(states_part_df, dd.DataFrame):
+        states_part_df = states_part_df.compute()
+    if isinstance(trans_part_df, dd.DataFrame):
+        trans_part_df = trans_part_df.compute()
+    
+    # Set index for fast lookup (more memory efficient than merge)
+    states_indexed = states_part_df.set_index('id')
+    
+    # Filter trans_df to only include transitions where both states exist
+    valid_mask = trans_part_df['u'].isin(states_indexed.index) & trans_part_df['l'].isin(states_indexed.index)
+    trans_part_df = trans_part_df[valid_mask]
+    
+    if len(trans_part_df) == 0:
+        return np.zeros_like(wn_grid)
+    
+    # Get upper and lower state data using vectorized lookup
+    u_states = states_indexed.loc[trans_part_df['u']].reset_index(drop=True)
+    l_states = states_indexed.loc[trans_part_df['l']].reset_index(drop=True)
+    
+    # Rename columns with suffixes (id column is already dropped by reset_index)
+    u_states.columns = [col + "'" for col in u_states.columns]
+    l_states.columns = [col + '"' for col in l_states.columns]
+    
+    # Combine trans and states data
+    st_df = pd.concat([
+        trans_part_df[['A']].reset_index(drop=True),
+        u_states,
+        l_states
+    ], axis=1)
+    
     st_df['v'] = cal_v(st_df["E'"].values, st_df['E"'].values)
+    # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
+    st_df = st_df[st_df['v'] >= 0]
     if cutoff == 'None':
         st_df = st_df[st_df['v'].between(min_wn, max_wn)]
     else:
@@ -3717,29 +4096,30 @@ def xsec_part_trans(states_part_df,T,Tvib,Trot,P,Q,broad,ratio,nbroad,broad_dfs,
     else:
         use_cols = [0,1,2]
         use_names = ['u','l','A']
-    if trans_filepath.split('.')[-1] == 'bz2':
-        trans_df_chunk_list = pd.read_csv(trans_filepath, compression='bz2', sep='\s+', header=None,
-                                          usecols=use_cols,names=use_names, chunksize=chunk_size, 
-                                          iterator=True, low_memory=False, encoding='utf-8')
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [
-                trans_executor.submit(CalculateExoMolCrossSection,states_part_df,T,Tvib,Trot,P,Q,
-                                        broad,ratio,nbroad,broad_dfs,profile_label,trans_df_chunk) 
-                for trans_df_chunk in tqdm(trans_df_chunk_list, desc='Processing '+trans_filename)
-                ]
-            xsecs = sum([future.result() for future in tqdm(futures)])        
+    large_file = is_large_trans_file(trans_filepath)
+    trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
+    desc = 'Processing ' + trans_filename + (' (streaming)' if large_file else '')
+    if large_file:
+        print('Large transition file detected (>1 GB). Streaming chunks sequentially to reduce memory usage.')
+        xsecs = None
+        for trans_df_chunk in log_tqdm(trans_reader, desc=desc):
+            chunk_xsec = CalculateExoMolCrossSection(states_part_df,T,Tvib,Trot,P,Q,
+                                                     broad,ratio,nbroad,broad_dfs,profile_label,trans_df_chunk)
+            xsecs = chunk_xsec if xsecs is None else xsecs + chunk_xsec
+        if xsecs is None:
+            xsecs = np.zeros_like(wn_grid)
     else:
-        trans_dd = dd.read_csv(trans_filepath, sep='\s+', header=None, usecols=use_cols,names=use_names,encoding='utf-8')
-        trans_dd_list = trans_dd.partitions
-        # Process multiple files in parallel
-        with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
-            futures = [
-                trans_executor.submit(CalculateExoMolCrossSection,states_part_df,T,Tvib,Trot,P,Q,
-                                        broad,ratio,nbroad,broad_dfs,profile_label,trans_dd_list[i].compute(scheduler='threads')) 
-                for i in tqdm(range(len(list(trans_dd_list))), desc='Processing '+trans_filename)
+        trans_chunks = list(trans_reader)
+        if len(trans_chunks) == 0:
+            xsecs = np.zeros_like(wn_grid)
+        else:
+            with ProcessPoolExecutor(max_workers=ncputrans) as trans_executor:
+                futures = [
+                    trans_executor.submit(CalculateExoMolCrossSection,states_part_df,T,Tvib,Trot,P,Q,
+                                          broad,ratio,nbroad,broad_dfs,profile_label,chunk) 
+                    for chunk in log_tqdm(trans_chunks, desc=desc)
                 ]
-            xsecs = sum([future.result() for future in tqdm(futures)])   
+                xsecs = np.sum([future.result() for future in log_tqdm(futures, desc='Combining '+trans_filename)], axis=0)
     return xsecs
 
 def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, unc_unit, threshold_unit):
@@ -3818,10 +4198,7 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, unc_unit
 # Plot and Save Results
 def save_xsec(wn, xsec, database, profile_label):             
     xsecs_foldername = save_path+'xsecs/files/'+data_info[0]+'/'+database+'/'
-    if os.path.exists(xsecs_foldername):
-        pass
-    else:
-        os.makedirs(xsecs_foldername, exist_ok=True)
+    ensure_dir(xsecs_foldername)
     print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, 
                     'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)')
     min_v = min(wn)
@@ -3850,10 +4227,7 @@ def save_xsec(wn, xsec, database, profile_label):
             tp = Timer()
             tp.start()
             plots_foldername = save_path+'xsecs/plots/'+data_info[0]+'/'+database+'/'
-            if os.path.exists(plots_foldername):
-                pass
-            else:
-                os.makedirs(plots_foldername, exist_ok=True)  
+            ensure_dir(plots_foldername)
             #plt.legend(fancybox=True, framealpha=0.0)
             parameters = {'axes.labelsize': 18,
                           'legend.fontsize': 18,
@@ -3898,7 +4272,7 @@ def save_xsec(wn, xsec, database, profile_label):
                 plt.semilogy()
             else:
                 plt.ylim([limitYaxisXsec, 1.05*max(xsec)])
-            #plt.title(database+' '+data_info[0]+' '+abs_emi+' Cross-Section with '+ profile_label) 
+            # plt.title(database+' '+data_info[0]+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.ylabel('Cross-section, cm$^{2}$/molecule')
             plt.legend()
             leg = plt.legend()                  # Get the legend object.
@@ -3955,11 +4329,8 @@ def save_xsec(wn, xsec, database, profile_label):
             tp = Timer()
             tp.start()
             plots_foldername = save_path+'xsecs/plots/'+data_info[0]+'/'+database+'/'
-            if os.path.exists(plots_foldername):
-                pass
-            else:
-                os.makedirs(plots_foldername, exist_ok=True)  
-            #plt.legend(fancybox=True, framealpha=0.0)
+            ensure_dir(plots_foldername)
+            # plt.legend(fancybox=True, framealpha=0.0)
             parameters = {'axes.labelsize': 18, 
                           'legend.fontsize': 18,
                           'xtick.labelsize': 14,
@@ -4028,7 +4399,7 @@ def save_xsec(wn, xsec, database, profile_label):
 # Cross sections for ExoMol database
 def exomol_cross_section(states_part_df, T, Tvib, Trot, P, Q):
     print('Calculate cross sections.')
-    print('Running on ', ncputrans, 'cores.')
+    print('Running on', used_cpus, 'cores.')
     tot = Timer()
     tot.start()
     broad, ratio, nbroad, broad_dfs = read_broad(read_path)
@@ -4038,10 +4409,10 @@ def exomol_cross_section(states_part_df, T, Tvib, Trot, P, Q):
     print('Reading transitions and calculating cross sections ...')    
     trans_filepaths = get_part_transfiles(read_path) 
     # Process multiple files in parallel
-    with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
+    with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(xsec_part_trans,states_part_df,T,Tvib,Trot,P,Q,broad,ratio,nbroad,broad_dfs,
-                                   profile_label,trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
+                                   profile_label,trans_filepath) for trans_filepath in log_tqdm(trans_filepaths, desc='Cross-section files')]
         xsec = sum([future.result() for future in futures])
         
     if len(xsec) == 0:
@@ -4064,7 +4435,7 @@ def hitran_cross_section(hitran_linelist_df, T, P):
     profile_label = line_profile(profile)
     print(profile_label,'profile')
     pool = Pool(processes=ncputrans) 
-    print('Running on', ncputrans, 'cores.')
+    print('Running on', used_cpus, 'cores.')
     process = pool.apply_async(CalculateHITRANCrossSection,
                                args=(hitran_linelist_df, T, P, Q, profile_label))
     pool.close()
@@ -4088,15 +4459,16 @@ def get_results(read_path):
     # Print ExoMol, ExoAtom, and HITRAN information
     if database == 'ExoMol':
         print('ExoMol database')
-        print('Molecule\t\t\t:', data_info[0], '\nIsotopologue\t:', data_info[1], '\nDataset\t\t\t\t:', data_info[2])
+        headers = ['Molecule','Isotopologue','Dataset']
+        print(tabulate([data_info], headers=headers, tablefmt="fancy_grid"))
     if database == 'ExoAtom':
         print('ExoAtom database')
-        print('Atom\t\t:', data_info[0], '\nDataset\t:', data_info[1])    
+        headers = ['Atom','Dataset']
+        print(tabulate([data_info], headers=headers, tablefmt="fancy_grid"))
     if database == 'HITRAN' or database == 'HITEMP':
         print(database, 'database')
-        print('Molecule\t\t\t:', data_info[0], '\t\t\tMolecule ID\t\t:', molecule_id, 
-              '\nIsotopologue\t:', data_info[1], '\t\tIsotopologue ID\t:', isotopologue_id,
-              '\nDataset\t\t\t\t:', data_info[2])
+        headers = ['Molecule','Molecule ID','Isotopologue','Isotopologue ID','Dataset']
+        print(tabulate([data_info], headers=headers, tablefmt="fancy_grid"))
         
     if database == 'ExoMol' or database == 'ExoAtom':
         # Functions
@@ -4132,13 +4504,13 @@ def get_results(read_path):
             if predissocYN == 'Y' and check_predissoc+check_lifetime == 0 and 'VOI' in profile:
                 np.seterr(divide='ignore', invalid='ignore')
                 print('Calculate lifetimes.')  
-                print('Running on ', ncputrans, 'cores.')
+                print('Running on', used_cpus, 'cores.')
                 t = Timer()
                 t.start()
                 print('Reading all transitions and calculating lifetimes ...')
                 trans_filepaths = get_transfiles(read_path)
                 # Process multiple files in parallel
-                with ThreadPoolExecutor(max_workers=ncpufiles) as executor:
+                with ProcessPoolExecutor(max_workers=ncpufiles) as executor:
                     # Submit reading tasks for each file
                     futures = [executor.submit(calculate_lifetime, states_part_df, 
                                             trans_filepath) for trans_filepath in trans_filepaths]
