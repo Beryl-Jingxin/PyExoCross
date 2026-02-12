@@ -4,6 +4,22 @@
 If you choose `LTE`, please ignore `# Calculate non-LTE #` section. \
 If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://pyexocross.readthedocs.io/en/latest/nonlte.html`).
 
+`WnWlUnit`: Choose to provide the range of wavenumber `wn` in unit of `cm-1` (cm⁻¹), or wavelength in unit of `um` (μm) or `nm`.
+
+`Range`: Give two values as the minimum and maximum of the wavenumber range in unit of cm⁻¹ or wavelength range in unit of μm or nm. Please use the same unit as `WnWlUnit`. Don't use `,` or `;` between these two numbers, just leave blank here.
+
+`Absorption/Emission`: Choose `Absorption` or `Emission`.
+
+
+
+`Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSiza` is the interval size of the grid , use the same unit as `WnWlUnit`.
+
+`PredissocXsec(Y/N)`: If `PredissocXsec(Y/N)` is yes, predissociation lifetimes will be used or calculated when calculating cross sections with Voigt profile.
+
+`Cutoff(Y/N)`: If `Cutoff(Y/N)` is yes, you can provide wing cutoff here in unit of cm⁻¹.
+
+## Temperatures and pressures
+
 `Temperatures`: Please provide temperatures in unit of K. 
 
 | `Temperatures`     |          | T = ?                                  |
@@ -15,12 +31,6 @@ If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://p
 | 1000: 3000: 500    | &#x274C; |                                        |
 | [300,3000]         | &#x274C; |                                        |
 | [300, 3000]        | &#x274C; |                                        |
-
-`WnWlUnit`: Choose to provide the range of wavenumber `wn` in unit of `cm-1` (cm⁻¹), or wavelength in unit of `um` (μm) or `nm`.
-
-`Range`: Give two values as the minimum and maximum of the wavenumber range in unit of cm⁻¹ or wavelength range in unit of μm or nm. Please use the same unit as `WnWlUnit`. Don't use `,` or `;` between these two numbers, just leave blank here.
-
-`Absorption/Emission`: Choose `Absorption` or `Emission`.
 
 `Pressures`: Please provide pressures in unit bar.
 
@@ -35,11 +45,9 @@ If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://p
 | [1,10]           | &#x274C; |                                     |
 | [1, 10]          | &#x274C; |                                     |
 
-`Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSiza` is the interval size of the grid , use the same unit as `WnWlUnit`.
+$N_T$ and $N_P$ can be different. The total number of result files should be:
 
-`PredissocXsec(Y/N)`: If `PredissocXsec(Y/N)` is yes, predissociation lifetimes will be used or calculated when calculating cross sections with Voigt profile.
-
-`Cutoff(Y/N)`: If `Cutoff(Y/N)` is yes, you can provide wing cutoff here in unit of cm⁻¹.
+$$N_\textrm{Total} = N_T \times N_P$$
 
 ## Filters
 
@@ -275,7 +283,7 @@ QNsFilter(Y/N)                          N          Ka[]  Kc[]  v1[]  v2[1,;,0]  
 
 
 # Calculate cross sections #
-Pressures                               1                         # Pressures in unit bar
+Pressures                               0.1,1                     # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              H2       He  
 Ratios                                  0.75     0.15  

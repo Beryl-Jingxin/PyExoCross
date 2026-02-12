@@ -195,7 +195,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1,10                      # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        
@@ -279,7 +279,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
+LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
 Temperatures                            300                       # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          1000           # Same unit as WnWlUnit
@@ -298,8 +298,8 @@ Y-axisLimitStickSpectra                 1e-35                     # Default valu
 
 # Calculate non-LTE stick spectra #
 NLTEMethod                             T                          # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
-Tvib                                   2000
-Trot                                   296
+Tvib                                   200,1000,3000
+Trot                                   200,500
 QNsVibLabel                            v1,v2,v3
 QNsRotLabel                            J,Ka,Kc
 

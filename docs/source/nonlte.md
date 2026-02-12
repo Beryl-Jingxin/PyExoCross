@@ -8,6 +8,12 @@
 
 `P`: Using custom rovibrational population. After `P`, please give the custom rovibrational population file path.  Ignore `Tvib` and `Trot`.
 
+``QNsVibLabel``: Please provide vibrational quantum number labels seperated by ``,``.
+
+``QNsRotLabel``: Please provide rotational quantum number labels seperated by ``,``.
+
+## Temperatures
+
 ``Tvib``: Please provide vibrational temperatures in unit of K.
 
 ``Trot``: Please provide rotational temperatures in unit of K.
@@ -22,9 +28,9 @@
 | [300,3000]         | &#x274C; |                                        |
 | [300, 3000]        | &#x274C; |                                        |
 
-``QNsVibLabel``: Please provide vibrational quantum number labels seperated by ``,``.
-
-``QNsRotLabel``: Please provide rotational quantum number labels seperated by ``,``.
+$N_{T_\textrm{vib}}$ and $N_{T_\textrm{rot}}$ and $N_P$ can be different. The total number of result files should be: 
+$$N_\textrm{Total} = N_{T_\textrm{vib}} \times N_{T_\textrm{vib}} \times N_P$$ 
+Here $N_P$ is the number of pressures if required.
 
 ## Two temperatures Treanor distribution
 

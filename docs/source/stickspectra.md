@@ -4,18 +4,6 @@
 If you choose `LTE`, please ignore `# Calculate non-LTE #` section. \
 If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://pyexocross.readthedocs.io/en/latest/nonlte.html`).
 
-`Temperatures`: Please provide temperatures in unit K.
-
-| `Temperatures`     |          | T = ?                                  |
-| :----------------- | -------- | -------------------------------------- |
-| 296                | &#x2705; | 296 K                                  |
-| 300,1000,3000,8000 | &#x2705; | 300 K, 1000 K, 3000 K, 8000 K          |
-| 1000:5000:1000     | &#x2705; | 1000 K, 2000 K, 3000 K, 4000 K, 5000 K |
-| 300, 3000          | &#x274C; |                                        |
-| 1000: 3000: 500    | &#x274C; |                                        |
-| [300,3000]         | &#x274C; |                                        |
-| [300, 3000]        | &#x274C; |                                        |
-
 `WnWlUnit`: Choose to provide the range of wavenumber `wn` in unit of `cm-1` (cm⁻¹), or wavelength in unit of `um` (μm) or `nm`.
 
 `Range`: Give two values as the minimum and maximum of the wavenumber range in unit of cm⁻¹ or wavelength range in unit of μm or nm. Please use the same unit as `WnWlUnit`. Don't use `,` or `;` between these two numbers, just leave blank here. 
@@ -35,6 +23,20 @@ The LTE emissivity equation is:
 $$
     \varepsilon (i \gets f) = \frac{g'{A}_{fi}hc}{4 \pi}\frac{e^{-c_2 \tilde{E}'/T}}{Q(T)}.
 $$
+
+## Temperatures
+
+`Temperatures`: Please provide temperatures in unit K.
+
+| `Temperatures`     |          | T = ?                                  |
+| :----------------- | -------- | -------------------------------------- |
+| 296                | &#x2705; | 296 K                                  |
+| 300,1000,3000,8000 | &#x2705; | 300 K, 1000 K, 3000 K, 8000 K          |
+| 1000:5000:1000     | &#x2705; | 1000 K, 2000 K, 3000 K, 4000 K, 5000 K |
+| 300, 3000          | &#x274C; |                                        |
+| 1000: 3000: 500    | &#x274C; |                                        |
+| [300,3000]         | &#x274C; |                                        |
+| [300, 3000]        | &#x274C; |                                        |
 
 ## Filters
 
