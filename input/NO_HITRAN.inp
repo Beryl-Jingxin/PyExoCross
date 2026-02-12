@@ -3,7 +3,7 @@ Database                                HITRAN
 Molecule                                NO
 Isotopologue                            14N-16O
 Dataset                                 NO-HITRAN
-MolIsoID                                81
+SpeciesID                               81
 
 
 # File path #
@@ -24,9 +24,9 @@ CrossSections                           1
 
 
 # Cores and chunks #
-NCPUtrans                               32
-NCPUfiles                               32
-ChunkSize                               1000000
+NCPUtrans                               4
+NCPUfiles                               1
+ChunkSize                               100000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
@@ -63,7 +63,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            2000                      # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -80,7 +80,7 @@ Y-axisLimitStickSpectra                 1e-35                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressure in unit bar
 Npoints/BinSize                         Npoints    10001          # Same unit as WnWlUnit
 Broadeners                              Air        Self 
 Ratios                                  0.7        0.3     

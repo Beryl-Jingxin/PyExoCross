@@ -3,7 +3,7 @@ Database                                HITRAN
 Molecule                                O2
 Isotopologue                            16O2
 Dataset                                 O2-HITRAN
-MolIsoID                                71
+SpeciesID                               71
 
 
 # File path #
@@ -36,7 +36,7 @@ QNsformat                               %2s   %3s     %2d     %1s    %3d     %1s
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                        # 'LTE' or 'Non-LTE'
-Temperature                             300                        # Temperature in unit of K
+Temperatures                            300                        # Temperature in unit of K
 WnWlUnit                                wn         cm-1            # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          5000            # Same unit as WnWlUnit
 Absorption/Emission                     Emission                   # 'Absorption' or 'Emission'

@@ -10,7 +10,7 @@ Database                                ExoMol
 Molecule                                MgH
 Isotopologue                            24Mg-1H
 Dataset                                 XAB
-MolIsoID                                666  
+SpeciesID                               666  
 
 
 # File path #
@@ -71,7 +71,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            2000,5000                 # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -96,7 +96,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        
@@ -178,7 +178,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            1000:3000:1000            # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          43000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -219,7 +219,7 @@ Database                                HITRAN
 Molecule                                H2O
 Isotopologue                            1H2-16O
 Dataset                                 H2O-HITRAN
-MolIsoID                                11
+SpeciesID                               11
 
 
 # File path #
@@ -280,7 +280,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             300                       # Temperature in unit of K
+Temperatures                            300                       # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          1000           # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -305,7 +305,7 @@ QNsRotLabel                            J,Ka,Kc
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1,10                      # Pressures in unit bar
 Npoints/BinSize                         Npoints    10001          # Same unit as WnWlUnit
 Broadeners                              Air        Self 
 Ratios                                  0.7        0.3         

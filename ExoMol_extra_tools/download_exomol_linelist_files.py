@@ -9,7 +9,10 @@ urllib3.disable_warnings()
 
 # File Paths and Molecules
 ################## Could be changed ! ##################
-url_path = '/home/jingxin/data/ExoMol/url/api__urls.txt'
+# Directory that will hold the generated api__urls.txt file
+url_dir = '/home/jingxin/data/ExoMol/url/'
+# Full path to the urls file (derived from url_dir)
+url_path = os.path.join(url_dir, 'api__urls.txt')
 file_path = '/home/jingxin/data/ExoMol/'
 molecules = ['MgH','NO']
 ########################################################
@@ -20,7 +23,7 @@ def get_api(molecules):
     api_url = []
     for i in range(len(molecules)):
         molecule_str.append(molecules[i].replace('_p','+').split('__')[0].replace('+','_p'))
-        api_url.append('http://exomol.com/api/?molecule=*&datatype=linelist'.replace('*',molecule_str[i]))
+        api_url.append('https://exomol.com/api/?molecule=*&datatype=linelist'.replace('*',molecule_str[i]))
     return(api_url)
 
 # Get Download Links with API
@@ -49,7 +52,7 @@ def get_urls(molecules):
                         trans_urls = []
                         for j in range(nfiles):
                             file_meta = files_meta[j]
-                            url = "http://www." + file_meta.get('url')
+                            url = "https://www." + file_meta.get('url')
                             if url.endswith('states.bz2'):
                                 states_url = url
                                 def_url = states_url.replace('.states.bz2','.def.json')
@@ -76,14 +79,11 @@ def get_urls(molecules):
 def download_files(molecules, url_path):
     urls = get_urls(molecules)
     # Save all URLs to a text file
-    if os.path.exists(url_path):
-        pass
-    else:
-        os.makedirs(url_path, exist_ok=True)
+    os.makedirs(os.path.dirname(url_path), exist_ok=True)
     with open(url_path, "w", encoding="utf-8") as fh:
         for entry in urls:
             fh.write(f"{entry}\n")
-    print('\nAll URLs have been saved to', url_path+'api__urls.txt')
+    print('\nAll URLs have been saved to', url_path)
     command = f'wget -r -nH --cut-dirs=1 -P {file_path} -i {url_path}'
     subprocess.run(command, shell=True)
     print('\nAll files have been downloaded to', file_path, 'folder!')

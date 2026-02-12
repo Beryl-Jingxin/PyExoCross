@@ -3,7 +3,7 @@ Database                                HITRAN
 Molecule                                CO
 Isotopologue                            12C-16O
 Dataset                                 CO-HITRAN
-MolIsoID                                51
+SpeciesID                               51
 
 
 # File path #
@@ -64,13 +64,13 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             300                       # Temperature in unit of K
+Temperatures                            300,1000                  # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          Y          X[]       Omega[]       v1[1,0;2,]
+QNsFilter(Y/N)                          N          X[]       Omega[]       v1[1,0;2,]
 
 
 #  Calculate stick spectra #
@@ -81,7 +81,7 @@ Y-axisLimitStickSpectra                 1e-40                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressure in unit bar
 Npoints/BinSize                         Npoints    10001          # Same unit as WnWlUnit
 Broadeners                              Air        Self 
 Ratios                                  0.7        0.3     

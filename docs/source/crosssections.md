@@ -4,7 +4,17 @@
 If you choose `LTE`, please ignore `# Calculate non-LTE #` section. \
 If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://pyexocross.readthedocs.io/en/latest/nonlte.html`).
 
-`Temperature`: Please provide temperature in unit of K.
+`Temperatures`: Please provide temperatures in unit of K. 
+
+| `Temperatures`     |          | T = ?                                  |
+| :----------------- | -------- | -------------------------------------- |
+| 296                | &#x2705; | 296 K                                  |
+| 300,1000,3000,8000 | &#x2705; | 300 K, 1000 K, 3000 K, 8000 K          |
+| 1000:5000:1000     | &#x2705; | 1000 K, 2000 K, 3000 K, 4000 K, 5000 K |
+| 300, 3000          | &#x274C; |                                        |
+| 1000: 3000: 500    | &#x274C; |                                        |
+| [300,3000]         | &#x274C; |                                        |
+| [300, 3000]        | &#x274C; |                                        |
 
 `WnWlUnit`: Choose to provide the range of wavenumber `wn` in unit of `cm-1` (cm⁻¹), or wavelength in unit of `um` (μm) or `nm`.
 
@@ -12,7 +22,18 @@ If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://p
 
 `Absorption/Emission`: Choose `Absorption` or `Emission`.
 
-`Pressure`: Please provide pressure in unit bar.
+`Pressures`: Please provide pressures in unit bar.
+
+| `Pressures`      |          | P = ?                               |
+| :--------------- | -------- | ----------------------------------- |
+| 1                | &#x2705; | 1 bar                               |
+| 1.0              | &#x2705; | 1.0 bar                             |
+| 0.5,1.0,5.0,10.0 | &#x2705; | 0.5 bar, 1.0 bar, 5.0 bar, 10.0 bar |
+| 1:5:1            | &#x2705; | 1 bar, 2 bar, 3 bar, 4 bar, 5 bar   |
+| 1, 10            | &#x274C; |                                     |
+| 1: 5: 1          | &#x274C; |                                     |
+| [1,10]           | &#x274C; |                                     |
+| [1, 10]          | &#x274C; |                                     |
 
 `Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSiza` is the interval size of the grid , use the same unit as `WnWlUnit`.
 
@@ -116,7 +137,7 @@ plot logarithm cross sections in unit of cm²/molecule and wavenumber in unit of
 ```bash
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            2000,5000                 # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -126,7 +147,7 @@ QNsFilter(Y/N)                          N          v[0,;1,;2,;3,;4,;,0;,1;,2;,3;
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               0.1,1,10                  # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        
@@ -147,7 +168,7 @@ plot logarithm cross sections in unit of cm²/molecule and wavelength in unit of
 ```bash
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            1000:3000:1000            # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -157,7 +178,7 @@ QNsFilter(Y/N)                          N          v[0,;1,;2,;3,;4,;,0;,1;,2;,3;
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressures in unit bar
 Npoints/BinSize                         Npoint     30001          # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        
@@ -178,7 +199,7 @@ plot linear cross sections in unit of cm²/molecule and wavelength in unit of nm
 ```bash
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            2000                      # Temperatures in unit of K
 WnWlUnit                                wl         um             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   6          10             # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -188,7 +209,7 @@ QNsFilter(Y/N)                          N
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressure in unit bar
 Npoints/BinSize                         BinSize    0.001          # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        
@@ -211,7 +232,7 @@ Database                                ExoMol
 Molecule                                H2O
 Isotopologue                            1H2-16O
 Dataset                                 POKAZATEL
-MolIsoID                                11
+SpeciesID                               11
 
 
 # File path #
@@ -244,7 +265,7 @@ QNsformat                               %2d     %2d     %2d     %2d     %2d     
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             300                       # Temperature in unit of K
+Temperatures                            300                       # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          41200          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -254,7 +275,7 @@ QNsFilter(Y/N)                          N          Ka[]  Kc[]  v1[]  v2[1,;,0]  
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              H2       He  
 Ratios                                  0.75     0.15  
@@ -275,7 +296,7 @@ Database                                ExoMol
 Molecule                                NO
 Isotopologue                            14N-16O
 Dataset                                 XABC
-MolIsoID                                81
+SpeciesID                               81
 
 
 # File path #
@@ -308,7 +329,7 @@ QNsformat                               %1s    %1s     %5s      %5d   %5d      %
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            300,2000,5000             # Temperatures in unit of K
 WnWlUnit                                wl         nm             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   150        1000           # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
@@ -318,7 +339,7 @@ QNsFilter(Y/N)                          N          State[]  v[]  Lambda[]  Sigma
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1,10                      # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              air    
 Ratios                                  1.0        
@@ -339,7 +360,7 @@ Database                                HITRAN
 Molecule                                NO
 Isotopologue                            14N-16O
 Dataset                                 NO-HITRAN
-MolIsoID                                81
+SpeciesID                               81
 
 
 # File path #
@@ -372,7 +393,7 @@ QNsformat                               %5s     %2s   %3s     %2d     %1s
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                      # 'LTE' or 'Non-LTE'
-Temperature                             1000                     # Temperature in unit of K
+Temperatures                            1000:4000:1000           # Temperatures in unit of K
 WnWlUnit                                wn         cm-1          # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   1000       5000          # Same unit as WnWlUnit
 Absorption/Emission                     Emission                 # 'Absorption' or 'Emission'
@@ -382,7 +403,7 @@ QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,;2,;,0
 
 
 # Calculate cross sections #
-Pressure                                0.1                       # Pressure in unit bar
+Pressures                               0.1                       # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Air        Self  
 Ratios                                  0.7        0.3   

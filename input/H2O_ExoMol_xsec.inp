@@ -3,7 +3,7 @@ Database                                ExoMol
 Molecule                                H2O
 Isotopologue                            1H2-16O
 Dataset                                 POKAZATEL
-MolIsoID                                11
+SpeciesID                               11
 
 
 # File path #
@@ -54,7 +54,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             300                       # Temperature in unit of K
+Temperatures                            300,1000,3000,5000        # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          41200          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -71,7 +71,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1
+Pressures                               1
 Npoints/BinSize                         BinSize   0.1
 Broadeners                              H2       He    
 Ratios                                  0.75     0.15        

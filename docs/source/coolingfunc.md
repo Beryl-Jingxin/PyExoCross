@@ -31,7 +31,7 @@ Database                                ExoMol
 Molecule                                H2O
 Isotopologue                            1H2-16O
 Dataset                                 POKAZATEL
-MolIsoID                                11
+SpeciesID                               11
 
 
 # File path #

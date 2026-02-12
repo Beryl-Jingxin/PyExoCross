@@ -63,7 +63,7 @@ Database                                ExoMol
 Molecule                                MgH
 Isotopologue                            24Mg-1H
 Dataset                                 XAB
-MolIsoID                                501
+SpeciesID                               501
 
 
 # File path #
@@ -167,7 +167,7 @@ Database                                HITRAN
 Molecule                                NO
 Isotopologue                            14N-16O
 Dataset                                 XABC-HITRAN
-MolIsoID                                81
+SpeciesID                               81
 
 
 # File path #

@@ -3,7 +3,7 @@ Database                                ExoMol
 Molecule                                HCN
 Isotopologue                            1H-12C-14N
 Dataset                                 Harris
-MolIsoID                                231
+SpeciesID                               231
 
 
 # File path #
@@ -37,4 +37,3 @@ QNsformat                               %2s         %2d     %2d     %2d     %2d 
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
 Tmax                                    5000                      # Maximal temperature in K 
-

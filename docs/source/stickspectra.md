@@ -4,7 +4,17 @@
 If you choose `LTE`, please ignore `# Calculate non-LTE #` section. \
 If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://pyexocross.readthedocs.io/en/latest/nonlte.html`).
 
-`Temperature`: Please provide temperature in unit K.
+`Temperatures`: Please provide temperatures in unit K.
+
+| `Temperatures`     |          | T = ?                                  |
+| :----------------- | -------- | -------------------------------------- |
+| 296                | &#x2705; | 296 K                                  |
+| 300,1000,3000,8000 | &#x2705; | 300 K, 1000 K, 3000 K, 8000 K          |
+| 1000:5000:1000     | &#x2705; | 1000 K, 2000 K, 3000 K, 4000 K, 5000 K |
+| 300, 3000          | &#x274C; |                                        |
+| 1000: 3000: 500    | &#x274C; |                                        |
+| [300,3000]         | &#x274C; |                                        |
+| [300, 3000]        | &#x274C; |                                        |
 
 `WnWlUnit`: Choose to provide the range of wavenumber `wn` in unit of `cm-1` (cm⁻¹), or wavelength in unit of `um` (μm) or `nm`.
 
@@ -48,7 +58,7 @@ plot logarithm stick spectra in unit of cm/molecule and wavenumber in unit of cm
 ```bash
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             300                       # Temperature in unit of K
+Temperatures                            300,3000                  # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -70,7 +80,7 @@ plot logarithm stick spectra in unit of cm/molecule and wavelength in unit of nm
 ```bash
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             300                       # Temperature in unit of K
+Temperatures                            1000:4000:1000            # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -92,7 +102,7 @@ plot linear stick spectra in unit of cm/molecule and wavelength in unit of nm.
 ```bash
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             300                       # Temperature in unit of K
+Temperatures                            300                       # Temperatures in unit of K
 WnWlUnit                                wl         um             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -116,7 +126,7 @@ Database                                ExoMol
 Molecule                                MgH
 Isotopologue                            24Mg-1H
 Dataset                                 XAB
-MolIsoID                                666
+SpeciesID                               666
 
 
 # File path #
@@ -149,7 +159,7 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             300                       # Temperature in unit of K
+Temperatures                            300,3000                  # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -171,7 +181,7 @@ Database                                ExoMol
 Molecule                                NO
 Isotopologue                            14N-16O
 Dataset                                 XABC
-MolIsoID                                81
+SpeciesID                               81
 
 
 # File path #
@@ -204,7 +214,7 @@ QNsformat                               %1s    %1s     %5s      %5d   %5d      %
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            2000:4000:500             # Temperatures in unit of K
 WnWlUnit                                wl         nm             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   150        1000           # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
@@ -226,7 +236,7 @@ Database                                HITRAN
 Molecule                                NO
 Isotopologue                            14N-16O
 Dataset                                 NO-HITRAN
-MolIsoID                                81
+SpeciesID                               81
 
 
 # File path #
@@ -259,7 +269,7 @@ QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             1000                      # Temperature in unit of K
+Temperatures                            1000                      # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   1000       5000           # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'

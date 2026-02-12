@@ -2,6 +2,7 @@
 Database                                ExoAtom
 Atom                                    Ar
 Dataset                                 NIST
+SpeciesID                               601
 
 
 # File path #
@@ -11,12 +12,12 @@ LogFilePath                             /home/jingxin/data/pyexocross/log/Ar_QDB
 
 
 # Functions #
-Conversion                              0
-PartitionFunctions                      0
-SpecificHeats                           0
-CoolingFunctions                        0
-Lifetimes                               0
-OscillatorStrengths                     0
+Conversion                              1
+PartitionFunctions                      1
+SpecificHeats                           1
+CoolingFunctions                        1
+Lifetimes                               1
+OscillatorStrengths                     1
 StickSpectra                            1
 CrossSections                           1
 
@@ -24,20 +25,48 @@ CrossSections                           1
 # Cores and chunks #
 NCPUtrans                               1
 NCPUfiles                               1
-ChunkSize                               1000000
+ChunkSize                               10000
 
 
 # Quantum numbers for conversion, stick spectra, and cross sections#
 QNslabel                                configuration     Multiple     parity
-QNsformat                               %50s              %30s         %2s  
+QNsformat                               %20s              %10s         %1s  
+
+
+# Conversion #
+ConversionFormat                        1     
+ConversionFrequncyRange                 0         115400          # Wavenumber in unit of cm-1      
+GlobalQNLabel                           configuration     
+GlobalQNFormat                          %20s               
+LocalQNLabel                            J       Multiple    parity
+LocalQNFormat                           %5.1f   %10s        %1s
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01 cm-1
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule
+
+
+# Calculate partition functions, specific heats or cooling functions #
+Ntemp                                   1                         # The number of temperature steps
+Tmax                                    6000                      # Maximal temperature in K 
+
+
+# Calculate lifetimes #
+Compress(Y/N)                           N                         # If Y, save as .states.bz2 file; otherwise, save as .states file
+
+
+# Calculate oscillator strengths #
+gf/f                                    f
+PlotOscillatorStrength(Y/N)             Y         
+PlotOscillatorStrengthMethod            log                       # Plot in linear (lin) or logarithm (log)
+PlotOscillatorStrengthWnWl              wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[um or nm])
+Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
 
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            1000:4000:1000            # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
-Range                                   8000       15500          # Same unit as WnWlUnit
-Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
+Range                                   0          115400         # Same unit as WnWlUnit
+Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          Y          configuration[]     Multiple[]     parity[]
@@ -59,7 +88,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressure in unit bar
 Npoints/BinSize                         BinSize    0.01           # Same unit as WnWlUnit
 Broadeners                              Default     
 Ratios                                  1.0        

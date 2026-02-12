@@ -2,6 +2,7 @@
 Database                                ExoAtom
 Atom                                    Al
 Dataset                                 Kurucz
+SpeciesID                               601
 
 
 # File path #
@@ -11,14 +12,14 @@ LogFilePath                             /home/jingxin/data/pyexocross/log/Al_Kur
 
 
 # Functions #
-Conversion                              0
+Conversion                              1
 PartitionFunctions                      1
-SpecificHeats                           0
-CoolingFunctions                        0
+SpecificHeats                           1
+CoolingFunctions                        1
 Lifetimes                               1
-OscillatorStrengths                     0
+OscillatorStrengths                     1
 StickSpectra                            1
-CrossSections                           0
+CrossSections                           1
 
 
 # Cores and chunks #
@@ -32,6 +33,17 @@ QNslabel                                Configuration     LS      Abbr
 QNsformat                               %12s              %7s     %2s  
 
 
+# Conversion #
+ConversionFormat                        1     
+ConversionFrequncyRange                 0         160000          # Wavenumber in unit of cm-1      
+GlobalQNLabel                           Configuration     
+GlobalQNFormat                          %12s               
+LocalQNLabel                            J       LS    
+LocalQNFormat                           %5.1f   %7s  
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01 cm-1
+ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule
+
+
 # Calculate partition functions, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
 Tmax                                    21000                     # Maximal temperature in K 
@@ -41,15 +53,31 @@ Tmax                                    21000                     # Maximal temp
 Compress(Y/N)                           N                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 
 
+# Calculate oscillator strengths #
+gf/f                                    f
+PlotOscillatorStrength(Y/N)             Y         
+PlotOscillatorStrengthMethod            log                       # Plot in linear (lin) or logarithm (log)
+PlotOscillatorStrengthWnWl              wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[um or nm])
+Y-axisLimitOscillatorStrength           1e-30                     # Default value is 1e-30
+
+
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
-Temperature                             1000                      # Temperature in unit of K
+Temperatures                            1000,5012,10000           # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
-Range                                   0          30000          # Same unit as WnWlUnit
+Range                                   0          160000         # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.1            # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          Y          Configuration[]     LS[]
+
+
+# Calculate non-LTE #
+NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                    1000,10000
+Trot                                    100,200
+QNsVibLabel                             Multiple
+QNsRotLabel                             J,parity  
 
 
 # Calculate stick spectra #
@@ -57,3 +85,19 @@ PlotStickSpectra(Y/N)                   Y
 PlotStickSpectraMethod                  log                       # Plot in linear (lin) or logarithm (log)
 PlotStickSpectraWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
 Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30 cm/molecule
+
+
+# Calculate cross sections #
+Pressures                               1                         # Pressure in unit bar
+Npoints/BinSize                         BinSize    0.01           # Same unit as WnWlUnit
+Broadeners                              Default     
+Ratios                                  1.0        
+Profile                                 SciPyVoigt      
+PredissocXsec(Y/N)                      N
+Cutoff(Y/N)                             N          25             # If Y, default value 25 cm-1
+DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   Y
+PlotCrossSectionMethod                  log                       # Plot in linear (lin) or logarithm (log)
+PlotCrossSectionWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
+Y-axisLimitXsec                         1e-30                     # Default value is 1e-30 cm2/molecule

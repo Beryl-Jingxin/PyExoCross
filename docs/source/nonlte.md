@@ -8,15 +8,25 @@
 
 `P`: Using custom rovibrational population. After `P`, please give the custom rovibrational population file path.  Ignore `Tvib` and `Trot`.
 
-``Tvib``: Please provide vibrational temperature in unit of K.
+``Tvib``: Please provide vibrational temperatures in unit of K.
 
-``Trot``: Please provide rotational temperature in unit of K.
+``Trot``: Please provide rotational temperatures in unit of K.
+
+| `Tvib` and `Trot`  |          | T = ?                                  |
+| :----------------- | -------- | -------------------------------------- |
+| 296                | &#x2705; | 296 K                                  |
+| 300,1000,3000,8000 | &#x2705; | 300 K, 1000 K, 3000 K, 8000 K          |
+| 1000:5000:1000     | &#x2705; | 1000 K, 2000 K, 3000 K, 4000 K, 5000 K |
+| 300, 3000          | &#x274C; |                                        |
+| 1000: 3000: 500    | &#x274C; |                                        |
+| [300,3000]         | &#x274C; |                                        |
+| [300, 3000]        | &#x274C; |                                        |
 
 ``QNsVibLabel``: Please provide vibrational quantum number labels seperated by ``,``.
 
 ``QNsRotLabel``: Please provide rotational quantum number labels seperated by ``,``.
 
-## Two temperature Treanor distribution
+## Two temperatures Treanor distribution
 
 The state energy is the sum of the rotational and vibrational state energy:
 
@@ -55,7 +65,7 @@ Database                                ExoMol
 Molecule                                MgH
 Isotopologue                            24Mg-1H
 Dataset                                 XAB
-MolIsoID                                501
+SpeciesID                               501
 
 
 # File path #
@@ -88,7 +98,7 @@ QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f   
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
-Temperature                             300                       # Temperature in unit of K
+Temperatures                            300,3000                  # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -99,8 +109,8 @@ QNsFilter(Y/N)                          N          e/f[]   v[0,;1,;2,;3,;4,;,0;,
 
 # Calculate non-LTE #
 NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
-Tvib                                    2000
-Trot                                    296
+Tvib                                    300,3000,5000
+Trot                                    300,500
 QNsVibLabel                             v,eS
 QNsRotLabel                             J,e/f   
 
@@ -113,7 +123,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1,10                      # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        
@@ -134,7 +144,7 @@ Database                                HITRAN
 Molecule                                NO
 Isotopologue                            14N-16O
 Dataset                                 NO-HITRAN
-MolIsoID                                81
+SpeciesID                               81
 
 
 # File path #
@@ -168,7 +178,7 @@ QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
-Temperature                             3000                      # Temperature in unit of K
+Temperatures                            1000,3000                 # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   1000       5000           # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
@@ -179,7 +189,7 @@ QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,1;1,0]
 
 # Calculate non-LTE #
 NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
-Tvib                                    2000
+Tvib                                    2000,3000
 Trot                                    296
 QNsVibLabel                             v,eS
 QNsRotLabel                             J,e/f      
@@ -194,7 +204,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressures in unit bar
 Npoints/BinSize                         Npoints    10001          # Same unit as WnWlUnit
 Broadeners                              Air        Self 
 Ratios                                  0.7        0.3     
@@ -256,7 +266,7 @@ QNsformat                               %50s              %30s         %2s
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # LTE or Non-LTE
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            2000                      # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   8000       15500          # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
@@ -281,7 +291,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.01           # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        
@@ -337,7 +347,7 @@ QNsformat                               %50s              %30s         %2s
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # LTE or Non-LTE
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            2000                      # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   8000       15500          # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
@@ -362,7 +372,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.01           # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        

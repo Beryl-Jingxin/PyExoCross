@@ -14,6 +14,7 @@ Welcome to PyExoCross's documentation!
    cite.md
    command.md
    requirements.md
+   python_api/index
    examples.md
    basicinfo.md
    conversion.md

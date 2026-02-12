@@ -3,7 +3,7 @@ Database                                ExoMol
 Molecule                                CH4
 Isotopologue                            12C-1H4
 Dataset                                 MM
-MolIsoID                                61
+SpeciesID                               61
 
 
 # File path #
@@ -36,7 +36,7 @@ QNsformat
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
-Temperature                             296                       # Temperature in unit of K
+Temperatures                            296                       # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   5000       5299           # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -47,7 +47,7 @@ QNsFilter(Y/N)                          N
 
 # Calculate non-LTE #
 NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
-Tvib                                    2000
+Tvib                                    2000,5000
 Trot                                    296
 QNsVibLabel                             v,eS
 QNsRotLabel                             J,e/f  

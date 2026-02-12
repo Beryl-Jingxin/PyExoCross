@@ -15,7 +15,7 @@ In data source section, please provide:
 
 The name of `Database`, `Molecule`, `Isotopologue`, and `Dataset` are necessary.
 
-The molecule and isotopologue ID `MolIsoID` can be set as `0` or any other integers.
+The molecule and isotopologue ID `SpeciesID` can be set as `0` or any other integers.
 
 *Example*
 
@@ -25,14 +25,14 @@ Database                                ExoMol
 Molecule                                H2O
 Isotopologue                            1H2-16O
 Dataset                                 POKAZATEL
-MolIsoID                                11
+SpeciesID                               11
 ```
 
 **For HITRAN and HITEMP databases**
 
-The `Database` name, `Molecule` name, and the molecule and isotopologue ID `MolIsoID` are necessary.
+The `Database` name, `Molecule` name, and the molecule and isotopologue ID `SpeciesID` are necessary.
 
-The first two digits of `MolIsoID` are molcule ID and the third digit is isotopologue ID and there is no blank between molecule ID and isotopologue ID. `MolIsoID` can be found from [HITRANOnline Isotopologue Metadata](https://hitran.org/docs/iso-meta/).
+The first two digits of `SpeciesID` are molcule ID and the third digit is isotopologue ID and there is no blank between molecule ID and isotopologue ID. `SpeciesID` can be found from [HITRANOnline Isotopologue Metadata](https://hitran.org/docs/iso-meta/).
 
 The name of `Isotopologue` and `Dataset` can be set as 'none' or any other strings.
 
@@ -44,7 +44,7 @@ Database                                HITRAN
 Molecule                                CO2
 Isotopologue                            none
 Dataset                                 none
-MolIsoID                                21
+SpeciesID                               21
 ```
 
 ```bash
@@ -53,7 +53,7 @@ Database                                HITRAN
 Molecule                                C2H2
 Isotopologue                            abcd
 Dataset                                 EfGh
-MolIsoID                                261
+SpeciesID                               261
 ```
 
 ### Atom and ion database

@@ -3,7 +3,7 @@ Database                                ExoMol
 Molecule                                SO2
 Isotopologue                            32S-16O2
 Dataset                                 ExoAmes 
-MolIsoID                                91
+SpeciesID                               91
 
 
 # File path #
@@ -41,7 +41,7 @@ Tmax                                    10000                     # Maximal temp
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
-Temperature                             1000                      # Temperature in unit of K
+Temperatures                            1000                      # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          22000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
@@ -66,7 +66,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressure in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              H2       He    
 Ratios                                  0.75     0.15        

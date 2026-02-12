@@ -2,6 +2,7 @@
 Database                                ExoAtom
 Atom                                    He
 Dataset                                 NIST
+SpeciesID                               666
 
 
 # File path #
@@ -34,7 +35,7 @@ QNsformat                               %50s              %30s   %2s
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # LTE or Non-LTE
-Temperature                             2000                      # Temperature in unit of K
+Temperatures                            2000                      # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          197208         # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
@@ -59,7 +60,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressure                                1                         # Pressure in unit bar
+Pressures                               1                         # Pressure in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        

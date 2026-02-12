@@ -1,5 +1,7 @@
 # PyExoCross
 
+**PyExoCross is a python program and package for generating molecular and atomic spectra and cross sections**
+
 PyExoCross ***Manual*** : [https://pyexocross.readthedocs.io](https://pyexocross.readthedocs.io)
 
 PyExoCross ***Wiki*** : [https://github.com/Beryl-Jingxin/PyExoCross/wiki](https://github.com/Beryl-Jingxin/PyExoCross/wiki)
@@ -97,7 +99,7 @@ https://doi.org/10.1093/rasti/rzae016
 <font color=Green>***Bibtex***</font>
 
 ```bash
-@article{10.1093/rasti/rzae016,
+@article{pyexocross,
     author   = {Zhang, Jingxin and Tennyson, Jonathan and Yurchenko, Sergei N},
     title    = {{PyExoCross: a Python program for generating spectra and cross-sections from molecular line lists}},
     journal  = {RAS Techniques and Instruments},

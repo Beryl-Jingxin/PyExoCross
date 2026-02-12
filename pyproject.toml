@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyexocross"
+version = "1.0.0"
+description = "A Python package for generating molecular and atomic spectra and cross sections"
+readme = "README.md"
+requires-python = ">=3.8,<=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Jingxin Zhang"}
+]
+keywords = ["spectroscopy", "molecule", "atom", "cross section", "exomol", "hitran"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "matplotlib",
+    "tqdm",
+    "tabulate",
+    "numexpr",
+    "astropy",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "black",
+    "flake8",
+]
+
+[project.urls]
+Homepage = "https://github.com/Beryl-Jingxin/PyExoCross"
+Documentation = "https://pyexocross.readthedocs.io"
+Repository = "https://github.com/Beryl-Jingxin/PyExoCross"
+Issues = "https://github.com/Beryl-Jingxin/PyExoCross/issues"
+Publication = "https://doi.org/10.1093/rasti/rzae016"
+
+[tool.setuptools]
+packages = ["pyexocross"]
+
+[tool.setuptools.package-data]
+pyexocross = ["*.txt", "*.md"]
+

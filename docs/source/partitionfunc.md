@@ -25,7 +25,7 @@ Database                                ExoMol
 Molecule                                CO2
 Isotopologue                            12C-16O2
 Dataset                                 UCL-4000
-MolIsoID                                21
+SpeciesID                               21
 
 
 # File path #
