@@ -20,17 +20,17 @@ pip install -e .
 ## Import
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-print(pyx.__version__)  # '1.0.0'
+print(px.__version__)  # '1.0.0'
 ```
 
 ## Minimal Example: Cross Sections from ExoMol
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cross_sections(
+px.cross_sections(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -55,9 +55,9 @@ pyx.cross_sections(
 ## Minimal Example: Cross Sections from HITRAN
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cross_sections(
+px.cross_sections(
     database='HITRAN',
     molecule='NO',
     isotopologue='14N-16O',
@@ -75,9 +75,9 @@ pyx.cross_sections(
 ## Minimal Example: Cross Sections from ExoAtom
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cross_sections(
+px.cross_sections(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
@@ -96,14 +96,14 @@ pyx.cross_sections(
 If you already have a `.inp` configuration file, you can run it directly:
 
 ```python
-pyx.run('/path/to/MgH_ExoMol.inp')
+px.run('/path/to/MgH_ExoMol.inp')
 ```
 
 Or call a specific function from a `.inp` file (ignoring the on/off switches
 in the file):
 
 ```python
-pyx.cross_sections(inp_filepath='/path/to/MgH_ExoMol.inp')
+px.cross_sections(inp_filepath='/path/to/MgH_ExoMol.inp')
 ```
 
 ## Key Concepts
@@ -142,7 +142,7 @@ All API calls support a `logs_path` parameter.  When provided, screen output
 is automatically duplicated to the log file.
 
 ```python
-pyx.partition_functions(
+px.partition_functions(
     ...,
     logs_path='/path/to/output/log/my_run.log',
 )

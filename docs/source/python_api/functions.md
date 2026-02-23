@@ -3,7 +3,7 @@
 All functions are accessible from the top-level `pyexocross` namespace:
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 ```
 
 Every function accepts either:
@@ -13,10 +13,10 @@ Every function accepts either:
 
 ---
 
-## `pyx.run`
+## `px.run`
 
 ```python
-pyx.run(inp_filepath)
+px.run(inp_filepath)
 ```
 
 Run **all** enabled functions from an `.inp` configuration file.  This is the
@@ -32,15 +32,15 @@ command line.
 **Example**
 
 ```python
-pyx.run('/path/to/MgH_ExoMol.inp')
+px.run('/path/to/MgH_ExoMol.inp')
 ```
 
 ---
 
-## `pyx.conversion`
+## `px.conversion`
 
 ```python
-pyx.conversion(inp_filepath=None, **kwargs)
+px.conversion(inp_filepath=None, **kwargs)
 ```
 
 Convert between ExoMol/ExoAtom and HITRAN line-list formats.
@@ -77,14 +77,14 @@ Convert between ExoMol/ExoAtom and HITRAN line-list formats.
 **Legacy Aliases**
 
 ```python
-pyx.convert_exomol_to_hitran(...)  # Sets conversion_format=1
-pyx.convert_hitran_to_exomol(...)  # Sets conversion_format=2
+px.convert_exomol_to_hitran(...)  # Sets conversion_format=1
+px.convert_hitran_to_exomol(...)  # Sets conversion_format=2
 ```
 
 **Example**
 
 ```python
-pyx.conversion(
+px.conversion(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -102,10 +102,10 @@ pyx.conversion(
 
 ---
 
-## `pyx.partition_functions`
+## `px.partition_functions`
 
 ```python
-pyx.partition_functions(inp_filepath=None, **kwargs)
+px.partition_functions(inp_filepath=None, **kwargs)
 ```
 
 Calculate partition functions $Q(T) = \sum_n g_n^{\text{tot}} \exp(-c_2 \tilde{E}_n / T)$.
@@ -130,12 +130,12 @@ Calculate partition functions $Q(T) = \sum_n g_n^{\text{tot}} \exp(-c_2 \tilde{E
 | `ncpufiles` | `int` | `1` | Files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size |
 
-**Legacy Alias**: `pyx.partition_function`
+**Legacy Alias**: `px.partition_function`
 
 **Example**
 
 ```python
-pyx.partition_functions(
+px.partition_functions(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -150,22 +150,22 @@ pyx.partition_functions(
 
 ---
 
-## `pyx.specific_heats`
+## `px.specific_heats`
 
 ```python
-pyx.specific_heats(inp_filepath=None, **kwargs)
+px.specific_heats(inp_filepath=None, **kwargs)
 ```
 
 Calculate specific heat capacities $C_p(T)$ using partition function derivatives.
 
-**Parameters**: Same as [`pyx.partition_functions`](#pyxpartition_functions).
+**Parameters**: Same as [`px.partition_functions`](#pxpartition_functions).
 
-**Legacy Alias**: `pyx.specific_heat`
+**Legacy Alias**: `px.specific_heat`
 
 **Example**
 
 ```python
-pyx.specific_heats(
+px.specific_heats(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -180,24 +180,24 @@ pyx.specific_heats(
 
 ---
 
-## `pyx.cooling_functions`
+## `px.cooling_functions`
 
 ```python
-pyx.cooling_functions(inp_filepath=None, **kwargs)
+px.cooling_functions(inp_filepath=None, **kwargs)
 ```
 
 Calculate cooling functions:
 
 $$W(T) = \frac{1}{4\pi Q(T)} \sum_{f,i} A_{fi}\, h c \tilde{\nu}_{fi}\, g'\, \exp\!\left(-\frac{c_2 \tilde{E}'}{T}\right)$$
 
-**Parameters**: Same as [`pyx.partition_functions`](#pyxpartition_functions).
+**Parameters**: Same as [`px.partition_functions`](#pxpartition_functions).
 
-**Legacy Alias**: `pyx.cooling_function`
+**Legacy Alias**: `px.cooling_function`
 
 **Example**
 
 ```python
-pyx.cooling_functions(
+px.cooling_functions(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -212,10 +212,10 @@ pyx.cooling_functions(
 
 ---
 
-## `pyx.lifetimes`
+## `px.lifetimes`
 
 ```python
-pyx.lifetimes(inp_filepath=None, **kwargs)
+px.lifetimes(inp_filepath=None, **kwargs)
 ```
 
 Calculate radiative lifetimes:
@@ -240,12 +240,12 @@ $$\tau_i = 1 / \sum_f A_{fi}$$
 | `ncpufiles` | `int` | `1` | Files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size |
 
-**Legacy Alias**: `pyx.lifetime`
+**Legacy Alias**: `px.lifetime`
 
 **Example**
 
 ```python
-pyx.lifetimes(
+px.lifetimes(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -259,10 +259,10 @@ pyx.lifetimes(
 
 ---
 
-## `pyx.oscillator_strengths`
+## `px.oscillator_strengths`
 
 ```python
-pyx.oscillator_strengths(inp_filepath=None, **kwargs)
+px.oscillator_strengths(inp_filepath=None, **kwargs)
 ```
 
 Calculate oscillator strengths: weighted $gf = g_{\text{tot}}' A_{fi} / (c \tilde{\nu}_{fi})^2$ or
@@ -292,12 +292,12 @@ unweighted $f$-values.
 | `plot_unit` | `str` | `'cm-1'` | `'cm-1'`, `'um'`, or `'nm'` |
 | `limit_yaxis` | `float` | `1e-30` | Lower limit for y-axis |
 
-**Legacy Alias**: `pyx.oscillator_strength`
+**Legacy Alias**: `px.oscillator_strength`
 
 **Example**
 
 ```python
-pyx.oscillator_strengths(
+px.oscillator_strengths(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -316,10 +316,10 @@ pyx.oscillator_strengths(
 
 ---
 
-## `pyx.stick_spectra`
+## `px.stick_spectra`
 
 ```python
-pyx.stick_spectra(inp_filepath=None, **kwargs)
+px.stick_spectra(inp_filepath=None, **kwargs)
 ```
 
 Calculate LTE or Non-LTE stick spectra (absorption or emission).
@@ -389,7 +389,7 @@ qns_filter={
 **Example**
 
 ```python
-pyx.stick_spectra(
+px.stick_spectra(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -408,17 +408,17 @@ pyx.stick_spectra(
 
 ---
 
-## `pyx.cross_sections`
+## `px.cross_sections`
 
 ```python
-pyx.cross_sections(inp_filepath=None, **kwargs)
+px.cross_sections(inp_filepath=None, **kwargs)
 ```
 
 Calculate LTE or Non-LTE cross sections with a choice of line profiles.
 
 **Parameters**
 
-All parameters from [`pyx.stick_spectra`](#pyxstick_spectra), plus:
+All parameters from [`px.stick_spectra`](#pxstick_spectra), plus:
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -474,12 +474,12 @@ All parameters from [`pyx.stick_spectra`](#pyxstick_spectra), plus:
 | `'CO2'` | CO$_2$ broadening |
 | `'H2O'` | Water broadening |
 
-**Legacy Alias**: `pyx.cross_section`
+**Legacy Alias**: `px.cross_section`
 
 **Example**
 
 ```python
-pyx.cross_sections(
+px.cross_sections(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',

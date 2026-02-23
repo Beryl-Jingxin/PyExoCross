@@ -94,7 +94,7 @@ separate `.trans` files (common for ExoMol).
 
 ## Conversion Parameters
 
-Used by `pyx.conversion()`.
+Used by `px.conversion()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -130,7 +130,7 @@ For HITRAN2004 format, both global and local quantum number fields are
 
 ## Partition Function / Specific Heat / Cooling Function Parameters
 
-Used by `pyx.partition_functions()`, `pyx.specific_heats()`, `pyx.cooling_functions()`.
+Used by `px.partition_functions()`, `px.specific_heats()`, `px.cooling_functions()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -143,7 +143,7 @@ The calculation produces values at every `ntemp` K from 1 K to `tmax` K.
 
 ## Lifetime Parameters
 
-Used by `pyx.lifetimes()`.
+Used by `px.lifetimes()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -153,7 +153,7 @@ Used by `pyx.lifetimes()`.
 
 ## Oscillator Strength Parameters
 
-Used by `pyx.oscillator_strengths()`.
+Used by `px.oscillator_strengths()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -163,7 +163,7 @@ Used by `pyx.oscillator_strengths()`.
 
 ## Physical Conditions
 
-Used by `pyx.stick_spectra()` and `pyx.cross_sections()`.
+Used by `px.stick_spectra()` and `px.cross_sections()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -179,7 +179,7 @@ Used by `pyx.stick_spectra()` and `pyx.cross_sections()`.
 
 ## Non-LTE Parameters
 
-Used by `pyx.stick_spectra()` and `pyx.cross_sections()` when `nlte_method != 'L'`.
+Used by `px.stick_spectra()` and `px.cross_sections()` when `nlte_method != 'L'`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -203,7 +203,7 @@ Used by `pyx.stick_spectra()` and `pyx.cross_sections()` when `nlte_method != 'L
 
 ## Filter Parameters
 
-Used by `pyx.stick_spectra()` and `pyx.cross_sections()`.
+Used by `px.stick_spectra()` and `px.cross_sections()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -268,7 +268,7 @@ qnsformat_list = ['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s']
 
 ## Line Profile Parameters
 
-Used by `pyx.cross_sections()`.
+Used by `px.cross_sections()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -280,7 +280,7 @@ Used by `pyx.cross_sections()`.
 
 ## Broadening Parameters
 
-Used by `pyx.cross_sections()`.
+Used by `px.cross_sections()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -299,7 +299,7 @@ quick testing or when database broadening files are unavailable.
 
 ## Grid Parameters
 
-Used by `pyx.cross_sections()`.
+Used by `px.cross_sections()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -315,7 +315,7 @@ and `bin_size` is calculated from the range.
 
 ## Plotting Parameters
 
-Used by `pyx.oscillator_strengths()`, `pyx.stick_spectra()`, `pyx.cross_sections()`.
+Used by `px.oscillator_strengths()`, `px.stick_spectra()`, `px.cross_sections()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -328,5 +328,5 @@ Used by `pyx.oscillator_strengths()`, `pyx.stick_spectra()`, `pyx.cross_sections
 :::{note}
 These are **convenience** kwargs that get remapped internally to
 function-specific names.  For example, `plot=True` in
-`pyx.cross_sections()` becomes `plot_cross_section=True`.
+`px.cross_sections()` becomes `plot_cross_section=True`.
 :::

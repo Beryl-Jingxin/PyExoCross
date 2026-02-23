@@ -33,20 +33,20 @@ reference when migrating from `.inp`-based workflows to the Python API.
 
 | `.inp` Keyword | Python API Function | `.inp` Value | Python Usage |
 |---|---|---|---|
-| `Conversion` | `pyx.conversion()` | `1` | Call function directly |
-| `PartitionFunctions` | `pyx.partition_functions()` | `1` | Call function directly |
-| `SpecificHeats` | `pyx.specific_heats()` | `1` | Call function directly |
-| `CoolingFunctions` | `pyx.cooling_functions()` | `1` | Call function directly |
-| `Lifetimes` | `pyx.lifetimes()` | `1` | Call function directly |
-| `OscillatorStrengths` | `pyx.oscillator_strengths()` | `1` | Call function directly |
-| `StickSpectra` | `pyx.stick_spectra()` | `1` | Call function directly |
-| `CrossSections` | `pyx.cross_sections()` | `1` | Call function directly |
+| `Conversion` | `px.conversion()` | `1` | Call function directly |
+| `PartitionFunctions` | `px.partition_functions()` | `1` | Call function directly |
+| `SpecificHeats` | `px.specific_heats()` | `1` | Call function directly |
+| `CoolingFunctions` | `px.cooling_functions()` | `1` | Call function directly |
+| `Lifetimes` | `px.lifetimes()` | `1` | Call function directly |
+| `OscillatorStrengths` | `px.oscillator_strengths()` | `1` | Call function directly |
+| `StickSpectra` | `px.stick_spectra()` | `1` | Call function directly |
+| `CrossSections` | `px.cross_sections()` | `1` | Call function directly |
 
 :::{note}
 In the Python API, you don't need to set these toggle flags.  Simply calling
-a function (e.g. `pyx.cross_sections(...)`) automatically enables that
+a function (e.g. `px.cross_sections(...)`) automatically enables that
 function.  The toggle is only relevant in `.inp` files or when using
-`pyx.run()`.
+`px.run()`.
 :::
 
 ---
@@ -202,7 +202,7 @@ CrossSections                    1
 **Python API equivalent:**
 
 ```python
-pyx.cross_sections(
+px.cross_sections(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',

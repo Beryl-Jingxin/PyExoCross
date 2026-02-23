@@ -6,10 +6,10 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.run('/home/jingxin/LHD/Program/PyExoCross/.input/MgH_ExoMol.inp')
+px.run('/home/jingxin/LHD/Program/PyExoCross/.input/MgH_ExoMol.inp')
 
-pyx.run('/home/jingxin/LHD/Program/PyExoCross/.input/Ar_QDB_nlte.inp')
+px.run('/home/jingxin/LHD/Program/PyExoCross/.input/Ar_QDB_nlte.inp')
 
-pyx.run('/home/jingxin/LHD/Program/PyExoCross/.input/NO_HITRAN.inp')
+px.run('/home/jingxin/LHD/Program/PyExoCross/.input/NO_HITRAN.inp')

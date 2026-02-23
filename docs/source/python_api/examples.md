@@ -10,9 +10,9 @@ database and function.  Replace the paths with your own data locations.
 ### Conversion (ExoMol -> HITRAN)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.conversion(
+px.conversion(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -41,9 +41,9 @@ pyx.conversion(
 ### Partition Functions
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.partition_functions(
+px.partition_functions(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -60,9 +60,9 @@ pyx.partition_functions(
 ### Specific Heats
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.specific_heats(
+px.specific_heats(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -79,9 +79,9 @@ pyx.specific_heats(
 ### Cooling Functions
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cooling_functions(
+px.cooling_functions(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -101,9 +101,9 @@ pyx.cooling_functions(
 ### Lifetimes
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.lifetimes(
+px.lifetimes(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -122,9 +122,9 @@ pyx.lifetimes(
 ### Oscillator Strengths
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.oscillator_strengths(
+px.oscillator_strengths(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -148,9 +148,9 @@ pyx.oscillator_strengths(
 ### Stick Spectra (LTE)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.stick_spectra(
+px.stick_spectra(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -176,9 +176,9 @@ pyx.stick_spectra(
 ### Stick Spectra (Non-LTE, Treanor Method)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.stick_spectra(
+px.stick_spectra(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -216,9 +216,9 @@ pyx.stick_spectra(
 ### Cross Sections
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cross_sections(
+px.cross_sections(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -254,9 +254,9 @@ pyx.cross_sections(
 ### Cross Sections (Non-LTE, Treanor Method)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cross_sections(
+px.cross_sections(
     database='ExoMol',
     molecule='MgH',
     isotopologue='24Mg-1H',
@@ -303,9 +303,9 @@ pyx.cross_sections(
 ### Conversion (ExoAtom -> HITRAN)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.conversion(
+px.conversion(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
@@ -333,9 +333,9 @@ pyx.conversion(
 ### Partition Functions
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.partition_functions(
+px.partition_functions(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
@@ -351,9 +351,9 @@ pyx.partition_functions(
 ### Specific Heats
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.specific_heats(
+px.specific_heats(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
@@ -369,9 +369,9 @@ pyx.specific_heats(
 ### Cooling Functions
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cooling_functions(
+px.cooling_functions(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
@@ -390,9 +390,9 @@ pyx.cooling_functions(
 ### Lifetimes
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.lifetimes(
+px.lifetimes(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
@@ -410,9 +410,9 @@ pyx.lifetimes(
 ### Oscillator Strengths
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.oscillator_strengths(
+px.oscillator_strengths(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
@@ -435,9 +435,9 @@ pyx.oscillator_strengths(
 ### Stick Spectra (Non-LTE, Population Method)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.stick_spectra(
+px.stick_spectra(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
@@ -473,9 +473,9 @@ pyx.stick_spectra(
 ### Cross Sections (Non-LTE, Population Method)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cross_sections(
+px.cross_sections(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
@@ -515,9 +515,9 @@ pyx.cross_sections(
 ### Conversion (HITRAN -> ExoMol)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.conversion(
+px.conversion(
     database='HITRAN',
     molecule='NO',
     isotopologue='14N-16O',
@@ -544,9 +544,9 @@ pyx.conversion(
 ### Partition Functions
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.partition_functions(
+px.partition_functions(
     database='HITRAN',
     molecule='NO',
     isotopologue='14N-16O',
@@ -568,9 +568,9 @@ pyx.partition_functions(
 ### Specific Heats
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.specific_heats(
+px.specific_heats(
     database='HITRAN',
     molecule='NO',
     isotopologue='14N-16O',
@@ -592,9 +592,9 @@ pyx.specific_heats(
 ### Cooling Functions
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cooling_functions(
+px.cooling_functions(
     database='HITRAN',
     molecule='NO',
     isotopologue='14N-16O',
@@ -612,9 +612,9 @@ pyx.cooling_functions(
 ### Lifetimes
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.lifetimes(
+px.lifetimes(
     database='HITRAN',
     molecule='NO',
     isotopologue='14N-16O',
@@ -635,9 +635,9 @@ pyx.lifetimes(
 ### Oscillator Strengths
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.oscillator_strengths(
+px.oscillator_strengths(
     database='HITRAN',
     molecule='NO',
     isotopologue='14N-16O',
@@ -659,9 +659,9 @@ pyx.oscillator_strengths(
 ### Stick Spectra (Non-LTE, Treanor Method)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.stick_spectra(
+px.stick_spectra(
     database='HITRAN',
     molecule='NO',
     isotopologue='14N-16O',
@@ -696,9 +696,9 @@ pyx.stick_spectra(
 ### Cross Sections (with Air + Self Broadening)
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
-pyx.cross_sections(
+px.cross_sections(
     database='HITRAN',
     molecule='NO',
     isotopologue='14N-16O',
@@ -736,7 +736,7 @@ pyx.cross_sections(
 Run multiple species or temperatures in a loop:
 
 ```python
-import pyexocross as pyx
+import pyexocross as px
 
 species_list = [
     {'molecule': 'NO', 'isotopologue': '14N-16O', 'dataset': 'XABC', 'species_id': 81},
@@ -788,7 +788,7 @@ PLOT = dict(
 )
 
 for species in species_list:
-    pyx.cross_sections(
+    px.cross_sections(
         **COMMON,
         **COMPUTE_PARAMS,
         **QN_PARAMS,

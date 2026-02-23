@@ -11,7 +11,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-import pyexocross as pyx
+import pyexocross as px
 
 
 # ---------------------------------------------------------------------------
@@ -77,9 +77,9 @@ COMPUTE_PARAMS = dict(
 def test_conversion():
     """Test HITRAN -> ExoMol conversion."""
     print('\n' + '='*70)
-    print('TEST: pyx.conversion()  [HITRAN -> ExoMol]')
+    print('TEST: px.conversion()  [HITRAN -> ExoMol]')
     print('='*70)
-    pyx.conversion(
+    px.conversion(
         **COMMON,
         **QN_PARAMS,
         **COMPUTE_PARAMS,
@@ -96,11 +96,11 @@ def test_conversion():
 def test_partition_functions():
     """Test partition function calculation."""
     print('\n' + '='*70)
-    print('TEST: pyx.partition_functions()')
+    print('TEST: px.partition_functions()')
     print('='*70)
     # HITRAN partition functions require QN labels for internal HITRAN->ExoMol
     # conversion to produce .states files.
-    pyx.partition_functions(
+    px.partition_functions(
         **COMMON,
         **QN_PARAMS,
         **COMPUTE_PARAMS,
@@ -114,9 +114,9 @@ def test_partition_functions():
 def test_specific_heats():
     """Test specific heat calculation."""
     print('\n' + '='*70)
-    print('TEST: pyx.specific_heats()')
+    print('TEST: px.specific_heats()')
     print('='*70)
-    pyx.specific_heats(
+    px.specific_heats(
         **COMMON,
         **QN_PARAMS,
         **COMPUTE_PARAMS,
@@ -130,9 +130,9 @@ def test_specific_heats():
 def test_cooling_functions():
     """Test cooling function calculation."""
     print('\n' + '='*70)
-    print('TEST: pyx.cooling_functions()')
+    print('TEST: px.cooling_functions()')
     print('='*70)
-    pyx.cooling_functions(
+    px.cooling_functions(
         **COMMON,
         **COMPUTE_PARAMS,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
@@ -144,9 +144,9 @@ def test_cooling_functions():
 def test_lifetimes():
     """Test radiative lifetime calculation."""
     print('\n' + '='*70)
-    print('TEST: pyx.lifetimes()')
+    print('TEST: px.lifetimes()')
     print('='*70)
-    pyx.lifetimes(
+    px.lifetimes(
         **COMMON,
         **QN_PARAMS,
         **COMPUTE_PARAMS,
@@ -159,9 +159,9 @@ def test_lifetimes():
 def test_oscillator_strengths():
     """Test oscillator strength calculation."""
     print('\n' + '='*70)
-    print('TEST: pyx.oscillator_strengths()')
+    print('TEST: px.oscillator_strengths()')
     print('='*70)
-    pyx.oscillator_strengths(
+    px.oscillator_strengths(
         **COMMON,
         **COMPUTE_PARAMS,
         gf_or_f='f',                  # 'gf' for weighted oscillator strength, 'f' for f-value (default: 'f')
@@ -177,9 +177,9 @@ def test_oscillator_strengths():
 def test_stick_spectra():
     """Test stick spectra calculation."""
     print('\n' + '='*70)
-    print('TEST: pyx.stick_spectra()')
+    print('TEST: px.stick_spectra()')
     print('='*70)
-    pyx.stick_spectra(
+    px.stick_spectra(
         **COMMON,
         **QN_PARAMS,
         **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
@@ -197,9 +197,9 @@ def test_stick_spectra():
 def test_cross_sections():
     """Test cross section calculation."""
     print('\n' + '='*70)
-    print('TEST: pyx.cross_sections()')
+    print('TEST: px.cross_sections()')
     print('='*70)
-    pyx.cross_sections(
+    px.cross_sections(
         **COMMON,
         **QN_PARAMS,
         **NLTE_PARAMS,                  # If Non-LTE is enabled, this parameter is required.
@@ -228,7 +228,7 @@ def test_cross_sections():
 # ---------------------------------------------------------------------------
 if __name__ == '__main__':
     print('PyExoCross API Test — HITRAN NO')
-    print(f'pyexocross version: {pyx.__version__}')
+    print(f'pyexocross version: {px.__version__}')
 
     tests = [
         test_conversion,

@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "A Python package for generating molecular and atomic spectra and cross sections"
 readme = "README.md"
 requires-python = ">=3.8,<=3.10"
-license = {text = "MIT"}
+license = {text = "GPL-3.0-only"}
 authors = [
     {name = "Jingxin Zhang"}
 ]
@@ -17,7 +17,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Physics",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -35,6 +35,9 @@ dependencies = [
     "astropy",
 ]
 
+[project.scripts]
+pyexocross = "pyexocross.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest",
@@ -50,9 +53,11 @@ Repository = "https://github.com/Beryl-Jingxin/PyExoCross"
 Issues = "https://github.com/Beryl-Jingxin/PyExoCross/issues"
 Publication = "https://doi.org/10.1093/rasti/rzae016"
 
-[tool.setuptools]
-packages = ["pyexocross"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pyexocross*", "src*"]
+exclude = ["test*", "docs*", "input*", "output*", "ExoMol_extra_tools*"]
 
 [tool.setuptools.package-data]
 pyexocross = ["*.txt", "*.md"]
-
+src = ["database/meta/*.txt"]
