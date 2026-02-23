@@ -10,7 +10,10 @@ readme = "README.md"
 requires-python = ">=3.8,<=3.10"
 license = {text = "GPL-3.0-only"}
 authors = [
-    {name = "Jingxin Zhang"}
+    {
+        name = "Jingxin Zhang",
+        email = "jingxin.zhang.19@ucl.ac.uk"
+    }
 ]
 keywords = ["spectroscopy", "molecule", "atom", "cross section", "exomol", "hitran"]
 classifiers = [
@@ -54,10 +57,9 @@ Issues = "https://github.com/Beryl-Jingxin/PyExoCross/issues"
 Publication = "https://doi.org/10.1093/rasti/rzae016"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["pyexocross*", "src*"]
+where = ["src"]
+include = ["pyexocross*"]
 exclude = ["test*", "docs*", "input*", "output*", "ExoMol_extra_tools*"]
 
 [tool.setuptools.package-data]
-pyexocross = ["*.txt", "*.md"]
-src = ["database/meta/*.txt"]
+pyexocross = ["*.txt", "*.md", "database/meta/*.txt"]

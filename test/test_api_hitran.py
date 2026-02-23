@@ -6,10 +6,11 @@ Parameters are derived from: .input/NO_HITRAN.inp
 import sys
 import os
 
-# Ensure the project root is on sys.path
+# Ensure src layout is importable in local runs
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+src_root = os.path.join(project_root, 'src')
+if src_root not in sys.path:
+    sys.path.insert(0, src_root)
 
 import pyexocross as px
 
@@ -23,9 +24,9 @@ COMMON = dict(
     isotopologue='14N-16O',
     dataset='NO-HITRAN',
     species_id=81,
-    read_path='/home/jingxin/LHD/Program/Databases/HITRAN/NO/NO__14N-16O.par',
-    save_path='/home/jingxin/LHD/Program/Data/pyexocross/',
-    logs_path='/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_hitran.log',
+    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/', #'/home/jingxin/LHD/Program/Databases/HITRAN/NO/NO__14N-16O.par',
+    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
+    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_hitran.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_hitran.log',
 )
 
 # Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
@@ -182,7 +183,7 @@ def test_stick_spectra():
     px.stick_spectra(
         **COMMON,
         **QN_PARAMS,
-        **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         plot=True,                    # Whether to plot results (default: False)
@@ -202,10 +203,10 @@ def test_cross_sections():
     px.cross_sections(
         **COMMON,
         **QN_PARAMS,
-        **NLTE_PARAMS,                  # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,                  # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
-        pressures=[0.5, 1.0],           # Pressure in unit bar (default: [1.0])
+        pressures=[1.0],           # Pressure in unit bar (default: [1.0])
         bin_size=0.1,                   # Bin size for wavenumber grid 
         profile='SciPyVoigt',           # Line profile name (default: 'Gaussian')
         predissociation=False,          # Predissociation (default: False)

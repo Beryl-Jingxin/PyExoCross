@@ -1,10 +1,11 @@
 import sys
 import os
 
-# Ensure the project root is on sys.path
+# Ensure src layout is importable in local runs
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+src_root = os.path.join(project_root, 'src')
+if src_root not in sys.path:
+    sys.path.insert(0, src_root)
 
 import pyexocross as px
 

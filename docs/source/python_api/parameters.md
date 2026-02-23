@@ -59,8 +59,8 @@ species_id = species_main_id * 10 + species_sub_id
 |---|---|---|
 | ExoMol | Root directory of ExoMol database | `'/data/ExoMol/'` |
 | ExoAtom | Root directory of ExoAtom database | `'/data/ExoAtom/'` |
-| HITRAN | Direct path to `.par` file | `'/data/HITRAN/NO/NO__14N-16O.par'` |
-| HITEMP | Direct path to `.par` file | `'/data/HITEMP/H2O/H2O.par'` |
+| HITRAN | Direct path to `.par` file | `'/data/HITRAN/'` |
+| HITEMP | Direct path to `.par` file | `'/data/HITEMP/'` |
 
 For ExoMol, the code automatically resolves the full path as:
 

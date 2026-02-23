@@ -372,7 +372,7 @@ SpeciesID                               81
 
 
 # File path #
-ReadPath                                /home/jingxin/data/HITRAN/NO.par
+ReadPath                                /home/jingxin/data/HITRAN/
 SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/NO_HITRAN_xsec_T1000_wn1000-5000.log
 

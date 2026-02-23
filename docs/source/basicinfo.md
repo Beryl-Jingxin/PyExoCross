@@ -92,8 +92,6 @@ File path section records the file path for both reading and saving.
 
 &#x2705; /aaa/bbb/ccc/
 
-&#x2705; /aaa/bbb/ccc/ddd.par
-
 &#x2705; /aaa/bbb/ccc/ddd.log
 
 **For ExoMol database**
@@ -203,19 +201,41 @@ LogFilePath                             /home/jingxin/data/pyexocross/log/Li_NIS
 
 `ReadPath` is the file path of input line list `.par` file.
 
-/<font color=Orange>FolderPath</font>/<font color=SkyBlue>xxx</font><font color=Brown>.par</font>
+<font color=Orange>`ReadPath`</font>/<font color=SkyBlue>`Molecule`</font>/<font color=YellowGreen>`Isotopologue`</font>/<font color=SkyBlue>`Molecule`</font><font color=Brown>__</font><font color=YellowGreen>`Isotopologue`</font><font color=Brown>.par</font>
 
-/<font color=Orange>home/jingxin/data/HITRAN</font>/<font color=SkyBlue>CO2</font><font color=Brown>.par</font></font>
+<font color=Orange>path/HITRAN</font>/<font color=SkyBlue>NO</font>/<font color=YellowGreen>14N-16O</font>/<font color=SkyBlue>NO</font><font color=Brown>__</font><font color=YellowGreen>14N-16O</font><font color=Brown>.par</font></font>
 
 `SavePath` is the folder path for saving all results obtained by the PyExoCross program.
 
 `LogFilePath` is the file path of the log file, the program can record the log output automatically.
 
+```
+└── HITRAN
+           ├── H2O
+           ├── CO2
+           ├── NO
+           │    ├── 14N-16O
+           │    │     ├── NO__14N-16O.par
+           │    │     └── NO__14N-16O.pf / NO__14N-16O.txt
+           │    ├── 15N-16O
+           │    │     ├── NO__15N-16O.par
+           │    │     └── NO__15N-16O.pf / NO__15N-16O.txt
+           │    └── 14N-18O
+           │          ├── NO__14N-18O.par
+           │          └── NO__14N-18O.pf / NO__14N-18O.txt
+           ├── NO_p
+           │    └── 14N-16O_p
+           │          ├── NO_p__14N-16O_p.par
+           │          └── NO_p__14N-16O_p.pf / NO_p__14N-16O_p.txt
+           ├── ...
+           │
+```
+
 *Example*
 
 ```bash
 # File path #
-ReadPath                                /home/jingxin/data/HITRAN/CO2.par
+ReadPath                                /home/jingxin/data/HITRAN/
 SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/CO2_HITRAN.log
 ```

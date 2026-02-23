@@ -223,7 +223,7 @@ SpeciesID                               11
 
 
 # File path #
-ReadPath                                /home/jingxin/data/HITRAN/H2O.par
+ReadPath                                /home/jingxin/data/HITRAN/
 SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/H2O_HITRAN_xsec.log
 

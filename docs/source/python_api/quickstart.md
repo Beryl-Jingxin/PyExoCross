@@ -63,7 +63,7 @@ px.cross_sections(
     isotopologue='14N-16O',
     dataset='NO-HITRAN',
     species_id=81,
-    read_path='/path/to/Databases/HITRAN/NO/NO__14N-16O.par',
+    read_path='/path/to/Databases/HITRAN/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/run.log',
     temperatures=[1000],
@@ -111,11 +111,11 @@ px.cross_sections(inp_filepath='/path/to/MgH_ExoMol.inp')
 ### `read_path` -- Where Your Data Lives
 
 - **ExoMol**: Path to the root ExoMol database directory.
-  The code locates files automatically as
-  `{read_path}/{molecule}/{isotopologue}/{dataset}/`.
+  Files are located as `{read_path}/{molecule}/{iso-slug}/{dataset}/`.
 - **ExoAtom**: Path to the root ExoAtom database directory.
   Files are located as `{read_path}/{atom}/{dataset}/`.
 - **HITRAN / HITEMP**: Direct path to the `.par` file.
+  Files are located as `{read_path}/{molecule}/{iso-slug}/`.
 
 ### `save_path` -- Where Results Go
 
