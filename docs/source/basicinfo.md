@@ -203,7 +203,7 @@ LogFilePath                             /home/jingxin/data/pyexocross/log/Li_NIS
 
 <font color=Orange>`ReadPath`</font>/<font color=SkyBlue>`Molecule`</font>/<font color=YellowGreen>`Isotopologue`</font>/<font color=SkyBlue>`Molecule`</font><font color=Brown>__</font><font color=YellowGreen>`Isotopologue`</font><font color=Brown>.par</font>
 
-<font color=Orange>path/HITRAN</font>/<font color=SkyBlue>NO</font>/<font color=YellowGreen>14N-16O</font>/<font color=SkyBlue>NO</font><font color=Brown>__</font><font color=YellowGreen>14N-16O</font><font color=Brown>.par</font></font>
+<font color=Orange>/path/HITRAN</font>/<font color=SkyBlue>NO</font>/<font color=YellowGreen>14N-16O</font>/<font color=SkyBlue>NO</font><font color=Brown>__</font><font color=YellowGreen>14N-16O</font><font color=Brown>.par</font></font>
 
 `SavePath` is the folder path for saving all results obtained by the PyExoCross program.
 
