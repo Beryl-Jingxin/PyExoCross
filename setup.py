@@ -1,4 +1,5 @@
-"""Compatibility shim for setuptools-based tooling.
+"""
+Compatibility shim for setuptools-based tooling.
 
 Package metadata is defined in pyproject.toml.
 """
