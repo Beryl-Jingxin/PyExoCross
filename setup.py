@@ -24,7 +24,7 @@ def _read_readme() -> str:
 if __name__ == "__main__":
     setup(
         name="pyexocross",
-        version="1.0.0",
+        version="1.0.1",
         description="A Python package for generating molecular and atomic spectra and cross sections",
         long_description=_read_readme(),
         long_description_content_type="text/markdown",
