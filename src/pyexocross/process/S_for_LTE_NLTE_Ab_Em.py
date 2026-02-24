@@ -88,27 +88,27 @@ def S_for_LTE_NLTE_Ab_Em(ll_df,T_list,Tvib_list,Trot_list,Q_arr,abs_emi,NLTEMeth
         elif NLTEMethod == 'T':
             if temp_idx is not None:
                 S_arr = cal_emicoefs_nlte_2T([Tvib],[Trot],[Q_arr[temp_idx]],
-                                             ll_df['Evib"'],
-                                             ll_df['Erot"'],
+                                             ll_df["Evib'"],
+                                             ll_df["Erot'"],
                                              ll_df["g'"],
                                              A,v,abundance)
             else:
                 S_arr = cal_emicoefs_nlte_2T(Tvib_list,Trot_list,Q_arr,
-                                             ll_df['Evib"'],
-                                             ll_df['Erot"'],
+                                             ll_df["Evib'"],
+                                             ll_df["Erot'"],
                                              ll_df["g'"],
                                              A,v,abundance)
         elif NLTEMethod == 'D':   
             if temp_idx is not None:
                 S_arr = cal_emicoefs_nlte_nvib([Trot],[Q_arr[temp_idx]],
                                                ll_df["nvib'"],
-                                               ll_df['E"'],
+                                               ll_df["E'"],
                                                ll_df["g'"],
                                                A,v,abundance)
             else:
                 S_arr = cal_emicoefs_nlte_nvib(Trot_list,Q_arr,
                                                ll_df["nvib'"],
-                                               ll_df['E"'],
+                                               ll_df["E'"],
                                                ll_df["g'"],
                                                A,v,abundance)
         elif NLTEMethod == 'P':

@@ -34,7 +34,7 @@ px.conversion(
     global_qn_label_list=['eS', 'v', 'Omega'],
     global_qn_format_list=['%9s', '%2d', '%4s'],
     local_qn_label_list=['J', 'e/f'],
-    local_qn_format_list=['%5.1f', '%2s'],
+    local_qn_format_list=['%5.1f', '%2s']
 )
 ```
 
@@ -48,12 +48,11 @@ px.partition_functions(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    species_id=501,
     read_path='/path/to/Databases/ExoMol/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exomol_pf.log',
     ntemp=1,
-    tmax=5000,
+    tmax=5000
 )
 ```
 
@@ -67,12 +66,11 @@ px.specific_heats(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    species_id=501,
     read_path='/path/to/Databases/ExoMol/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exomol_cp.log',
     ntemp=1,
-    tmax=5000,
+    tmax=5000
 )
 ```
 
@@ -86,7 +84,6 @@ px.cooling_functions(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    species_id=501,
     read_path='/path/to/Databases/ExoMol/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exomol_cf.log',
@@ -94,7 +91,7 @@ px.cooling_functions(
     ncpufiles=1,
     chunk_size=100000,
     ntemp=1,
-    tmax=5000,
+    tmax=5000
 )
 ```
 
@@ -108,14 +105,13 @@ px.lifetimes(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    species_id=501,
     read_path='/path/to/Databases/ExoMol/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exomol_lifetime.log',
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
-    compress=False,
+    compress=False
 )
 ```
 
@@ -129,7 +125,6 @@ px.oscillator_strengths(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    species_id=501,
     read_path='/path/to/Databases/ExoMol/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exomol_os.log',
@@ -141,7 +136,7 @@ px.oscillator_strengths(
     plot_method='log',
     plot_wn_wl='WN',
     plot_unit='cm-1',
-    limit_yaxis=1e-30,
+    limit_yaxis=1e-30
 )
 ```
 
@@ -155,7 +150,6 @@ px.stick_spectra(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    species_id=501,
     read_path='/path/to/Databases/ExoMol/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exomol_stick.log',
@@ -169,7 +163,7 @@ px.stick_spectra(
     max_range=30000,
     abs_emi='Ab',
     plot=True,
-    plot_method='log',
+    plot_method='log'
 )
 ```
 
@@ -183,7 +177,6 @@ px.stick_spectra(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    species_id=501,
     read_path='/path/to/Databases/ExoMol/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exomol_stick_nlte.log',
@@ -209,7 +202,7 @@ px.stick_spectra(
         'e/f': [],
         'eS': [],
         'v': ['0,', '1,', '2,', '3,', '4,', ',0', ',1', ',2', ',3', ',4'],
-    },
+    }
 )
 ```
 
@@ -223,7 +216,6 @@ px.cross_sections(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    species_id=501,
     read_path='/path/to/Databases/ExoMol/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exomol_xsec.log',
@@ -247,7 +239,7 @@ px.cross_sections(
     plot_method='log',
     plot_wn_wl='WN',
     plot_unit='cm-1',
-    limit_yaxis=1e-30,
+    limit_yaxis=1e-30
 )
 ```
 
@@ -261,10 +253,9 @@ px.cross_sections(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    species_id=501,
-    read_path='/path/to/Databases/ExoMol/',
-    save_path='/path/to/output/',
-    logs_path='/path/to/output/log/exomol_xsec_nlte.log',
+    # read_path='/path/to/Databases/ExoMol/',
+    # save_path='/path/to/output/',
+    # logs_path='/path/to/output/log/exomol_xsec_nlte.log',
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
@@ -275,7 +266,7 @@ px.cross_sections(
     trot_list=[100, 200],
     vib_label=['v', 'eS'],
     rot_label=['J', 'e/f'],
-    temperatures=[1000, 2000, 3000],
+    # temperatures=[1000, 2000, 3000],
     pressures=[1.0, 5.0],
     wn_wl='WN',
     wn_wl_unit='cm-1',
@@ -293,6 +284,9 @@ px.cross_sections(
     plot_wn_wl='WN',
     plot_unit='cm-1',
     limit_yaxis=1e-30,
+    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMol/',
+    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/',
+    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exomol.log',
 )
 ```
 
