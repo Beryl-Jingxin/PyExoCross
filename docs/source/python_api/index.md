@@ -13,9 +13,9 @@ pip install pyexocross
 import pyexocross as px
 ```
 
-## <font color=Orange>[**PyExoCross Documentation Homepage**](https://pyexocross.readthedocs.io)</font>
+## <font color=Orange>**PyExoCross Documentation Homepage**</font>
 
-Find more details of input parameters from [PyExoCross Documentation Homepage](../index.rst).
+Find more details of input parameters from [***PyExoCross Documentation Homepage***](../index.rst).
 
 ## Overview
 
