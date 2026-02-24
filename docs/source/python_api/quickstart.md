@@ -6,15 +6,8 @@ library in under 5 minutes.
 ## Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/ExoMol/PyExoCross.git
-cd PyExoCross
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install PyExoCross in development mode
-pip install -e .
+# Install PyExoCross python package
+pip install pyexocross
 ```
 
 ## Import

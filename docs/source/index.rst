@@ -12,9 +12,9 @@ Welcome to PyExoCross's documentation!
 
    intro.md
    cite.md
+   python_api/index
    command.md
    requirements.md
-   python_api/index
    examples.md
    basicinfo.md
    conversion.md

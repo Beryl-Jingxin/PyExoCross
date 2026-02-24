@@ -1,13 +1,21 @@
-# Python API Reference
+# <font color=Green>Python API Reference</font>
 
 PyExoCross provides a full-featured Python API for programmatic access to all
 functionalities.  Instead of writing `.inp` configuration files, you can call
 functions directly from Python scripts, Jupyter notebooks, or any other Python
 environment.
 
+```bash
+pip install pyexocross
+```
+
 ```python
 import pyexocross as px
 ```
+
+## <font color=Green>[PyExoCross Documentation Homepage](../index.rst)</font>
+
+Find more details of input parameters from [PyExoCross Documentation Homepage](../index.rst).
 
 ## Overview
 
@@ -32,7 +40,7 @@ import pyexocross as px
 | **HITRAN** | `database='HITRAN'` | `molecule`, `isotopologue`, `dataset` |
 | **HITEMP** | `database='HITEMP'` | `molecule`, `isotopologue`, `dataset` |
 
-## Two Ways to Use PyExoCross
+## Two Ways to Use PyExoCross Python Package
 
 ### 1. From an `.inp` file (traditional)
 
@@ -71,7 +79,7 @@ px.cross_sections(
 )
 ```
 
-## Documentation Contents
+## PyExoCross Python Package Documentation Contents
 
 ```{toctree}
 :maxdepth: 2
