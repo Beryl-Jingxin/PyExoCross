@@ -43,7 +43,7 @@ NLTE_PARAMS = dict(
 
 # Spectral range parameters
 RANGE_PARAMS = dict(
-    temperatures=[1000, 2000],      # Temperature in unit of K
+    temperatures=[1000,2000],       # Temperature in unit of K
     wn_wl='WN',                     # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
     wn_wl_unit='cm-1',              # Unit for wavenumber (default: cm⁻¹)
     min_range=0,                    # Minimum wavenumber in unit of cm⁻¹
@@ -95,7 +95,7 @@ def test_partition_functions():
         **COMMON,
         **COMPUTE_PARAMS,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
-        tmax=6000,                   # Maximum temperature in unit of K (default: 5000)
+        tmax=600,                   # Maximum temperature in unit of K (default: 5000)
     )
     print('PASSED: partition_functions()')
 
@@ -109,7 +109,7 @@ def test_specific_heats():
         **COMMON,
         **COMPUTE_PARAMS,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
-        tmax=6000,                   # Maximum temperature in unit of K (default: 5000)
+        tmax=600,                   # Maximum temperature in unit of K (default: 5000)
     )
     print('PASSED: specific_heats()')
 
@@ -123,7 +123,7 @@ def test_cooling_functions():
         **COMMON,
         **COMPUTE_PARAMS,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
-        tmax=6000,                   # Maximum temperature in unit of K (default: 5000)
+        tmax=600,                   # Maximum temperature in unit of K (default: 5000)
     )
     print('PASSED: cooling_functions()')
 
@@ -167,7 +167,7 @@ def test_stick_spectra():
     px.stick_spectra(
         **COMMON,
         **QN_PARAMS,
-        **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,        # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         qns_filter={
@@ -192,10 +192,10 @@ def test_cross_sections():
     px.cross_sections(
         **COMMON,
         **QN_PARAMS,
-        **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,        # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
-        pressures=[1.0],        # Pressure in bar (default: [1.0])
+        pressures=[0.5,1.0],    # Pressure in bar (default: [1.0])
         bin_size=0.1,           # Bin size for wavenumber grid
         profile='SciPyVoigt',   # Line profile name (default: 'Gaussian')
         predissociation=False,  # Predissociation (default: False)

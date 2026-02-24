@@ -24,7 +24,7 @@ COMMON = dict(
     isotopologue='14N-16O',
     dataset='NO-HITRAN',
     species_id=81,
-    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/', #'/home/jingxin/LHD/Program/Databases/HITRAN/NO/NO__14N-16O.par',
+    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/', #'/home/jingxin/LHD/Program/Databases/HITRAN/',
     save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
     logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_hitran.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_hitran.log',
 )

@@ -52,6 +52,25 @@ px.cross_sections(
 )
 ```
 
+## Minimal Example: Cross Sections from ExoAtom
+
+```python
+import pyexocross as px
+
+px.cross_sections(
+    database='ExoAtom',
+    atom='Ar',
+    dataset='NIST',
+    species_id=601,
+    read_path='/path/to/Databases/ExoAtom/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/run.log',
+    temperatures=[1000],
+    pressures=[1.0],
+    profile='SciPyVoigt',
+)
+```
+
 ## Minimal Example: Cross Sections from HITRAN
 
 ```python
@@ -64,25 +83,6 @@ px.cross_sections(
     dataset='NO-HITRAN',
     species_id=81,
     read_path='/path/to/Databases/HITRAN/',
-    save_path='/path/to/output/',
-    logs_path='/path/to/output/log/run.log',
-    temperatures=[1000],
-    pressures=[1.0],
-    profile='SciPyVoigt',
-)
-```
-
-## Minimal Example: Cross Sections from ExoAtom
-
-```python
-import pyexocross as px
-
-px.cross_sections(
-    database='ExoAtom',
-    atom='Ar',
-    dataset='NIST',
-    species_id=601,
-    read_path='/path/to/Databases/ExoAtom/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/run.log',
     temperatures=[1000],
@@ -110,12 +110,18 @@ px.cross_sections(inp_filepath='/path/to/MgH_ExoMol.inp')
 
 ### `read_path` -- Where Your Data Lives
 
-- **ExoMol**: Path to the root ExoMol database directory.
-  Files are located as `{read_path}/{molecule}/{iso-slug}/{dataset}/`.
-- **ExoAtom**: Path to the root ExoAtom database directory.
-  Files are located as `{read_path}/{atom}/{dataset}/`.
-- **HITRAN / HITEMP**: Direct path to the `.par` file.
-  Files are located as `{read_path}/{molecule}/{iso-slug}/`.
+- **ExoMol**: Path to the root ExoMol database directory. \
+  Files are located as `{read_path}/{molecule}/{isotopologue}/{dataset}/`. \
+  If a directory is given, the code looks for definition, line list, and partition function files in fowllowing format filepath \
+  `{read_path}/{molecule}/{isotopologue}/{dataset}/{isotopologue}__{dataset}.def.json`. 
+- **ExoAtom**: Path to the root ExoAtom database directory. \
+  Files are located as `{read_path}/{atom}/{dataset}/`. \
+  If a directory is given, the code looks for definition, line list, and partition function files in fowllowing format filepath \
+  `{read_path}/{atom}/{dataset}/{atom}__{dataset}.adef.json`. 
+- **HITRAN / HITEMP**: Path to the root HITRAN/HITEMP database directory. \
+  Files are located as `{read_path}/{molecule}/{isotopologue}/`. \
+  If a directory is given, the code looks for line list and partition function files in fowllowing format filepath \
+  `{read_path}/{molecule}/{isotopologue}/{molecule}__{isotopologue}.par`.
 
 ### `save_path` -- Where Results Go
 

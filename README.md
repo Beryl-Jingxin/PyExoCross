@@ -26,25 +26,22 @@ git clone https://github.com/Beryl-Jingxin/PyExoCross.git
 pip install -r requirements.txt
 ```
 
-Python packages version
+Python packages version (see `requirements.txt` for installable bounds; tested on Python 3.8–3.12):
 
-| Python packages     | Version     |
-| :------------------ | ----------- |
-| python_version      | [3.8, 3.10] |
-| argparse            | 1.1         |
-| astropy             | 6.0.0       |
-| dask                | 2024.1.0    |
-| indexed_bzip2       | 1.5.0       |
-| ipython             | 8.12.3      |
-| matplotlib          | 3.8.2       |
-| numexpr             | 2.8.8       |
-| numpy               | 1.22.3      |
-| pandarallel         | 1.6.5       |
-| pandas              | 2.0.3       |
-| requests            | 2.31.0      |
-| scipy               | 1.11.4      |
-| tqdm                | 4.66.1      |
-| urllib3             | 1.26.13     |
+| Python packages   | Version range              |
+| :---------------- | -------------------------- |
+| python_version    | 3.8, 3.9, 3.10, 3.11, 3.12 |
+| numpy             | >=1.20, <2.0               |
+| pandas            | >=1.4, <3.0                |
+| scipy             | >=1.7, <2.0                |
+| numexpr           | >=2.7.0,<3.0.0             |
+| matplotlib        | >=3.5, <4.0                |
+| tqdm              | >=4.64.0,<5.0.0            |
+| tabulate          | >=0.8.9,<1.0.0             |
+| requests          | >=2.25.1,<3.0.0            |
+| astropy           | >=5.0.0,<7.0.0             |
+| dask              | >=2022.5, <2025            |
+| pandarallel       | >=1.6.5,<2.0.0             |
 
 ## Run PyExoCross
 

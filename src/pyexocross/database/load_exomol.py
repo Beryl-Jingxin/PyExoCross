@@ -364,7 +364,8 @@ def read_exomol_pf(read_path, data_info, T_list):
     pf_filename = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.pf'
     pf_col_name = ['T', 'Q']
     try:
-        pf_df = pd.read_csv(pf_filename, sep='\\s+', names=pf_col_name, header=None)
+        # Use Python engine for regex separator; avoids pandas warning and parses correctly.
+        pf_df = pd.read_csv(pf_filename, sep=r'\s+', names=pf_col_name, header=None, engine='python')
     except:
         raise ValueError('No partition function file. Please check the file path.')
     try:
@@ -372,6 +373,9 @@ def read_exomol_pf(read_path, data_info, T_list):
     except:
         raise ValueError('No specified temperature dependent partition funtion value.', 
                           'Please change the temperature(s) or calculate the partition function at first.')
+    if Q_list.empty:
+        raise ValueError('No specified temperature dependent partition funtion value.',
+                         'Please change the temperature(s) or calculate the partition function at first.')
     Q_arr = Q_list.to_numpy(dtype=float)
     return Q_arr
 
@@ -456,4 +460,3 @@ def extract_broad(broad_df, st_df):
     gamma_L = broad_df['gamma_L'][id_broad]
     n_air = broad_df['n_air'][id_broad]
     return(gamma_L, n_air)
-

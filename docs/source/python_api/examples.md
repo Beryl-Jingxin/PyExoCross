@@ -378,7 +378,7 @@ px.cooling_functions(
     species_id=601,
     read_path='/path/to/Databases/ExoAtom/',
     save_path='/path/to/output/',
-    logs_path='/path/to/output/log/exoato_cf.log',
+    logs_path='/path/to/output/log/exoatom_cf.log',
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
@@ -465,7 +465,7 @@ px.stick_spectra(
     plot=True,
     plot_method='log',
     plot_wn_wl='WN', 
-    plot_unit='cm',        
+    plot_unit='cm-1',
     limit_yaxis=1e-30,
 )
 ```
@@ -503,7 +503,7 @@ px.cross_sections(
     plot=True,
     plot_method='log',
     plot_wn_wl='WN', 
-    plot_unit='cm',        
+    plot_unit='cm-1',
     limit_yaxis=1e-30,
 )
 ```
@@ -651,7 +651,7 @@ px.oscillator_strengths(
     plot=True,
     plot_method='log',
     plot_wn_wl='WN', 
-    plot_unit='cm',        
+    plot_unit='cm-1',
     limit_yaxis=1e-30,
 )
 ```
@@ -688,7 +688,7 @@ px.stick_spectra(
     plot=True,
     plot_method='log',
     plot_wn_wl='WN', 
-    plot_unit='cm',        
+    plot_unit='cm-1',
     limit_yaxis=1e-30,
 )
 ```
@@ -793,8 +793,8 @@ for species in species_list:
         **COMPUTE_PARAMS,
         **QN_PARAMS,
         **RANGE_PARAMS,
-        **LINE_PROFILE
-        **PLOT
+        **LINE_PROFILE,
+        **PLOT,
         temperatures=[1000, 3000, 5000],
         pressures=[1.0, 10.0],
         bin_size=0.1,           

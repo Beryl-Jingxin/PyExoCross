@@ -57,10 +57,10 @@ species_id = species_main_id * 10 + species_sub_id
 
 | Database | `read_path` Format | Example |
 |---|---|---|
-| ExoMol | Root directory of ExoMol database | `'/data/ExoMol/'` |
+| ExoMol  | Root directory of ExoMol database  | `'/data/ExoMol/'`  |
 | ExoAtom | Root directory of ExoAtom database | `'/data/ExoAtom/'` |
-| HITRAN | Direct path to `.par` file | `'/data/HITRAN/'` |
-| HITEMP | Direct path to `.par` file | `'/data/HITEMP/'` |
+| HITRAN  | Root directory of HITRAN database  | `'/data/HITRAN/'`  |
+| HITEMP  | Root directory of HITEMP database  | `'/data/HITEMP/'`  |
 
 For ExoMol, the code automatically resolves the full path as:
 
@@ -74,14 +74,20 @@ For ExoAtom:
 {read_path}/{atom}/{dataset}/
 ```
 
+For HITRAN/HITEMP:
+
+```
+  {read_path}/{molecule}/{isotopologue}/
+```
+
 ---
 
 ## Computing Resources
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `ncputrans` | `int` | `4` | Number of CPU cores for processing each transitions file |
-| `ncpufiles` | `int` | `1` | Number of transitions files processed simultaneously |
+| `ncputrans`  | `int` | `4` | Number of CPU cores for processing each transitions file |
+| `ncpufiles`  | `int` | `1` | Number of transitions files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size when reading/calculating transitions |
 
 :::{tip}

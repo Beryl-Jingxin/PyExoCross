@@ -55,9 +55,9 @@ function.  The toggle is only relevant in `.inp` files or when using
 
 | `.inp` Keyword | Python Kwarg | `.inp` Format | Python Type |
 |---|---|---|---|
-| `NCPUtrans` | `ncputrans` | `2` | `int` |
-| `NCPUfiles` | `ncpufiles` | `4` | `int` |
-| `ChunkSize` | `chunk_size` | `1000000` | `int` |
+| `NCPUtrans` | `ncputrans` | `2` | `2` (int) |
+| `NCPUfiles` | `ncpufiles` | `4` | `4` (int) |
+| `ChunkSize` | `chunk_size` | `1000000` | `1000000` (int) |
 
 ---
 
@@ -74,7 +74,7 @@ function.  The toggle is only relevant in `.inp` files or when using
 
 | `.inp` Keyword | Python Kwarg | `.inp` Format | Python Type |
 |---|---|---|---|
-| `ConversionFormat` | `conversion_format` | `1` | `int` |
+| `ConversionFormat` | `conversion_format` | `1` | `1` (int) |
 | `ConversionFrequncyRange` | `conversion_min_freq`, `conversion_max_freq` | `0 30000` | Two separate `float` args |
 | `GlobalQNLabel` | `global_qn_label_list` | `eS v Omega` | `['eS', 'v', 'Omega']` |
 | `GlobalQNFormat` | `global_qn_format_list` | `%9s %2d %4s` | `['%9s', '%2d', '%4s']` |
@@ -89,8 +89,8 @@ function.  The toggle is only relevant in `.inp` files or when using
 
 | `.inp` Keyword | Python Kwarg | `.inp` Format | Python Type |
 |---|---|---|---|
-| `Ntemp` | `ntemp` | `1` | `int` |
-| `Tmax` | `tmax` | `5000` | `int` |
+| `Ntemp` | `ntemp` | `1` | `1` (int) |
+| `Tmax` | `tmax` | `5000` | `5000` (int) |
 
 ---
 
@@ -119,7 +119,7 @@ function.  The toggle is only relevant in `.inp` files or when using
 | `.inp` Keyword | Python Kwarg | `.inp` Format | Python Type |
 |---|---|---|---|
 | `LTE/Non-LTE` | `nlte_method` | `LTE` or `Non-LTE` | `'L'` (LTE) or `'T'`/`'D'`/`'P'` |
-| `Temperature` | `temperatures` | `1000` | `[1000]` (list) |
+| `Temperatures` | `temperatures` | `1000` | `[1000]` (list) |
 | `WnWlUnit` | `wn_wl`, `wn_wl_unit` | `wn cm-1` | `'WN'`, `'cm-1'` |
 | `Range` | `min_range`, `max_range` | `0 30000` | Two separate `float` args |
 | `Absorption/Emission` | `abs_emi` | `Absorption` | `'Ab'` or `'Em'` |
@@ -139,7 +139,7 @@ All stick spectra parameters above, plus:
 
 | `.inp` Keyword | Python Kwarg | `.inp` Format | Python Type |
 |---|---|---|---|
-| `Pressure` | `pressures` | `1.0` | `[1.0]` (list) |
+| `Pressures` | `pressures` | `1.0` | `[1.0]` (list) |
 | `Npoints/BinSize` | `n_point` or `bin_size` | `BinSize 0.1` | `bin_size=0.1` or `n_point=10000` |
 | `Profile` | `profile` | `SciPyVoigt` | `'SciPyVoigt'` |
 | `Cutoff(Y/N)` | `cutoff` | `Y 25` | `25.0` (or `None` for `N`) |
@@ -192,11 +192,11 @@ Molecule                         MgH
 Isotopologue                     24Mg-1H
 Dataset                          XAB
 SpeciesID                        501
+CrossSections                    1
 Temperatures                     1000:4000:1000
-Pressure                         0.1,1.0
+Pressures                        0.1,1.0
 Range                            0  30000
 Profile                          SciPyVoigt
-CrossSections                    1
 ```
 
 **Python API equivalent:**

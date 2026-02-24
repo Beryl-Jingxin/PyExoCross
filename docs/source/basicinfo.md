@@ -199,7 +199,7 @@ LogFilePath                             /home/jingxin/data/pyexocross/log/Li_NIS
 
 **For HITRAN and HITEMP databases**
 
-`ReadPath` is the file path of input line list `.par` file.
+`ReadPath` is the folder path of input files when the input line list files path is stored in the following format.
 
 <font color=Orange>`ReadPath`</font>/<font color=SkyBlue>`Molecule`</font>/<font color=YellowGreen>`Isotopologue`</font>/<font color=SkyBlue>`Molecule`</font><font color=Brown>__</font><font color=YellowGreen>`Isotopologue`</font><font color=Brown>.par</font>
 
