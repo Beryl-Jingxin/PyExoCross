@@ -451,12 +451,20 @@ def print_stick_info(unc_unit, threshold_unit):
         pass
     print()
     print('{:25s} : {}'.format('Intensity', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission')))
-    NLTE_case = (NLTEMethod.replace('L', 'LTE').replace('T', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
-    NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
-                 .replace('T', 'Treanor distribution with Tvib and Trot')
-                 .replace('D', 'Custom vibrational density nvib and Trot')
-                 .replace('P', 'Custom rovibrational population'))
-    print('{:25s} : {}'.format(NLTE_case, NLTE_desc))
+    # NLTE_case = (NLTEMethod.replace('L', 'LTE').replace('T', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
+    # NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
+    #              .replace('T', 'Treanor distribution with Tvib and Trot')
+    #              .replace('D', 'Custom vibrational density nvib and Trot')
+    #              .replace('P', 'Custom rovibrational population'))
+    # print('{:25s} : {}'.format(NLTE_case, NLTE_desc))
+    if NLTEMethod == 'L':
+        print('{:25s} : {}'.format('LTE', 'Boltzmann distribution'))
+    elif NLTEMethod == 'T':
+        print('{:25s} : {}'.format('Non-LTE', 'Treanor distribution with Tvib and Trot'))
+    elif NLTEMethod == 'D':
+        print('{:25s} : {}'.format('Non-LTE', 'Custom vibrational density nvib and Trot'))
+    elif NLTEMethod == 'P':
+        print('{:25s} : {}'.format('Non-LTE', 'Custom rovibrational population'))
     print('{:25s} : {:<6}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
     if NLTEMethod == 'T':
         print('{:25s} : {:<6}'.format('Vibrational temperatures', str(sorted(list(set(Tvib_list)))), 'K'))
@@ -569,12 +577,20 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
     print()
     print('{:25s} : {}'.format('Line profile', profile_label+' profile'))
     print('{:25s} : {}'.format('Intensity', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission')))
-    NLTE_case = (NLTEMethod.replace('L', 'LTE').replace('T', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
-    NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
-                 .replace('T', 'Treanor distribution with Tvib and Trot')
-                 .replace('D', 'Custom vibrational density nvib and Trot')
-                 .replace('P', 'Custom rovibrational population'))
-    print('{:25s} : {}'.format(NLTE_case, NLTE_desc))
+    # NLTE_case = (NLTEMethod.replace('L', 'LTE').replace('T', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
+    # NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
+    #              .replace('T', 'Treanor distribution with Tvib and Trot')
+    #              .replace('D', 'Custom vibrational density nvib and Trot')
+    #              .replace('P', 'Custom rovibrational population'))
+    # print('{:25s} : {}'.format(NLTE_case, NLTE_desc))
+    if NLTEMethod == 'L':
+        print('{:25s} : {}'.format('LTE', 'Boltzmann distribution'))
+    elif NLTEMethod == 'T':
+        print('{:25s} : {}'.format('Non-LTE', 'Treanor distribution with Tvib and Trot'))
+    elif NLTEMethod == 'D':
+        print('{:25s} : {}'.format('Non-LTE', 'Custom vibrational density nvib and Trot'))
+    elif NLTEMethod == 'P':
+        print('{:25s} : {}'.format('Non-LTE', 'Custom rovibrational population'))
     print('{:25s} : {:<6}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
     if NLTEMethod == 'T':
         print('{:25s} : {:<6}'.format('Vibrational temperatures', str(sorted(list(set(Tvib_list)))), 'K'))

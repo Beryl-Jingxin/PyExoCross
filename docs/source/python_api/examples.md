@@ -163,7 +163,10 @@ px.stick_spectra(
     max_range=30000,
     abs_emi='Ab',
     plot=True,
-    plot_method='log'
+    plot_method='log',
+    plot_wn_wl='WN',
+    plot_unit='cm-1',
+    limit_yaxis=1e-30
 )
 ```
 
@@ -206,7 +209,7 @@ px.stick_spectra(
 )
 ```
 
-### Cross Sections
+### Cross Sections (LTE)
 
 ```python
 import pyexocross as px
@@ -253,9 +256,9 @@ px.cross_sections(
     molecule='MgH',
     isotopologue='24Mg-1H',
     dataset='XAB',
-    # read_path='/path/to/Databases/ExoMol/',
-    # save_path='/path/to/output/',
-    # logs_path='/path/to/output/log/exomol_xsec_nlte.log',
+    read_path='/path/to/Databases/ExoMol/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/exomol_xsec_nlte.log',
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
@@ -266,7 +269,6 @@ px.cross_sections(
     trot_list=[100, 200],
     vib_label=['v', 'eS'],
     rot_label=['J', 'e/f'],
-    # temperatures=[1000, 2000, 3000],
     pressures=[1.0, 5.0],
     wn_wl='WN',
     wn_wl_unit='cm-1',
@@ -283,10 +285,7 @@ px.cross_sections(
     plot_method='log',
     plot_wn_wl='WN',
     plot_unit='cm-1',
-    limit_yaxis=1e-30,
-    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMol/',
-    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/',
-    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exomol.log',
+    limit_yaxis=1e-30
 )
 ```
 
@@ -320,7 +319,7 @@ px.conversion(
     global_qn_label_list=['configuration'],
     global_qn_format_list=['%20s'],
     local_qn_label_list=['J', 'Multiple', 'parity'],
-    local_qn_format_list=['%5.1f', '%10s', '%1s'],
+    local_qn_format_list=['%5.1f', '%10s', '%1s']
 )
 ```
 
@@ -333,12 +332,11 @@ px.partition_functions(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
-    species_id=601,
     read_path='/path/to/Databases/ExoAtom/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exoatom_pf.log',
     ntemp=1,
-    tmax=6000,
+    tmax=6000
 )
 ```
 
@@ -351,12 +349,11 @@ px.specific_heats(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
-    species_id=601,
     read_path='/path/to/Databases/ExoAtom/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exoatom_cp.log',
     ntemp=1,
-    tmax=6000,
+    tmax=6000
 )
 ```
 
@@ -369,7 +366,6 @@ px.cooling_functions(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
-    species_id=601,
     read_path='/path/to/Databases/ExoAtom/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exoatom_cf.log',
@@ -377,7 +373,7 @@ px.cooling_functions(
     ncpufiles=1,
     chunk_size=100000,
     ntemp=1,
-    tmax=6000,
+    tmax=6000
 )
 ```
 
@@ -390,14 +386,13 @@ px.lifetimes(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
-    species_id=601,
     read_path='/path/to/Databases/ExoAtom/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exoatom_lifetime.log',
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
-    compress=False,
+    compress=False
 )
 ```
 
@@ -410,7 +405,6 @@ px.oscillator_strengths(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
-    species_id=601,
     read_path='/path/to/Databases/ExoAtom/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exoatom_os.log',
@@ -422,11 +416,11 @@ px.oscillator_strengths(
     plot_method='log',
     plot_wn_wl='WN',   
     plot_unit='cm-1',     
-    limit_yaxis=1e-30, 
+    limit_yaxis=1e-30
 )
 ```
 
-### Stick Spectra (Non-LTE, Population Method)
+### Stick Spectra (LTE)
 
 ```python
 import pyexocross as px
@@ -435,7 +429,6 @@ px.stick_spectra(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
-    species_id=601,
     read_path='/path/to/Databases/ExoAtom/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exoatom_stick_nlte.log',
@@ -444,8 +437,7 @@ px.stick_spectra(
     chunk_size=100000,
     qnslabel_list=['configuration', 'Multiple', 'parity'],
     qnsformat_list=['%20s', '%10s', '%2s'],
-    nlte_method='P',
-    nlte_path='/path/to/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv',
+    temperatures=[300, 3000],
     wn_wl='WN',
     wn_wl_unit='cm-1',
     min_range=0,
@@ -460,7 +452,123 @@ px.stick_spectra(
     plot_method='log',
     plot_wn_wl='WN', 
     plot_unit='cm-1',
-    limit_yaxis=1e-30,
+    limit_yaxis=1e-30
+)
+```
+
+### Stick Spectra (Non-LTE, Population Method)
+
+```python
+import pyexocross as px
+
+px.stick_spectra(
+    database='ExoAtom',
+    atom='Ar',
+    dataset='NIST',
+    read_path='/path/to/Databases/ExoAtom/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/exoatom_stick_nlte.log',
+    ncputrans=4,    
+    ncpufiles=1,
+    chunk_size=100000,
+    qnslabel_list=['configuration', 'Multiple', 'parity'],
+    qnsformat_list=['%20s', '%10s', '%2s'],
+    nlte_method='P',
+    nlte_path='/path/to/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv',
+    temperatures=[300, 3000],
+    wn_wl='WN',
+    wn_wl_unit='cm-1',
+    min_range=0,
+    max_range=115400,
+    abs_emi='Ab',
+    qns_filter={
+        'configuration': [],
+        'Multiple': [],
+        'parity': [],
+    },
+    plot=True,
+    plot_method='log',
+    plot_wn_wl='WN', 
+    plot_unit='cm-1',
+    limit_yaxis=1e-30
+)
+```
+
+### Cross Sections (LTE)
+
+```python
+import pyexocross as px
+
+px.cross_sections(
+    database='ExoAtom',
+    atom='Ar',
+    dataset='NIST',
+    read_path='/path/to/Databases/ExoAtom/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/exoatom_stick_nlte.log',
+    ncputrans=4,    
+    ncpufiles=1,
+    chunk_size=100000,
+    temperatures=[1000, 2000, 3000],
+    pressures=[1.0, 10.0],
+    wn_wl='WN',
+    wn_wl_unit='cm-1',
+    min_range=0,
+    max_range=115400,
+    bin_size=1,
+    profile='SciPyVoigt',
+    predissociation=False,
+    broadeners=['Default'],
+    ratios=[1.0],
+    cutoff=25.0,
+    abs_emi='Ab',
+    plot=True,
+    plot_method='log',
+    plot_wn_wl='WN',
+    plot_unit='cm-1',
+    limit_yaxis=1e-30
+)
+```
+
+### Cross Sections (Non-LTE, Treanor Method)
+
+```python
+import pyexocross as px
+
+px.cross_sections(
+    database='ExoAtom',
+    atom='Ar',
+    dataset='NIST',
+    read_path='/path/to/Databases/ExoMol/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/exomol_xsec_nlte.log',
+    ncputrans=4,    
+    ncpufiles=1,
+    chunk_size=100000,
+    qnslabel_list=['configuration', 'Multiple', 'parity'],
+    qnsformat_list=['%20s', '%10s', '%1s'],
+    nlte_method='T',
+    tvib_list=[1000],
+    trot_list=[100, 200],
+    vib_label=['parity'],
+    rot_label=['J'],
+    pressures=[1.0, 5.0],
+    wn_wl='WN',
+    wn_wl_unit='cm-1',
+    min_range=0,
+    max_range=30000,
+    bin_size=1,
+    profile='SciPyVoigt',
+    predissociation=False,
+    broadeners=['Default'],
+    ratios=[1.0],
+    cutoff=25.0,
+    abs_emi='Em',
+    plot=True,
+    plot_method='log',
+    plot_wn_wl='WN',
+    plot_unit='cm-1',
+    limit_yaxis=1e-30
 )
 ```
 
@@ -473,7 +581,6 @@ px.cross_sections(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
-    species_id=601,
     read_path='/path/to/Databases/ExoAtom/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/exoatom_xsec_nlte.log',
@@ -484,13 +591,12 @@ px.cross_sections(
     qnsformat_list=['%20s', '%10s', '%2s'],
     nlte_method='P',
     nlte_path='/path/to/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv',
-    pressures=[1.0],
     wn_wl='WN',
     wn_wl_unit='cm-1',
     min_range=0,
     max_range=115400,
     bin_size=0.1,
-    profile='SciPyVoigt',
+    profile='Gaussian',
     broadeners=['Default'],
     ratios=[1.0],
     abs_emi='Ab',
@@ -498,7 +604,7 @@ px.cross_sections(
     plot_method='log',
     plot_wn_wl='WN', 
     plot_unit='cm-1',
-    limit_yaxis=1e-30,
+    limit_yaxis=1e-30
 )
 ```
 
@@ -531,7 +637,7 @@ px.conversion(
     global_qn_label_list=['X', 'Omega', 'v1'],
     global_qn_format_list=['%2s', '%3s', '%2d'],
     local_qn_label_list=['Br', 'Sym', 'F'],
-    local_qn_format_list=['%2s', '%1s', '%5s'],
+    local_qn_format_list=['%2s', '%1s', '%5s']
 )
 ```
 
@@ -548,14 +654,12 @@ px.partition_functions(
     species_id=81,
     read_path='/path/to/Databases/HITRAN/',
     save_path='/path/to/output/',
-    logs_path='/path/to/output/log/hitran_pf.log',
-    ncputrans=4,    
-    ncpufiles=1,
+    logs_path='/path/to/output/log/hitran_pf.log',   
     chunk_size=100000,
     qnslabel_list=['J', 'X', 'Omega', 'v1', 'Sym', 'F'],
     qnsformat_list=['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s'],
     ntemp=1,
-    tmax=5000,
+    tmax=5000
 )
 ```
 
@@ -573,13 +677,11 @@ px.specific_heats(
     read_path='/path/to/Databases/HITRAN/',
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/hitran_cp.log',
-    ncputrans=4,    
-    ncpufiles=1,
     chunk_size=100000,
     qnslabel_list=['J', 'X', 'Omega', 'v1', 'Sym', 'F'],
     qnsformat_list=['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s'],
     ntemp=1,
-    tmax=5000,
+    tmax=5000
 )
 ```
 
@@ -600,6 +702,9 @@ px.cooling_functions(
     chunk_size=100000,
     ntemp=1,
     tmax=5000,
+    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/', 
+    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/', 
+    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_hitran.log'
 )
 ```
 
@@ -622,7 +727,7 @@ px.lifetimes(
     chunk_size=100000,
     qnslabel_list=['J', 'X', 'Omega', 'v1', 'Sym', 'F'],
     qnsformat_list=['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s'],
-    compress=False,
+    compress=False
 )
 ```
 
@@ -646,7 +751,38 @@ px.oscillator_strengths(
     plot_method='log',
     plot_wn_wl='WN', 
     plot_unit='cm-1',
-    limit_yaxis=1e-30,
+    limit_yaxis=1e-30
+)
+```
+
+### Stick Spectra (LTE)
+
+```python
+import pyexocross as px
+
+px.stick_spectra(
+    database='HITRAN',
+    molecule='NO',
+    isotopologue='14N-16O',
+    dataset='NO-HITRAN',
+    species_id=81,
+    read_path='/path/to/Databases/HITRAN/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/hitran_stick_nlte.log',
+    chunk_size=100000,
+    temperatures=[296, 1000],
+    wn_wl='WN',
+    wn_wl_unit='cm-1',
+    min_range=0,
+    max_range=30000,
+    abs_emi='Ab',
+    unc_filter=0.01,
+    threshold=1e-30,
+    plot=True,
+    plot_method='log',
+    plot_wn_wl='WN', 
+    plot_unit='cm-1',
+    limit_yaxis=1e-30
 )
 ```
 
@@ -683,7 +819,7 @@ px.stick_spectra(
     plot_method='log',
     plot_wn_wl='WN', 
     plot_unit='cm-1',
-    limit_yaxis=1e-30,
+    limit_yaxis=1e-30
 )
 ```
 
@@ -719,7 +855,7 @@ px.cross_sections(
     plot=True,
     plot_method='log',
     plot_unit='cm-1',
-    limit_yaxis=1e-30,
+    limit_yaxis=1e-30
 )
 ```
 
@@ -733,15 +869,16 @@ Run multiple species or temperatures in a loop:
 import pyexocross as px
 
 species_list = [
-    {'molecule': 'NO', 'isotopologue': '14N-16O', 'dataset': 'XABC', 'species_id': 81},
-    {'molecule': 'NO', 'isotopologue': '15N-16O', 'dataset': 'XABC', 'species_id': 82},
+    {'molecule': 'NO', 'isotopologue': '14N-16O', 'dataset': 'XABC'},
+    {'molecule': 'NO', 'isotopologue': '15N-16O', 'dataset': 'XABC'},
+    {'molecule': 'MgH', 'isotopologue': '24Mg-1H', 'dataset': 'XAB'},
 ]
 
 COMMON = dict(
     database='ExoMol',
-    read_path='/home/jingxin/LHD/Program/Databases/ExoMol/',
-    save_path='/home/jingxin/LHD/Program/Data/pyexocross/',
-    logs_path='/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_exomol.log',
+    read_path='/path/to/Databases/ExoMol/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/exomol_multiple_species.log'
 )
 
 COMPUTE_PARAMS = dict(
@@ -766,7 +903,7 @@ RANGE_PARAMS = dict(
 )
 
 LINE_PROFILE = dict(
-    profile='SciPyVoigt',
+    profile='Gaussian',
     broadeners=['Default'], 
     ratios=[1.0],           
     alpha_hwhm=None,         
@@ -789,9 +926,11 @@ for species in species_list:
         **RANGE_PARAMS,
         **LINE_PROFILE,
         **PLOT,
-        temperatures=[1000, 3000, 5000],
-        pressures=[1.0, 10.0],
-        bin_size=0.1,           
+        molecule=species['molecule'],
+        isotopologue=species['isotopologue'],
+        dataset=species['dataset'],
+        temperatures=[1000, 3000],
+        bin_size=1,           
         predissociation=False,  
         cutoff=25.0,            
     )
