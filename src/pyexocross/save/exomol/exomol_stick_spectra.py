@@ -71,8 +71,8 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
         Stick spectra DataFrame with columns: v, S, J', E', J", E", and quantum numbers
     """
     from pyexocross.core import ( 
-        min_wn,
-        max_wn,
+        min_wnl,
+        max_wnl,
         QNsFilter,
         QNs_value,
         QNs_label,
@@ -123,7 +123,7 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
     stick_spectra_df['v'] = cal_v(stick_spectra_df["E'"].values, stick_spectra_df['E"'].values)
     # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
     stick_spectra_df = stick_spectra_df[stick_spectra_df['v'] >= 0]
-    stick_spectra_df = stick_spectra_df[stick_spectra_df['v'].between(min_wn, max_wn)]
+    stick_spectra_df = stick_spectra_df[stick_spectra_df['v'].between(min_wnl, max_wnl)]
     if len(stick_spectra_df) != 0 and QNsFilter != []:
         stick_spectra_df = QNfilter_linelist(stick_spectra_df, QNs_value, QNs_label)
     num = len(stick_spectra_df)

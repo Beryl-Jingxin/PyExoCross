@@ -55,7 +55,7 @@ if TYPE_CHECKING:
         ncputrans,
     )
 
-_USE_THREAD_POOL = False
+_USE_THREAD_POOL = True
 
 
 def _executor_context(max_workers):
