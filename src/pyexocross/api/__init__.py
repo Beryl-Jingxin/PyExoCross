@@ -88,7 +88,7 @@ def _remap_plot_kwargs(kwargs, plot_map):
 # ---------------------------------------------------------------------------
 # Run (all functions from .inp file)
 # ---------------------------------------------------------------------------
-def run(inp_filepath):
+def run(inp_filepath, force_reload=False):
     """
     Run all enabled functions from an .inp configuration file.
 
@@ -103,6 +103,9 @@ def run(inp_filepath):
     ----------
     inp_filepath : str
         Path to the .inp configuration file.
+    force_reload : bool, optional
+        If True, force re-parse of ``inp_filepath`` even when a cached
+        configuration exists in this Python process. Default is False.
 
     Examples
     --------
@@ -110,7 +113,7 @@ def run(inp_filepath):
     >>> px.run('/path/to/MgH_ExoMol.inp')
     """
     _ensure_logging(inp_filepath=inp_filepath)
-    config = Config(inp_filepath=inp_filepath)
+    config = Config(inp_filepath=inp_filepath, force_reload=force_reload)
     get_results(config)
 
 

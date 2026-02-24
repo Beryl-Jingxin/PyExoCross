@@ -97,6 +97,9 @@ If you already have a `.inp` configuration file, you can run it directly:
 
 ```python
 px.run('/path/to/MgH_ExoMol.inp')
+
+# Use force_reload=True if you edited the same .inp file in this session
+px.run('/path/to/MgH_ExoMol.inp', force_reload=True)
 ```
 
 Or call a specific function from a `.inp` file (ignoring the on/off switches

@@ -133,6 +133,7 @@ dmypy.json
 
 # Test folder
 .old/
+.note/
 .input/
 .output/
 output/

@@ -16,7 +16,7 @@ Every function accepts either:
 ## `px.run`
 
 ```python
-px.run(inp_filepath)
+px.run(inp_filepath, force_reload=False)
 ```
 
 Run **all** enabled functions from an `.inp` configuration file.  This is the
@@ -28,11 +28,20 @@ command line.
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `inp_filepath` | `str` | Yes | Path to the `.inp` configuration file |
+| `force_reload` | `bool` | No | Force re-parse of `.inp` even when cached in current Python process (default: `False`) |
+
+:::{note}
+If you edit the same `.inp` file repeatedly in a long-lived session (e.g. Jupyter),
+use `force_reload=True` to avoid reusing stale cached parameters.
+:::
 
 **Example**
 
 ```python
 px.run('/path/to/MgH_ExoMol.inp')
+
+# Re-read updated .inp content in the same session
+px.run('/path/to/MgH_ExoMol.inp', force_reload=True)
 ```
 
 ---

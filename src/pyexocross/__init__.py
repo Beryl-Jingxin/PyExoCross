@@ -30,7 +30,7 @@ Functions
 - ``px.cross_sections(...)``       -- Cross sections
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.0.dev1"
 
 from pyexocross.api import (
     # Run from .inp file

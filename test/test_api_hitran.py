@@ -208,7 +208,7 @@ def test_cross_sections():
         **COMPUTE_PARAMS,
         pressures=[1.0],           # Pressure in unit bar (default: [1.0])
         bin_size=0.1,                   # Bin size for wavenumber grid 
-        profile='SciPyVoigt',           # Line profile name (default: 'Gaussian')
+        profile='Gaussian',           # Line profile name (default: 'Gaussian')
         predissociation=False,          # Predissociation (default: False)
         cutoff=25.0,                    # Cutoff distance in cm⁻¹ (default: None)
         broadeners=['Air', 'Self'],     # Broadening species (default: ['Default'])

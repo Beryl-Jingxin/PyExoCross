@@ -38,6 +38,9 @@ import pyexocross as px
 
 ```python
 px.run('/path/to/config.inp')
+
+# Force re-parse when the same .inp file was edited in this session
+px.run('/path/to/config.inp', force_reload=True)
 ```
 
 ### 2. With keyword arguments (recommended for scripting)

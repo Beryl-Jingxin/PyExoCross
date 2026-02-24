@@ -23,7 +23,7 @@ class Config:
     Can be initialized from an .inp file or from keyword arguments.
     """
     
-    def __init__(self, inp_filepath=None, **kwargs):
+    def __init__(self, inp_filepath=None, force_reload=False, **kwargs):
         """
         Initialize configuration from .inp file or keyword arguments.
 
@@ -31,11 +31,15 @@ class Config:
         ----------
         inp_filepath : str, optional
             Path to .inp configuration file. If provided, parameters are read from file.
+        force_reload : bool, optional
+            If True, bypass cached parsed .inp parameters and re-parse the file.
+            This is useful when the same .inp file is edited within a long-lived
+            Python session (e.g., Jupyter). Default is False.
         **kwargs
             Direct parameter values. Used when inp_filepath is None or to override file values.
         """
         if inp_filepath is not None:
-            self._load_from_file(inp_filepath)
+            self._load_from_file(inp_filepath, force_reload=force_reload)
         
         # Always call _load_from_kwargs to handle overrides and defaults.
         # If inp_filepath was provided, kwargs will override file values.
@@ -47,11 +51,11 @@ class Config:
         from pyexocross.base.config_manager import ConfigManager
         ConfigManager._last_config = self
     
-    def _load_from_file(self, inp_filepath):
+    def _load_from_file(self, inp_filepath, force_reload=False):
         """Load configuration from .inp file."""
         # Use ConfigManager to cache parsed configurations
         from pyexocross.base.config_manager import ConfigManager
-        params = ConfigManager.get_config(inp_filepath)
+        params = ConfigManager.get_config(inp_filepath, force_reload=force_reload)
         self._set_attributes(params)
     
     def _load_from_kwargs(self, **kwargs):

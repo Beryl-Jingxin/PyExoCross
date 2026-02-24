@@ -27,5 +27,6 @@ if __name__ == '__main__':
     inp_path = parse_args()
 
     setup_logging(parse_logging_info(inp_path))
-    cfg = Config(inp_filepath=inp_path)
+    # CLI should always reflect latest .inp edits in the same shell session.
+    cfg = Config(inp_filepath=inp_path, force_reload=True)
     get_results(cfg)

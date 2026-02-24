@@ -27,8 +27,8 @@ def get_results(config):
     from pyexocross.process.hitran_qn import hitran_linelist_QN
     from pyexocross.calculation.calculate_lifetime import cal_lifetime
     from pyexocross.base.large_file import read_trans_chunks
-    from pyexocross.conversion.exomol_to_hitran import conversion_exomol2hitran
-    from pyexocross.conversion.hitran_to_exomol import conversion_hitran2exomol
+    from pyexocross.convert.exomol_to_hitran import conversion_exomol2hitran
+    from pyexocross.convert.hitran_to_exomol import conversion_hitran2exomol
     from pyexocross.save.exomol.exomol_partition_func import save_exomol_partition_func
     from pyexocross.save.exomol.exomol_specific_heat import save_exomol_specific_heat
     from pyexocross.save.exomol.exomol_lifetime import save_exomol_lifetime
