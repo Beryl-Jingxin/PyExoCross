@@ -1,4 +1,4 @@
-# <font color=Green>Python API Reference</font>
+# <font color=Orange>**Python API Reference**</font>
 
 PyExoCross provides a full-featured Python API for programmatic access to all
 functionalities.  Instead of writing `.inp` configuration files, you can call
@@ -13,7 +13,7 @@ pip install pyexocross
 import pyexocross as px
 ```
 
-## <font color=Green>[PyExoCross Documentation Homepage](../index.rst)</font>
+## <font color=Orange>[**PyExoCross Documentation Homepage**](../index.rst)</font>
 
 Find more details of input parameters from [PyExoCross Documentation Homepage](../index.rst).
 
