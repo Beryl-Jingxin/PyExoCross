@@ -33,7 +33,7 @@ For detailed usage, see the Python API Reference in the documentation:
 
 ## PyExoCross Python Program
 
-*PyExoCross* ***GitHub*** : [https://github.com/ExoMol/PyExoCross](https://github.com/ExoMol/PyExoCross)
+*PyExoCross* ***GitHub*** : [https://github.com/Beryl-Jingxin/PyExoCross](https://github.com/Beryl-Jingxin/PyExoCross)
 
 *PyExoCross* ***Manual*** : [https://pyexocross.readthedocs.io](https://pyexocross.readthedocs.io)
 

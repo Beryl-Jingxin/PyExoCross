@@ -1,6 +1,6 @@
 # Examples
 
-The examples of the whole input files for databases can be obtained from the `input` folder of *PyExoCross*'s ***GitHub*** : [https://github.com/ExoMol/PyExoCross](https://github.com/ExoMol/PyExoCross).
+The examples of the whole input files for databases can be obtained from the `input` folder of *PyExoCross*'s ***GitHub*** : [https://github.com/Beryl-Jingxin/PyExoCross](https://github.com/Beryl-Jingxin/PyExoCross).
 
 ## Example for the ExoMol database
 
