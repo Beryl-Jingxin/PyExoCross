@@ -34,7 +34,7 @@ QNsformat                               %12s              %7s     %2s
 
 
 # Conversion #
-ConversionFormat                        1     
+ConversionFormat                        HITRAN     
 ConversionFrequncyRange                 0         160000          # Wavenumber in unit of cm-1      
 GlobalQNLabel                           Configuration     
 GlobalQNFormat                          %12s               

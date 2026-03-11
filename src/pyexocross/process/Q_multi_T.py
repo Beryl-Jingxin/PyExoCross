@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from ..calculation.calculate_partition_func import cal_Q_nlte_2T, cal_Q_nlte_nvib
 from ..database.load_exomol import read_exomol_pf
+from ..database.load_exomolhr import read_exomolhr_pf
 
 def cal_pf_multiT(T_list, Tvib_list, Trot_list, states_df, NLTEMethod, read_path, data_info):
     """
@@ -35,7 +36,10 @@ def cal_pf_multiT(T_list, Tvib_list, Trot_list, states_df, NLTEMethod, read_path
     """
     # LTE
     if NLTEMethod == 'L':
-        Q_arr = read_exomol_pf(read_path, data_info, T_list)
+        try:
+            Q_arr = read_exomol_pf(read_path, data_info, T_list)
+        except ValueError:
+            Q_arr = read_exomolhr_pf(read_path, data_info, T_list)
     # Non-LTE using two temperatures
     elif NLTEMethod == 'T':
         Q_arr = cal_Q_nlte_2T(Tvib_list, Trot_list, states_df['Evib'], states_df['Erot'], states_df['g'])

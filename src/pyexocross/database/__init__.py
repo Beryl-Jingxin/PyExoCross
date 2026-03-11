@@ -14,6 +14,15 @@ from .load_exomol import (
     read_broad,
     extract_broad,
 )
+from .load_exomolhr import (
+    resolve_exomolhr_data_info,
+    resolve_exomolhr_filepaths,
+    exomolhr_metadata,
+    read_exomolhr_df,
+    read_exomolhr_pf,
+    process_exomolhr_linelist,
+    process_exomolhr_linelist_Q,
+)
 from .load_hitran import (
     read_parfile,
     read_hitran_parfile,
@@ -31,6 +40,14 @@ __all__ = [
     'read_exomol_pf',
     'read_broad',
     'extract_broad',
+    # ExoMolHR
+    'resolve_exomolhr_data_info',
+    'resolve_exomolhr_filepaths',
+    'exomolhr_metadata',
+    'read_exomolhr_df',
+    'read_exomolhr_pf',
+    'process_exomolhr_linelist',
+    'process_exomolhr_linelist_Q',
     # HITRAN
     'read_parfile',
     'read_hitran_parfile',
@@ -38,4 +55,3 @@ __all__ = [
     'process_hitran_linelist',
     'process_hitran_linelist_Q',
 ]
-

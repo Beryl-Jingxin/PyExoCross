@@ -198,9 +198,14 @@ class Config:
                 raise ValueError("atom must be specified for ExoAtom database")
             self.data_info = [self.atom, self.dataset]
         else:
-            if self.molecule is None or self.isotopologue is None or self.dataset is None:
-                raise ValueError("molecule, isotopologue, and dataset must be specified")
-            self.data_info = [self.molecule, self.isotopologue, self.dataset]
+            if self.molecule is None or self.isotopologue is None:
+                raise ValueError("molecule and isotopologue must be specified")
+            if self.database == 'ExoMolHR':
+                self.data_info = [self.molecule, self.isotopologue, self.dataset]
+            else:
+                if self.dataset is None:
+                    raise ValueError("molecule, isotopologue, and dataset must be specified")
+                self.data_info = [self.molecule, self.isotopologue, self.dataset]
         
         # Set defaults for other parameters
         self._set_defaults(**kwargs)
@@ -254,7 +259,7 @@ class Config:
     def _set_defaults(self, **kwargs):
         """Set default values for parameters not specified, with kwargs overrides."""
         # Conversion defaults
-        self.conversion_format = kwargs.get('conversion_format', getattr(self, 'conversion_format', 1))
+        self.conversion_format = kwargs.get('conversion_format', getattr(self, 'conversion_format', 'None'))
         self.conversion_min_freq = kwargs.get('conversion_min_freq', getattr(self, 'conversion_min_freq', 0))
         self.conversion_max_freq = kwargs.get('conversion_max_freq', getattr(self, 'conversion_max_freq', 30000))
         
@@ -432,11 +437,24 @@ class Config:
         self.check_lifetime = meta['check_lifetime']
         self.check_gfactor = meta['check_gfactor']
         self.check_predissoc = meta['check_predissoc']
+        if self.database == 'ExoMolHR':
+            self.dataset = meta.get('dataset', self.dataset)
+            self.data_info = [self.molecule, self.isotopologue, self.dataset]
+            if not getattr(self, 'qnslabel_list', []):
+                self.qnslabel_list = meta.get('qnslabel_list', [])
+            if not getattr(self, 'qnsformat_list', []):
+                self.qnsformat_list = meta.get('qnsformat_list', [])
+            if getattr(self, 'qns_label', []) and not getattr(self, 'qns_format', []):
+                self.qns_format = [
+                    self.qnsformat_list[self.qnslabel_list.index(label)]
+                    for label in self.qns_label
+                    if label in self.qnslabel_list
+                ]
         resolved_species_main_id = meta['species_main_id']
         resolved_species_sub_id = meta['species_sub_id']
         # For ExoMol/ExoAtom, keep non-zero IDs that were already parsed from
         # inp_para(). If resolver returns zeros, do not overwrite valid values.
-        if self.database in ('ExoMol', 'ExoAtom'):
+        if self.database in ('ExoMol', 'ExoAtom', 'ExoMolHR'):
             if current_species_main_id and current_species_sub_id and not (resolved_species_main_id or resolved_species_sub_id):
                 self.species_main_id = current_species_main_id
                 self.species_sub_id = current_species_sub_id

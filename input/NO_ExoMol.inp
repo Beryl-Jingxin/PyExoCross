@@ -24,9 +24,9 @@ CrossSections                           1
 
 
 # Cores and chunks #
-NCPUtrans                               4
+NCPUtrans                               1
 NCPUfiles                               1
-ChunkSize                               1000000
+ChunkSize                               100000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
@@ -35,7 +35,7 @@ QNsformat                               %1s    %1s     %12s     %3d   %3d      %
 
 
 # Conversion #
-ConversionFormat                        1     
+ConversionFormat                        HITRAN     
 ConversionFrequncyRange                 0          63000          # Wavenumber in unit of cm-1      
 GlobalQNLabel                           State      v       
 GlobalQNFormat                          %12s       %3d     

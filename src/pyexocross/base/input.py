@@ -31,6 +31,94 @@ LocalQNLabel_list = []
 LocalQNFormat_list = []
 
 
+def _exomolhr_meta_filepath():
+    """Return the fixed ExoMolHR metadata filepath."""
+    return os.path.join(
+        os.path.dirname(__file__),
+        '..',
+        'database',
+        'meta',
+        'ExoMolHR_list.csv',
+    )
+
+
+def _split_exomolhr_meta_list(value):
+    """Split a comma-separated metadata field into a clean list."""
+    if pd.isna(value):
+        return []
+    return [item.strip() for item in str(value).split(',') if item.strip() != '']
+
+
+def _resolve_exomolhr_filepaths(read_path, molecule, isotopologue):
+    """Resolve ExoMolHR CSV and PF filepaths from molecule and isotopologue."""
+    iso_path = os.path.join(read_path, molecule, isotopologue)
+    csv_files = sorted([
+        path for path in glob.glob(os.path.join(iso_path, '*.csv'))
+        if isotopologue in os.path.basename(path)
+    ])
+    pf_files = sorted([
+        path for path in glob.glob(os.path.join(iso_path, '*.pf'))
+        if isotopologue in os.path.basename(path)
+    ])
+    if len(csv_files) != 1 or len(pf_files) != 1:
+        # Fallback to ANY csv/pf if strict isotopologue match fails but exactly one exists
+        if len(csv_files) == 0:
+            csv_files = glob.glob(os.path.join(iso_path, '*.csv'))
+        if len(pf_files) == 0:
+            pf_files = glob.glob(os.path.join(iso_path, '*.pf'))
+            
+    if len(csv_files) != 1 or len(pf_files) != 1:
+        raise ValueError(
+            f"ExoMolHR expects exactly one CSV and one PF file under {iso_path}. "
+            f"Found {len(csv_files)} CSV and {len(pf_files)} PF."
+        )
+    
+    csv_name = os.path.basename(csv_files[0])
+    pf_name = os.path.basename(pf_files[0])
+    
+    # Try to extract dataset name by splitting by '__'
+    # Standard format: Molecule__Isotopologue__Dataset.csv and Isotopologue__Dataset.pf
+    def get_dataset(name, ext):
+        parts = name.replace(ext, '').split('__')
+        if len(parts) >= 1:
+            return parts[-1]
+        return 'default'
+
+    csv_dataset = get_dataset(csv_name, '.csv')
+    pf_dataset = get_dataset(pf_name, '.pf')
+    
+    # If they both exist and we have a preferred one from metadata, we'd use it.
+    # For now, if either works, we return it. PF dataset is usually more reliable.
+    return pf_dataset
+
+
+def _exomolhr_metadata(molecule, isotopologue):
+    """Return ExoMolHR metadata for a molecule/isotopologue pair."""
+    meta_df = pd.read_csv(_exomolhr_meta_filepath())
+    meta_row = meta_df[
+        (meta_df['molecule'] == molecule) & (meta_df['iso-slug'] == isotopologue)
+    ]
+    if meta_row.empty:
+        raise ValueError(
+            f"No ExoMolHR metadata found for molecule={molecule}, isotopologue={isotopologue}."
+        )
+    meta_row = meta_row.iloc[0]
+    qnslabel_list = _split_exomolhr_meta_list(meta_row['QN label'])
+    qnsformat_list = _split_exomolhr_meta_list(meta_row['QN format'])
+    main_col = _split_exomolhr_meta_list(meta_row['Main column'])
+    main_fmt = _split_exomolhr_meta_list(meta_row['Main format'])
+    actual_main_col = [('nu' if col == 'v' else 'unc' if col == 'Unc' else col) for col in main_col]
+    return {
+        'dataset': str(meta_row['dataset']),
+        'mass': float(meta_row['mass']),
+        'abundance': float(meta_row['abundance']),
+        'qnslabel_list': qnslabel_list,
+        'qnsformat_list': qnsformat_list,
+        'exomolhr_col': actual_main_col + [label + "'" for label in qnslabel_list] + [label + '"' for label in qnslabel_list],
+        'exomolhr_fmt': main_fmt + qnsformat_list + qnsformat_list,
+    }
+
+
 def _hitran_molparam_filepath():
     """Return the fixed HITRAN molparam filepath."""
     return os.path.join(
@@ -147,20 +235,23 @@ def inp_para(inp_filepath):
     
     # Database
     database = (inp_df[col0.isin(['Database'])][1].values[0].upper()
-                .replace('EXOMOL','ExoMol').replace('EXOATOM','ExoAtom'))
+                .replace('EXOMOLHR', 'ExoMolHR')
+                .replace('EXOMOL','ExoMol')
+                .replace('EXOATOM','ExoAtom'))
     
     # Basic information
     if database != 'ExoAtom':
         molecule = inp_df[col0.isin(['Molecule'])][1].values[0]
         isotopologue = inp_df[col0.isin(['Isotopologue'])][1].values[0]
-        dataset = inp_df[col0.isin(['Dataset'])][1].values[0]
+        dataset_rows = inp_df[col0.isin(['Dataset'])]
+        dataset = dataset_rows[1].values[0] if not dataset_rows.empty else None
         data_info = [molecule, isotopologue, dataset]
     elif database == 'ExoAtom':
         atom = inp_df[col0.isin(['Atom'])][1].values[0]
         dataset = inp_df[col0.isin(['Dataset'])][1].values[0]
         data_info = [atom, dataset]
     else:
-        raise ValueError("Please type the correct database choice 'ExoMol', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")
+        raise ValueError("Please type the correct database choice 'ExoMol', 'ExoMolHR', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")
     try:
         species_id = int(inp_df[col0.isin(['SpeciesID'])][1].iloc[0])
     except:
@@ -182,6 +273,9 @@ def inp_para(inp_filepath):
     ensure_dir(save_path)
     ensure_dir(log_dir + '/')
     logs_path = os.path.join(log_dir, log_name)
+    if database == 'ExoMolHR':
+        dataset = _resolve_exomolhr_filepaths(read_path, molecule, isotopologue)
+        data_info = [molecule, isotopologue, dataset]
         
     # Functions 
     Conversion = int(inp_df[col0.isin(['Conversion'])][1].iloc[0])
@@ -204,23 +298,71 @@ def inp_para(inp_filepath):
     # Quantum numbers
     NeedQNs = Conversion + StickSpectra + CrossSections
     if NeedQNs != 0:
-        QNslabel_list = list(inp_df[col0.isin(['QNslabel'])].iloc[0])[1:]
-        QNsformat_list = list(inp_df[col0.isin(['QNsformat'])].iloc[0])[1:]
-        QNslabel_list = [x for x in QNslabel_list if x == x]
-        QNsformat_list = [x for x in QNsformat_list if x == x]
+        qn_label_rows = inp_df[col0.isin(['QNslabel'])]
+        qn_format_rows = inp_df[col0.isin(['QNsformat'])]
+        if not qn_label_rows.empty and not qn_format_rows.empty:
+            QNslabel_list = list(qn_label_rows.iloc[0])[1:]
+            QNsformat_list = list(qn_format_rows.iloc[0])[1:]
+            QNslabel_list = [x for x in QNslabel_list if x == x]
+            QNsformat_list = [x for x in QNsformat_list if x == x]
+        elif database == 'ExoMolHR':
+            exomolhr_meta = _exomolhr_metadata(molecule, isotopologue)
+            QNslabel_list = exomolhr_meta['qnslabel_list']
+            QNsformat_list = exomolhr_meta['qnsformat_list']
+        else:
+            raise ValueError("Please provide QNslabel and QNsformat in the input file.")
     else:
         QNslabel_list = []
         QNsformat_list = []  
     
     # Convert from one format to another
     if Conversion != 0:
-        ConversionFormat = int(inp_df[col0.isin(['ConversionFormat'])][1].iloc[0])
+        # Parse ConversionFormat as string (target database name)
+        _conv_fmt_raw = str(inp_df[col0.isin(['ConversionFormat'])][1].iloc[0]).strip().upper()
+        # Normalize: accept string names or legacy numeric values
+        _conv_fmt_map = {
+            'HITRAN': 'HITRAN', 'HITEMP': 'HITRAN',
+            'EXOMOL': 'ExoMol', 'EXOMOLHR': 'ExoMolHR',
+            '1': 'HITRAN', '2': 'ExoMol',  # Legacy numeric support
+        }
+        ConversionFormat = _conv_fmt_map.get(_conv_fmt_raw)
+        if ConversionFormat is None:
+            raise ValueError(
+                f"Unknown ConversionFormat '{_conv_fmt_raw}'. "
+                "Please use 'HITRAN', 'ExoMol', or 'ExoMolHR'."
+            )
         ConversionMinFreq = float(inp_df[col0.isin(['ConversionFrequncyRange'])][1].iloc[0])
         ConversionMaxFreq = float(inp_df[col0.isin(['ConversionFrequncyRange'])][2].iloc[0])
         GlobalQNLabel_list = list(inp_df[col0.isin(['GlobalQNLabel'])].iloc[0].dropna())[1:]
         GlobalQNFormat_list = list(inp_df[col0.isin(['GlobalQNFormat'])].iloc[0].dropna())[1:]
         LocalQNLabel_list = list(inp_df[col0.isin(['LocalQNLabel'])].iloc[0].dropna())[1:]
         LocalQNFormat_list = list(inp_df[col0.isin(['LocalQNFormat'])].iloc[0].dropna())[1:]
+        
+        # # Read GlobalQN / LocalQN labels and formats from input file
+        # _gqn_rows = inp_df[col0.isin(['GlobalQNLabel'])]
+        # _gqf_rows = inp_df[col0.isin(['GlobalQNFormat'])]
+        # _lqn_rows = inp_df[col0.isin(['LocalQNLabel'])]
+        # _lqf_rows = inp_df[col0.isin(['LocalQNFormat'])]
+        # if not _gqn_rows.empty and not _gqf_rows.empty:
+        #     GlobalQNLabel_list = list(_gqn_rows.iloc[0].dropna())[1:]
+        #     GlobalQNFormat_list = list(_gqf_rows.iloc[0].dropna())[1:]
+        # else:
+        #     GlobalQNLabel_list = []
+        #     GlobalQNFormat_list = []
+        # if not _lqn_rows.empty and not _lqf_rows.empty:
+        #     LocalQNLabel_list = list(_lqn_rows.iloc[0].dropna())[1:]
+        #     LocalQNFormat_list = list(_lqf_rows.iloc[0].dropna())[1:]
+        # else:
+        #     LocalQNLabel_list = []
+        #     LocalQNFormat_list = []
+        # # For ExoMolHR: auto-populate QN labels/formats from metadata if not provided
+        # if database == 'ExoMolHR' and (not GlobalQNLabel_list or not GlobalQNFormat_list):
+        #     exomolhr_meta = _exomolhr_metadata(molecule, isotopologue)
+        #     if not GlobalQNLabel_list:
+        #         GlobalQNLabel_list = exomolhr_meta['qnslabel_list']
+        #     if not GlobalQNFormat_list:
+        #         GlobalQNFormat_list = exomolhr_meta['qnsformat_list']
+        
         # Uncertainty filter
         ConversionUncYN = inp_df[col0.isin(['ConvUncFilter(Y/N)'])][1].values[0].upper()[0]
         if ConversionUncYN == 'Y':
@@ -238,7 +380,7 @@ def inp_para(inp_filepath):
         else:
             raise ValueError("Please type the correct threshold choice 'Y' or 'N' into the input file.")       
     else:
-        ConversionFormat = 0
+        ConversionFormat = 'None'
         ConversionMinFreq = 0
         ConversionMaxFreq = 1e20
         GlobalQNLabel_list = []
@@ -657,6 +799,17 @@ def inp_para(inp_filepath):
             except:
                 check_gfactor = False
 
+    elif database == 'ExoMolHR':
+        exomolhr_meta = _exomolhr_metadata(molecule, isotopologue)
+        states_col = exomolhr_meta['exomolhr_col']
+        states_fmt = exomolhr_meta['exomolhr_fmt']
+        abundance = exomolhr_meta['abundance']
+        mass = exomolhr_meta['mass']
+        check_uncertainty = True
+        check_predissoc = False
+        check_lifetime = False
+        check_gfactor = False
+
     elif database == 'ExoAtom':
         # Read ExoAtom definition file (.adef.json).
         deffile_path = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.adef.json'  
@@ -760,7 +913,7 @@ def inp_para(inp_filepath):
         check_gfactor = False
 
     else:
-        raise ValueError("Please add the name of the database 'ExoMol', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")
+        raise ValueError("Please add the name of the database 'ExoMol', 'ExoMolHR', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")
 
     if predissocYN == 'Y' and check_predissoc is False and 'LOR' not in profile:
         print(

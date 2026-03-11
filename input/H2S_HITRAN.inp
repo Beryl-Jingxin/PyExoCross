@@ -35,7 +35,7 @@ QNsformat                               %2d    %2d   %2d    %3d    %3d   %5s   %
 
 
 # Conversion #
-ConversionFormat                        2  
+ConversionFormat                        ExoMol  
 ConversionFrequncyRange                 0          12000          # Wavenumber in unit of cm-1      
 GlobalQNLabel                           v1       v2       v3
 GlobalQNFormat                          %2d      %2d      %2d

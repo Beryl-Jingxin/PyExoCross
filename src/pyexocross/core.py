@@ -22,13 +22,16 @@ def get_results(config):
     # Import modules here to avoid circular import issues
     from pyexocross.base.utils import Timer
     from pyexocross.database.load_exomol import read_all_states, read_part_states, get_transfiles
+    from pyexocross.database.load_exomolhr import read_exomolhr_df
     from pyexocross.database.load_hitran import read_parfile, read_hitran_parfile
     from pyexocross.process.Q_multi_T import cal_pf_multiT
+    from pyexocross.process.filter_qn import QNfilter_linelist
     from pyexocross.process.hitran_qn import hitran_linelist_QN
     from pyexocross.calculation.calculate_lifetime import cal_lifetime
     from pyexocross.base.large_file import read_trans_chunks
     from pyexocross.convert.exomol_to_hitran import conversion_exomol2hitran
     from pyexocross.convert.hitran_to_exomol import conversion_hitran2exomol
+    from pyexocross.convert.exomolhr_to_hitran import conversion_exomolhr2hitran
     from pyexocross.save.exomol.exomol_partition_func import save_exomol_partition_func
     from pyexocross.save.exomol.exomol_specific_heat import save_exomol_specific_heat
     from pyexocross.save.exomol.exomol_lifetime import save_exomol_lifetime
@@ -37,6 +40,9 @@ def get_results(config):
     from pyexocross.save.exomol.exomol_stick_spectra import save_exomol_stick_spectra
     from pyexocross.save.exomol.exomol_cross_section import save_exomol_cross_section
     from pyexocross.save.exomol.exomol_stick_spectra_cross_section import save_exomol_stick_spectra_cross_section
+    from pyexocross.save.exomolhr.exomolhr_stick_spectra import save_exomolhr_stick_spectra
+    from pyexocross.save.exomolhr.exomolhr_cross_section import save_exomolhr_cross_section
+    from pyexocross.save.exomolhr.exomolhr_stick_spectra_cross_section import save_exomolhr_stick_spectra_cross_section
     from pyexocross.save.hitran.hitran_partition_func import save_hitran_partition_func
     from pyexocross.save.hitran.hitran_specific_heat import save_hitran_specific_heat
     from pyexocross.save.hitran.hitran_lifetime import save_hitran_lifetime
@@ -106,6 +112,10 @@ def get_results(config):
         print('ExoMol database')
         headers = ['Molecule', 'Isotopologue', 'Dataset']
         print(tabulate([data_info], headers=headers, tablefmt="fancy_grid"))
+    elif database == 'ExoMolHR':
+        print('ExoMolHR database')
+        headers = ['Molecule', 'Isotopologue', 'Dataset']
+        print(tabulate([data_info], headers=headers, tablefmt="fancy_grid"))
     elif database == 'ExoAtom':
         print('ExoAtom database')
         headers = ['Atom', 'Dataset']
@@ -137,7 +147,7 @@ def get_results(config):
         NeedAllStates = (Conversion + PartitionFunctions + SpecificHeats
                         + Lifetimes + CoolingFunctions + OscillatorStrengths)
         if NeedAllStates > 0:
-            if (Conversion == 1 and ConversionFormat == 1):
+            if (Conversion == 1 and ConversionFormat == 'HITRAN'):
                 conversion_exomol2hitran(states_df)
             if PartitionFunctions == 1:
                 save_exomol_partition_func(states_df, Ntemp, Tmax)
@@ -239,9 +249,61 @@ def get_results(config):
             elif CrossSections == 1:
                 save_exomol_cross_section(states_part_df, T_list, Tvib_list, Trot_list, P_list, Q_arr)
     
+    elif database == 'ExoMolHR':
+        unsupported_funcs = PartitionFunctions + SpecificHeats + Lifetimes + CoolingFunctions + OscillatorStrengths
+        if unsupported_funcs > 0:
+            raise ValueError(
+                "ExoMolHR currently supports conversion, stick spectra and cross sections only."
+            )
+        if predissocYN == 'Y':
+            raise ValueError("Predissociation cross sections are not supported for ExoMolHR.")
+        if Conversion + StickSpectra + CrossSections == 0:
+            raise ValueError("Please choose conversion, stick spectra, or cross sections for ExoMolHR.")
+        
+        # Conversion: ExoMolHR → HITRAN
+        if Conversion == 1 and ConversionFormat == 'HITRAN':
+            from pyexocross.database.load_exomolhr import read_exomolhr_df as _read_exomolhr
+            conv_exomolhr_df = _read_exomolhr(read_path, data_info,
+                                              config.conversion_min_freq,
+                                              config.conversion_max_freq,
+                                              config.conversion_unc)
+            conversion_exomolhr2hitran(conv_exomolhr_df)
+        
+        if StickSpectra + CrossSections > 0:
+            exomolhr_df = read_exomolhr_df(read_path, data_info, min_wn, max_wn, UncFilter)
+            if config.qns_filter != []:
+                exomolhr_df = QNfilter_linelist(exomolhr_df, config.qns_value, config.qns_label)
+            QNs_col = [label + "'" for label in config.qnslabel_list] + [label + '"' for label in config.qnslabel_list]
+
+            if StickSpectra == 1 and CrossSections == 1:
+                save_exomolhr_stick_spectra_cross_section(
+                exomolhr_df,
+                QNs_col,
+                T_list,
+                Tvib_list,
+                Trot_list,
+                P_list,
+                )
+            elif StickSpectra == 1:
+                save_exomolhr_stick_spectra(
+                    exomolhr_df,
+                    QNs_col,
+                    T_list,
+                    Tvib_list,
+                    Trot_list,
+                )
+            elif CrossSections == 1:
+                save_exomolhr_cross_section(
+                    exomolhr_df,
+                    T_list,
+                    P_list,
+                    Tvib_list,
+                    Trot_list,
+                )
+
     elif database == 'HITRAN' or database == 'HITEMP':
         parfile_df = read_parfile(read_path)
-        if (Conversion == 1 and ConversionFormat == 2):
+        if (Conversion == 1 and ConversionFormat == 'ExoMol'):
             hitran_df = read_hitran_parfile(read_path,parfile_df,ConversionMinFreq,ConversionMaxFreq,
                                             ConversionUnc,ConversionThreshold).reset_index().drop(columns='index')
             (hitran_states_col, hitran_states_fmt) = conversion_hitran2exomol(hitran_df)
@@ -291,7 +353,7 @@ def get_results(config):
         elif CrossSections == 1:
             save_hitran_cross_section(hitran_linelist_df, T_list, P_list, Tvib_list, Trot_list)
     else:
-        raise ValueError("Please add the name of the database 'ExoMol', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")
+        raise ValueError("Please add the name of the database 'ExoMol', 'ExoMolHR', 'ExoAtom', 'HITRAN', or 'HITEMP' into the input file.")
     
     print('The program total running time:')
     t_tot.end()

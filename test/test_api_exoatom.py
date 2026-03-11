@@ -1,7 +1,7 @@
 """
-Test all PyExoCross API functions using ExoMol MgH parameters.
+Test all PyExoCross API functions using ExoAtom Ar parameters.
 
-Parameters are derived from: .input/MgH_ExoMol.inp
+Parameters are derived from: input/Ar_NIST.inp
 """
 import sys
 import os
@@ -65,15 +65,15 @@ COMPUTE_PARAMS = dict(
 # Test functions
 # ---------------------------------------------------------------------------
 def test_conversion():
-    """Test ExoMol -> HITRAN conversion."""
+    """Test ExoAtom -> HITRAN conversion."""
     print('\n' + '='*70)
-    print('TEST: px.conversion()  [ExoMol -> HITRAN]')
+    print('TEST: px.conversion()  [ExoAtom -> HITRAN]')
     print('='*70)
     px.conversion(
         **COMMON,
         **QN_PARAMS,
         **COMPUTE_PARAMS,
-        conversion_format=1,
+        conversion_format='HITRAN',
         conversion_min_freq=0,          # Minimum wavenumber in unit of cm⁻¹
         conversion_max_freq=115400,     # Maximum wavenumber in unit of cm⁻¹
         conversion_unc=None,            # Uncertainty filter (default: None)
@@ -217,7 +217,7 @@ def test_cross_sections():
 # Main
 # ---------------------------------------------------------------------------
 if __name__ == '__main__':
-    print('PyExoCross API Test — ExoMol MgH')
+    print('PyExoCross API Test — ExoAtom Ar')
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
@@ -244,6 +244,6 @@ if __name__ == '__main__':
             traceback.print_exc()
 
     print('\n' + '='*70)
-    print(f'ExoMol API test results: {passed} passed, {failed} failed out of {len(tests)}')
+    print(f'ExoAtom API test results: {passed} passed, {failed} failed out of {len(tests)}')
     print('='*70)
     sys.exit(1 if failed else 0)

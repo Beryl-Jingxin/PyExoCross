@@ -8,6 +8,7 @@ by reading actual database definition files.
 This allows the Python API to work without an .inp file by deriving the
 same metadata that inp_para() reads from .inp + database files.
 """
+import glob
 import os
 import re
 import numpy as np
@@ -24,12 +25,12 @@ def resolve_database_metadata(database, read_path, data_info, species_id=None):
     Parameters
     ----------
     database : str
-        Database name: 'ExoMol', 'ExoAtom', 'HITRAN', or 'HITEMP'.
+        Database name: 'ExoMol', 'ExoMolHR', 'ExoAtom', 'HITRAN', or 'HITEMP'.
     read_path : str
         Path to the database root directory (ExoMol/ExoAtom) or the .par
         file (HITRAN/HITEMP).
     data_info : list of str
-        [molecule, isotopologue, dataset] for ExoMol/HITRAN/HITEMP, or
+        [molecule, isotopologue, dataset] for ExoMol/ExoMolHR/HITRAN/HITEMP, or
         [atom, dataset] for ExoAtom.
     species_id : int, optional
         HITRAN molecule-isotopologue ID (e.g. 81 for NO 14N-16O).
@@ -59,6 +60,8 @@ def resolve_database_metadata(database, read_path, data_info, species_id=None):
     """
     if database == 'ExoMol':
         return _resolve_exomol(read_path, data_info, species_id)
+    elif database == 'ExoMolHR':
+        return _resolve_exomolhr(read_path, data_info, species_id)
     elif database == 'ExoAtom':
         return _resolve_exoatom(read_path, data_info, species_id)
     elif database in ('HITRAN', 'HITEMP'):
@@ -66,7 +69,7 @@ def resolve_database_metadata(database, read_path, data_info, species_id=None):
     else:
         raise ValueError(
             f"Unsupported database '{database}'. "
-            "Choose from 'ExoMol', 'ExoAtom', 'HITRAN', or 'HITEMP'."
+            "Choose from 'ExoMol', 'ExoMolHR', 'ExoAtom', 'HITRAN', or 'HITEMP'."
         )
 
 
@@ -171,6 +174,93 @@ def _parse_exomol_text_def(def_path):
         'mass': mass,
     }
 
+
+def _resolve_exomolhr(read_path, data_info, species_id=None):
+    """Resolve metadata for ExoMolHR CSV line lists."""
+    molecule, isotopologue = data_info[0], data_info[1]
+    dataset = _resolve_exomolhr_files(read_path, molecule, isotopologue)
+    meta_df = pd.read_csv(_exomolhr_meta_filepath())
+    meta_row = meta_df[
+        (meta_df['molecule'] == molecule) & (meta_df['iso-slug'] == isotopologue)
+    ]
+    if meta_row.empty:
+        raise ValueError(
+            f"No ExoMolHR metadata found for molecule={molecule}, isotopologue={isotopologue}."
+        )
+    meta_row = meta_row.iloc[0]
+
+    main_col = _split_exomolhr_meta_list(meta_row['Main column'])
+    main_fmt = _split_exomolhr_meta_list(meta_row['Main format'])
+    qnslabel_list = _split_exomolhr_meta_list(meta_row['QN label'])
+    qnsformat_list = _split_exomolhr_meta_list(meta_row['QN format'])
+
+    states_col = main_col + [label + "'" for label in qnslabel_list] + [label + '"' for label in qnslabel_list]
+    states_fmt = main_fmt + qnsformat_list + qnsformat_list
+
+    species_main_id = 0
+    species_sub_id = 0
+    if species_id is not None:
+        species_main_id = int(species_id / 10)
+        species_sub_id = species_id - species_main_id * 10
+
+    return {
+        'states_col': states_col,
+        'states_fmt': states_fmt,
+        'check_uncertainty': True,
+        'check_lifetime': False,
+        'check_gfactor': False,
+        'check_predissoc': False,
+        'species_main_id': species_main_id,
+        'species_sub_id': species_sub_id,
+        'abundance': float(meta_row['abundance']),
+        'mass': float(meta_row['mass']),
+        'dataset': dataset,
+        'qnslabel_list': qnslabel_list,
+        'qnsformat_list': qnsformat_list,
+    }
+
+
+def _exomolhr_meta_filepath():
+    """Return the fixed ExoMolHR metadata filepath."""
+    return os.path.join(
+        os.path.dirname(__file__),
+        '..',
+        'database',
+        'meta',
+        'ExoMolHR_list.csv',
+    )
+
+
+def _split_exomolhr_meta_list(value):
+    """Split a comma-separated metadata field into a clean list."""
+    if pd.isna(value):
+        return []
+    return [item.strip() for item in str(value).split(',') if item.strip() != '']
+
+
+def _resolve_exomolhr_files(read_path, molecule, isotopologue):
+    """Resolve ExoMolHR CSV and PF filepaths from molecule and isotopologue."""
+    iso_path = os.path.join(read_path, molecule, isotopologue)
+    
+    # 1. First, identify the dataset from the .pf file (which usually has a standard name).
+    pf_files = sorted([
+        path for path in glob.glob(os.path.join(iso_path, '*.pf'))
+        if os.path.basename(path).startswith(f'{isotopologue}__')
+    ])
+    if not pf_files:
+        raise ValueError(f"No ExoMolHR .pf file found in {iso_path}")
+    pf_name = os.path.basename(pf_files[0])
+    dataset = pf_name[len(f'{isotopologue}__'):-3]
+    
+    # 2. Check for a .csv file.
+    csv_files = sorted([
+        path for path in glob.glob(os.path.join(iso_path, '*.csv'))
+    ])
+    if not csv_files:
+        raise ValueError(f"No ExoMolHR .csv file found in {iso_path}")
+    
+    return dataset
+    
 
 def _resolve_exoatom(read_path, data_info, species_id=None):
     """Resolve metadata from ExoAtom definition files (.adef.json)."""

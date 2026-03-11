@@ -1,7 +1,7 @@
 """
 Test all PyExoCross API functions using HITRAN NO parameters.
 
-Parameters are derived from: .input/NO_HITRAN.inp
+Parameters are derived from: input/NO_HITRAN.inp
 """
 import sys
 import os
@@ -85,7 +85,7 @@ def test_conversion():
         **QN_PARAMS,
         **COMPUTE_PARAMS,
         **CONVERSION_QN,
-        conversion_format=2,          
+        conversion_format='ExoMol',          
         conversion_min_freq=0,        # Minimum wavenumber in unit of cm⁻¹
         conversion_max_freq=63000,    # Maximum wavenumber in unit of cm⁻¹
         conversion_unc=None,          # Uncertainty filter (default: None)
@@ -203,12 +203,12 @@ def test_cross_sections():
     px.cross_sections(
         **COMMON,
         **QN_PARAMS,
-        # **NLTE_PARAMS,                  # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
-        pressures=[1.0],           # Pressure in unit bar (default: [1.0])
+        pressures=[1.0],                # Pressure in unit bar (default: [1.0])
         bin_size=0.1,                   # Bin size for wavenumber grid 
-        profile='Gaussian',           # Line profile name (default: 'Gaussian')
+        profile='Gaussian',             # Line profile name (default: 'Gaussian')
         predissociation=False,          # Predissociation (default: False)
         cutoff=25.0,                    # Cutoff distance in cm⁻¹ (default: None)
         broadeners=['Air', 'Self'],     # Broadening species (default: ['Default'])

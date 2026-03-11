@@ -35,7 +35,7 @@ QNsformat                               %1s  %1s   %12s       %3d   %3d      %5d
 
 
 # Conversion #
-ConversionFormat                        1  
+ConversionFormat                        HITRAN  
 ConversionFrequncyRange                 0          30000          # Wavenumber in unit of cm-1
 GlobalQNLabel                           ElecState       v        Omega
 GlobalQNFormat                          %9s             %2d      %4s

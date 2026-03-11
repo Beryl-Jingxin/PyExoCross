@@ -3,6 +3,7 @@ Format conversion modules for PyExoCross.
 
 This package provides functions for converting between:
 - ExoMol and HITRAN formats
+- ExoMolHR and HITRAN formats
 """
 from .exomol_to_hitran import (
     read_unc_states,
@@ -24,6 +25,9 @@ from .hitran_to_exomol import (
     conversion_broad,
     conversion_hitran2exomol,
 )
+from .exomolhr_to_hitran import (
+    conversion_exomolhr2hitran,
+)
 
 __all__ = [
     # ExoMol to HITRAN
@@ -44,5 +48,6 @@ __all__ = [
     'conversion_trans',
     'conversion_broad',
     'conversion_hitran2exomol',
+    # ExoMolHR to HITRAN
+    'conversion_exomolhr2hitran',
 ]
-

@@ -1,7 +1,7 @@
 """
 Test all PyExoCross API functions using ExoMol MgH parameters.
 
-Parameters are derived from: .input/MgH_ExoMol.inp
+Parameters are derived from: input/MgH_ExoMol.inp
 """
 import sys
 import os
@@ -76,7 +76,7 @@ def test_conversion():
         **COMMON,
         **QN_PARAMS,
         **COMPUTE_PARAMS,
-        conversion_format=1,
+        conversion_format='HITRAN',
         conversion_min_freq=0,          # Minimum wavenumber in unit of cm⁻¹
         conversion_max_freq=30000,      # Maximum wavenumber in unit of cm⁻¹
         conversion_unc=None,            # Uncertainty filter (default: None)
