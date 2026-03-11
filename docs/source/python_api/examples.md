@@ -26,7 +26,7 @@ px.conversion(
     chunk_size=100000,
     qnslabel_list=['par', 'e/f', 'eS', 'v', 'Lambda', 'Sigma', 'Omega'],
     qnsformat_list=['%1s', '%1s', '%13s', '%3d', '%2d', '%7.1f', '%7.1f'],
-    conversion_format=1,
+    conversion_format='HITRAN',
     conversion_min_freq=0,
     conversion_max_freq=30000,
     conversion_unc=0.01, 
@@ -291,6 +291,182 @@ px.cross_sections(
 
 ---
 
+## ExoMolHR Examples
+
+### Conversion (ExoMolHR -> HITRAN)
+
+```python
+import pyexocross as px
+
+px.conversion(
+    database='ExoMolHR',
+    molecule='NO',
+    isotopologue='14N-16O',
+    species_id=81,
+    read_path='/path/to/Databases/ExoMolHR/',
+    save_path='/path/to/output/', 
+    logs_path='/path/to/output/log/exomolhr_conversion.log',
+    ncputrans=1,    
+    ncpufiles=1,
+    chunk_size=100000,
+    conversion_format='HITRAN',
+    conversion_min_freq=24,
+    conversion_max_freq=53452,
+    conversion_unc=0.01, 
+    conversion_threshold=1e-30,
+    global_qn_label_list=['ElecState', 'v', 'Omega'],
+    global_qn_format_list=['%9s', '%2d', '%4s'],
+    local_qn_label_list=['J', 'e/f'],
+    local_qn_format_list=['%7.1f', '%1s']
+)
+```
+
+### Stick Spectra (LTE)
+
+```python
+import pyexocross as px
+
+px.stick_spectra(
+    database='ExoMolHR',
+    molecule='NO',
+    isotopologue='14N-16O',
+    read_path='/path/to/Databases/ExoMolHR/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/exomolhr_stick.log',
+    ncputrans=1,    
+    ncpufiles=1,
+    chunk_size=100000,
+    temperatures=[1000, 2000],
+    wn_wl='WN',
+    wn_wl_unit='cm-1',
+    min_range=24,
+    max_range=53452,
+    abs_emi='Ab',
+    plot=True,
+    plot_method='log',
+    plot_wn_wl='WN',
+    plot_unit='cm-1',
+    limit_yaxis=1e-30
+)
+```
+
+### Stick Spectra (Non-LTE, Treanor Method)
+
+```python
+import pyexocross as px
+
+px.stick_spectra(
+    database='ExoMolHR',
+    molecule='NO',
+    isotopologue='14N-16O',
+    read_path='/path/to/Databases/ExoMolHR/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/exomolhr_stick_nlte.log',
+    ncputrans=1,    
+    ncpufiles=1,
+    chunk_size=100000,
+    nlte_method='T',
+    tvib_list=[1000, 2000],
+    trot_list=[296],
+    vib_label=['v', 'ElecState'],
+    rot_label=['J', 'e/f'],
+    wn_wl='WN',
+    wn_wl_unit='cm-1',
+    min_range=24,
+    max_range=53452,
+    abs_emi='Ab',
+    unc_filter=0.01,
+    threshold=1e-30,
+    qns_filter={
+        'e/f': [],
+        'ElecState': [],
+        'v': [],
+    }
+)
+```
+
+### Cross Sections (LTE)
+
+```python
+import pyexocross as px
+
+px.cross_sections(
+    database='ExoMolHR',
+    molecule='NO',
+    isotopologue='14N-16O',
+    read_path='/path/to/Databases/ExoMolHR/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/exomolhr_xsec.log',
+    ncputrans=1,    
+    ncpufiles=1,
+    chunk_size=100000,
+    temperatures=[296, 3000],
+    pressures=[1.0, 5.0],
+    wn_wl='WN',
+    wn_wl_unit='cm-1',
+    min_range=24,
+    max_range=53452,
+    bin_size=0.1,
+    profile='SciPyVoigt',
+    predissociation=False,
+    broadeners=['Default'],
+    ratios=[1.0],
+    alpha_hwhm=3.0,
+    gamma_hwhm=None,
+    cutoff=25.0,
+    abs_emi='Ab',
+    plot=True,
+    plot_method='log',
+    plot_wn_wl='WN',
+    plot_unit='cm-1',
+    limit_yaxis=1e-30
+)
+```
+
+### Cross Sections (Non-LTE, Treanor Method)
+
+```python
+import pyexocross as px
+
+px.cross_sections(
+    database='ExoMolHR',
+    molecule='NO',
+    isotopologue='14N-16O',
+    read_path='/path/to/Databases/ExoMolHR/',
+    save_path='/path/to/output/',
+    logs_path='/path/to/output/log/exomolhr_xsec_nlte.log',
+    ncputrans=1,    
+    ncpufiles=1,
+    chunk_size=100000,
+    nlte_method='T',
+    tvib_list=[1000, 2000, 3000],
+    trot_list=[100, 200],
+    vib_label=['v', 'ElecState'],
+    rot_label=['J', 'e/f'],
+    pressures=[1.0, 5.0],
+    wn_wl='WN',
+    wn_wl_unit='cm-1',
+    min_range=24,
+    max_range=53452,
+    bin_size=0.1,
+    profile='SciPyVoigt',
+    predissociation=False,
+    broadeners=['Default'],
+    ratios=[1.0],
+    alpha_hwhm=3.0,
+    gamma_hwhm=None,
+    cutoff=25.0,
+    abs_emi='Em',
+    plot=True,
+    plot_method='log',
+    plot_wn_wl='WN',
+    plot_unit='cm-1',
+    limit_yaxis=1e-30
+)
+```
+
+---
+
 ## ExoAtom Examples
 
 ### Conversion (ExoAtom -> HITRAN)
@@ -311,7 +487,7 @@ px.conversion(
     chunk_size=100000,
     qnslabel_list=['configuration', 'Multiple', 'parity'],
     qnsformat_list=['%20s', '%10s', '%2s'],
-    conversion_format=1,
+    conversion_format='HITRAN',
     conversion_min_freq=0,
     conversion_max_freq=115400,
     conversion_unc=None, 
@@ -629,7 +805,7 @@ px.conversion(
     chunk_size=100000,
     qnslabel_list=['J', 'X', 'Omega', 'v1', 'Sym', 'F'],
     qnsformat_list=['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s'],
-    conversion_format=2,
+    conversion_format='ExoMol',
     conversion_min_freq=0,
     conversion_max_freq=63000,
     conversion_unc=None,           

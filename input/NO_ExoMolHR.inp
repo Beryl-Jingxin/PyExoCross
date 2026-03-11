@@ -52,9 +52,9 @@ QNsFilter(Y/N)                          N
 
 # Calculate non-LTE #
 NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
-Tvib                                    2000
+Tvib                                    1000,2000
 Trot                                    296
-QNsVibLabel                             v,eS
+QNsVibLabel                             v,ElecState
 QNsRotLabel                             J,e/f            
 
 

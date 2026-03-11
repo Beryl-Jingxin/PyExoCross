@@ -148,6 +148,79 @@ Y-axisLimitXsec                         1e-30                     # Default valu
 
 ```bash
 # Data source #
+Database                                ExoMolHR
+Molecule                                NO
+Isotopologue                            14N-16O
+SpeciesID                               81
+
+
+# File path #
+ReadPath                                /mnt/data/exomolhr/exomolhr_results/
+SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross//log/NO_ExoMolHR_nlte.log
+
+
+# Functions #
+Conversion                              0
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+OscillatorStrengths                     0
+StickSpectra                            1
+CrossSections                           1
+
+
+# Cores and chunks #
+NCPUtrans                               4
+NCPUfiles                               1
+ChunkSize                               1000000
+
+
+# Calculate stick spectra or cross sections #
+LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
+Temperatures                            296,1000                  # Temperature in unit of K
+WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
+Range                                   24         53452          # Same unit as WnWlUnit
+Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01 cm-1
+Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
+QNsFilter(Y/N)                          N          
+
+
+# Calculate non-LTE #
+NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+Tvib                                    1000,2000
+Trot                                    296
+QNsVibLabel                             v,ElecState
+QNsRotLabel                             J,e/f            
+
+
+# Calculate stick spectra #
+PlotStickSpectra(Y/N)                   Y          
+PlotStickSpectraMethod                  log                       # Plot in linear (lin) or logarithm (log)
+PlotStickSpectraWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
+Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30 cm/molecule
+
+
+# Calculate cross sections #
+Pressures                               1                         # Pressure in unit bar
+Npoints/BinSize                         BinSize    1              # Same unit as WnWlUnit
+Broadeners                              Default    
+Ratios                                  0.1        
+Profile                                 SciPyVoigt      
+PredissocXsec(Y/N)                      N
+Cutoff(Y/N)                             N          25             # If Y, default value 25 cm-1
+DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant 
+LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+PlotCrossSection(Y/N)                   Y          
+PlotCrossSectionMethod                  log                       # Plot in linear (lin) or logarithm (log)
+PlotCrossSectionWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
+Y-axisLimitXsec                         1e-30                     # Default value is 1e-30 cm2/molecule
+```
+
+```bash
+# Data source #
 Database                                HITRAN
 Molecule                                NO
 Isotopologue                            14N-16O

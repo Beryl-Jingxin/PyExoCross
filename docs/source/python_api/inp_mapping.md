@@ -74,7 +74,7 @@ function.  The toggle is only relevant in `.inp` files or when using
 
 | `.inp` Keyword | Python Kwarg | `.inp` Format | Python Type |
 |---|---|---|---|
-| `ConversionFormat` | `conversion_format` | `1` | `1` (int) |
+| `ConversionFormat` | `conversion_format` | `'HITRAN'` | `'HITRAN'` (str) |
 | `ConversionFrequncyRange` | `conversion_min_freq`, `conversion_max_freq` | `0 30000` | Two separate `float` args |
 | `GlobalQNLabel` | `global_qn_label_list` | `eS v Omega` | `['eS', 'v', 'Omega']` |
 | `GlobalQNFormat` | `global_qn_format_list` | `%9s %2d %4s` | `['%9s', '%2d', '%4s']` |

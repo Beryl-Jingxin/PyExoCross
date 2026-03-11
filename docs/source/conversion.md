@@ -5,6 +5,7 @@
 | Database | ExoMol format | HITRAN format |
 | :------: | :-----------: | :-----------: |
 | ExoMol   | &#x2705;      |               |
+| ExoMolHR | &#x2705;      |               |
 | ExoAtom  | &#x2705;      |               |
 | HITRAN   |               | &#x2705;      |
 | HITEMP   |               | &#x2705;      |
@@ -15,11 +16,19 @@
 
 `ConversionFormat`
 
-`0` means no conversion.
+Write the data format you want to convert to.
 
-`1` means convert data format from ExoMol to HITRAN. In this case, `Database` should be `ExoMol`.
+If you want to convert data format from ExoMol to HITRAN. In this case, `Database` should be `ExoMol` and `ConversionFormat` should be `HITRAN`.
 
-`2` means convert data format from HITRAN to ExoMol. In this case, `Database` should be `HITRAN`.
+If you want to convert data format from HITRAN to ExoMol. In this case, `Database` should be `HITRAN` and `ConversionFormat` should be `ExoMol`.
+
+| `Database` | `ConversionFormat` | 
+| :--------: | :----------------: |
+| ExoMol     | HITRAN             |            
+| ExoMolHR   | HITRAN             |               
+| ExoAtom    | HITRAN             |               
+| HITRAN     | ExoMol             |   
+| HITEMP     | ExoMol             | 
 
 ## Quantum number label
 
@@ -102,6 +111,52 @@ GlobalQNFormat                          %9s      %2d      %4s
 LocalQNLabel                            J        e/f
 LocalQNFormat                           %5.1f    %2s
 ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.01 cm-1
+ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30 cm/molecule
+```
+
+**For ExoMolHR database**
+
+*Example*
+
+```bash
+# Data source #
+Database                                ExoMolHR
+Molecule                                NO
+Isotopologue                            14N-16O
+SpeciesID                               81
+
+
+# File path #
+ReadPath                                /mnt/data/exomolhr/exomolhr_results/
+SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/NO_ExoMolHR_toHITRAN.log
+
+
+# Functions #
+Conversion                              1
+PartitionFunctions                      0
+SpecificHeats                           0
+CoolingFunctions                        0
+Lifetimes                               0
+OscillatorStrengths                     0
+StickSpectra                            0
+CrossSections                           0
+
+
+# Cores and chunks #
+NCPUtrans                               1
+NCPUfiles                               1
+ChunkSize                               100000
+
+
+# Conversion #
+ConversionFormat                        HITRAN     
+ConversionFrequncyRange                 24         53452          # Wavenumber in unit of cm-1      
+GlobalQNLabel                           ElecState      v       
+GlobalQNFormat                          %12s           %3d     
+LocalQNLabel                            J              e/f
+LocalQNFormat                           %7.1f          %1s
+ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01 cm-1
 ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30 cm/molecule
 ```
 
@@ -212,4 +267,5 @@ ConvThreshold(Y/N)                      N          1e-30          # If Y, defaul
 **Note**
 
 1. ExoMol format definition files `.def`, `.def.json`, and `.adef.json` (available at [exomol.com](https://www.exomol.com/)) provide the labels and formats of the quantum numbers for each species for reference.
-2. HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
+2. ExoMolHR format can be found from ExoMolHR website [https://www.exomol.com/exomolhr/](https://www.exomol.com/exomolhr/).
+3. HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.

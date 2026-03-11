@@ -68,7 +68,7 @@ Convert between ExoMol/ExoAtom and HITRAN line-list formats.
 | `read_path` | `str` | `'./'` | Path to input database |
 | `save_path` | `str` | `'./output/'` | Path for output files |
 | `logs_path` | `str` | `None` | Log file path |
-| `conversion_format` | `int` | `1` | `1` = ExoMol/ExoAtom -> HITRAN/HITEMP, `2` = HITRAN/HITEMP -> ExoMol/ExoAtom |
+| `conversion_format` | `str` | `None` | `'ExoMo'` = HITRAN/HITEMP -> ExoMol/ExoAtom, `'HITRAN'` = ExoMol/ExoMolHR/ExoAtom -> HITRAN/HITEMP |
 | `conversion_min_freq` | `float` | `0` | Minimum frequency in cm⁻¹ |
 | `conversion_max_freq` | `float` | `30000` | Maximum frequency in cm⁻¹ |
 | `conversion_unc` | `float` or `None` | `None` | Uncertainty filter (cm⁻¹); `None` to disable |
@@ -86,8 +86,10 @@ Convert between ExoMol/ExoAtom and HITRAN line-list formats.
 **Legacy Aliases**
 
 ```python
-px.convert_exomol_to_hitran(...)  # Sets conversion_format=1
-px.convert_hitran_to_exomol(...)  # Sets conversion_format=2
+px.convert_exomol_to_hitran(...)     # Sets conversion_format='HITRAN'
+px.convert_exomolhr_to_hitran(...)   # Sets conversion_format='HITRAN'
+px.convert_exoatom_to_hitran(...)    # Sets conversion_format='HITRAN'
+px.convert_hitran_to_exomol(...)     # Sets conversion_format='ExoMol'
 ```
 
 **Example**
@@ -101,7 +103,7 @@ px.conversion(
     species_id=501,
     read_path='/path/to/ExoMol/',
     save_path='/path/to/output/',
-    conversion_format=1,
+    conversion_format='HITRAN',
     global_qn_label_list=['eS', 'v', 'Omega'],
     global_qn_format_list=['%9s', '%2d', '%4s'],
     local_qn_label_list=['J', 'e/f'],
@@ -390,8 +392,8 @@ labels and values are lists of accepted value patterns.  Use an empty list
 ```python
 qns_filter={
     'par': [],                    # accept all parities
-    'v': ['0,', '1,', '2,'],     # only v = 0, 1, 2
-    'eS': [],                    # accept all electronic states
+    'v': ['0,', '1,', '2,'],      # only v' = 0, 1, 2
+    'eS': [],                     # accept all electronic states
 }
 ```
 

@@ -28,6 +28,22 @@ Dataset                                 POKAZATEL
 SpeciesID                               11
 ```
 
+**For ExoMol database**
+
+The name of `Database`, `Molecule`, and `Isotopologue` are necessary.
+
+The molecule and isotopologue ID `SpeciesID` can be set as `0` or any other integers.
+
+*Example*
+
+```bash
+# Data source #
+Database                                ExoMolHR
+Molecule                                NO
+Isotopologue                            14N-16O
+SpeciesID                               81
+```
+
 **For HITRAN and HITEMP databases**
 
 The `Database` name, `Molecule` name, and the molecule and isotopologue ID `SpeciesID` are necessary.
@@ -146,6 +162,68 @@ SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/MgH_ExoMol.log
 ```
 
+**For ExoMolHR database**
+
+`ReadPath` is the folder path of input files when the input line list files path is stored in the following format.
+
+For ExoMolHR line list files, the standard filename formats are: 
+
+<font color=Orange>`ReadPath`</font>/<font color=Pink>`Molecule`</font>/<font color=SkyBlue>`Isotopologue`</font>/<font color=Brown></font><font color=SkyBlue>date__`Isotopologue`__T</font><font color=Brown>.csv</font>
+
+<font color=Orange>/mnt/data/exomolhr/exomolhr_results</font>/<font color=Pink>NO</font>/<font color=SkyBlue>14N-16O</font>/<font color=Brown>20260311080614__</font><font color=SkyBlue>14N-16O</font><font color=Brown>__1000K.csv</font></font>
+
+<font color=Orange>`ReadPath`</font>/<font color=Pink>`Molecule`</font>/<font color=SkyBlue>`Isotopologue`</font>/<font color=SkyBlue>`Isotopologue`</font><font color=Brown>__</font><font color=YellowGreen>`Dataset`</font><font color=Brown>.pf</font>
+
+<font color=Orange>/mnt/data/exomol/exomol3_data</font>/<font color=Pink>NO</font>/<font color=SkyBlue>14N-16O</font>/<font color=SkyBlue>14N-16O</font><font color=Brown>__</font><font color=YellowGreen>XABC</font><font color=Brown>.pf</font></font>
+
+However, users can also rename the CSV filenames in any formats as long as `Isotopologue` is included in the filename.
+
+&#x2705; date__`Isotopologue`__T.csv
+
+&#x2705; `Molecule`__`Isotopologue`.csv
+
+&#x2705; `Molecule`__`Isotopologue`__T.csv
+
+```
+└── exomolhr_results
+           ├── C2H2
+           ├── CO2
+           │     ├── 12C-16O2
+           │     ├── 13C-16O2
+           │     ├── ...
+           │     ├── 12C-16O2__air.broad
+           │     └── 12C-16O2__self.broad
+           ├── NO
+           │     └── 14N-16O
+           │             ├── 14N-16O__XABC.pf
+           │             └── 20260311080614__14N-16O__1000K.csv
+           ├── MgH
+           │     ├── 24Mg-1H
+           │     │       ├── 24Mg-1H__XAB.pf
+           │     │       └── 20260311080614__24Mg-1H__1000K.csv
+           │     ├── 25Mg-1H
+           │     │       ├── 25Mg-1H__XAB.pf
+           │     │       └── MgH__25Mg-1H__1000K.csv
+           │     └── 26Mg-1H    
+           │             ├── 26Mg-1H__XAB.pf
+           │             └── MgH__26Mg-1H.csv     
+           ├── ...
+           │
+```
+
+`SavePath` is the folder path for saving all results obtained by the PyExoCross program.
+
+`LogFilePath` is the file path of the log file, the program can record the log output automatically.
+
+*Example*
+
+```bash
+# File path #
+ReadPath                                /mnt/data/exomolhr/exomolhr_results/
+SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/NO_ExoMolHR.log
+```
+
 **For ExoAtom database**
 
 `ReadPath` is the folder path of input files when the input line list files path is stored in the following format.
@@ -242,11 +320,20 @@ LogFilePath                             /home/jingxin/data/pyexocross/log/CO2_HI
 
 ## Functions
 
-In current version, *PyExoCross* can convert data format between the ExoMol and the HITRAN formats.
+In current version, *PyExoCross* can convert data format between the ExoMol (ExoMol, ExoMolHR, and ExoAtom databases) and the HITRAN (HITRAN and HITEMP database) formats.
 
-*PyExoCross* also implements the computations of other useful functions including partition functions, specific heats, cooling functions, radiative lifetimes, oscillator strengths, LTE and non-LTE stick spectra and cross sections for data from the ExoMol database.
+*PyExoCross* also implements the computations of other useful functions including partition functions, specific heats, cooling functions, radiative lifetimes, oscillator strengths, LTE and non-LTE stick spectra and cross sections.
 
-*PyExoCross* provides computations of cooling function, oscillator strengths, LTE and non-LTE stick spectra and cross sections for data from the HITRAN database. If you want to use the other functions, please convert the data format from the HITRAN format to the ExoMol format at first and then treat the data as the ExoMol data to use *PyExoCross*.
+*PyExoCross* can only compute stick spectra and cross sections for ExoMolHR database.
+
+If users use `.inp` input files:
+
+*PyExoCross* provides computations of cooling function, oscillator strengths, LTE and non-LTE stick spectra and cross sections for data from the HITRAN format databases. If you want to use the other functions, please convert the data format from the HITRAN format to the ExoMol format at first and then treat the data as the ExoMol data to use *PyExoCross*. 
+
+If users use Python package:
+
+*PyExoCross* can convert data format automatically if required.
+
 
 Use this function or not:
 

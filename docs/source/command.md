@@ -51,5 +51,4 @@ nohup /home/username/anaconda3/envs/exomol/bin/python -u run.py -p ./input/H2O_e
 
 ## Notes for input file
 
-1. All information can be written in the input file. Just change the information you will use.You don't need to change any other unnecessary information.Please do not change the first column strings.
-2. If you met problems, jupyter notebook `.ipynb` code is stored for checking and testing.
+All information can be written in the input file. Just change the information you will use.You don't need to change any other unnecessary information.Please do not change the first column strings.

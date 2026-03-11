@@ -44,7 +44,7 @@ RANGE_PARAMS = dict(
 NLTE_PARAMS = dict(
     nlte_method='T',                   # Non-LTE: 2T NLTE (default: 'T')
     tvib_list=[1000, 2000],            # Vibrational temperatures in unit of K
-    trot_list=[300],                   # Rotational temperatures in unit of K
+    trot_list=[296],                   # Rotational temperatures in unit of K
     vib_label=['v', 'ElecState'],      # Vibrational quantum numbers
     rot_label=['J', 'e/f'],            # Rotational quantum numbers
 )
@@ -86,7 +86,7 @@ def test_stick_spectra():
     print('='*70)
     px.stick_spectra(
         **COMMON,
-        # **NLTE_PARAMS,              # If Non-LTE is enabled, this parameter is required.
+        **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         plot=True,                    # Whether to plot results (default: False)
@@ -104,7 +104,7 @@ def test_cross_sections():
     print('='*70)
     px.cross_sections(
         **COMMON,
-        # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
+        **NLTE_PARAMS,                  # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         pressures=[1.0],                # Pressure in unit bar (default: [1.0])

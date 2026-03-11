@@ -104,7 +104,7 @@ Used by `px.conversion()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `conversion_format` | `int` | `1` | `1` = ExoMol/ExoAtom -> HITRAN, `2` = HITRAN -> ExoMol |
+| `conversion_format` | `str` | `'None` | `'ExoMo'` = HITRAN/HITEMP -> ExoMol/ExoAtom, `'HITRAN'` = ExoMol/ExoMolHR/ExoAtom -> HITRAN/HITEMP |
 | `conversion_min_freq` | `float` | `0` | Minimum frequency in cm⁻¹ |
 | `conversion_max_freq` | `float` | `30000` | Maximum frequency in cm⁻¹ |
 | `conversion_unc` | `float` or `None` | `None` | Max uncertainty (cm⁻¹); `None` disables |
@@ -223,13 +223,13 @@ A dictionary mapping quantum number label to a list of accepted value patterns.
 An empty list `[]` means "accept all values".
 
 ```python
-# Accept only v = 0, 1, 2 and all parities
+# Accept only v' = 0, 1, 2; v" = 5; v' = 7 and v" = 7, and all parities
 qns_filter = {
-    'v': ['0,', '1,', '2,'],
+    'v': ['0,', '1,', '2,', ',5', '7,7'],
     'par': [],
 }
 
-# Accept all (equivalent to None)
+# Accept all configuration, Multiple, and parity
 qns_filter = {
     'configuration': [],
     'Multiple': [],
@@ -248,6 +248,8 @@ qns_filter = {
 
 The labels and formats must correspond to the columns in the `.states` file
 **after** the standard columns (ID, energy, degeneracy, lifetime).
+
+**ExoMolHR** No need.
 
 **ExoMol Example** (MgH XAB):
 

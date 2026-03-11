@@ -22,7 +22,7 @@ Find more details of input parameters from [***PyExoCross Documentation Homepage
 | Function | Description |
 |---|---|
 | {func}`px.run <pyexocross.run>` | Run all enabled functions from an `.inp` file |
-| {func}`px.conversion <pyexocross.conversion>` | Convert between ExoMol and HITRAN formats |
+| {func}`px.conversion <pyexocross.conversion>` | Convert between ExoMol and HITRAN data formats |
 | {func}`px.partition_functions <pyexocross.partition_functions>` | Calculate partition functions $Q(T)$ |
 | {func}`px.specific_heats <pyexocross.specific_heats>` | Calculate specific heats $C_p(T)$ |
 | {func}`px.cooling_functions <pyexocross.cooling_functions>` | Calculate cooling functions $W(T)$ |
@@ -35,10 +35,11 @@ Find more details of input parameters from [***PyExoCross Documentation Homepage
 
 | Database | Keyword | Species Identifier |
 |---|---|---|
-| **ExoMol** | `database='ExoMol'` | `molecule`, `isotopologue`, `dataset` |
-| **ExoAtom** | `database='ExoAtom'` | `atom`, `dataset` |
-| **HITRAN** | `database='HITRAN'` | `molecule`, `isotopologue`, `dataset` |
-| **HITEMP** | `database='HITEMP'` | `molecule`, `isotopologue`, `dataset` |
+| **ExoMol**   | `database='ExoMol'`   | `molecule`, `isotopologue`, `dataset` |
+| **ExoMolHR** | `database='ExoMolHR'` | `molecule`, `isotopologue` |
+| **ExoAtom**  | `database='ExoAtom'`  | `atom`, `dataset` |
+| **HITRAN**   | `database='HITRAN'`   | `molecule`, `isotopologue`, `dataset` |
+| **HITEMP**   | `database='HITEMP'`   | `molecule`, `isotopologue`, `dataset` |
 
 ## Two Ways to Use PyExoCross Python Package
 
