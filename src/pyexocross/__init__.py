@@ -30,7 +30,7 @@ Functions
 - ``px.cross_sections(...)``       -- Cross sections
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 from pyexocross.api import (
     # Run from .inp file
@@ -46,6 +46,8 @@ from pyexocross.api import (
     cross_sections,
     # Legacy aliases kept for backward compatibility
     convert_exomol_to_hitran,
+    convert_exomolhr_to_hitran,
+    convert_exoatom_to_hitran,
     convert_hitran_to_exomol,
     partition_function,
     specific_heat,
@@ -70,6 +72,8 @@ __all__ = [
     'cross_sections',
     # Legacy aliases
     'convert_exomol_to_hitran',
+    'convert_exomolhr_to_hitran',
+    'convert_exoatom_to_hitran',
     'convert_hitran_to_exomol',
     'partition_function',
     'specific_heat',

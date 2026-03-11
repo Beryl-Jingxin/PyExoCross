@@ -174,13 +174,22 @@ def conversion(inp_filepath=None, **kwargs):
 # Keep legacy aliases for backward compatibility
 def convert_exomol_to_hitran(inp_filepath=None, **kwargs):
     """Convert ExoMol to HITRAN format. See :func:`conversion`."""
-    kwargs.setdefault('conversion_format', 1)
+    kwargs.setdefault('conversion_format', 'HITRAN')
     conversion(inp_filepath=inp_filepath, **kwargs)
-
+    
+def convert_exomolhr_to_hitran(inp_filepath=None, **kwargs):
+    """Convert ExoMolHR to HITRAN format. See :func:`conversion`."""
+    kwargs.setdefault('conversion_format', 'HITRAN')
+    conversion(inp_filepath=inp_filepath, **kwargs)
+    
+def convert_exoatom_to_hitran(inp_filepath=None, **kwargs):
+    """Convert ExoAtom to HITRAN format. See :func:`conversion`."""
+    kwargs.setdefault('conversion_format', 'HITRAN')
+    conversion(inp_filepath=inp_filepath, **kwargs)
 
 def convert_hitran_to_exomol(inp_filepath=None, **kwargs):
     """Convert HITRAN to ExoMol format. See :func:`conversion`."""
-    kwargs.setdefault('conversion_format', 2)
+    kwargs.setdefault('conversion_format', 'ExoMol')
     conversion(inp_filepath=inp_filepath, **kwargs)
 
 
