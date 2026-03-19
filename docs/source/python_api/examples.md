@@ -24,14 +24,14 @@ px.conversion(
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
-    qnslabel_list=['par', 'e/f', 'eS', 'v', 'Lambda', 'Sigma', 'Omega'],
-    qnsformat_list=['%1s', '%1s', '%13s', '%3d', '%2d', '%7.1f', '%7.1f'],
+    qnslabel_list=['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega'],
+    qnsformat_list=['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f'],
     conversion_format='HITRAN',
     conversion_min_freq=0,
     conversion_max_freq=30000,
     conversion_unc=0.01, 
     conversion_threshold=1e-30,
-    global_qn_label_list=['eS', 'v', 'Omega'],
+    global_qn_label_list=['ElecState', 'v', 'Omega'],
     global_qn_format_list=['%9s', '%2d', '%4s'],
     local_qn_label_list=['J', 'e/f'],
     local_qn_format_list=['%5.1f', '%2s']
@@ -186,12 +186,12 @@ px.stick_spectra(
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
-    qnslabel_list=['par', 'e/f', 'eS', 'v', 'Lambda', 'Sigma', 'Omega'],
-    qnsformat_list=['%1s', '%1s', '%13s', '%3d', '%2d', '%7.1f', '%7.1f'],
+    qnslabel_list=['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega'],
+    qnsformat_list=['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f'],
     nlte_method='T',
     tvib_list=[1000, 2000, 3000],
     trot_list=[100, 200],
-    vib_label=['v', 'eS'],
+    vib_label=['v', 'ElecState'],
     rot_label=['J', 'e/f'],
     wn_wl='WN',
     wn_wl_unit='cm-1',
@@ -201,9 +201,9 @@ px.stick_spectra(
     unc_filter=0.01,
     threshold=1e-30,
     qns_filter={
-        'par': [],
+        '+/-': [],
         'e/f': [],
-        'eS': [],
+        'ElecState': [],
         'v': ['0,', '1,', '2,', '3,', '4,', ',0', ',1', ',2', ',3', ',4'],
     }
 )
@@ -262,12 +262,12 @@ px.cross_sections(
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
-    qnslabel_list=['par', 'e/f', 'eS', 'v', 'Lambda', 'Sigma', 'Omega'],
-    qnsformat_list=['%1s', '%1s', '%13s', '%3d', '%2d', '%7.1f', '%7.1f'],
+    qnslabel_list=['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega'],
+    qnsformat_list=['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f'],
     nlte_method='T',
     tvib_list=[1000, 2000, 3000],
     trot_list=[100, 200],
-    vib_label=['v', 'eS'],
+    vib_label=['v', 'ElecState'],
     rot_label=['J', 'e/f'],
     pressures=[1.0, 5.0],
     wn_wl='WN',
@@ -1064,8 +1064,8 @@ COMPUTE_PARAMS = dict(
 )
 
 QN_PARAMS = dict(
-    qnslabel_list=['par', 'e/f', 'eS', 'v', 'Lambda', 'Sigma', 'Omega'],
-    qnsformat_list=['%1s', '%1s', '%13s', '%3d', '%2d', '%7.1f', '%7.1f'],
+    qnslabel_list=['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega'],
+    qnsformat_list=['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f'],
 )
 
 RANGE_PARAMS = dict( 

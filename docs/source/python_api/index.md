@@ -30,6 +30,7 @@ Find more details of input parameters from [***PyExoCross Documentation Homepage
 | {func}`px.oscillator_strengths <pyexocross.oscillator_strengths>` | Calculate oscillator strengths $gf$ or $f$ |
 | {func}`px.stick_spectra <pyexocross.stick_spectra>` | Calculate LTE / Non-LTE stick spectra |
 | {func}`px.cross_sections <pyexocross.cross_sections>` | Calculate LTE / Non-LTE cross sections |
+| {func}`px.stick_spectra_cross_section <pyexocross.stick_spectra_cross_section>` | Calculate LTE / Non-LTE stick spectra and cross sections simultaneously |
 
 ## Supported Databases
 

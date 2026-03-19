@@ -55,15 +55,16 @@ def plot_stick_spectra(stick_spectra_df, T=None, Tvib=None, Trot=None):
     print('\nPlotting stick spectra ...')
     tp = Timer()
     tp.start()
-    stick_spectra_df = stick_spectra_df[np.isfinite(stick_spectra_df['S'])]
-    stick_spectra_df = stick_spectra_df.reset_index(drop=True)
+    stick_spectra_df_plot = stick_spectra_df[np.isfinite(stick_spectra_df['S'])]
+    stick_spectra_df_plot = stick_spectra_df_plot.reset_index(drop=True)
     
-    if len(stick_spectra_df) == 0:
+    if len(stick_spectra_df_plot) == 0:
         print('Warning: No valid stick spectra data to plot. Skipping plot.')
         return
     
-    v = stick_spectra_df['v'].values
-    S = stick_spectra_df['S'].values
+    v = stick_spectra_df_plot['v'].values
+    S = stick_spectra_df_plot['S'].values
+    del stick_spectra_df_plot
     min_v = min(v)
     max_v = max(v)
     

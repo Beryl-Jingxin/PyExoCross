@@ -31,10 +31,10 @@ ChunkSize                               10000
 # Conversion #
 ConversionFormat                        HITRAN     
 ConversionFrequncyRange                 0         43530           # Wavenumber in unit of cm-1      
-GlobalQNLabel                           eS      v      Omega
-GlobalQNFormat                          %9s     %2d    %4d
-LocalQNLabel                            J       e/f
-LocalQNFormat                           %7d     %1s
+GlobalQNLabel                           ElecState    v      Omega
+GlobalQNFormat                          %9s          %2d    %4d
+LocalQNLabel                            J            e/f
+LocalQNFormat                           %7d          %1s
 ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01 cm-1
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule
                            
@@ -54,7 +54,7 @@ QNsFilter(Y/N)                          N
 NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
 Tvib                                    2000
 Trot                                    296
-QNsVibLabel                             v,eS
+QNsVibLabel                             v,ElecState
 QNsRotLabel                             J,e/f            
 
 

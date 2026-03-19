@@ -331,8 +331,8 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                +/-    e/f     State    v     Lambda   Sigma    Omega
-QNsformat                               %1s    %1s     %5s      %5d   %5d      %5.1f    %5.1f
+QNslabel                                +/-    e/f     ElecState    v     Lambda   Sigma    Omega
+QNsformat                               %1s    %1s     %12s         %3d   %3d      %5.1f    %5.1f
 
 
 # Calculate stick spectra or cross sections #
@@ -395,8 +395,8 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                J       X     Omega   v1      m      Sym  
-QNsformat                               %5s     %2s   %3s     %2d     %1s 
+QNslabel                                J       X     Omega   v1      Sym    F
+QNsformat                               %5.1f   %2s   %3s     %2d     %1s    %5s
 
 
 # Calculate stick spectra or cross sections #
@@ -407,7 +407,7 @@ Range                                   1000       5000          # Same unit as 
 Absorption/Emission                     Emission                 # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          No         0.01          # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          NO         1e-30         # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,;2,;,0;4,4;4,3]  
+QNsFilter(Y/N)                          N          X[]       Omega[]       v1[1,0;2,]
 
 
 # Calculate cross sections #

@@ -2,8 +2,14 @@
 Save ExoMolHR cross sections.
 """
 import numpy as np
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 
-from pyexocross.base.log import log_tqdm, print_T_Tvib_Trot_P_path_info, print_xsec_info
+from pyexocross.base.log import (
+    log_tqdm, 
+    print_T_Tvib_Trot_P_path_info, 
+    print_xsec_info,
+    print_file_info,
+)
 from pyexocross.base.utils import Timer
 from pyexocross.calculation.calculate_cross_section import (
     cross_section_BinnedGaussian,
@@ -33,6 +39,20 @@ from pyexocross.plot.plot_cross_section import save_xsec_file_plot
 from pyexocross.process.T_n_val import get_ntemp, get_temp_vals
 from pyexocross.save.hitran.hitran_stick_spectra import process_hitran_stick_spectra
 
+_USE_THREAD_POOL = True
+
+def _executor_context(max_workers):
+    """
+    Prefer process pool, fall back to threads if unavailable.
+    """
+    global _USE_THREAD_POOL
+    if _USE_THREAD_POOL:
+        return ThreadPoolExecutor(max_workers=max_workers)
+    try:
+        return ProcessPoolExecutor(max_workers=max_workers)
+    except PermissionError:
+        _USE_THREAD_POOL = True
+        return ThreadPoolExecutor(max_workers=max_workers)
 
 def process_exomolhr_cross_section_chunk(exomolhr_df, T, P, Q, profile_label,
                                          Tvib=None, Trot=None,
@@ -144,7 +164,6 @@ def process_exomolhr_cross_section_chunk(exomolhr_df, T, P, Q, profile_label,
         return cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff)
     raise ValueError('Please choose line profile from the list.')
 
-
 def save_exomolhr_cross_section(exomolhr_df, T_list, P_list, Tvib_list, Trot_list):
     """
     Calculate and save cross sections for ExoMolHR line lists.
@@ -160,6 +179,8 @@ def save_exomolhr_cross_section(exomolhr_df, T_list, P_list, Tvib_list, Trot_lis
         profile,
         read_path,
         database,
+        wn_wl,
+        ncputrans,
     )
 
     print('Calculating cross sections ...')
@@ -192,34 +213,43 @@ def save_exomolhr_cross_section(exomolhr_df, T_list, P_list, Tvib_list, Trot_lis
     print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
                     'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)', broad, ratio)
 
-    any_results = False
-    xsec_file_count = 0
-    for temp_idx in log_tqdm(range(n_temps), desc='\nProcessing cross sections'):
+    xsec_tasks = []
+    for temp_idx in range(n_temps):
         T, Tvib, Trot = get_temp_vals(temp_idx, NLTEMethod, T_list, Tvib_list, Trot_list)
         pressures = P_per_temp[temp_idx] if pressure_dependent else [P_per_temp[temp_idx][0]]
         Q = Q_arr[temp_idx]
         for P in pressures:
-            xsec = process_exomolhr_cross_section_chunk(
-                exomolhr_df,
-                T,
-                P,
-                Q,
-                profile_label,
-                Tvib,
-                Trot,
-                Evibp,
-                Erotp,
-                Evibpp,
-                Erotpp,
-            )
-            if len(xsec) == 0 or np.all(xsec == 0):
-                print(f'Warning: No cross sections found for T={T} K, P={P} bar. Skipping this combination.')
-                continue
+            xsec_tasks.append((temp_idx, T, Q, P, Tvib, Trot))
+            
+    any_results = False
+    xsec_file_count = 0
+    print('Processing cross sections in parallel...')
+    
+    with _executor_context(max_workers=ncputrans) as executor:
+        if NLTEMethod in ('L', 'P'):
+            futures_xsec = {executor.submit(process_exomolhr_cross_section_chunk,
+                                           exomolhr_df, T, P, Q, profile_label,
+                                           None, None, None, None, None, None): (temp_idx, P)
+                           for temp_idx, T, Q, P, Tvib, Trot in log_tqdm(xsec_tasks, desc='\nProcessing cross sections')}
+        else:
+            futures_xsec = {executor.submit(process_exomolhr_cross_section_chunk,
+                                           exomolhr_df, T, P, Q, profile_label,
+                                           Tvib, Trot, Evibp, Erotp, Evibpp, Erotpp): (temp_idx, P)
+                           for temp_idx, T, Q, P, Tvib, Trot in log_tqdm(xsec_tasks, desc='\nProcessing cross sections')}
 
-            any_results = True
-            save_xsec_file_plot(wn_grid, xsec, database, profile_label, T, P, temp_idx, Tvib_list, Trot_list)
-            xsec_file_count += 1
-            print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, P if pressure_dependent else None, abs_emi, NLTEMethod, 'Cross sections', None)
+        for future in as_completed(futures_xsec):
+            temp_idx, P = futures_xsec[future]
+            T, Tvib, Trot = get_temp_vals(temp_idx, NLTEMethod, T_list, Tvib_list, Trot_list)
+            try:
+                xsec = future.result()
+                if xsec is not None and not (len(xsec) == 0 or np.all(xsec == 0)):
+                    any_results = True
+                    save_xsec_file_plot(wn_grid, xsec, database, profile_label, T, P, temp_idx, Tvib_list, Trot_list)
+                    xsec_file_count += 1
+                    print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, P if pressure_dependent else None, abs_emi, NLTEMethod, 'Cross sections', None)
+                    del xsec
+            except Exception as e:
+                print(f'Warning: Error processing cross sections for T={T} K, P={P} bar: {e}')
 
     print('\nTotal running time for cross sections:')
     t.end()
@@ -227,6 +257,9 @@ def save_exomolhr_cross_section(exomolhr_df, T_list, P_list, Tvib_list, Trot_lis
 
     if not any_results:
         raise ValueError("Empty result with the input filter values. Please type new filter values in the input file.")
-
+    if wn_wl == 'WN':
+        print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%15.6f', '%15.8E'])
+    else:
+        print_file_info('Cross sections', ['Wavelength', 'Cross section'], ['%15.8E', '%15.8E'])
     print(f'\nAll {xsec_file_count} cross sections files have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')

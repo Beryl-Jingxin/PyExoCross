@@ -66,7 +66,7 @@ Range                                   0          30000          # Same unit as
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          N          par[]   e/f[]  eS[]  v[1,1;1,0;2,;,0]  
+QNsFilter(Y/N)                          N          +/-[]   e/f[]  ElecState[]  v[1,1;1,0;2,;,0]  
 
 
 # Calculate stick spectra #
@@ -88,7 +88,7 @@ Range                                   0          30000          # Same unit as
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          Y          par[]   e/f[]  eS[]  v[]  
+QNsFilter(Y/N)                          Y          +/-[]   e/f[]  ElecState[]  v[]  
 
 
 # Calculate stick spectra #
@@ -110,7 +110,7 @@ Range                                   0          30000          # Same unit as
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          Y          par[]   e/f[]  eS[]  v[]  
+QNsFilter(Y/N)                          Y          +/-[]   e/f[]  ElecState[]  v[]  
 
 
 # Calculate stick spectra #
@@ -155,8 +155,8 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+QNslabel                                +/-  e/f   ElecState    v     Lambda   Sigma    Omega
+QNsformat                               %1s  %1s   %12s         %3d   %3d      %5.1f    %5.1f
 
 
 # Calculate stick spectra or cross sections #
@@ -167,7 +167,7 @@ Range                                   0          30000          # Same unit as
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          N          par[]   e/f[]  eS[]  v[1,1;1,0;2,;,0]  
+QNsFilter(Y/N)                          N          +/-[]   e/f[]  ElecState[]  v[1,1;1,0;2,;,0]  
 
 
 # Calculate stick spectra #
@@ -210,8 +210,8 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                +/-    e/f     State    v     Lambda   Sigma    Omega
-QNsformat                               %1s    %1s     %5s      %5d   %5d      %5.1f    %5.1f
+QNslabel                                J       X     Omega   v1      Sym    F
+QNsformat                               %5.1f   %2s   %3s     %2d     %1s    %5s
 
 
 # Calculate stick spectra or cross sections #
@@ -222,7 +222,7 @@ Range                                   150        1000           # Same unit as
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          Y          State[]  v[]  Lambda[]  Sigma[]  Omega[]
+QNsFilter(Y/N)                          Y          X[]       Omega[]       v1[1,0;2,]
 
 
 # Calculate stick spectra #
@@ -265,8 +265,8 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                J       X     Omega   v1      m      Sym    
-QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
+QNslabel                                J       X     Omega   v1      Sym    F
+QNsformat                               %5.1f   %2s   %3s     %2d     %1s    %5s
 
 
 # Calculate stick spectra or cross sections #
@@ -277,7 +277,7 @@ Range                                   1000       5000           # Same unit as
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.005          # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,1;1,0]  
+QNsFilter(Y/N)                          N          X[]       Omega[]       v1[1,0;2,]
 
 
 # Calculate stick spectra #

@@ -30,17 +30,17 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+QNslabel                                +/-  e/f   ElecState   v     Lambda   Sigma    Omega
+QNsformat                               %1s  %1s   %12s        %3d   %3d      %5.1f    %5.1f
 
 
 # Conversion #
 ConversionFormat                        HITRAN     
 ConversionFrequncyRange                 0         30000           # Wavenumber in unit of cm-1      
-GlobalQNLabel                           eS      v      Omega
-GlobalQNFormat                          %9s     %2d    %4s
-LocalQNLabel                            J       e/f
-LocalQNFormat                           %5.1f   %2s
+GlobalQNLabel                           ElecState    v      Omega
+GlobalQNFormat                          %9s          %2d    %4s
+LocalQNLabel                            J            e/f
+LocalQNFormat                           %5.1f        %2s
 ConvUncFilter(Y/N)                      N          0.01           # If Y, default value 0.01 cm-1
 ConvThreshold(Y/N)                      N          1e-30          # If Y, default value 1e-30 cm/molecule
                            
@@ -70,14 +70,14 @@ Range                                   0          30000          # Same unit as
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          N          par[]  e/f  eS[]  v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
+QNsFilter(Y/N)                          N          +/-[]  e/f  ElecState[]  v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
 
 
 # Calculate non-LTE #
 NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
 Tvib                                    2000
 Trot                                    296
-QNsVibLabel                             v,eS
+QNsVibLabel                             v,ElecState
 QNsRotLabel                             J,e/f            
 
 

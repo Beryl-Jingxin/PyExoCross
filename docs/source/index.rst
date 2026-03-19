@@ -25,6 +25,7 @@ Welcome to PyExoCross's documentation!
    oscillatorstrengths.md
    stickspectra.md
    crosssections.md
+   stickspectracrosssection.md
    nonlte.md
    filters.md
    report.md

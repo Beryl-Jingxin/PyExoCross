@@ -115,7 +115,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
             NLTEMethod,
             pressure_dependent,
         )
-        np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
+        np.savetxt(xsec_filepath, xsec_df, fmt="%15.6f %15.8E")
         ts.end()
         # File info printed once by caller
         print('Cross sections file has been saved:', xsec_filepath)
@@ -348,7 +348,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
             NLTEMethod,
             pressure_dependent,
         )
-        np.savetxt(xsec_filepath, xsec_df, fmt="%12.6f %14.8E")
+        np.savetxt(xsec_filepath, xsec_df, fmt="%15.8E %15.8E")
         ts.end()
         # File info printed once by caller
         print('Cross sections file has been saved:', xsec_filepath)       

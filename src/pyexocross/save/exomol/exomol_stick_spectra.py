@@ -11,7 +11,12 @@ import pandas as pd
 import dask.dataframe as dd
 from concurrent.futures import ThreadPoolExecutor
 from pyexocross.base.utils import Timer, ensure_dir
-from pyexocross.base.log import log_tqdm, print_stick_info, print_T_Tvib_Trot_P_path_info
+from pyexocross.base.log import (
+    log_tqdm, 
+    print_stick_info, 
+    print_T_Tvib_Trot_P_path_info,
+    print_file_info,
+)
 from pyexocross.base.large_file import (
     save_large_txt,
     is_large_trans_file,
@@ -293,9 +298,9 @@ def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_ar
     str_max_wnl = str(int(np.ceil(max_wnl)))
     
     if QNsfmf == '':
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f'
     else:
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f ' + QNsfmf + ' ' + QNsfmf
     
     # Process each temperature separately (ntemp: L=len(T_list), T/D=len(Trot_list), P=1)
     ntemp = get_ntemp(NLTEMethod, T_list, Trot_list)
@@ -316,6 +321,10 @@ def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_ar
             continue
         
         any_results = True
+        
+        # Plot stick spectra for this temperature
+        if PlotStickSpectraYN == 'Y':
+            plot_stick_spectra(stick_spectra_df, T=T, Tvib=Tvib, Trot=Trot)
             
         if wn_wl == 'WN':
             print_unit_str = 'Wavenumber in unit of cm⁻¹'
@@ -334,8 +343,8 @@ def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_ar
         
         # Save file for this temperature (shared naming)
         ss_path = stick_spectra_filepath(ss_folder, T, Tvib, Trot, str_min_wnl, str_max_wnl, unit_fn,
-                                        data_info, wn_wl, UncFilter, threshold, database, abs_emi, LTE_NLTE, photo,
-                                        NLTEMethod)
+                                         data_info, wn_wl, UncFilter, threshold, database, abs_emi, LTE_NLTE, photo,
+                                         NLTEMethod)
         
         ts = Timer()    
         ts.start()
@@ -343,21 +352,7 @@ def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_ar
         ts.end()
         ss_file_count += 1
         print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, None, abs_emi, NLTEMethod, 'Stick spectra', ss_path)
-
-        # Plot stick spectra for this temperature
-        if PlotStickSpectraYN == 'Y':
-            # Create a copy for plotting
-            stick_spectra_df_plot = stick_spectra_df.copy()
-            # plot_stick_spectra expects wavenumber (cm⁻¹) input, so convert if needed
-            if wn_wl == 'WL':
-                # Convert back to wavenumber for plotting
-                if wn_wl_unit == 'um':
-                    stick_spectra_df_plot['v'] = 1e4/stick_spectra_df_plot['v']
-                elif wn_wl_unit == 'nm':
-                    stick_spectra_df_plot['v'] = 1e7/stick_spectra_df_plot['v']
-            # If wn_wl == 'WN', data is already in wavenumber, so use it directly
-            plot_stick_spectra(stick_spectra_df_plot, T=T, Tvib=Tvib, Trot=Trot)
-            del stick_spectra_df_plot
+        ss_col = list(stick_spectra_df.columns)
         
         # Clear memory
         del stick_spectra_df
@@ -368,5 +363,12 @@ def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_ar
     if not any_results:
         raise ValueError("Empty result with the input filter values. Please type new filter values in the input file.")
     
+    if wn_wl == 'WN':
+        ss_col_list = ['Wavenumber'] + ss_col[1:]
+        ss_fmt_list = ['%15.6f'] + ss_fmt.split()[1:]
+    else:
+        ss_col_list = ['Wavelength'] + ss_col[1:]
+        ss_fmt_list = ['%15.8E'] + ss_fmt.split()[1:]
+    print_file_info('Stick spectra', ss_col_list, ss_fmt_list)
     print(f'All {ss_file_count} stick spectra files have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')

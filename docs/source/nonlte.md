@@ -100,8 +100,8 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+QNslabel                                +/-  e/f   ElecState   v     Lambda   Sigma    Omega
+QNsformat                               %1s  %1s   %12s        %3d   %3d      %5.1f    %5.1f
 
 
 # Calculate stick spectra or cross sections #
@@ -119,7 +119,7 @@ QNsFilter(Y/N)                          N          e/f[]   v[0,;1,;2,;3,;4,;,0;,
 NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
 Tvib                                    300,3000,5000
 Trot                                    300,500
-QNsVibLabel                             v,eS
+QNsVibLabel                             v,ElecState
 QNsRotLabel                             J,e/f   
 
 
@@ -253,27 +253,27 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                J       X     Omega   v1      m      Sym    
-QNsformat                               %5s     %2s   %3s     %2d     %1s    %1s
+QNslabel                                J       X     Omega   v1      Sym    F
+QNsformat                               %5.1f   %2s   %3s     %2d     %1s    %5s
 
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
-Temperatures                            1000,3000                 # Temperatures in unit of K
+Temperatures                            1000,2000                 # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
-Range                                   1000       5000           # Same unit as WnWlUnit
-Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.005          # If Y, default value 0.01 cm-1
-Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          N          par[]   e/f[e,e]   v[1,1;1,0]  
+Range                                   0          30000          # Same unit as WnWlUnit
+Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
+UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01
+Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30
+QNsFilter(Y/N)                          N          X[]       Omega[]       v1[1,0;2,]
 
 
 # Calculate non-LTE #
 NLTEMethod                              T                         # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
-Tvib                                    2000,3000
-Trot                                    296
-QNsVibLabel                             v,eS
-QNsRotLabel                             J,e/f      
+Tvib                                    1000:2000:1000
+Trot                                    300,400
+QNsVibLabel                             v1,X
+QNsRotLabel                             J    
 
 
 # Calculate stick spectra #
@@ -286,14 +286,14 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 # Calculate cross sections #
 Pressures                               1                         # Pressures in unit bar
-Npoints/BinSize                         Npoints    10001          # Same unit as WnWlUnit
+Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Air        Self 
 Ratios                                  0.7        0.3     
-Profile                                 Lorentzian        
+Profile                                 SciPyVoigt        
 PredissocXsec(Y/N)                      N
 Cutoff(Y/N)                             Y          25             # If Y, default value 25 cm-1
-DopplerHWHM(Y/N)                        N          0.1            # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     N          0.5            # Set Lorentzian HWHM as a constant
+DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant
+LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
 PlotCrossSection(Y/N)                   Y
 PlotCrossSectionMethod                  log                       # Plot in linear (lin) or logarithm (log)
 PlotCrossSectionWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
@@ -360,8 +360,8 @@ QNsFilter(Y/N)                          Y          configuration[]     Multiple[
 NLTEMethod                              D           /home/jingxin/data/NLTE/Ar/NIST/Ar_density.csv     # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
 Tvib                                    2000
 Trot                                    296
-QNsVibLabel                             v,eS
-QNsRotLabel                             J,parity          
+QNsVibLabel                             nan
+QNsRotLabel                             nan       
 
 
 # Calculate stick spectra #
@@ -441,8 +441,8 @@ QNsFilter(Y/N)                          Y          configuration[]     Multiple[
 NLTEMethod                              P           /home/jingxin/data/NLTE/Ar/NIST/Ar_Ids.csv     # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
 Tvib                                    2000
 Trot                                    296
-QNsVibLabel                             v,eS
-QNsRotLabel                             J,parity          
+QNsVibLabel                             nan
+QNsRotLabel                             nan
 
 
 # Calculate stick spectra #

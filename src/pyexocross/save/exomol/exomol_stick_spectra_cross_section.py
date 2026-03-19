@@ -221,9 +221,9 @@ def save_exomol_stick_spectra_cross_section(
     str_max_wnl = str(int(np.ceil(max_wnl)))
     
     if QNsfmf == '':
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f'
     else:
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f ' + QNsfmf + ' ' + QNsfmf
     
     # Determine columns needed for cross sections
     if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
@@ -392,8 +392,6 @@ def save_exomol_stick_spectra_cross_section(
     ss_file_count = 0
     print('\nCalculate stick spectra.')
     print_stick_info('cm⁻¹', 'cm/molecule')
-    ss_columns = None
-    ss_fmt_list = ss_fmt.split()
     for temp_idx in log_tqdm(range(ntemp), desc='\nProcessing stick spectra'):
         T, Tvib, Trot = get_temp_vals(temp_idx, NLTEMethod, T_list, Tvib_list, Trot_list)
         
@@ -402,6 +400,10 @@ def save_exomol_stick_spectra_cross_section(
             any_results_ss = True
             stick_spectra_df = pd.concat(stick_spectra_results[temp_idx], ignore_index=True)
             
+            # Plot stick spectra for this temperature
+            if PlotStickSpectraYN == 'Y':
+                plot_stick_spectra(stick_spectra_df, T=T, Tvib=Tvib, Trot=Trot)
+  
             if wn_wl == 'WN':
                 print_unit_str = 'Wavenumber in unit of cm⁻¹'
                 unit_fn = 'cm-1__'
@@ -426,35 +428,25 @@ def save_exomol_stick_spectra_cross_section(
             ts.start()
             save_large_txt(ss_path, stick_spectra_df, fmt=ss_fmt)
             ss_file_count += 1
-            if ss_columns is None:
-                ss_columns = list(stick_spectra_df.columns)
             ts.end()
             print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, None, abs_emi, NLTEMethod, 'Stick spectra', ss_path)
-            # Plot stick spectra for this temperature
-            if PlotStickSpectraYN == 'Y':
-                # Create a copy for plotting
-                stick_spectra_df_plot = stick_spectra_df.copy()
-                # plot_stick_spectra expects wavenumber (cm⁻¹) input, so convert if needed
-                if wn_wl == 'WL':
-                    # Convert back to wavenumber for plotting
-                    if wn_wl_unit == 'um':
-                        stick_spectra_df_plot['v'] = 1e4/stick_spectra_df_plot['v']
-                    elif wn_wl_unit == 'nm':
-                        stick_spectra_df_plot['v'] = 1e7/stick_spectra_df_plot['v']
-                # If wn_wl == 'WN', data is already in wavenumber, so use it directly
-                plot_stick_spectra(stick_spectra_df_plot, T=T, Tvib=Tvib, Trot=Trot)
-                del stick_spectra_df_plot
+            ss_col = list(stick_spectra_df.columns)
             
             # Clear memory
             del stick_spectra_df
             stick_spectra_results[temp_idx] = []  # Clear the list
     
     if any_results_ss:
-        if ss_columns is not None:
-            print_file_info('Stick spectra', ss_columns, ss_fmt_list)
         # End and report stick spectra timing
         print('\nTotal running time for stick spectra:')
         t_ss.end()
+        if wn_wl == 'WN':
+            ss_col_list = ['Wavenumber'] + ss_col[1:]
+            ss_fmt_list = ['%15.6f'] + ss_fmt.split()[1:]
+        else:
+            ss_col_list = ['Wavelength'] + ss_col[1:]
+            ss_fmt_list = ['%15.8E'] + ss_fmt.split()[1:]
+        print_file_info('Stick spectra', ss_col_list, ss_fmt_list)
         print(f'\nAll {ss_file_count} stick spectra files have been saved!\n')
         print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
     
@@ -558,9 +550,12 @@ def save_exomol_stick_spectra_cross_section(
                 xsec_results[temp_idx] = None
     
     if any_results_xsec:
-        print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%12.6f', '%14.8E'])
         print('\nTotal running time for cross sections:')
         t_xsec.end()
+        if wn_wl == 'WN':
+            print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%15.6f', '%15.8E'])
+        else:
+            print_file_info('Cross sections', ['Wavelength', 'Cross section'], ['%15.8E', '%15.8E'])
         print(f'\nAll {xsec_file_count} cross sections files have been saved!\n')
     print('\nFinished reading transitions and calculating stick spectra and cross sections!\n')
     

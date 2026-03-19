@@ -99,17 +99,17 @@ ChunkSize                               1000000
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
-QNslabel                                par  e/f   eS    v     Lambda   Sigma    Omega
-QNsformat                               %1s  %1s   %13s  %3d   %2d      %7.1f    %7.1f
+QNslabel                                +/-  e/f   ElecState   v     Lambda   Sigma    Omega
+QNsformat                               %1s  %1s   %12s        %3d   %3d      %5.1f    %5.1f
 
 
 # Conversion #
 ConversionFormat                        1  
 ConversionFrequncyRange                 0          30000          # Wavenumber in unit of cm-1    
-GlobalQNLabel                           eS       v        Omega
-GlobalQNFormat                          %9s      %2d      %4s
-LocalQNLabel                            J        e/f
-LocalQNFormat                           %5.1f    %2s
+GlobalQNLabel                           ElecState     v        Omega
+GlobalQNFormat                          %9s           %2d      %4s
+LocalQNLabel                            J             e/f
+LocalQNFormat                           %5.1f         %2s
 ConvUncFilter(Y/N)                      Y          0.01           # If Y, default value 0.01 cm-1
 ConvThreshold(Y/N)                      Y          1e-30          # If Y, default value 1e-30 cm/molecule
 ```

@@ -198,10 +198,10 @@ def save_exomol_oscillator_strength(states_df):
     os_folder = save_path + 'oscillator_strength/files/'+data_info[0]+'/'+database+'/'
     ensure_dir(os_folder)
     os_path = os_folder+'__'.join(data_info[-2:])+'_'+gfORf.lower()+'.os' 
-    os_format = "%12d %12d %10.4E %15.6f"
+    os_format = "%12d %12d %12.4E %15.6f"
     save_large_txt(os_path, oscillator_strength_df, fmt=os_format)
     ts.end()
-    print_file_info('Oscillator strengths', oscillator_strength_df.columns, ['%12d', '%12d', '%10.4E', '%15.6f'])
+    print_file_info('Oscillator strengths', oscillator_strength_df.columns, ['%12d', '%12d', '%12.4E', '%15.6f'])
     print('Wavenumber in unit of cm⁻¹')
     print('Oscillator strengths file has been saved:', os_path, '\n')  
     

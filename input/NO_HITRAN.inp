@@ -62,7 +62,7 @@ Y-axisLimitOscillatorStrength           1e-30                     # Default valu
 
 
 # Calculate stick spectra or cross sections #
-LTE/Non-LTE                             Non-LTE                       # 'LTE' or 'Non-LTE'
+LTE/Non-LTE                             Non-LTE                   # 'LTE' or 'Non-LTE'
 Temperatures                            1000,2000                 # Temperature in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit

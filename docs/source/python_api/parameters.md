@@ -120,10 +120,10 @@ The global and local quantum number format strings follow HITRAN2004 convention.
 Each format field is a C/Fortran-style specifier:
 
 ```python
-global_qn_label_list  = ['eS',  'v',  'Omega']
+global_qn_label_list  = ['ElecState', 'v', 'Omega']
 global_qn_format_list = ['%9s', '%2d', '%4s']    # Total: 15 chars
 
-local_qn_label_list   = ['J',    'e/f']
+local_qn_label_list   = ['J', 'e/f']
 local_qn_format_list  = ['%5.1f', '%2s']         # Total: 15 chars (padded)
 ```
 
@@ -169,7 +169,7 @@ Used by `px.oscillator_strengths()`.
 
 ## Physical Conditions
 
-Used by `px.stick_spectra()` and `px.cross_sections()`.
+Used by `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross_section()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -185,7 +185,7 @@ Used by `px.stick_spectra()` and `px.cross_sections()`.
 
 ## Non-LTE Parameters
 
-Used by `px.stick_spectra()` and `px.cross_sections()` when `nlte_method != 'L'`.
+Used by `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross_section()` when `nlte_method != 'L'`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -209,7 +209,7 @@ Used by `px.stick_spectra()` and `px.cross_sections()` when `nlte_method != 'L'`
 
 ## Filter Parameters
 
-Used by `px.stick_spectra()` and `px.cross_sections()`.
+Used by `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross_section()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
@@ -226,7 +226,7 @@ An empty list `[]` means "accept all values".
 # Accept only v' = 0, 1, 2; v" = 5; v' = 7 and v" = 7, and all parities
 qns_filter = {
     'v': ['0,', '1,', '2,', ',5', '7,7'],
-    'par': [],
+    '+/-': [],
 }
 
 # Accept all configuration, Multiple, and parity
@@ -254,8 +254,8 @@ The labels and formats must correspond to the columns in the `.states` file
 **ExoMol Example** (MgH XAB):
 
 ```python
-qnslabel_list  = ['par', 'e/f', 'eS', 'v', 'Lambda', 'Sigma', 'Omega']
-qnsformat_list = ['%1s', '%1s', '%13s', '%3d', '%2d', '%7.1f', '%7.1f']
+qnslabel_list  = ['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega']
+qnsformat_list = ['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f']
 ```
 
 **ExoAtom Example** (Ar NIST):
@@ -323,7 +323,7 @@ and `bin_size` is calculated from the range.
 
 ## Plotting Parameters
 
-Used by `px.oscillator_strengths()`, `px.stick_spectra()`, `px.cross_sections()`.
+Used by `px.oscillator_strengths()`, `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross_section()`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|

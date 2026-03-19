@@ -50,12 +50,12 @@ Wrong format of the quantum number column nams: '1', '2', 'electronic state'.
 
 *Example*
 
-Save all of `par`, all of `e/f`, and part of `v` (v'=1 and v"=any + v'=2 and v"=2 + v'=2 and v"=1 + v'=amy and v"=0) quantum numbers into the result file.
+Save all of `+/-`, all of `e/f`, and part of `v` (v'=1 and v"=any + v'=2 and v"=2 + v'=2 and v"=1 + v'=any and v"=0) quantum numbers into the result file.
 
 ```bash
 UncFilter(Y/N)                          y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          yes        1e-30          # If Y, default value 1e-30 cm/molecule
-QNsFilter(Y/N)                          Y          par[]   e/f[]   v[1,;2,2;2,1;,0]  
+QNsFilter(Y/N)                          Y          +/-[]   e/f[]   v[1,;2,2;2,1;,0]  
 ```
 
 Don't use uncertainty and threshold filters. Don't save quantum numbers into the result file.

@@ -104,7 +104,7 @@ px.conversion(
     read_path='/path/to/ExoMol/',
     save_path='/path/to/output/',
     conversion_format='HITRAN',
-    global_qn_label_list=['eS', 'v', 'Omega'],
+    global_qn_label_list=['ElecState', 'v', 'Omega'],
     global_qn_format_list=['%9s', '%2d', '%4s'],
     local_qn_label_list=['J', 'e/f'],
     local_qn_format_list=['%5.1f', '%2s'],
@@ -391,9 +391,9 @@ labels and values are lists of accepted value patterns.  Use an empty list
 
 ```python
 qns_filter={
-    'par': [],                    # accept all parities
+    '+/-': [],                    # accept all parities
     'v': ['0,', '1,', '2,'],      # only v' = 0, 1, 2
-    'eS': [],                     # accept all electronic states
+    'ElecState': [],              # accept all electronic states
 }
 ```
 
@@ -513,3 +513,41 @@ px.cross_sections(
     plot_method='log',
 )
 ```
+
+---
+
+## `px.stick_spectra_cross_section`
+
+```python
+px.stick_spectra_cross_section(inp_filepath=None, **kwargs)
+```
+
+Calculate LTE or Non-LTE stick spectra and cross sections simultaneously.
+
+**Parameters**
+
+All parameters from [`px.stick_spectra`](#pxstick_spectra) and [`px.cross_sections`](#pxcross_sections).
+
+**Example**
+
+```python
+px.stick_spectra_cross_section(
+    database='ExoMol',
+    molecule='MgH',
+    isotopologue='24Mg-1H',
+    dataset='XAB',
+    species_id=501,
+    read_path='/path/to/ExoMol/',
+    save_path='/path/to/output/',
+    temperatures=[1000, 2000],
+    pressures=[1.0],
+    wn_wl='WN',
+    wn_wl_unit='cm-1',
+    min_range=0,
+    max_range=30000,
+    bin_size=0.1,
+    profile='SciPyVoigt',
+    plot=True,
+)
+```
+

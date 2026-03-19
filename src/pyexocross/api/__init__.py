@@ -24,19 +24,20 @@ Usage::
 
 Available functions (snake_case, following PEP 8):
 
-- ``px.run(inp_filepath)``         -- Run all functions from .inp file
-- ``px.conversion(...)``           -- ExoMol-to-HITRAN or HITRAN-to-ExoMol
-- ``px.partition_functions(...)``   -- Partition function calculation
-- ``px.specific_heats(...)``       -- Specific heat calculation
-- ``px.cooling_functions(...)``    -- Cooling function calculation
-- ``px.lifetimes(...)``            -- Radiative lifetime calculation
-- ``px.oscillator_strengths(...)`` -- Oscillator strength calculation
-- ``px.stick_spectra(...)``        -- Stick spectra calculation
-- ``px.cross_sections(...)``       -- Cross section calculation
+- ``px.run(inp_filepath)``                  -- Run all functions from .inp file
+- ``px.conversion(...)``                    -- ExoMol-to-HITRAN or HITRAN-to-ExoMol
+- ``px.partition_functions(...)``           -- Partition function calculation
+- ``px.specific_heats(...)``                -- Specific heat calculation
+- ``px.cooling_functions(...)``             -- Cooling function calculation
+- ``px.lifetimes(...)``                     -- Radiative lifetime calculation
+- ``px.oscillator_strengths(...)``          -- Oscillator strength calculation
+- ``px.stick_spectra(...)``                 -- Stick spectra calculation
+- ``px.cross_sections(...)``                -- Cross section calculation
+- ``px.stick_spectra_cross_section(...)``   -- Stick spectra and Cross section calculation simultaneously
 """
 import os
-from pyexocross.config import Config
-from pyexocross.core import get_results
+from ..config import Config
+from ..core import get_results
 
 
 def _ensure_logging(inp_filepath=None, logs_path=None):
@@ -552,3 +553,63 @@ def cross_sections(inp_filepath=None, **kwargs):
 
 # Legacy alias
 cross_section = cross_sections
+
+
+# ---------------------------------------------------------------------------
+# Stick spectra and Cross sections simultaneously
+# ---------------------------------------------------------------------------
+def stick_spectra_cross_section(inp_filepath=None, **kwargs):
+    """
+    Calculate stick spectra and cross sections simultaneously.
+
+    Parameters
+    ----------
+    inp_filepath : str, optional
+        Path to .inp configuration file.
+    **kwargs
+        All parameters from :func:`stick_spectra` and :func:`cross_sections`.
+
+    Examples
+    --------
+    >>> import pyexocross as px
+    >>> px.stick_spectra_cross_section(
+    ...     database='ExoMol',
+    ...     molecule='MgH',
+    ...     isotopologue='24Mg-1H',
+    ...     dataset='XAB',
+    ...     read_path='/path/to/databases/',
+    ...     temperatures=[1000],
+    ...     pressures=[1.0],
+    ...     profile='SciPyVoigt',
+    ... )
+    """
+    _ensure_logging(inp_filepath, kwargs.get('logs_path'))
+    
+    if 'plot' in kwargs:
+        plot_val = kwargs.pop('plot')
+        kwargs.setdefault('plot_stick_spectra', plot_val)
+        kwargs.setdefault('plot_cross_section', plot_val)
+    if 'plot_method' in kwargs:
+        method_val = kwargs.pop('plot_method')
+        kwargs.setdefault('plot_stick_spectra_method', method_val)
+        kwargs.setdefault('plot_cross_section_method', method_val)
+    if 'plot_wn_wl' in kwargs:
+        wn_wl_val = kwargs.pop('plot_wn_wl')
+        kwargs.setdefault('plot_stick_spectra_wn_wl', wn_wl_val)
+        kwargs.setdefault('plot_cross_section_wn_wl', wn_wl_val)
+    if 'plot_unit' in kwargs:
+        unit_val = kwargs.pop('plot_unit')
+        kwargs.setdefault('plot_stick_spectra_unit', unit_val)
+        kwargs.setdefault('plot_cross_section_unit', unit_val)
+    if 'limit_yaxis' in kwargs:
+        limit_val = kwargs.pop('limit_yaxis')
+        kwargs.setdefault('limit_yaxis_stick_spectra', limit_val)
+        kwargs.setdefault('limit_yaxis_xsec', limit_val)
+
+    config = Config(
+        inp_filepath=inp_filepath,
+        stick_spectra=1,
+        cross_sections=1,
+        **kwargs
+    )
+    get_results(config)

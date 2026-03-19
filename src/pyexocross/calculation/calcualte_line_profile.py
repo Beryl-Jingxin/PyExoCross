@@ -27,7 +27,7 @@ from ..base.constants import (
     Sqrt2NAkBln2mInvc,
     binSizeHalf
 )
-from pyexocross.base.config_manager import get_config
+from ..base.config_manager import get_config
 
 # Lazy config: only resolved when line-profile functions run (avoids requiring
 # config in worker processes that only import this module for other symbols).

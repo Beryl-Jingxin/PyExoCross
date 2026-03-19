@@ -42,10 +42,10 @@ def read_all_states(read_path, data_info, check_uncertainty, states_col, states_
     states_filename = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.states.bz2'
     if os.path.exists(states_filename):    
         chunks = pd.read_csv(states_filename, compression='bz2', sep='\s+', header=None,
-                             chunksize=100_000, iterator=True, low_memory=False, dtype=object)
+                             chunksize=500_000, iterator=True, low_memory=False, dtype=object)
     elif os.path.exists(states_filename.replace('.bz2','')):
         chunks = pd.read_csv(states_filename.replace('.bz2',''), sep='\s+', header=None,
-                             chunksize=100_000, iterator=True, low_memory=False, dtype=object)
+                             chunksize=500_000, iterator=True, low_memory=False, dtype=object)
     else:
         raise ValueError("No such states file, please check the read path and states filename format!")
 
@@ -58,6 +58,7 @@ def read_all_states(read_path, data_info, check_uncertainty, states_col, states_
     else:      
         states_df = states_df.rename(columns={0:'id',1:'E',2:'g',3:'J'})  
         convert_dict = {'id':np.int32,'E':np.float64,'g':np.int32,'J':np.float16}
+    states_df = states_df[states_df['E'].notna()]
     states_df = states_df.astype(convert_dict)
     t.end()     
     print_file_info('States', states_col, states_fmt)

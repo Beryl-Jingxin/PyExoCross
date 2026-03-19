@@ -12,7 +12,12 @@ from tqdm import tqdm
 from functools import partial
 from concurrent.futures import ThreadPoolExecutor
 from pyexocross.base.utils import Timer
-from pyexocross.base.log import log_tqdm, print_xsec_info, print_T_Tvib_Trot_P_path_info
+from pyexocross.base.log import (
+    log_tqdm, 
+    print_xsec_info, 
+    print_T_Tvib_Trot_P_path_info,
+    print_file_info,
+)
 from pyexocross.base.large_file import (
     is_large_trans_file,
     read_trans_chunks
@@ -463,6 +468,7 @@ def save_exomol_cross_section(states_part_df, T_list, Tvib_list, Trot_list, P_li
         wn_grid,
         database,
         ncpufiles,
+        wn_wl,
     )
     print('Calculate cross sections.')
     tot = Timer()
@@ -560,6 +566,9 @@ def save_exomol_cross_section(states_part_df, T_list, Tvib_list, Trot_list, P_li
     
     if not any_results:
         raise ValueError("Empty result with the input filter values. Please type new filter values in the input file.")
-    
+    if wn_wl == 'WN':
+        print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%15.6f', '%15.8E'])
+    else:
+        print_file_info('Cross sections', ['Wavelength', 'Cross section'], ['%15.8E', '%15.8E'])
     print(f'All {xsec_file_count} cross sections files have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')

@@ -221,7 +221,7 @@ def conversion_trans(hitran2exomol_trans_df, conversion_folder):
     trans_format = "%12d %12d %10.4e %15.6f"
     save_large_txt(conversion_trans_path, hitran2exomol_trans_df, fmt=trans_format)
     t.end()
-    print_file_info('Converted ExoMol transitions', ['f', 'i', 'A', 'v'], ['%12d', '%12d', '%10.4e', '%15.6f'])
+    print_file_info('Converted ExoMol transitions', ['u', 'l', 'A', 'v'], ['%12d', '%12d', '%10.4e', '%15.6f'])
     print('Converted transitions file has been saved:', conversion_trans_path)
     print('Converted transitions file has been saved!\n')  
     

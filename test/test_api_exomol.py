@@ -31,8 +31,8 @@ COMMON = dict(
 
 # Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
 QN_PARAMS = dict(
-    qnslabel_list=['par', 'e/f', 'eS', 'v', 'Lambda', 'Sigma', 'Omega'],
-    qnsformat_list=['%1s', '%1s', '%13s', '%3d', '%2d', '%7.1f', '%7.1f'],
+    qnslabel_list=['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega'],
+    qnsformat_list=['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f'],
 )
 
 # NLTE parameters (needed by stick_spectra and cross_sections)
@@ -40,7 +40,7 @@ NLTE_PARAMS = dict(
     nlte_method='T',                    # Non-LTE: 2T NLTE (default: 'T')
     tvib_list=[1000, 2000, 3000],       # Vibrational temperatures in unit of K
     trot_list=[100, 200],               # Rotational temperatures in unit of K
-    vib_label=['v', 'eS'],              # Vibrational quantum numbers
+    vib_label=['v', 'ElecState'],       # Vibrational quantum numbers
     rot_label=['J', 'e/f'],             # Rotational quantum numbers
 )
 
@@ -81,10 +81,10 @@ def test_conversion():
         conversion_max_freq=30000,      # Maximum wavenumber in unit of cm⁻¹
         conversion_unc=None,            # Uncertainty filter (default: None)
         conversion_threshold=None,      # Threshold filter (default: None)
-        global_qn_label_list=['eS', 'v', 'Omega'],      # Quantum number label for global quantum numbers
-        global_qn_format_list=['%9s', '%2d', '%4s'],    # Quantum number format for global quantum numbers
-        local_qn_label_list=['J', 'e/f'],               # Quantum number label for local quantum numbers
-        local_qn_format_list=['%5.1f', '%2s'],          # Quantum number format for local quantum numbers
+        global_qn_label_list=['ElecState', 'v', 'Omega'],      # Quantum number label for global quantum numbers
+        global_qn_format_list=['%9s', '%2d', '%4s'],           # Quantum number format for global quantum numbers
+        local_qn_label_list=['J', 'e/f'],                      # Quantum number label for local quantum numbers
+        local_qn_format_list=['%5.1f', '%2s'],                 # Quantum number format for local quantum numbers
     )
     print('PASSED: conversion()')
 
@@ -174,15 +174,15 @@ def test_stick_spectra():
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         qns_filter={
-            'par': [],
+            '+/-': [],
             'e/f': [],
-            'eS': [],
+            'ElecState': [],
             'v': ['0,', '1,', '2,', '3,', '4,', ',0', ',1', ',2', ',3', ',4'],
         },
         plot=True,                    # Whether to plot results (default: False)
         plot_method='log',            # Plot in linear (lin) or logarithm (log) (default: 'log')
         plot_wn_wl='WN',              # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WL')
-        plot_unit='cm',               # Unit for plotting axis (default: cm⁻¹)
+        plot_unit='cm-1',             # Unit for plotting axis (default: cm⁻¹)
         limit_yaxis=1e-30,            # Lower limit for y-axis (default: 1e-30 cm/molecule)
     )
     print('PASSED: stick_spectra()')
@@ -215,6 +215,36 @@ def test_cross_sections():
         limit_yaxis=1e-30,      # Lower limit for y-axis (default: 1e-30 cm²/molecule)
     )
     print('PASSED: cross_sections()')
+    
+    
+def test_stick_spectra_cross_section():
+    """Test stick spectra and cross section simultaneous calculation."""
+    print('\n' + '='*70)
+    print('TEST: px.stick_spectra_cross_section()')
+    print('='*70)
+    px.stick_spectra_cross_section(
+        **COMMON,
+        **QN_PARAMS,
+        **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
+        **RANGE_PARAMS,
+        **COMPUTE_PARAMS,
+        pressures=[1.0],        # Pressure in unit bar (default: [1.0])
+        bin_size=0.1,           # Bin size for wavenumber grid 
+        profile='SciPyVoigt',   # Line profile name (default: 'Gaussian')
+        predissociation=False,  # Predissociation (default: False)
+        cutoff=25.0,            # Cutoff distance in cm⁻¹ (default: None)
+        broadeners=['Default'], # Broadening species (default: ['Default'])
+        ratios=[1.0],           # Broadening ratios (default: [1.0])
+        alpha_hwhm=None,        # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
+        gamma_hwhm=None,        # Constant Lorentzian HWHM (None, will calculate from broadening) or custom value (default: 0.5)
+        plot=True,              # Whether to plot results (default: False)
+        plot_method='log',      # Plot in linear (lin) or logarithm (log) (default: 'log')
+        plot_wn_wl='WL',        # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+        plot_unit='nm',         # Unit for plotting axis (default: cm⁻¹)
+        limit_yaxis=1e-30,      # Lower limit for y-axis (default: 1e-30 cm²/molecule)
+    )
+    print('PASSED: stick_spectra_cross_section()')
+
 
 
 # ---------------------------------------------------------------------------
@@ -233,6 +263,7 @@ if __name__ == '__main__':
         test_oscillator_strengths,
         test_stick_spectra,
         test_cross_sections,
+        test_stick_spectra_cross_section,
     ]
 
     passed = 0

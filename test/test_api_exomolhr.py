@@ -124,6 +124,33 @@ def test_cross_sections():
     )
     print('PASSED: cross_sections()')
 
+def test_stick_spectra_cross_section():
+    """Test stick spectra and cross section calculation."""
+    print('\n' + '='*70)
+    print('TEST: px.stick_spectra_cross_section()')
+    print('='*70)
+    px.stick_spectra_cross_section(
+        **COMMON,
+        **NLTE_PARAMS,                  # If Non-LTE is enabled, this parameter is required.
+        **RANGE_PARAMS,
+        **COMPUTE_PARAMS,
+        pressures=[1.0],                # Pressure in unit bar (default: [1.0])
+        bin_size=1,                     # Bin size for wavenumber grid 
+        profile='SciPyVoigt',           # Line profile name (default: 'Gaussian')
+        predissociation=False,          # Predissociation (default: False)
+        cutoff=25.0,                    # Cutoff distance in cm⁻¹ (default: None)
+        broadeners=['Default'],         # Broadening species (default: ['Default'])
+        ratios=[1.0],                   # Broadening ratios (default: [1.0])
+        alpha_hwhm=3.0,                 # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
+        gamma_hwhm=None,                # Constant Lorentzian HWHM (None, will calculate from broadening) or custom value (default: 0.5)
+        plot=True,                      # Whether to plot results (default: False)
+        plot_method='log',              # Plot in linear (lin) or logarithm (log) (default: 'log')
+        plot_wn_wl='WN',                # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+        plot_unit='cm-1',               # Unit for plotting axis (default: cm⁻¹)
+        limit_yaxis=1e-30,              # Lower limit for y-axis (default: 1e-30 cm²/molecule)
+    )
+    print('PASSED: stick_spectra_cross_section()')
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -135,6 +162,7 @@ if __name__ == '__main__':
         test_conversion,
         test_stick_spectra,
         test_cross_sections,
+        test_stick_spectra_cross_section,
     ]
 
     passed = 0

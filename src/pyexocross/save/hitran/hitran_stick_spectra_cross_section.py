@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from pyexocross.base.utils import Timer, ensure_dir
 from pyexocross.base.large_file import save_large_txt
 from pyexocross.base.log import (
     log_tqdm, 
     print_stick_info, 
     print_xsec_info, 
+    print_file_info,
     print_T_Tvib_Trot_P_path_info,
 )
 from pyexocross.base.config_manager import get_config
@@ -58,6 +59,22 @@ from pyexocross.calculation.calculate_cross_section import (
 from pyexocross.plot.plot_cross_section import save_xsec_file_plot
 from pyexocross.plot.plot_stick_spectra import plot_stick_spectra
 
+_USE_THREAD_POOL = True
+
+
+def _executor_context(max_workers):
+    """
+    Prefer process pool, fall back to threads if unavailable.
+    """
+    global _USE_THREAD_POOL
+    if _USE_THREAD_POOL:
+        return ThreadPoolExecutor(max_workers=max_workers)
+    try:
+        return ProcessPoolExecutor(max_workers=max_workers)
+    except PermissionError:
+        _USE_THREAD_POOL = True
+        return ThreadPoolExecutor(max_workers=max_workers)
+    
 def process_hitran_stick_spectra_cross_section_singleT(A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, T, Q, profile_label, P=None,  
                                                        Tvib=None, Trot=None, Evibp=None, Erotp=None, Evibpp=None, Erotpp=None):
     """
@@ -326,9 +343,9 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
     str_max_wnl = str(int(np.ceil(max_wnl)))
     
     if QNsfmf == '':
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f'
     else:
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f ' + QNsfmf + ' ' + QNsfmf
     
     # Prepare base DataFrame columns (extract once)
     ss_colname = ['v','S',"J'","E'",'J"','E"'] + QNs_col
@@ -388,7 +405,7 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
 
     # Process stick spectra in parallel
     print('Processing stick spectra in parallel...')
-    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
+    with _executor_context(max_workers=ncputrans) as executor:
         if NLTEMethod == 'L' or NLTEMethod == 'P':
             futures_ss = {executor.submit(process_hitran_stick_spectra_cross_section_singleT,
                                           A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, T, Q, None, None): temp_idx
@@ -421,7 +438,7 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
     
     # Process cross sections in parallel
     print('Processing cross sections in parallel...')
-    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
+    with _executor_context(max_workers=ncputrans) as executor:
         if NLTEMethod in ('L', 'P'):
             if pressure_dependent:
                 futures_xsec = {executor.submit(process_hitran_stick_spectra_cross_section_singleT,
@@ -473,6 +490,10 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
         for temp_idx, stick_spectra_df in stick_spectra_results.items():
             T, Tvib, Trot = get_temp_vals(temp_idx, NLTEMethod, T_list, Tvib_list, Trot_list)
             
+            # Plot stick spectra for this temperature
+            if PlotStickSpectraYN == 'Y':
+                plot_stick_spectra(stick_spectra_df, T=T, Tvib=Tvib, Trot=Trot)           
+            
             if wn_wl == 'WN':
                 print_unit_str = 'Wavenumber in unit of cm⁻¹'
                 unit_fn = 'cm-1__'
@@ -499,25 +520,22 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
             ts.end()
             ss_file_count += 1
             print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, None, abs_emi, NLTEMethod, 'Stick spectra', ss_path)
+            ss_col = list(stick_spectra_df.columns)
             
-            # Plot stick spectra for this temperature
-            if PlotStickSpectraYN == 'Y':
-                # Create a copy for plotting
-                stick_spectra_df_plot = stick_spectra_df.copy()
-                # plot_stick_spectra expects wavenumber (cm⁻¹) input, so convert if needed
-                if wn_wl == 'WL':
-                    # Convert back to wavenumber for plotting
-                    if wn_wl_unit == 'um':
-                        stick_spectra_df_plot['v'] = 1e4/stick_spectra_df_plot['v']
-                    elif wn_wl_unit == 'nm':
-                        stick_spectra_df_plot['v'] = 1e7/stick_spectra_df_plot['v']
-                plot_stick_spectra(stick_spectra_df_plot, T=T, Tvib=Tvib, Trot=Trot)
-                del stick_spectra_df_plot
+            # Clear memory
+            del stick_spectra_df
         
         print('\nTotal running time for stick spectra:')
         t_ss.end()
+        if wn_wl == 'WN':
+            ss_col_list = ['Wavenumber'] + ss_col[1:]
+            ss_fmt_list = ['%15.6f'] + ss_fmt.split()[1:]
+        else:
+            ss_col_list = ['Wavelength'] + ss_col[1:]
+            ss_fmt_list = ['%15.8E'] + ss_fmt.split()[1:]
+        print_file_info('Stick spectra', ss_col_list, ss_fmt_list)
         print(f'\nAll {ss_file_count} stick spectra files have been saved!\n')
-        print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+        print('* * * * * - - - - - * * * * * - - - * * * * * - - - - - * * * * *\n')
     
     # Save cross section results
     if any_results_xsec:
@@ -542,6 +560,12 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
         
         print('\nTotal running time for cross sections:')
         t_xsec.end()
+        if wn_wl == 'WN':
+            print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%15.6f', '%15.8E'])
+        else:
+            print_file_info('Cross sections', ['Wavelength', 'Cross section'], ['%15.8E', '%15.8E'])
+        print(f'\nAll {xsec_file_count} cross sections files have been saved!\n')
+        print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
     
     # Check if we have any results
     if not any_results_ss and not any_results_xsec:

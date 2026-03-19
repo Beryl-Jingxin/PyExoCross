@@ -19,15 +19,16 @@ Quick start::
 
 Functions
 ---------
-- ``px.run(inp_filepath)``         -- Run all functions from .inp file
-- ``px.conversion(...)``           -- Format conversion
-- ``px.partition_functions(...)``  -- Partition functions
-- ``px.specific_heats(...)``       -- Specific heats
-- ``px.cooling_functions(...)``    -- Cooling functions
-- ``px.lifetimes(...)``            -- Radiative lifetimes
-- ``px.oscillator_strengths(...)`` -- Oscillator strengths
-- ``px.stick_spectra(...)``        -- Stick spectra
-- ``px.cross_sections(...)``       -- Cross sections
+- ``px.run(inp_filepath)``                  -- Run all functions from .inp file
+- ``px.conversion(...)``                    -- Format conversion
+- ``px.partition_functions(...)``           -- Partition functions
+- ``px.specific_heats(...)``                -- Specific heats
+- ``px.cooling_functions(...)``             -- Cooling functions
+- ``px.lifetimes(...)``                     -- Radiative lifetimes
+- ``px.oscillator_strengths(...)``          -- Oscillator strengths
+- ``px.stick_spectra(...)``                 -- Stick spectra
+- ``px.cross_sections(...)``                -- Cross sections
+- ``px.stick_spectra_cross_section(...)``   -- Stick spectra and Cross section calculation simultaneously
 """
 
 __version__ = "1.1.0"
@@ -44,6 +45,7 @@ from pyexocross.api import (
     oscillator_strengths,
     stick_spectra,
     cross_sections,
+    stick_spectra_cross_section,
     # Legacy aliases kept for backward compatibility
     convert_exomol_to_hitran,
     convert_exomolhr_to_hitran,
@@ -56,6 +58,7 @@ from pyexocross.api import (
     oscillator_strength,
     stick_spectra,
     cross_section,
+    stick_spectra_cross_section,
 )
 
 __all__ = [
@@ -70,6 +73,7 @@ __all__ = [
     'oscillator_strengths',
     'stick_spectra',
     'cross_sections',
+    'stick_spectra_cross_section',
     # Legacy aliases
     'convert_exomol_to_hitran',
     'convert_exomolhr_to_hitran',
@@ -82,4 +86,5 @@ __all__ = [
     'oscillator_strength',
     'stick_spectra',
     'cross_section',
+    'stick_spectra_cross_section',
 ]

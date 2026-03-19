@@ -41,6 +41,7 @@ reference when migrating from `.inp`-based workflows to the Python API.
 | `OscillatorStrengths` | `px.oscillator_strengths()` | `1` | Call function directly |
 | `StickSpectra` | `px.stick_spectra()` | `1` | Call function directly |
 | `CrossSections` | `px.cross_sections()` | `1` | Call function directly |
+| `StickSpectraCrossSection` | `px.stick_spectra_cross_section()` | `1` | Call function directly |
 
 :::{note}
 In the Python API, you don't need to set these toggle flags.  Simply calling
@@ -65,8 +66,8 @@ function.  The toggle is only relevant in `.inp` files or when using
 
 | `.inp` Keyword | Python Kwarg | `.inp` Format | Python Type |
 |---|---|---|---|
-| `QNslabel` | `qnslabel_list` | `par e/f eS v Lambda Sigma Omega` | `['par', 'e/f', 'eS', 'v', 'Lambda', 'Sigma', 'Omega']` |
-| `QNsformat` | `qnsformat_list` | `%1s %1s %13s %3d %2d %7.1f %7.1f` | `['%1s', '%1s', '%13s', '%3d', '%2d', '%7.1f', '%7.1f']` |
+| `QNslabel` | `qnslabel_list` | `+/- e/f ElecState v Lambda Sigma Omega` | `['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega']` |
+| `QNsformat` | `qnsformat_list` | `%1s %1s %12s %3d %3d %5.1f %5.1f` | `['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f']` |
 
 ---
 
@@ -76,7 +77,7 @@ function.  The toggle is only relevant in `.inp` files or when using
 |---|---|---|---|
 | `ConversionFormat` | `conversion_format` | `'HITRAN'` | `'HITRAN'` (str) |
 | `ConversionFrequncyRange` | `conversion_min_freq`, `conversion_max_freq` | `0 30000` | Two separate `float` args |
-| `GlobalQNLabel` | `global_qn_label_list` | `eS v Omega` | `['eS', 'v', 'Omega']` |
+| `GlobalQNLabel` | `global_qn_label_list` | `ElecState v Omega` | `['ElecState', 'v', 'Omega']` |
 | `GlobalQNFormat` | `global_qn_format_list` | `%9s %2d %4s` | `['%9s', '%2d', '%4s']` |
 | `LocalQNLabel` | `local_qn_label_list` | `J e/f` | `['J', 'e/f']` |
 | `LocalQNFormat` | `local_qn_format_list` | `%5.1f %2s` | `['%5.1f', '%2s']` |
@@ -162,7 +163,7 @@ All stick spectra parameters above, plus:
 | `NLTEMethod` | `nlte_method` | `T` | `'T'` |
 | `Tvib` | `tvib_list` | `1000 2000` | `[1000, 2000]` |
 | `Trot` | `trot_list` | `300 400` | `[300, 400]` |
-| `QNsVibLabel` | `vib_label` | `v, eS` | `['v', 'eS']` |
+| `QNsVibLabel` | `vib_label` | `v, ElecState` | `['v', 'ElecState']` |
 | `QNsRotLabel` | `rot_label` | `J, e/f` | `['J', 'e/f']` |
 | *(NLTEMethod D/P path)* | `nlte_path` | `/path/to/file.csv` | `'/path/to/file.csv'` |
 

@@ -3,7 +3,12 @@ import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from pyexocross.base.utils import Timer
-from pyexocross.base.log import log_tqdm, print_xsec_info, print_T_Tvib_Trot_P_path_info
+from pyexocross.base.log import (
+    log_tqdm, 
+    print_xsec_info, 
+    print_T_Tvib_Trot_P_path_info,
+    print_file_info,
+)
 from pyexocross.base.config_manager import get_config
 try:
     (
@@ -209,6 +214,7 @@ def save_hitran_cross_section(hitran_linelist_df, T_list, P_list, Tvib_list, Tro
         max_wnl,
         wn_grid,
         ncputrans,
+        wn_wl,
     )
 
     print('Calculating cross sections ...')  
@@ -365,6 +371,9 @@ def save_hitran_cross_section(hitran_linelist_df, T_list, P_list, Tvib_list, Tro
     
     if not any_results:
         raise ValueError("Empty result with the input filter values. Please type new filter values in the input file.")
-    
+    if wn_wl == 'WN':
+        print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%15.6f', '%15.8E'])
+    else:
+        print_file_info('Cross sections', ['Wavelength', 'Cross section'], ['%15.8E', '%15.8E'])
     print(f'All {xsec_file_count} cross sections files have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')

@@ -5,12 +5,14 @@ Reads and processes the ExoMolHR line list once, then calculates both
 stick spectra and cross sections for each temperature/pressure combination.
 """
 import numpy as np
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 
 from pyexocross.base.large_file import save_large_txt
 from pyexocross.base.log import (
     log_tqdm,
     print_stick_info,
     print_xsec_info,
+    print_file_info,
     print_T_Tvib_Trot_P_path_info,
 )
 from pyexocross.base.utils import Timer, ensure_dir
@@ -23,12 +25,45 @@ from pyexocross.save.hitran.hitran_stick_spectra import process_hitran_stick_spe
 from pyexocross.save.exomolhr.exomolhr_cross_section import process_exomolhr_cross_section_chunk
 from pyexocross.calculation.calcualte_line_profile import line_profile
 
+_USE_THREAD_POOL = True
+
+def _executor_context(max_workers):
+    """
+    Prefer process pool, fall back to threads if unavailable.
+    """
+    global _USE_THREAD_POOL
+    if _USE_THREAD_POOL:
+        return ThreadPoolExecutor(max_workers=max_workers)
+    try:
+        return ProcessPoolExecutor(max_workers=max_workers)
+    except PermissionError:
+        _USE_THREAD_POOL = True
+        return ThreadPoolExecutor(max_workers=max_workers)
+
+def process_exomolhr_stick_spectra_cross_section_singleT(A, v, Ep, Epp, gp, T, Q, profile_label, P=None,
+                                                         Tvib=None, Trot=None, Evibp=None, Erotp=None, Evibpp=None, Erotpp=None,
+                                                         exomolhr_df=None):
+    """
+    Calculate stick spectra or cross sections for a single temperature/pressure combination.
+    """
+    if P is None:
+        I = process_hitran_stick_spectra(
+            A, v, Ep, Epp, gp, T, Q,
+            Tvib, Trot, Evibp, Erotp, Evibpp, Erotpp,
+        )
+        return I, None
+    else:
+        xsec = process_exomolhr_cross_section_chunk(
+            exomolhr_df, T, P, Q, profile_label,
+            Tvib, Trot, Evibp, Erotp, Evibpp, Erotpp,
+        )
+        return None, xsec
 
 def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib_list, Trot_list, P_list):
     """Run ExoMolHR stick spectra and cross sections using the same line list.
 
     Reads and processes the data ONCE, then computes both stick spectra and
-    cross sections for every temperature (and pressure) combination.
+    cross sections for every temperature (and pressure) combination in parallel.
     """
     from pyexocross.core import (
         NLTEMethod,
@@ -50,6 +85,7 @@ def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib
         cutoff,
         profile,
         read_path,
+        ncputrans,
     )
 
     print('Calculate stick spectra and cross sections (read once, calculate both together).\n')
@@ -93,7 +129,7 @@ def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib
         raise ValueError("Please choose one from: 'Absorption' or 'Emission'.")
 
     # ---- Stick spectra file format ----
-    QNsfmf = (str(QNsformat_list + QNsformat_list)
+    QNsfmf = (str(QNsformat_list)
               .replace("'", "").replace(",", "").replace("[", "").replace("]", "")
               .replace('d', 's').replace('i', 's').replace('.1f', 's'))
     ss_folder = save_path + 'stick_spectra/files/' + data_info[0] + '/' + database + '/'
@@ -102,11 +138,11 @@ def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib
     str_max_wnl = str(int(np.ceil(max_wnl)))
 
     if QNsfmf == '':
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f'
     else:
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f ' + QNsfmf + ' ' + QNsfmf
 
-    keep_cols = ['v', "J'", "E'", 'J"', 'E"'] + QNs_col
+    keep_cols = ['v', 'S', "J'", "E'", 'J"', 'E"'] + QNs_col 
     base_df = exomolhr_df[keep_cols].copy()
 
     # ---- Read broadening info once (for cross section info line) ----
@@ -119,32 +155,64 @@ def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib
     print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
                     'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)', broad, ratio)
 
-    # ---- Main loop ----
-    t_ss.start()
-    t_xsec.start()
-    any_results_ss = False
-    any_results_xsec = False
-    ss_file_count = 0
-    xsec_file_count = 0
-
-    for temp_idx in log_tqdm(range(n_temps), desc='\nProcessing stick spectra & cross sections'):
+    # Prepare tasks for stick spectra and cross sections
+    ss_tasks = []
+    xsec_tasks = []
+    for temp_idx in range(n_temps):
         T, Tvib, Trot = get_temp_vals(temp_idx, NLTEMethod, T_list, Tvib_list, Trot_list)
         Q = Q_arr[temp_idx]
+        ss_tasks.append((temp_idx, T, Q, Tvib, Trot))
+        
+        pressures = P_per_temp[temp_idx] if pressure_dependent else [P_per_temp[temp_idx][0]]
+        for P in pressures:
+            xsec_tasks.append((temp_idx, T, Q, P, Tvib, Trot))
 
-        # ---- Stick spectra intensity (same for all pressures) ----
-        I = process_hitran_stick_spectra(
-            A, v, Ep, Epp, gp, T, Q,
-            Tvib, Trot, Evibp, Erotp, Evibpp, Erotpp,
-        )
+    # Storage for parallel results
+    stick_spectra_results = {}
+    
+    # ---- Main loop for stick spectra ----
+    t_ss.start()
+    any_results_ss = False
+    ss_file_count = 0
+    print('Processing stick spectra in parallel...')
+    
+    with _executor_context(max_workers=ncputrans) as executor:
+        if NLTEMethod in ('L', 'P'):
+            futures_ss = {executor.submit(process_exomolhr_stick_spectra_cross_section_singleT,
+                                         A, v, Ep, Epp, gp, T, Q, None, None): temp_idx
+                         for temp_idx, T, Q, Tvib, Trot in log_tqdm(ss_tasks, desc='\nProcessing stick spectra')}
+        else:
+            futures_ss = {executor.submit(process_exomolhr_stick_spectra_cross_section_singleT,
+                                         A, v, Ep, Epp, gp, T, Q, None, None,
+                                         Tvib, Trot, Evibp, Erotp, Evibpp, Erotpp): temp_idx
+                         for temp_idx, T, Q, Tvib, Trot in log_tqdm(ss_tasks, desc='\nProcessing stick spectra')}
+            
+        for future in as_completed(futures_ss):
+            temp_idx = futures_ss[future]
+            try:
+                I, _ = future.result()
+                if I is not None and len(I) > 0:
+                    stick_spectra_df = base_df.copy()
+                    stick_spectra_df['S'] = I
+                    stick_spectra_df = stick_spectra_df[['v', 'S', "J'", "E'", 'J"', 'E"'] + QNs_col]
+                    
+                    if threshold != 'None':
+                        stick_spectra_df = stick_spectra_df[stick_spectra_df['S'] >= threshold]
+                        
+                    if len(stick_spectra_df) > 0:
+                        any_results_ss = True
+                        stick_spectra_results[temp_idx] = stick_spectra_df
+            except Exception as e:
+                print(f'Error processing stick spectra for temp_idx={temp_idx}: {e}')
 
-        stick_spectra_df = base_df.copy()
-        stick_spectra_df['S'] = I
-        stick_spectra_df = stick_spectra_df[['v', 'S', "J'", "E'", 'J"', 'E"'] + QNs_col]
-        if threshold != 'None':
-            stick_spectra_df = stick_spectra_df[stick_spectra_df['S'] >= threshold]
-
-        if len(stick_spectra_df) > 0:
-            any_results_ss = True
+    if any_results_ss:
+        print('\nSaving stick spectra results...')
+        for temp_idx in list(stick_spectra_results.keys()):
+            stick_spectra_df = stick_spectra_results.pop(temp_idx)
+            T, Tvib, Trot = get_temp_vals(temp_idx, NLTEMethod, T_list, Tvib_list, Trot_list)
+            
+            if PlotStickSpectraYN == 'Y':
+                plot_stick_spectra(stick_spectra_df, T=T, Tvib=Tvib, Trot=Trot)
 
             # Unit conversion for saving
             if wn_wl == 'WN':
@@ -168,47 +236,67 @@ def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib
             ss_file_count += 1
             print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, None, abs_emi, NLTEMethod,
                                           'Stick spectra', ss_path)
-
-            if PlotStickSpectraYN == 'Y':
-                stick_spectra_df_plot = stick_spectra_df.copy()
-                if wn_wl == 'WL':
-                    if wn_wl_unit == 'um':
-                        stick_spectra_df_plot['v'] = 1e4 / stick_spectra_df_plot['v']
-                    elif wn_wl_unit == 'nm':
-                        stick_spectra_df_plot['v'] = 1e7 / stick_spectra_df_plot['v']
-                plot_stick_spectra(stick_spectra_df_plot, T=T, Tvib=Tvib, Trot=Trot)
-        else:
-            print(f'Warning: No transitions found for T={T} K. Skipping stick spectra for this temperature.')
-
-        # ---- Cross sections for each pressure ----
-        pressures = P_per_temp[temp_idx] if pressure_dependent else [P_per_temp[temp_idx][0]]
-        for P in pressures:
-            xsec = process_exomolhr_cross_section_chunk(
-                exomolhr_df, T, P, Q, profile_label,
-                Tvib, Trot, Evibp, Erotp, Evibpp, Erotpp,
-            )
-            if len(xsec) == 0 or np.all(xsec == 0):
-                print(f'Warning: No cross sections found for T={T} K, P={P} bar. Skipping.')
-                continue
-
-            any_results_xsec = True
-            save_xsec_file_plot(wn_grid, xsec, database, profile_label, T, P,
-                                temp_idx, Tvib_list, Trot_list)
-            xsec_file_count += 1
-            print_T_Tvib_Trot_P_path_info(T, Tvib, Trot,
-                                          P if pressure_dependent else None,
-                                          abs_emi, NLTEMethod, 'Cross sections', None)
-
-    # ---- Final summary ----
-    if any_results_ss:
+            ss_col = list(stick_spectra_df.columns)
+            del stick_spectra_df
+            
         print('\nTotal running time for stick spectra:')
         t_ss.end()
+        if wn_wl == 'WN':
+            ss_col_list = ['Wavenumber'] + ss_col[1:]
+            ss_fmt_list = ['%15.6f'] + ss_fmt.split()[1:]
+        else:
+            ss_col_list = ['Wavelength'] + ss_col[1:]
+            ss_fmt_list = ['%15.8E'] + ss_fmt.split()[1:]
+        print_file_info('Stick spectra', ss_col_list, ss_fmt_list)
         print(f'\nAll {ss_file_count} stick spectra files have been saved!\n')
-        print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
+        print('* * * * * - - - - - * * * * * - - - * * * * * - - - - - * * * * *\n')
+    else:
+        print(f'Warning: No transitions found for any temperature. Skipping stick spectra.')
+
+    # ---- Main loop for cross sections ----
+    t_xsec.start()
+    any_results_xsec = False
+    xsec_file_count = 0
+    print('Processing cross sections in parallel...')
+    
+    with _executor_context(max_workers=ncputrans) as executor:
+        if NLTEMethod in ('L', 'P'):
+            futures_xsec = {executor.submit(process_exomolhr_stick_spectra_cross_section_singleT,
+                                           A, v, Ep, Epp, gp, T, Q, profile_label, P,
+                                           None, None, None, None, None, None,
+                                           exomolhr_df): (temp_idx, P)
+                           for temp_idx, T, Q, P, Tvib, Trot in log_tqdm(xsec_tasks, desc='\nProcessing cross sections')}
+        else:
+            futures_xsec = {executor.submit(process_exomolhr_stick_spectra_cross_section_singleT,
+                                           A, v, Ep, Epp, gp, T, Q, profile_label, P,
+                                           Tvib, Trot, Evibp, Erotp, Evibpp, Erotpp,
+                                           exomolhr_df): (temp_idx, P)
+                           for temp_idx, T, Q, P, Tvib, Trot in log_tqdm(xsec_tasks, desc='\nProcessing cross sections')}
+            
+        for future in as_completed(futures_xsec):
+            temp_idx, P = futures_xsec[future]
+            T, Tvib, Trot = get_temp_vals(temp_idx, NLTEMethod, T_list, Tvib_list, Trot_list)
+            try:
+                _, xsec = future.result()
+                if xsec is not None and not (len(xsec) == 0 or np.all(xsec == 0)):
+                    any_results_xsec = True
+                    save_xsec_file_plot(wn_grid, xsec, database, profile_label, T, P,
+                                        temp_idx, Tvib_list, Trot_list)
+                    xsec_file_count += 1
+                    print_T_Tvib_Trot_P_path_info(T, Tvib, Trot,
+                                                  P if pressure_dependent else None,
+                                                  abs_emi, NLTEMethod, 'Cross sections', None)
+                    del xsec
+            except Exception as e:
+                print(f'Error processing cross sections for T={T} K, P={P} bar: {e}')
 
     if any_results_xsec:
         print('\nTotal running time for cross sections:')
         t_xsec.end()
+        if wn_wl == 'WN':
+            print_file_info('Cross sections', ['Wavenumber', 'Cross section'], ['%15.6f', '%15.8E'])
+        else:
+            print_file_info('Cross sections', ['Wavelength', 'Cross section'], ['%15.8E', '%15.8E'])
         print(f'\nAll {xsec_file_count} cross sections files have been saved!\n')
 
     if not any_results_ss and not any_results_xsec:

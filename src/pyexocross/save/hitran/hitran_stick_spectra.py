@@ -2,7 +2,12 @@ import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 
 from pyexocross.base.utils import Timer, ensure_dir
-from pyexocross.base.log import log_tqdm, print_stick_info, print_T_Tvib_Trot_P_path_info
+from pyexocross.base.log import (
+    log_tqdm, 
+    print_stick_info, 
+    print_file_info,
+    print_T_Tvib_Trot_P_path_info,
+)
 from pyexocross.base.large_file import save_large_txt
 from pyexocross.calculation.calculate_para import cal_v
 from pyexocross.calculation.calculate_intensity import (
@@ -155,9 +160,9 @@ def save_hitran_stick_spectra(hitran_linelist_df, QNs_col, T_list, Tvib_list, Tr
     str_max_wnl = str(int(np.ceil(max_wnl)))
     
     if QNsfmf == '':
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f'
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f'
     else:
-        ss_fmt = '%12.8E %12.8E %7s %12.4f %7s %12.4f ' + QNsfmf + ' ' + QNsfmf
+        ss_fmt = '%15.6f %15.8E %7s %12.6f %7s %12.6f ' + QNsfmf + ' ' + QNsfmf
     
     # Prepare base DataFrame columns (extract once)
     ss_colname = ['v','S',"J'","E'",'J"','E"'] + QNs_col
@@ -191,6 +196,10 @@ def save_hitran_stick_spectra(hitran_linelist_df, QNs_col, T_list, Tvib_list, Tr
         
         any_results = True
         
+        # Plot stick spectra for this temperature
+        if PlotStickSpectraYN == 'Y':
+            plot_stick_spectra(stick_spectra_df, T=T, Tvib=Tvib, Trot=Trot)
+        
         if wn_wl == 'WN':
             print_unit_str = 'Wavenumber in unit of cm⁻¹'
             unit_fn = 'cm-1__'
@@ -217,21 +226,7 @@ def save_hitran_stick_spectra(hitran_linelist_df, QNs_col, T_list, Tvib_list, Tr
         ts.end()
         ss_file_count += 1
         print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, None, abs_emi, NLTEMethod, 'Stick spectra', ss_path)
-        
-        # Plot stick spectra for this temperature
-        if PlotStickSpectraYN == 'Y':
-            # Create a copy for plotting
-            stick_spectra_df_plot = stick_spectra_df.copy()
-            # plot_stick_spectra expects wavenumber (cm⁻¹) input, so convert if needed
-            if wn_wl == 'WL':
-                # Convert back to wavenumber for plotting
-                if wn_wl_unit == 'um':
-                    stick_spectra_df_plot['v'] = 1e4/stick_spectra_df_plot['v']
-                elif wn_wl_unit == 'nm':
-                    stick_spectra_df_plot['v'] = 1e7/stick_spectra_df_plot['v']
-            # If wn_wl == 'WN', data is already in wavenumber, so use it directly
-            plot_stick_spectra(stick_spectra_df_plot, T=T, Tvib=Tvib, Trot=Trot)
-            del stick_spectra_df_plot
+        ss_col = list(stick_spectra_df.columns)
         
         # Clear memory
         del stick_spectra_df
@@ -242,6 +237,12 @@ def save_hitran_stick_spectra(hitran_linelist_df, QNs_col, T_list, Tvib_list, Tr
     
     if not any_results:
         raise ValueError("Empty result with the input filter values. Please type new filter values in the input file.")
-    
+    if wn_wl == 'WN':
+        ss_col_list = ['Wavenumber'] + ss_col[1:]
+        ss_fmt_list = ['%15.6f'] + ss_fmt.split()[1:]
+    else:
+        ss_col_list = ['Wavelength'] + ss_col[1:]
+        ss_fmt_list = ['%15.8E'] + ss_fmt.split()[1:]
+    print_file_info('Stick spectra', ss_col_list, ss_fmt_list)
     print(f'\nAll {ss_file_count} stick spectra files have been saved!\n')
     print('* * * * * - - - - - * * * * * - - - - - * * * * * - - - - - * * * * *\n')
