@@ -1,10 +1,11 @@
-"""GPU backend runtime selection for CUDA.
+"""GPU backend runtime selection for CUDA / MPS.
 
 This module centralizes compute backend selection for PyExoCross:
 - CPU
-- GPU(CUDA)
+- GPU(CUDA / MPS)
 
 CUDA can run with CuPy or Torch backend.
+MPS uses Torch backend.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ _DEFAULT_GPU_BATCH_GRID = 256
 
 _RUNTIME = {
     'requested_mode': 'CPU',
-    'requested_gpu_backend': 'CUDA',
+    'requested_gpu_backend': 'AUTO',
     'active_mode': 'CPU',
     'active_gpu_backend': 'CPU',
     'provider': None,  # 'cupy' | 'torch' | None
@@ -45,8 +46,13 @@ def normalize_run_mode(value: Any) -> str:
 
 
 def normalize_gpu_backend(value: Any) -> str:
-    """Normalize GPU backend to ``CUDA``."""
-    return 'CUDA'
+    """Normalize GPU backend to ``AUTO``, ``CUDA`` or ``MPS``."""
+    if value is None:
+        return 'AUTO'
+    backend = str(value).strip().upper()
+    if backend in ('AUTO', 'CUDA', 'MPS'):
+        return backend
+    raise ValueError("gpu_backend must be 'AUTO', 'CUDA', or 'MPS'.")
 
 
 def _normalize_positive_int(value: Any, name: str, default: int) -> int:
@@ -87,8 +93,8 @@ def _try_import_torch() -> Optional[Any]:
     return torch
 
 
-def _select_cuda_provider() -> tuple[Optional[str], str, Optional[str]]:
-    """Return (provider, reason, torch_device)."""
+def _select_cuda_provider() -> tuple[Optional[str], str, Optional[str], Optional[str]]:
+    """Return (provider, reason, torch_device, active_backend)."""
     cp = _try_import_cupy()
     if cp is not None:
         try:
@@ -96,20 +102,33 @@ def _select_cuda_provider() -> tuple[Optional[str], str, Optional[str]]:
         except Exception:
             n_dev = 0
         if n_dev > 0:
-            return ('cupy', f'CUDA enabled with CuPy ({n_dev} device(s)).', None)
+            return ('cupy', f'CUDA enabled with CuPy ({n_dev} device(s)).', None, 'CUDA')
 
     torch = _try_import_torch()
     if torch is not None and bool(torch.cuda.is_available()):
-        return ('torch', 'CUDA enabled with Torch.', 'cuda')
+        return ('torch', 'CUDA enabled with Torch.', 'cuda', 'CUDA')
 
-    return (None, 'CUDA requested but no CUDA-capable runtime was detected.', None)
+    return (None, 'CUDA requested but no CUDA-capable runtime was detected.', None, None)
 
 
+def _select_mps_provider() -> tuple[Optional[str], str, Optional[str], Optional[str]]:
+    """Return (provider, reason, torch_device, active_backend)."""
+    torch = _try_import_torch()
+    if torch is None:
+        return (None, 'MPS requested but Torch is not available.', None, None)
+    try:
+        mps_backend = getattr(torch.backends, 'mps', None)
+        mps_ok = bool(mps_backend is not None and mps_backend.is_available())
+    except Exception:
+        mps_ok = False
+    if mps_ok:
+        return ('torch', 'MPS enabled with Torch.', 'mps', 'MPS')
+    return (None, 'MPS requested but no MPS-capable runtime was detected.', None, None)
 
 
 def configure_runtime(
     run_mode: Any = 'CPU',
-    gpu_backend: Any = 'CUDA',
+    gpu_backend: Any = 'AUTO',
     gpu_batch_lines: Any = _DEFAULT_GPU_BATCH_LINES,
     gpu_batch_grid: Any = _DEFAULT_GPU_BATCH_GRID,
     verbose: bool = True,
@@ -135,11 +154,34 @@ def configure_runtime(
     if requested_mode == 'CPU':
         _RUNTIME['reason'] = 'GPU mode not requested.'
     else:
-        provider, reason, torch_device = _select_cuda_provider()
+        provider = None
+        reason = ''
+        torch_device = None
+        active_backend = None
+
+        if requested_gpu_backend in ('AUTO', 'CUDA'):
+            provider, reason, torch_device, active_backend = _select_cuda_provider()
+
+        # Keep a CUDA->MPS fallback to support environments where input/API
+        # still requests CUDA by default but only local MPS is available.
+        if provider is None and requested_gpu_backend in ('AUTO', 'MPS', 'CUDA'):
+            mps_provider, mps_reason, mps_device, mps_backend = _select_mps_provider()
+            if mps_provider is not None:
+                provider = mps_provider
+                torch_device = mps_device
+                active_backend = mps_backend
+                if requested_gpu_backend == 'CUDA':
+                    reason = 'CUDA requested but unavailable; fallback to MPS with Torch.'
+                else:
+                    reason = mps_reason
+            elif requested_gpu_backend == 'AUTO' and reason:
+                reason = f'{reason} {mps_reason}'
+            elif not reason:
+                reason = mps_reason
 
         if provider is not None:
             _RUNTIME['active_mode'] = 'GPU'
-            _RUNTIME['active_gpu_backend'] = 'CUDA'
+            _RUNTIME['active_gpu_backend'] = active_backend if active_backend is not None else 'CPU'
             _RUNTIME['provider'] = provider
             _RUNTIME['torch_device'] = torch_device
             _RUNTIME['reason'] = reason
@@ -190,6 +232,10 @@ def using_gpu() -> bool:
 
 def is_cuda_active() -> bool:
     return using_gpu() and active_gpu_backend() == 'CUDA'
+
+
+def is_mps_active() -> bool:
+    return using_gpu() and active_gpu_backend() == 'MPS'
 
 
 def get_cupy() -> Optional[Any]:
@@ -250,11 +296,17 @@ def free_gpu_memory() -> None:
         try:
             if is_cuda_active() and torch.cuda.is_available():
                 torch.cuda.empty_cache()
+            elif is_mps_active():
+                mps_mod = getattr(torch, 'mps', None)
+                if mps_mod is not None and hasattr(mps_mod, 'empty_cache'):
+                    mps_mod.empty_cache()
         except Exception:
             pass
 
 
 def _torch_dtype(torch, device: str):
+    if str(device).startswith('mps'):
+        return torch.float32
     return torch.float64
 
 

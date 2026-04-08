@@ -57,7 +57,7 @@ def get_results(config):
     from pyexocross.gpu.base_gpu import configure_runtime
     configure_runtime(
         run_mode=getattr(config, 'run_mode', 'CPU'),
-        gpu_backend='CUDA',
+        gpu_backend=getattr(config, 'gpu_backend', 'AUTO'),
         gpu_batch_lines=getattr(config, 'gpu_batch_lines', 8192),
         gpu_batch_grid=getattr(config, 'gpu_batch_grid', 256),
         verbose=True,

@@ -1,4 +1,4 @@
-"""GPU cross-section kernels for CUDA backend."""
+"""GPU cross-section kernels for CUDA / MPS backends."""
 
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from pyexocross.gpu.base_gpu import (
 )
 
 _GPU_NOTICE_KEYS = set()
+_EPS = float(np.finfo(np.float64).eps)
 
 
 def _notify_gpu_fallback(kind, message, key_type='fallback'):
@@ -41,14 +42,33 @@ def _window_bounds(wn_grid, v, cutoff):
 
 
 def _torch_float_dtype(torch, device):
+    if str(device).startswith('mps'):
+        return torch.float32
     return torch.float64
 
 
 def _torch_complex_dtype(torch, device):
+    if str(device).startswith('mps'):
+        return torch.complex64
     return torch.complex128
 
 
+def _finite_or_zero(provider, mod, arr):
+    return mod.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
+
+
+def _safe_positive(provider, mod, arr, eps=_EPS):
+    return mod.where(arr > eps, arr, mod.full_like(arr, eps))
+
+
+def _safe_nonzero(provider, mod, arr, eps=_EPS):
+    sign = mod.where(arr < 0, -1.0, 1.0)
+    return mod.where(mod.abs(arr) > eps, arr, sign * eps)
+
+
 def _cupy_humlicek_profile(cp, dv, alpha, gamma):
+    alpha = cp.where(alpha > _EPS, alpha, cp.full_like(alpha, _EPS))
+    gamma = cp.where(gamma > _EPS, gamma, cp.full_like(gamma, _EPS))
     sqrtln2 = np.sqrt(np.log(2.0))
     inv_sqrt_pi = 1.0 / np.sqrt(np.pi)
     sqrtln2_inv_pi = np.sqrt(np.log(2.0) / np.pi)
@@ -92,12 +112,15 @@ def _cupy_humlicek_profile(cp, dv, alpha, gamma):
     w4 = cp.exp(u) - nom / den
     w = cp.where(mask4, w4, w)
 
-    return cp.real(w) / alpha[None, :] * sqrtln2_inv_pi
+    out = cp.real(w) / alpha[None, :] * sqrtln2_inv_pi
+    return cp.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
 
 
 def _torch_humlicek_profile(torch, dv, alpha, gamma):
     device = dv.device.type
     fdtype = _torch_float_dtype(torch, device)
+    alpha = torch.where(alpha > _EPS, alpha, torch.full_like(alpha, _EPS))
+    gamma = torch.where(gamma > _EPS, gamma, torch.full_like(gamma, _EPS))
     sqrtln2 = float(np.sqrt(np.log(2.0)))
     sqrtln2_inv_pi = float(np.sqrt(np.log(2.0) / np.pi))
 
@@ -145,6 +168,7 @@ def _torch_humlicek_profile(torch, dv, alpha, gamma):
         w = torch.where(mask4, w4, w)
 
         out = torch.real(w) / alpha[None, :] * sqrtln2_inv_pi
+        out = torch.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
         return out.to(fdtype)
     except Exception:
         # Complex math may be unavailable on some MPS builds; use pseudo-Voigt
@@ -160,17 +184,22 @@ def _torch_humlicek_profile(torch, dv, alpha, gamma):
             + gamma**5
         ) ** 0.2
         eta = 1.36603 * (gamma / hV) - 0.47719 * (gamma / hV) ** 2 + 0.11116 * (gamma / hV) ** 3
-        return (eta[None, :] * lorentzian + (1.0 - eta[None, :]) * gaussian).to(fdtype)
+        out = eta[None, :] * lorentzian + (1.0 - eta[None, :]) * gaussian
+        out = torch.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
+        return out.to(fdtype)
 
 
 def _cupy_voigt_profile(cp, dv, sigma, gamma):
+    sigma = cp.where(sigma > _EPS, sigma, cp.full_like(sigma, _EPS))
+    gamma = cp.where(gamma > _EPS, gamma, cp.full_like(gamma, _EPS))
     inv_sqrt2 = 1.0 / np.sqrt(2.0)
     inv_sqrt2pi = 1.0 / np.sqrt(2.0 * np.pi)
     try:
         from cupyx.scipy.special import wofz as cp_wofz  # type: ignore
         z = (dv + 1j * gamma[None, :]) / sigma[None, :] * inv_sqrt2
         wz = cp_wofz(z)
-        return cp.real(wz) / sigma[None, :] * inv_sqrt2pi
+        out = cp.real(wz) / sigma[None, :] * inv_sqrt2pi
+        return cp.nan_to_num(out, nan=0.0, posinf=0.0, neginf=0.0)
     except Exception:
         alpha = sigma * np.sqrt(2.0 * np.log(2.0))
         return _cupy_humlicek_profile(cp, dv, alpha, gamma)
@@ -178,6 +207,8 @@ def _cupy_voigt_profile(cp, dv, sigma, gamma):
 
 def _torch_voigt_profile(torch, dv, sigma, gamma):
     # Torch currently has no native wofz on all devices; use Humlicek approximation.
+    sigma = torch.where(sigma > _EPS, sigma, torch.full_like(sigma, _EPS))
+    gamma = torch.where(gamma > _EPS, gamma, torch.full_like(gamma, _EPS))
     alpha = sigma * np.sqrt(2.0 * np.log(2.0))
     return _torch_humlicek_profile(torch, dv, alpha, gamma)
 
@@ -249,6 +280,29 @@ def gpu_cross_section(
         sigma_np = np.asarray(sigma, dtype=np.float64) if sigma is not None else None
         eta_np = np.asarray(eta, dtype=np.float64) if eta is not None else None
 
+        valid = np.isfinite(v_np) & np.isfinite(coef_np)
+        if alpha_np is not None:
+            valid &= np.isfinite(alpha_np) & (alpha_np > 0.0)
+        if gamma_np is not None:
+            valid &= np.isfinite(gamma_np) & (gamma_np > 0.0)
+        if sigma_np is not None:
+            valid &= np.isfinite(sigma_np) & (sigma_np > 0.0)
+        if eta_np is not None:
+            valid &= np.isfinite(eta_np)
+        if not np.any(valid):
+            return np.zeros_like(wn_grid_np)
+
+        v_np = v_np[valid]
+        coef_np = np.nan_to_num(coef_np[valid], nan=0.0, posinf=0.0, neginf=0.0)
+        if alpha_np is not None:
+            alpha_np = alpha_np[valid]
+        if gamma_np is not None:
+            gamma_np = gamma_np[valid]
+        if sigma_np is not None:
+            sigma_np = sigma_np[valid]
+        if eta_np is not None:
+            eta_np = eta_np[valid]
+
         start, end = _window_bounds(wn_grid_np, v_np, cutoff)
         xsec = np.zeros_like(wn_grid_np, dtype=np.float64)
         if start >= end:
@@ -306,9 +360,11 @@ def gpu_cross_section(
                 eta_g = _to_backend_array(provider, mod, eta_np[l0:l1]) if eta_np is not None else None
 
                 if kind == 'doppler':
-                    profile = sqrtln2_inv_pi / alpha_g[None, :] * mod.exp(negln2 * (dv / alpha_g[None, :]) ** 2)
+                    alpha_safe = _safe_positive(provider, mod, alpha_g)
+                    profile = sqrtln2_inv_pi / alpha_safe[None, :] * mod.exp(negln2 * (dv / alpha_safe[None, :]) ** 2)
                 elif kind == 'lorentzian':
-                    profile = gamma_g[None, :] / pi_val / (dv**2 + gamma_g[None, :] ** 2)
+                    gamma_safe = _safe_positive(provider, mod, gamma_g)
+                    profile = gamma_safe[None, :] / pi_val / (dv**2 + gamma_safe[None, :] ** 2)
                 elif kind in ('scipy_voigt', 'scipy_wofz_voigt'):
                     if provider == 'cupy':
                         profile = _cupy_voigt_profile(mod, dv, sigma_g, gamma_g)
@@ -320,64 +376,76 @@ def gpu_cross_section(
                     else:
                         profile = _torch_humlicek_profile(mod, dv, alpha_g, gamma_g)
                 elif kind == 'pseudo_voigt':
-                    gaussian = sqrtln2_inv_pi / alpha_g[None, :] * mod.exp(negln2 * (dv / alpha_g[None, :]) ** 2)
-                    lorentzian = gamma_g[None, :] / pi_val / (dv**2 + gamma_g[None, :] ** 2)
+                    alpha_safe = _safe_positive(provider, mod, alpha_g)
+                    gamma_safe = _safe_positive(provider, mod, gamma_g)
+                    gaussian = sqrtln2_inv_pi / alpha_safe[None, :] * mod.exp(negln2 * (dv / alpha_safe[None, :]) ** 2)
+                    lorentzian = gamma_safe[None, :] / pi_val / (dv**2 + gamma_safe[None, :] ** 2)
                     profile = eta_g[None, :] * lorentzian + (1.0 - eta_g[None, :]) * gaussian
                 elif kind == 'binned_gaussian':
+                    alpha_safe = _safe_positive(provider, mod, alpha_g)
                     if provider == 'cupy':
                         try:
-                            erfxpos = mod.erf(sqrtln2 * (dv + bin_half) / alpha_g[None, :])
-                            erfxneg = mod.erf(sqrtln2 * (dv - bin_half) / alpha_g[None, :])
+                            erfxpos = mod.erf(sqrtln2 * (dv + bin_half) / alpha_safe[None, :])
+                            erfxneg = mod.erf(sqrtln2 * (dv - bin_half) / alpha_safe[None, :])
                         except Exception:
                             from cupyx.scipy.special import erf as cp_erf  # type: ignore
-                            erfxpos = cp_erf(sqrtln2 * (dv + bin_half) / alpha_g[None, :])
-                            erfxneg = cp_erf(sqrtln2 * (dv - bin_half) / alpha_g[None, :])
+                            erfxpos = cp_erf(sqrtln2 * (dv + bin_half) / alpha_safe[None, :])
+                            erfxneg = cp_erf(sqrtln2 * (dv - bin_half) / alpha_safe[None, :])
                     else:
-                        erfxpos = mod.special.erf(sqrtln2 * (dv + bin_half) / alpha_g[None, :])
-                        erfxneg = mod.special.erf(sqrtln2 * (dv - bin_half) / alpha_g[None, :])
+                        erfxpos = mod.special.erf(sqrtln2 * (dv + bin_half) / alpha_safe[None, :])
+                        erfxneg = mod.special.erf(sqrtln2 * (dv - bin_half) / alpha_safe[None, :])
                     profile = erfxpos - erfxneg
                 elif kind == 'binned_lorentzian':
+                    gamma_safe = _safe_positive(provider, mod, gamma_g)
                     bnorm_g = _to_backend_array(provider, mod, bnorm_np[l0:l1])
                     profile = (
-                        mod.atan((dv + bin_half) / gamma_g[None, :])
-                        - mod.atan((dv - bin_half) / gamma_g[None, :])
+                        mod.atan((dv + bin_half) / gamma_safe[None, :])
+                        - mod.atan((dv - bin_half) / gamma_safe[None, :])
                     ) * bnorm_g[None, :]
                 elif kind == 'binned_voigt':
+                    sigma_safe = _safe_positive(provider, mod, sigma_g)
+                    gamma_safe = _safe_positive(provider, mod, gamma_g)
                     # Build quadrature tensors: [g, l, q]
                     roots_g = _to_backend_array(provider, mod, roots)
                     weights_g = _to_backend_array(provider, mod, weights)
 
                     # bnormq: [l, q]
-                    vxsigma = v_g[:, None] + roots_g[None, :] * sigma_g[:, None]
-                    bnormq = 1.0 / (
-                        mod.atan((wngrid_end - vxsigma) / gamma_g[:, None])
-                        - mod.atan((wngrid_start - vxsigma) / gamma_g[:, None])
+                    vxsigma = v_g[:, None] + roots_g[None, :] * sigma_safe[:, None]
+                    bnormq_den = (
+                        mod.atan((wngrid_end - vxsigma) / gamma_safe[:, None])
+                        - mod.atan((wngrid_start - vxsigma) / gamma_safe[:, None])
                     )
+                    bnormq = 1.0 / _safe_nonzero(provider, mod, bnormq_den)
 
-                    dvx = dv[:, :, None] - roots_g[None, None, :] * sigma_g[None, :, None]
+                    dvx = dv[:, :, None] - roots_g[None, None, :] * sigma_safe[None, :, None]
                     lorenz = (
-                        mod.atan((dvx + bin_half) / gamma_g[None, :, None])
-                        - mod.atan((dvx - bin_half) / gamma_g[None, :, None])
+                        mod.atan((dvx + bin_half) / gamma_safe[None, :, None])
+                        - mod.atan((dvx - bin_half) / gamma_safe[None, :, None])
                     )
                     profile = mod.sum(weights_g[None, None, :] * bnormq[None, :, :] * lorenz, axis=2)
                 else:
                     return None
 
+                profile = _finite_or_zero(provider, mod, profile)
                 if cutoff_val is not None:
                     mask = mod.abs(dv) <= cutoff_val
                     profile = mod.where(mask, profile, 0.0)
+                    profile = _finite_or_zero(provider, mod, profile)
 
-                block_sum += mod.sum(profile * coef_g[None, :], axis=1)
+                contribution = _finite_or_zero(provider, mod, profile * coef_g[None, :])
+                block_sum += mod.sum(contribution, axis=1)
+                block_sum = _finite_or_zero(provider, mod, block_sum)
 
             if provider == 'cupy':
-                xsec[g0:g1] = mod.asnumpy(block_sum)
+                xsec[g0:g1] = mod.asnumpy(_finite_or_zero(provider, mod, block_sum))
             else:
-                xsec[g0:g1] = block_sum.detach().cpu().numpy()
+                xsec[g0:g1] = _finite_or_zero(provider, mod, block_sum).detach().cpu().numpy()
 
         if kind == 'binned_gaussian':
             xsec[start:end] /= float(bin_size2)
         elif kind == 'binned_voigt':
             xsec[start:end] *= float(inv_bin_size_pi_half)
+        xsec = np.nan_to_num(xsec, nan=0.0, posinf=0.0, neginf=0.0)
 
         free_gpu_memory()
         return xsec
