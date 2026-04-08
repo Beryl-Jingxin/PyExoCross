@@ -26,13 +26,23 @@ PyExoCross defaults to CPU mode.
 # Explicit CPU mode (default)
 run_mode='CPU'
 
-# GPU mode with automatic backend selection
+# GPU mode with automatic backend selection (recommended)
 run_mode='GPU'
+gpu_backend='AUTO'   # CUDA -> MPS -> CPU fallback
 gpu_batch_lines=8192
 gpu_batch_grid=256
+
+# Force CUDA (NVIDIA)
+run_mode='GPU'
+gpu_backend='CUDA'
+
+# Force MPS (Apple Metal)
+run_mode='GPU'
+gpu_backend='MPS'
 ```
 
 `gpu_batch_lines` and `gpu_batch_grid` are used to control GPU memory usage.
+If no selected backend is available, PyExoCross falls back to CPU formulas.
 
 GPU acceleration is available for `cooling_functions`, `stick_spectra`,
 `cross_sections`, and `stick_spectra_cross_section`.  

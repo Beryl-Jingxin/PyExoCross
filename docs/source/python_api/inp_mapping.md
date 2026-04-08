@@ -60,6 +60,7 @@ function.  The toggle is only relevant in `.inp` files or when using
 | `NCPUfiles` | `ncpufiles` | `4` | `4` (int) |
 | `ChunkSize` | `chunk_size` | `1000000` | `1000000` (int) |
 | `RunMode` | `run_mode` | `CPU` or `GPU` | `'CPU'` / `'GPU'` (str, default `'CPU'`) |
+| `GPUBackend` | `gpu_backend` | `AUTO` / `CUDA` / `MPS` | `'AUTO'` / `'CUDA'` / `'MPS'` (str, default `'AUTO'`) |
 | `GPUBatchLines` | `gpu_batch_lines` | `8192` | `8192` (int, optional) |
 | `GPUBatchGrid` | `gpu_batch_grid` | `256` | `256` (int, optional) |
 
@@ -69,12 +70,28 @@ function.  The toggle is only relevant in `.inp` files or when using
 
 ```text
 RunMode                                 CPU
+GPUBackend                              AUTO
 GPUBatchLines                           
 GPUBatchGrid                            
 ```
 
 ```text
 RunMode                                 GPU
+GPUBackend                              AUTO
+GPUBatchLines                           8192
+GPUBatchGrid                            256
+```
+
+```text
+RunMode                                 GPU
+GPUBackend                              CUDA
+GPUBatchLines                           8192
+GPUBatchGrid                            256
+```
+
+```text
+RunMode                                 GPU
+GPUBackend                              MPS
 GPUBatchLines                           8192
 GPUBatchGrid                            256
 ```
@@ -92,13 +109,21 @@ px.cross_sections(
 px.cross_sections(
     ...,
     run_mode='GPU',
+    gpu_backend='AUTO',
     gpu_batch_lines=8192,
     gpu_batch_grid=256,
 )
 ```
 
+```python
+px.cross_sections(..., run_mode='GPU', gpu_backend='CUDA')
+px.cross_sections(..., run_mode='GPU', gpu_backend='MPS')
+```
+
 Notes:
 - Omit these kwargs to use default CPU mode (`run_mode='CPU'`).
+- Use `gpu_backend='AUTO'` unless you explicitly want to force CUDA or MPS.
+- Backend fallback order for `AUTO`: CUDA -> MPS -> CPU.
 - GPU acceleration applies to `cooling_functions`, `stick_spectra`,
   `cross_sections`, and `stick_spectra_cross_section`.
 

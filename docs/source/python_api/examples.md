@@ -14,24 +14,41 @@ COMPUTE_CPU = dict(
     run_mode='CPU',
 )
 
-# GPU (AUTO backend)
-COMPUTE_GPU = dict(
+# GPU (AUTO backend, recommended)
+COMPUTE_GPU_AUTO = dict(
     ncputrans=4,
     ncpufiles=1,
     chunk_size=100000,
     run_mode='GPU',
+    gpu_backend='AUTO',      # CUDA -> MPS -> CPU fallback
     gpu_batch_lines=8192,    # memory-control knob
     gpu_batch_grid=256,      # memory-control knob
 )
+
+# GPU (force CUDA)
+COMPUTE_GPU_CUDA = dict(
+    run_mode='GPU',
+    gpu_backend='CUDA',
+    gpu_batch_lines=8192,
+    gpu_batch_grid=256,
+)
+
+# GPU (force MPS)
+COMPUTE_GPU_MPS = dict(
+    run_mode='GPU',
+    gpu_backend='MPS',
+    gpu_batch_lines=8192,
+    gpu_batch_grid=256,
+)
 ```
 
-Use `COMPUTE_GPU` with GPU-enabled functions:
+Use `COMPUTE_GPU_AUTO` with GPU-enabled functions:
 
 ```python
-px.cooling_functions(..., **COMPUTE_GPU)
-px.stick_spectra(..., **COMPUTE_GPU)
-px.cross_sections(..., **COMPUTE_GPU)
-px.stick_spectra_cross_section(..., **COMPUTE_GPU)
+px.cooling_functions(..., **COMPUTE_GPU_AUTO)
+px.stick_spectra(..., **COMPUTE_GPU_AUTO)
+px.cross_sections(..., **COMPUTE_GPU_AUTO)
+px.stick_spectra_cross_section(..., **COMPUTE_GPU_AUTO)
 ```
 
 ---

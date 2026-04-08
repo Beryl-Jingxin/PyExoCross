@@ -371,7 +371,17 @@ The program will run on different cores together.
 
 `RunMode`: Choose to run the program in CPU or GPU mode.
 
-**Note: macOS MPS GPU cannot use GPU mode because it only uses float32 which lacks precision, so please use Nvidia GPU (CUDA) or use macOS CPU mode instead.**
+`GPUBackend`: GPU backend selection (only used when `RunMode=GPU`):
+
+- `AUTO` (recommended): try CUDA first, then try MPS, then fall back to CPU.
+- `CUDA`: prefer NVIDIA CUDA backend (if unavailable, PyExoCross will try MPS; otherwise CPU fallback).
+- `MPS`: prefer Apple Metal backend via PyTorch MPS.
+
+**Note**
+
+- MPS uses float32 kernels, so results can differ slightly from CPU/CUDA float64.
+- If no compatible GPU backend is available, PyExoCross falls back to CPU automatically.
+- GPU acceleration is available for cooling functions, stick spectra, cross sections, and stick spectra + cross sections.
 
 
 `GPUBatchLines`: The number of lines to process in each batch on the GPU. Default value is 8192.
@@ -400,6 +410,7 @@ NCPUtrans                               2
 NCPUfiles                               4
 ChunkSize                               500000
 RunMode                                 CPU                       # CPU(default) or GPU
+GPUBackend                              AUTO                      # AUTO(default), CUDA, or MPS (used only when RunMode=GPU)
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 ```
@@ -411,8 +422,25 @@ NCPUtrans                               8
 NCPUfiles                               1
 ChunkSize                               1000000
 RunMode                                 GPU                       # CPU(default) or GPU
+GPUBackend                              AUTO                      # AUTO(default): CUDA -> MPS -> CPU fallback
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+```
+
+```bash
+# Force CUDA (NVIDIA)
+RunMode                                 GPU
+GPUBackend                              CUDA
+GPUBatchLines                           8192
+GPUBatchGrid                            256
+```
+
+```bash
+# Force MPS (Apple Silicon)
+RunMode                                 GPU
+GPUBackend                              MPS
+GPUBatchLines                           8192
+GPUBatchGrid                            256
 ```
 
 ## Quantum numbers

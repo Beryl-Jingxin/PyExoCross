@@ -18,6 +18,7 @@ PyExoCross uses CPU by default.  You can explicitly select compute mode with:
 | Kwarg | Type | Default | Description |
 |---|---|---|---|
 | `run_mode` | `str` | `'CPU'` | `'CPU'` or `'GPU'` |
+| `gpu_backend` | `str` | `'AUTO'` | GPU backend policy: `'AUTO'`, `'CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | GPU line-batch size for memory control |
 | `gpu_batch_grid` | `int` | `256` | GPU grid-batch size for memory control |
 
@@ -31,12 +32,8 @@ CPU formulas are used for:
 - `px.conversion`
 - `px.partition_functions`
 - `px.specific_heats`
-- `px.cooling_functions`
 - `px.lifetimes`
 - `px.oscillator_strengths`
-- `px.stick_spectra`
-- `px.cross_sections`
-- `px.stick_spectra_cross_section`
 
 If `run_mode='GPU'` but no compatible backend is available, PyExoCross falls
 back to CPU formulas.
@@ -49,9 +46,16 @@ px.cross_sections(..., run_mode='CPU')
 px.cross_sections(
     ...,
     run_mode='GPU',
+    gpu_backend='AUTO',
     gpu_batch_lines=8192,
     gpu_batch_grid=256,
 )
+
+# Force CUDA
+px.cross_sections(..., run_mode='GPU', gpu_backend='CUDA')
+
+# Force MPS
+px.cross_sections(..., run_mode='GPU', gpu_backend='MPS')
 ```
 
 ---
@@ -252,6 +256,7 @@ compute backend kwargs:
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `run_mode` | `str` | `'CPU'` | `'CPU'` or `'GPU'` |
+| `gpu_backend` | `str` | `'AUTO'` | `'AUTO'`, `'CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | GPU line-batch size (memory control) |
 | `gpu_batch_grid` | `int` | `256` | GPU grid-batch size (memory control) |
 
@@ -431,6 +436,7 @@ Calculate LTE or Non-LTE stick spectra (absorption or emission).
 | `ncpufiles` | `int` | `1` | Files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size |
 | `run_mode` | `str` | `'CPU'` | `'CPU'` or `'GPU'` |
+| `gpu_backend` | `str` | `'AUTO'` | `'AUTO'`, `'CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | GPU line-batch size (memory control) |
 | `gpu_batch_grid` | `int` | `256` | GPU grid-batch size (memory control) |
 | **Plotting** | | | |
@@ -566,6 +572,7 @@ px.cross_sections(
     bin_size=0.1,
     profile='SciPyVoigt',
     run_mode='GPU',
+    gpu_backend='AUTO',
     gpu_batch_lines=8192,
     gpu_batch_grid=256,
     broadeners=['Default'],
@@ -610,6 +617,7 @@ px.stick_spectra_cross_section(
     bin_size=0.1,
     profile='SciPyVoigt',
     run_mode='GPU',
+    gpu_backend='AUTO',
     gpu_batch_lines=8192,
     gpu_batch_grid=256,
     plot=True,

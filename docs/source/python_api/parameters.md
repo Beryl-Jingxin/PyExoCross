@@ -90,12 +90,18 @@ For HITRAN/HITEMP:
 | `ncpufiles`  | `int` | `1` | Number of transitions files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size when reading/calculating transitions |
 | `run_mode` | `str` | `'CPU'` | Compute backend mode: `'CPU'` (default) or `'GPU'` |
+| `gpu_backend` | `str` | `'AUTO'` | GPU backend policy when `run_mode='GPU'`: `'AUTO'`, `'CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | Max number of lines per GPU batch (memory-control knob) |
 | `gpu_batch_grid` | `int` | `256` | Max number of grid points per GPU batch (memory-control knob) |
 
 GPU acceleration scope:
 - Enabled for `cooling_functions`, `stick_spectra`, `cross_sections`, and `stick_spectra_cross_section`
 - Other functions are CPU formula based
+
+`gpu_backend` behavior:
+- `'AUTO'` (recommended): try CUDA first, then MPS, then CPU fallback
+- `'CUDA'`: prefer CUDA (NVIDIA); if unavailable, try MPS, then CPU fallback
+- `'MPS'`: prefer Apple Metal (MPS); otherwise CPU fallback
 
 Typical usage:
 
@@ -105,8 +111,17 @@ run_mode='CPU'
 
 # GPU (auto backend)
 run_mode='GPU'
+gpu_backend='AUTO'
 gpu_batch_lines=8192
 gpu_batch_grid=256
+
+# GPU (force CUDA)
+run_mode='GPU'
+gpu_backend='CUDA'
+
+# GPU (force MPS)
+run_mode='GPU'
+gpu_backend='MPS'
 ```
 
 :::{tip}

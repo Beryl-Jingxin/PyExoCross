@@ -73,17 +73,20 @@ px.cross_sections(
 ## CPU / GPU Compute Mode
 
 PyExoCross uses CPU mode by default.  You can switch to GPU mode with
-`run_mode='GPU'`.
+`run_mode='GPU'` and optionally select a backend with `gpu_backend`.
 
 ```python
 # Default CPU mode
 px.cross_sections(..., run_mode='CPU')
 
 # Auto-select GPU backend (CUDA first, then MPS)
+px.cross_sections(..., run_mode='GPU', gpu_backend='AUTO')
 
 # Force CUDA
+px.cross_sections(..., run_mode='GPU', gpu_backend='CUDA')
 
 # Force Apple Metal (MPS)
+px.cross_sections(..., run_mode='GPU', gpu_backend='MPS')
 ```
 
 GPU memory-control knobs:
@@ -92,6 +95,7 @@ GPU memory-control knobs:
 px.cross_sections(
     ...,
     run_mode='GPU',
+    gpu_backend='AUTO',   # AUTO (recommended), CUDA, or MPS
     gpu_batch_lines=8192,
     gpu_batch_grid=256,
 )
@@ -99,6 +103,7 @@ px.cross_sections(
 
 Notes:
 - If GPU backend is unavailable, execution falls back to CPU formulas.
+- On Apple Silicon, MPS uses float32 kernels so tiny numeric differences vs CPU/CUDA are expected.
 - GPU acceleration applies to:
   `cooling_functions`, `stick_spectra`, `cross_sections`,
   `stick_spectra_cross_section`.
