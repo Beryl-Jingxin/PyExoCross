@@ -11,6 +11,49 @@ Every function accepts either:
 - Keyword arguments (`**kwargs`), **or**
 - Both (keyword arguments override `.inp` file values).
 
+## Common CPU/GPU Compute Kwargs
+
+PyExoCross uses CPU by default.  You can explicitly select compute mode with:
+
+| Kwarg | Type | Default | Description |
+|---|---|---|---|
+| `run_mode` | `str` | `'CPU'` | `'CPU'` or `'GPU'` |
+| `gpu_batch_lines` | `int` | `8192` | GPU line-batch size for memory control |
+| `gpu_batch_grid` | `int` | `256` | GPU grid-batch size for memory control |
+
+GPU acceleration is available for:
+- `px.cooling_functions`
+- `px.stick_spectra`
+- `px.cross_sections`
+- `px.stick_spectra_cross_section`
+
+CPU formulas are used for:
+- `px.conversion`
+- `px.partition_functions`
+- `px.specific_heats`
+- `px.cooling_functions`
+- `px.lifetimes`
+- `px.oscillator_strengths`
+- `px.stick_spectra`
+- `px.cross_sections`
+- `px.stick_spectra_cross_section`
+
+If `run_mode='GPU'` but no compatible backend is available, PyExoCross falls
+back to CPU formulas.
+
+```python
+# Default CPU mode
+px.cross_sections(..., run_mode='CPU')
+
+# GPU mode (auto backend)
+px.cross_sections(
+    ...,
+    run_mode='GPU',
+    gpu_batch_lines=8192,
+    gpu_batch_grid=256,
+)
+```
+
 ---
 
 ## `px.run`
@@ -201,7 +244,16 @@ Calculate cooling functions:
 
 $$W(T) = \frac{1}{4\pi Q(T)} \sum_{f,i} A_{fi}\, h c \tilde{\nu}_{fi}\, g'\, \exp\!\left(-\frac{c_2 \tilde{E}'}{T}\right)$$
 
-**Parameters**: Same as [`px.partition_functions`](#pxpartition_functions).
+**Parameters**
+
+Same as [`px.partition_functions`](#pxpartition_functions), plus optional
+compute backend kwargs:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `run_mode` | `str` | `'CPU'` | `'CPU'` or `'GPU'` |
+| `gpu_batch_lines` | `int` | `8192` | GPU line-batch size (memory control) |
+| `gpu_batch_grid` | `int` | `256` | GPU grid-batch size (memory control) |
 
 **Legacy Alias**: `px.cooling_function`
 
@@ -218,6 +270,7 @@ px.cooling_functions(
     save_path='/path/to/output/',
     ntemp=1,
     tmax=5000,
+    run_mode='CPU',
 )
 ```
 
@@ -303,6 +356,7 @@ unweighted $f$-values.
 | `plot_unit` | `str` | `'cm-1'` | `'cm-1'`, `'um'`, or `'nm'` |
 | `limit_yaxis` | `float` | `1e-30` | Lower limit for y-axis |
 
+
 **Legacy Alias**: `px.oscillator_strength`
 
 **Example**
@@ -376,6 +430,9 @@ Calculate LTE or Non-LTE stick spectra (absorption or emission).
 | `ncputrans` | `int` | `4` | CPU cores for transitions |
 | `ncpufiles` | `int` | `1` | Files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size |
+| `run_mode` | `str` | `'CPU'` | `'CPU'` or `'GPU'` |
+| `gpu_batch_lines` | `int` | `8192` | GPU line-batch size (memory control) |
+| `gpu_batch_grid` | `int` | `256` | GPU grid-batch size (memory control) |
 | **Plotting** | | | |
 | `plot` | `bool` | `False` | Whether to generate a plot |
 | `plot_method` | `str` | `'log'` | `'log'` or `'linear'` |
@@ -414,6 +471,7 @@ px.stick_spectra(
     min_range=0,
     max_range=30000,
     abs_emi='Ab',
+    run_mode='CPU',
 )
 ```
 
@@ -463,11 +521,12 @@ All parameters from [`px.stick_spectra`](#pxstick_spectra), plus:
 | `'SciPyVoigt'` | Voigt via SciPy `wofz` (recommended) |
 | `'SciPyWofzVoigt'` | Voigt via SciPy `wofz` (alternative) |
 | `'HumlicekVoigt'` | Humlicek algorithm for Voigt |
-| `'ThompsonPseudoVoigt'` | Thompson pseudo-Voigt approximation |
-| `'KielkopfPseudoVoigt'` | Kielkopf pseudo-Voigt approximation |
-| `'OliveroPseudoVoigt'` | Olivero pseudo-Voigt approximation |
-| `'LiuLinPseudoVoigt'` | Liu-Lin pseudo-Voigt approximation |
-| `'RoccoPseudoVoigt'` | Rocco pseudo-Voigt approximation |
+| `'PseudoVoigt'` | Generic pseudo-Voigt |
+| `'PseudoThompsonVoigt'` | Thompson pseudo-Voigt approximation |
+| `'PseudoKielkopfVoigt'` | Kielkopf pseudo-Voigt approximation |
+| `'PseudoOliveroVoigt'` | Olivero pseudo-Voigt approximation |
+| `'PseudoLiuLinVoigt'` | Liu-Lin pseudo-Voigt approximation |
+| `'PseudoRoccoVoigt'` | Rocco pseudo-Voigt approximation |
 | `'BinnedDoppler'` | Binned Doppler profile |
 | `'BinnedGaussian'` | Binned Gaussian profile |
 | `'BinnedLorentzian'` | Binned Lorentzian profile |
@@ -506,6 +565,9 @@ px.cross_sections(
     max_range=30000,
     bin_size=0.1,
     profile='SciPyVoigt',
+    run_mode='GPU',
+    gpu_batch_lines=8192,
+    gpu_batch_grid=256,
     broadeners=['Default'],
     ratios=[1.0],
     cutoff=25.0,
@@ -547,7 +609,9 @@ px.stick_spectra_cross_section(
     max_range=30000,
     bin_size=0.1,
     profile='SciPyVoigt',
+    run_mode='GPU',
+    gpu_batch_lines=8192,
+    gpu_batch_grid=256,
     plot=True,
 )
 ```
-

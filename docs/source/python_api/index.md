@@ -70,6 +70,39 @@ px.cross_sections(
 )
 ```
 
+## CPU / GPU Compute Mode
+
+PyExoCross uses CPU mode by default.  You can switch to GPU mode with
+`run_mode='GPU'`.
+
+```python
+# Default CPU mode
+px.cross_sections(..., run_mode='CPU')
+
+# Auto-select GPU backend (CUDA first, then MPS)
+
+# Force CUDA
+
+# Force Apple Metal (MPS)
+```
+
+GPU memory-control knobs:
+
+```python
+px.cross_sections(
+    ...,
+    run_mode='GPU',
+    gpu_batch_lines=8192,
+    gpu_batch_grid=256,
+)
+```
+
+Notes:
+- If GPU backend is unavailable, execution falls back to CPU formulas.
+- GPU acceleration applies to:
+  `cooling_functions`, `stick_spectra`, `cross_sections`,
+  `stick_spectra_cross_section`.
+
 You can also mix the two approaches -- pass an `.inp` file **and** override
 individual parameters with keyword arguments:
 

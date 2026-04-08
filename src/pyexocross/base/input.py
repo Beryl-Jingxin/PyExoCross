@@ -207,7 +207,7 @@ def inp_para(inp_filepath):
         A large tuple containing all parsed parameters in the following order:
         - Database and data info (database, data_info, read_path, save_path, logs_path)
         - Function flags (Conversion, PartitionFunctions, SpecificHeats, etc.)
-        - Computational parameters (ncputrans, ncpufiles, chunk_size, etc.)
+        - Computational parameters (ncputrans, ncpufiles, chunk_size, run_mode, etc.)
         - Conversion parameters (if applicable)
         - Temperature/pressure lists (T_list, P_list)
         - Wavenumber/wavelength settings
@@ -291,9 +291,25 @@ def inp_para(inp_filepath):
     ncputrans = int(inp_df[col0.isin(['NCPUtrans'])][1].iloc[0])
     ncpufiles = int(inp_df[col0.isin(['NCPUfiles'])][1].iloc[0])
     chunk_size = int(inp_df[col0.isin(['ChunkSize'])][1].iloc[0])
+    run_mode_rows = inp_df[col0.isin(['RunMode'])]
+    run_mode = str(run_mode_rows[1].iloc[0]).strip().upper() if not run_mode_rows.empty else 'CPU'
+    if run_mode not in ('CPU', 'GPU'):
+        raise ValueError("RunMode must be 'CPU' or 'GPU' in the input file.")
+    gpu_backend_rows = inp_df[col0.isin(['GPUBackend'])]
+    gpu_backend = 'CUDA'
+    gpu_batch_lines_rows = inp_df[col0.isin(['GPUBatchLines'])]
+    gpu_batch_grid_rows = inp_df[col0.isin(['GPUBatchGrid'])]
+    gpu_batch_lines = int(gpu_batch_lines_rows[1].iloc[0]) if not gpu_batch_lines_rows.empty else 8192
+    gpu_batch_grid = int(gpu_batch_grid_rows[1].iloc[0]) if not gpu_batch_grid_rows.empty else 256
+    if gpu_batch_lines <= 0 or gpu_batch_grid <= 0:
+        raise ValueError("GPUBatchLines and GPUBatchGrid must be positive integers.")
     used_cpus = min(num_cpus, ncpufiles * ncputrans)
     print('Number of CPU on system:', num_cpus)
     print('Number of CPU in used  :', used_cpus, '\n')
+    print('Compute mode requested :', run_mode)
+    if run_mode == 'GPU':
+        print('GPU backend requested :', gpu_backend)
+        print('GPU batching (lines/grid):', gpu_batch_lines, '/', gpu_batch_grid, '\n')
     
     # Quantum numbers
     NeedQNs = Conversion + StickSpectra + CrossSections
@@ -923,7 +939,8 @@ def inp_para(inp_filepath):
             
     return (database, data_info, read_path, save_path, logs_path,
             Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
-            ncputrans, ncpufiles, chunk_size, ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
+            ncputrans, ncpufiles, chunk_size, run_mode, gpu_backend, gpu_batch_lines, gpu_batch_grid,
+            ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
             Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T_list, P_list, wn_wl, wn_wl_unit, min_wnl, max_wnl, min_wn, max_wn, N_point, bin_size, wn_grid, 
             predissocYN, photo, cutoff, threshold, UncFilter, NLTEMethod, NLTEPath, LTE_NLTE, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 

@@ -150,7 +150,14 @@ def process_exomol_oscillator_strength(states_df, trans_filepath):
             with _executor_context(max_workers=ncputrans) as trans_executor:
                 futures = [trans_executor.submit(process_exomol_oscillator_strength_chunk, states_df, chunk)
                            for chunk in tqdm(trans_chunks, desc=desc)]
-                oscillator_strength_df = pd.concat([future.result() for future in tqdm(futures, desc='Combining '+trans_filename)])
+                chunk_frames = [
+                    df for df in (future.result() for future in tqdm(futures, desc='Combining '+trans_filename))
+                    if df is not None and not df.empty and not df.dropna(how='all').empty
+                ]
+                if chunk_frames:
+                    oscillator_strength_df = pd.concat(chunk_frames, ignore_index=True)
+                else:
+                    oscillator_strength_df = pd.DataFrame(columns=['u','l','os','v'])
     return oscillator_strength_df
 
 def save_exomol_oscillator_strength(states_df):
@@ -186,7 +193,14 @@ def save_exomol_oscillator_strength(states_df):
         # Submit reading tasks for each file
         futures = [executor.submit(process_exomol_oscillator_strength,states_df,
                                    trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
-        oscillator_strength_df = pd.concat([future.result() for future in futures])
+        result_frames = [
+            df for df in (future.result() for future in futures)
+            if df is not None and not df.empty and not df.dropna(how='all').empty
+        ]
+        if result_frames:
+            oscillator_strength_df = pd.concat(result_frames, ignore_index=True)
+        else:
+            oscillator_strength_df = pd.DataFrame(columns=['u','l','os','v'])
     oscillator_strength_df.sort_values(by=['v'], ascending=True, inplace=True)  
     # oscillator_strength_df  = oscillator_strength_df.sort_values('v').reset_index(drop=True)
     tot.end()

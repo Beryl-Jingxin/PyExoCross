@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from ..base.utils import Timer, ensure_dir
 from ..process.stick_xsec_filepath import temperature_string_base
+from .mpl_safety import configure_mpl_large_path_rendering
 
 # Plot stick spectra
 def plot_stick_spectra(stick_spectra_df, T=None, Tvib=None, Trot=None):
@@ -57,6 +58,7 @@ def plot_stick_spectra(stick_spectra_df, T=None, Tvib=None, Trot=None):
     tp.start()
     stick_spectra_df_plot = stick_spectra_df[np.isfinite(stick_spectra_df['S'])]
     stick_spectra_df_plot = stick_spectra_df_plot.reset_index(drop=True)
+    configure_mpl_large_path_rendering()
     
     if len(stick_spectra_df_plot) == 0:
         print('Warning: No valid stick spectra data to plot. Skipping plot.')

@@ -54,6 +54,14 @@ def get_results(config):
     
     # Set globals from config (for legacy-style modules)
     config.to_globals()
+    from pyexocross.gpu.base_gpu import configure_runtime
+    configure_runtime(
+        run_mode=getattr(config, 'run_mode', 'CPU'),
+        gpu_backend='CUDA',
+        gpu_batch_lines=getattr(config, 'gpu_batch_lines', 8192),
+        gpu_batch_grid=getattr(config, 'gpu_batch_grid', 256),
+        verbose=True,
+    )
     
     # Update bin-size–dependent constants used by line profile and
     # cross-section routines so that modules importing from

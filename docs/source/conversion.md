@@ -96,6 +96,9 @@ CrossSections                           0
 NCPUtrans                               4
 NCPUfiles                               1
 ChunkSize                               1000000
+RunMode                                 CPU                       # CPU(default) or GPU
+GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
@@ -147,6 +150,9 @@ CrossSections                           0
 NCPUtrans                               1
 NCPUfiles                               1
 ChunkSize                               100000
+RunMode                                 CPU                       # CPU(default) or GPU
+GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 
 
 # Conversion #
@@ -192,6 +198,9 @@ CrossSections                           0
 NCPUtrans                               1
 NCPUfiles                               1
 ChunkSize                               10000
+RunMode                                 CPU                       # CPU(default) or GPU
+GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
@@ -246,6 +255,9 @@ CrossSections                           0
 NCPUtrans                               16
 NCPUfiles                               1
 ChunkSize                               1000000
+RunMode                                 CPU                       # CPU(default) or GPU
+GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 
 
 # Quantum numbers for conversion, stick spectra and cross sections 

@@ -11,6 +11,8 @@ from ..base.constants import (
     InvbinSizePIhalf,
     binSize2,
 )
+from ..gpu.base_gpu import using_gpu
+from ..gpu.calculate_line_profile_gpu import gpu_cross_section
 from ..calculation.calcualte_line_profile import (
     Doppler_profile,
     Lorentzian_profile,
@@ -24,6 +26,25 @@ from ..calculation.calcualte_line_profile import (
     BinnedVoigt_bnormq,
     BinnedVoigt_lorenz,
 )
+
+def _cross_section_gpu(kind, wn_grid, v, coef, cutoff, alpha=None, gamma=None, sigma=None, eta=None):
+    """Dispatch cross-section calculation to GPU backend implementation."""
+    if not using_gpu():
+        return None
+    return gpu_cross_section(
+        kind,
+        wn_grid,
+        v,
+        coef,
+        cutoff,
+        alpha=alpha,
+        gamma=gamma,
+        sigma=sigma,
+        eta=eta,
+        bin_size2=binSize2,
+        inv_bin_size_pi_half=InvbinSizePIhalf,
+    )
+
 
 # Calculate Cross Sections
 def cross_section_Doppler(wn_grid, v, alpha, coef, cutoff):
@@ -48,6 +69,11 @@ def cross_section_Doppler(wn_grid, v, alpha, coef, cutoff):
     np.ndarray
         Cross-section array, shape (n_points,)
     """  
+    if using_gpu():
+        gpu_xsec = _cross_section_gpu('doppler', wn_grid, v, coef, cutoff, alpha=alpha)
+        if gpu_xsec is not None:
+            return gpu_xsec
+
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
         start = max(0,wn_grid.searchsorted(min(v))-1)
@@ -97,6 +123,11 @@ def cross_section_Lorentzian(wn_grid, v, gamma, coef, cutoff):
     np.ndarray
         Cross-section array, shape (n_points,)
     """  
+    if using_gpu():
+        gpu_xsec = _cross_section_gpu('lorentzian', wn_grid, v, coef, cutoff, gamma=gamma)
+        if gpu_xsec is not None:
+            return gpu_xsec
+
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
         start = max(0,wn_grid.searchsorted(min(v))-1)
@@ -148,6 +179,11 @@ def cross_section_SciPyVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
     np.ndarray
         Cross-section array, shape (n_points,)
     """  
+    if using_gpu():
+        gpu_xsec = _cross_section_gpu('scipy_voigt', wn_grid, v, coef, cutoff, sigma=sigma, gamma=gamma)
+        if gpu_xsec is not None:
+            return gpu_xsec
+        
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
         start = max(0,wn_grid.searchsorted(min(v))-1)
@@ -202,6 +238,11 @@ def cross_section_SciPyWofzVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
     np.ndarray
         Cross-section array, shape (n_points,)
     """
+    if using_gpu():
+        gpu_xsec = _cross_section_gpu('scipy_wofz_voigt', wn_grid, v, coef, cutoff, sigma=sigma, gamma=gamma)
+        if gpu_xsec is not None:
+            return gpu_xsec
+        
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
         start = max(0,wn_grid.searchsorted(min(v))-1)
@@ -256,6 +297,11 @@ def cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff):
     np.ndarray
         Cross-section array, shape (n_points,)
     """
+    if using_gpu():
+        gpu_xsec = _cross_section_gpu('humlicek_voigt', wn_grid, v, coef, cutoff, alpha=alpha, gamma=gamma)
+        if gpu_xsec is not None:
+            return gpu_xsec
+        
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
         start = max(0,wn_grid.searchsorted(min(v))-1)
@@ -312,6 +358,20 @@ def cross_section_PseudoVoigt(wn_grid, v, alpha, gamma, eta, coef, cutoff):
     np.ndarray
         Cross-section array, shape (n_points,)
     """
+    if using_gpu():
+        gpu_xsec = _cross_section_gpu(
+            'pseudo_voigt',
+            wn_grid,
+            v,
+            coef,
+            cutoff,
+            alpha=alpha,
+            gamma=gamma,
+            eta=eta,
+        )
+        if gpu_xsec is not None:
+            return gpu_xsec
+
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
         start = max(0,wn_grid.searchsorted(min(v))-1)
@@ -365,6 +425,11 @@ def cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff):
     np.ndarray
         Cross-section array, shape (n_points,)
     """  
+    if using_gpu():
+        gpu_xsec = _cross_section_gpu('binned_gaussian', wn_grid, v, coef, cutoff, alpha=alpha)
+        if gpu_xsec is not None:
+            return gpu_xsec
+
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
         start = max(0,wn_grid.searchsorted(min(v))-1)
@@ -416,7 +481,13 @@ def cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff):
     np.ndarray
         Cross-section array, shape (n_points,)
     """ 
+    if using_gpu():
+        gpu_xsec = _cross_section_gpu('binned_lorentzian', wn_grid, v, coef, cutoff, gamma=gamma)
+        if gpu_xsec is not None:
+            return gpu_xsec
+
     xsec = np.zeros_like(wn_grid)
+    bin_size = float(binSize2) / 2.0
     if cutoff == 'None':
         start = max(0,wn_grid.searchsorted(min(v))-1)
         end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
@@ -476,6 +547,11 @@ def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
     np.ndarray
         Cross-section array, shape (n_points,)
     """
+    if using_gpu():
+        gpu_xsec = _cross_section_gpu('binned_voigt', wn_grid, v, coef, cutoff, sigma=sigma, gamma=gamma)
+        if gpu_xsec is not None:
+            return gpu_xsec
+        
     nquad = 20
     roots, weights = roots_hermite(nquad, mu=False)
     xsec = np.zeros_like(wn_grid)

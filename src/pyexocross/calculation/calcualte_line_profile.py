@@ -14,6 +14,7 @@ from ..base.constants import (
     c,
     PI,
     PI4c,
+    sinPI,
     Negln2,
     SqrtPI,
     Sqrtln2,
@@ -25,7 +26,8 @@ from ..base.constants import (
     TwoSqrt2ln2,
     Sqrtln2InvPi,
     Sqrt2NAkBln2mInvc,
-    binSizeHalf
+    binSizeHalf,
+    OneminSqrtPIln2
 )
 from ..base.config_manager import get_config
 
@@ -581,7 +583,7 @@ def PseudoLiuLinVoigt(alpha, gamma):
     d = ne.evaluate('(gamma-alpha)/(gamma+alpha)')
     hV = ne.evaluate('(1-0.18121*(1-d**2)-(0.023665*exp(0.6*d)+0.00418*exp(-1.9*d))*sinPI*d)*(alpha+gamma)')
     eta = ne.evaluate('0.68188+0.61293*d-0.18384*d**2-0.11568*d**3')
-    return (eta)
+    return (eta) 
 
 def PseudoRoccoVoigt(alpha, gamma):
     """

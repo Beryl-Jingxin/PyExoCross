@@ -26,7 +26,7 @@ COMMON = dict(
     species_id=501,
     read_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMol/', #'/home/jingxin/LHD/Program/Databases/ExoMol/',
     save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
-    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exomol.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_exomol.log',
+    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/MgH_ExoMol.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_exomol.log',
 )
 
 # Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
@@ -38,29 +38,32 @@ QN_PARAMS = dict(
 # NLTE parameters (needed by stick_spectra and cross_sections)
 NLTE_PARAMS = dict(
     nlte_method='T',                    # Non-LTE: 2T NLTE (default: 'T')
-    tvib_list=[1000, 2000, 3000],       # Vibrational temperatures in unit of K
-    trot_list=[100, 200],               # Rotational temperatures in unit of K
+    tvib_list=[3000],                   # Vibrational temperatures in unit of K
+    trot_list=[296],                    # Rotational temperatures in unit of K
     vib_label=['v', 'ElecState'],       # Vibrational quantum numbers
     rot_label=['J', 'e/f'],             # Rotational quantum numbers
 )
 
 # Spectral range parameters
 RANGE_PARAMS = dict(
-    temperatures=[1000, 2000],  # Temperature in unit of K
-    wn_wl='WN',                 # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
-    wn_wl_unit='cm-1',          # Unit for wavenumber (default: cm⁻¹)
-    min_range=0,                # Minimum wavenumber in unit of cm⁻¹
-    max_range=30000,            # Maximum wavenumber in unit of cm⁻¹
-    abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
-    unc_filter=0.01,            # Uncertainty filter (default: None)
-    threshold=1e-30,            # Threshold filter (default: None)
+    temperatures=[296, 3000],           # Temperature in unit of K
+    wn_wl='WN',                         # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+    wn_wl_unit='cm-1',                  # Unit for wavenumber (default: cm⁻¹)
+    min_range=0,                        # Minimum wavenumber in unit of cm⁻¹
+    max_range=13190,                   # Maximum wavenumber in unit of cm⁻¹
+    abs_emi='Ab',                       # Absorption or emission (default: 'Absorption')
+    unc_filter=None,                    # Uncertainty filter (default: None)
+    threshold=None,                     # Threshold filter (default: None)
 )
 
 # Cores and chunks
 COMPUTE_PARAMS = dict(
     ncputrans=4,                # Number of CPU threads for each transition file (default: 4)
     ncpufiles=1,                # Number of CPU files for transition calculation (default: 1)
-    chunk_size=100000,          # Chunk size for transition calculation (default: 100000)
+    chunk_size=500000,          # Chunk size for transition calculation (default: 100000)
+    run_mode='CPU',             # Run mode: 'CPU' or 'GPU' (default: 'CPU')
+    # gpu_batch_lines=8192,     # GPU line-batch size (default: 8192)
+    # gpu_batch_grid=256,       # GPU grid-batch size (default: 256)
 )
 
 
@@ -99,7 +102,7 @@ def test_partition_functions():
         **COMPUTE_PARAMS,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
         tmax=5000,                   # Maximum temperature in unit of K (default: 5000)
-    )
+    ) 
     print('PASSED: partition_functions()')
 
 
@@ -170,15 +173,15 @@ def test_stick_spectra():
     px.stick_spectra(
         **COMMON,
         **QN_PARAMS,
-        **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
-        qns_filter={
-            '+/-': [],
-            'e/f': [],
-            'ElecState': [],
-            'v': ['0,', '1,', '2,', '3,', '4,', ',0', ',1', ',2', ',3', ',4'],
-        },
+        # qns_filter={
+        #     '+/-': [],
+        #     'e/f': [],
+        #     'ElecState': [],
+        #     'v': ['0,', '1,', '2,', '3,', '4,', ',0', ',1', ',2', ',3', ',4'],
+        # },
         plot=True,                    # Whether to plot results (default: False)
         plot_method='log',            # Plot in linear (lin) or logarithm (log) (default: 'log')
         plot_wn_wl='WN',              # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WL')
@@ -196,17 +199,17 @@ def test_cross_sections():
     px.cross_sections(
         **COMMON,
         **QN_PARAMS,
-        **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         pressures=[1.0],        # Pressure in unit bar (default: [1.0])
         bin_size=0.1,           # Bin size for wavenumber grid 
-        profile='SciPyVoigt',   # Line profile name (default: 'Gaussian')
+        profile='Gaussian',     # Line profile name (default: 'Gaussian')
         predissociation=False,  # Predissociation (default: False)
-        cutoff=25.0,            # Cutoff distance in cm⁻¹ (default: None)
+        cutoff=None,            # Cutoff distance in cm⁻¹ (default: None)
         broadeners=['Default'], # Broadening species (default: ['Default'])
         ratios=[1.0],           # Broadening ratios (default: [1.0])
-        alpha_hwhm=None,         # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
+        alpha_hwhm=3,           # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
         gamma_hwhm=None,        # Constant Lorentzian HWHM (None, will calculate from broadening) or custom value (default: 0.5)
         plot=True,              # Whether to plot results (default: False)
         plot_method='log',      # Plot in linear (lin) or logarithm (log) (default: 'log')
@@ -225,17 +228,17 @@ def test_stick_spectra_cross_section():
     px.stick_spectra_cross_section(
         **COMMON,
         **QN_PARAMS,
-        **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         pressures=[1.0],        # Pressure in unit bar (default: [1.0])
         bin_size=0.1,           # Bin size for wavenumber grid 
         profile='SciPyVoigt',   # Line profile name (default: 'Gaussian')
         predissociation=False,  # Predissociation (default: False)
-        cutoff=25.0,            # Cutoff distance in cm⁻¹ (default: None)
+        cutoff=None,            # Cutoff distance in cm⁻¹ (default: None)
         broadeners=['Default'], # Broadening species (default: ['Default'])
         ratios=[1.0],           # Broadening ratios (default: [1.0])
-        alpha_hwhm=None,        # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
+        alpha_hwhm=3,           # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
         gamma_hwhm=None,        # Constant Lorentzian HWHM (None, will calculate from broadening) or custom value (default: 0.5)
         plot=True,              # Whether to plot results (default: False)
         plot_method='log',      # Plot in linear (lin) or logarithm (log) (default: 'log')

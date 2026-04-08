@@ -59,6 +59,48 @@ function.  The toggle is only relevant in `.inp` files or when using
 | `NCPUtrans` | `ncputrans` | `2` | `2` (int) |
 | `NCPUfiles` | `ncpufiles` | `4` | `4` (int) |
 | `ChunkSize` | `chunk_size` | `1000000` | `1000000` (int) |
+| `RunMode` | `run_mode` | `CPU` or `GPU` | `'CPU'` / `'GPU'` (str, default `'CPU'`) |
+| `GPUBatchLines` | `gpu_batch_lines` | `8192` | `8192` (int, optional) |
+| `GPUBatchGrid` | `gpu_batch_grid` | `256` | `256` (int, optional) |
+
+### CPU / GPU Example Mapping
+
+**`.inp`**
+
+```text
+RunMode                                 CPU
+GPUBatchLines                           
+GPUBatchGrid                            
+```
+
+```text
+RunMode                                 GPU
+GPUBatchLines                           8192
+GPUBatchGrid                            256
+```
+
+**Python API**
+
+```python
+px.cross_sections(
+    ...,
+    run_mode='CPU',
+)
+```
+
+```python
+px.cross_sections(
+    ...,
+    run_mode='GPU',
+    gpu_batch_lines=8192,
+    gpu_batch_grid=256,
+)
+```
+
+Notes:
+- Omit these kwargs to use default CPU mode (`run_mode='CPU'`).
+- GPU acceleration applies to `cooling_functions`, `stick_spectra`,
+  `cross_sections`, and `stick_spectra_cross_section`.
 
 ---
 

@@ -369,6 +369,15 @@ The program will run on different cores together.
 
 `ChunkSize`: The program splits each transitions file to many chunks when reading and calculating. `ChunkSize` is the size of each chunk.
 
+`RunMode`: Choose to run the program in CPU or GPU mode.
+
+**Note: macOS MPS GPU cannot use GPU mode because it only uses float32 which lacks precision, so please use Nvidia GPU (CUDA) or use macOS CPU mode instead.**
+
+
+`GPUBatchLines`: The number of lines to process in each batch on the GPU. Default value is 8192.
+
+`GPUBatchGrid`: The number of grids to process in each batch on the GPU. Default value is 256.
+
 **Note**
 
 Some suggestions on setting the number of `NCPUtrans` and `NCPUfiles`.
@@ -389,7 +398,21 @@ Some suggestions on setting the number of `NCPUtrans` and `NCPUfiles`.
 # Cores and chunks #
 NCPUtrans                               2
 NCPUfiles                               4
+ChunkSize                               500000
+RunMode                                 CPU                       # CPU(default) or GPU
+GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+```
+
+
+```bash
+# Cores and chunks #
+NCPUtrans                               8
+NCPUfiles                               1
 ChunkSize                               1000000
+RunMode                                 GPU                       # CPU(default) or GPU
+GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 ```
 
 ## Quantum numbers

@@ -197,9 +197,13 @@ def process_exomol_stick_spectra(states_part_df,T_list,Tvib_list,Trot_list,Q_arr
     desc = 'Processing ' + trans_filename + (' (limited streaming)' if large_file else '')
     zero_factory = lambda: pd.DataFrame(columns=['v','S',"J'","E'",'J"','E"'])
     def combine_fn(results):
-        if not results:
+        valid_results = [
+            df for df in results
+            if df is not None and not df.empty and not df.dropna(how='all').empty
+        ]
+        if not valid_results:
             return zero_factory()
-        return pd.concat(results, ignore_index=True)
+        return pd.concat(valid_results, ignore_index=True)
     handler = partial(process_exomol_stick_spectra_chunk, states_part_df, T_list, Tvib_list, Trot_list, Q_arr, temp_idx=temp_idx)
     if large_file:
         print('Large transition file detected (>1 GB). Using bounded parallel streaming to reduce memory usage.')
@@ -314,7 +318,14 @@ def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_ar
             # Submit reading tasks for each file
             futures = [executor.submit(process_exomol_stick_spectra,states_part_df_ss,T_list,Tvib_list,Trot_list,Q_arr,
                                        trans_filepath,temp_idx) for trans_filepath in trans_filepaths]
-            stick_spectra_df = pd.concat([future.result() for future in futures])
+            result_frames = [
+                df for df in (future.result() for future in futures)
+                if df is not None and not df.empty and not df.dropna(how='all').empty
+            ]
+            if result_frames:
+                stick_spectra_df = pd.concat(result_frames, ignore_index=True)
+            else:
+                stick_spectra_df = pd.DataFrame(columns=['v','S',"J'","E'",'J"','E"'])
             
         if len(stick_spectra_df) == 0:
             print(f'Warning: No transitions found for T={T} K. Skipping this temperature.')

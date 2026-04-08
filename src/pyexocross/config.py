@@ -103,6 +103,13 @@ class Config:
         self.ncputrans = kwargs.get('ncputrans', getattr(self, 'ncputrans', 4))
         self.ncpufiles = kwargs.get('ncpufiles', getattr(self, 'ncpufiles', 1))
         self.chunk_size = kwargs.get('chunk_size', getattr(self, 'chunk_size', 100000))
+        from pyexocross.gpu.base_gpu import normalize_run_mode
+        self.run_mode = normalize_run_mode(kwargs.get('run_mode', getattr(self, 'run_mode', 'CPU')))
+        self.gpu_backend = 'CUDA'
+        self.gpu_batch_lines = int(kwargs.get('gpu_batch_lines', getattr(self, 'gpu_batch_lines', 8192)))
+        self.gpu_batch_grid = int(kwargs.get('gpu_batch_grid', getattr(self, 'gpu_batch_grid', 256)))
+        if self.gpu_batch_lines <= 0 or self.gpu_batch_grid <= 0:
+            raise ValueError("gpu_batch_lines and gpu_batch_grid must be positive integers.")
         
         # Temperature and pressure
         if 'temperatures' in kwargs:
@@ -469,11 +476,23 @@ class Config:
     
     def _set_attributes(self, params):
         """Set attributes from parsed parameters tuple."""
+        # Backward compatibility: older cached tuples do not contain
+        # run_mode / gpu_backend / gpu_batch_lines / gpu_batch_grid.
+        if len(params) == 94:
+            params = list(params)
+            params[16:16] = ['CPU', 'AUTO', 8192, 256]
+            params = tuple(params)
+        elif len(params) == 97:
+            params = list(params)
+            params[17:17] = ['AUTO']
+            params = tuple(params)
+
         # Unpack all parameters (matching inp_para return structure)
         (self.database, self.data_info, self.read_path, self.save_path, self.logs_path,
          self.conversion, self.partition_functions, self.specific_heats, self.cooling_functions,
          self.lifetimes, self.oscillator_strengths, self.stick_spectra, self.cross_sections,
          self.ncputrans, self.ncpufiles, self.chunk_size,
+         self.run_mode, self.gpu_backend, self.gpu_batch_lines, self.gpu_batch_grid,
          self.conversion_format, self.conversion_min_freq, self.conversion_max_freq,
          self.conversion_unc, self.conversion_threshold,
          self.global_qn_label_list, self.global_qn_format_list,
@@ -528,6 +547,10 @@ class Config:
             'ncputrans': 'ncputrans',
             'ncpufiles': 'ncpufiles',
             'chunk_size': 'chunk_size',
+            'run_mode': 'run_mode',
+            'gpu_backend': 'gpu_backend',
+            'gpu_batch_lines': 'gpu_batch_lines',
+            'gpu_batch_grid': 'gpu_batch_grid',
             'conversion_format': 'ConversionFormat',
             'conversion_min_freq': 'ConversionMinFreq',
             'conversion_max_freq': 'ConversionMaxFreq',
@@ -670,6 +693,10 @@ class Config:
             'ncputrans': 'ncputrans',
             'ncpufiles': 'ncpufiles',
             'chunk_size': 'chunk_size',
+            'run_mode': 'run_mode',
+            'gpu_backend': 'gpu_backend',
+            'gpu_batch_lines': 'gpu_batch_lines',
+            'gpu_batch_grid': 'gpu_batch_grid',
             'conversion_format': 'ConversionFormat',
             'conversion_min_freq': 'ConversionMinFreq',
             'conversion_max_freq': 'ConversionMaxFreq',

@@ -18,6 +18,25 @@ import pyexocross as px
 print(px.__version__)  # '1.0.0'
 ```
 
+## Choose CPU or GPU
+
+PyExoCross defaults to CPU mode.
+
+```python
+# Explicit CPU mode (default)
+run_mode='CPU'
+
+# GPU mode with automatic backend selection
+run_mode='GPU'
+gpu_batch_lines=8192
+gpu_batch_grid=256
+```
+
+`gpu_batch_lines` and `gpu_batch_grid` are used to control GPU memory usage.
+
+GPU acceleration is available for `cooling_functions`, `stick_spectra`,
+`cross_sections`, and `stick_spectra_cross_section`.  
+
 ## Minimal Example: Cross Sections from ExoMol
 
 ```python
@@ -34,6 +53,7 @@ px.cross_sections(
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
+    run_mode='CPU',
     temperatures=[1000],
     pressures=[1.0],
     wn_wl='WN',
@@ -70,6 +90,7 @@ px.cross_sections(
     ncputrans=1,    
     ncpufiles=1,
     chunk_size=100000,
+    run_mode='CPU',
     temperatures=[1000],
     pressures=[1.0],
     wn_wl='WN',
@@ -108,6 +129,7 @@ px.cross_sections(
     ncputrans=4,    
     ncpufiles=1,
     chunk_size=100000,
+    run_mode='CPU',
     temperatures=[1000],
     pressures=[1.0],
     wn_wl='WN',
@@ -144,6 +166,7 @@ px.cross_sections(
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/hitran_xsec.log',
     chunk_size=100000,
+    run_mode='CPU',
     qnslabel_list=['J', 'X', 'Omega', 'v1', 'Sym', 'F'],
     qnsformat_list=['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s'],
     temperatures=[1000],

@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from ..base.utils import Timer, ensure_dir
 from ..process.stick_xsec_filepath import cross_section_filepath, temperature_pressure_string
+from .mpl_safety import configure_mpl_large_path_rendering
 
 # Plot and Save Results
 def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_idx=None,
@@ -57,6 +58,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
     )
     xsecs_foldername = save_path+'xsecs/files/'+data_info[0]+'/'+database+'/'
     ensure_dir(xsecs_foldername)
+    configure_mpl_large_path_rendering()
     min_v = min(wn)
     max_v = max(wn)
     # Check if profile is pressure-dependent (Lorentzian/Voigt need pressure, but Doppler/Gaussian don't)

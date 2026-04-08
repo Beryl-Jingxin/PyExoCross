@@ -7,6 +7,13 @@ coefficients) under various thermodynamic conditions.
 import numpy as np
 import numexpr as ne
 from ..base.constants import Inv8Pic, c2
+from ..gpu.base_gpu import using_gpu
+from ..gpu.calculate_intensity_gpu import (
+    gpu_cal_abscoefs,
+    gpu_cal_abscoefs_nlte_2T,
+    gpu_cal_abscoefs_nlte_nvib,
+    gpu_cal_abscoefs_nlte_pop,
+)
 
 ## LTE intensity
 # Calculate absorption coefficient
@@ -38,6 +45,11 @@ def cal_abscoefs(T_list, Q_list, Epp, gp, A, v, abundance):
     np.ndarray
         Absorption coefficient 2D array, shape (n_temps, n_levels)
     """
+    if using_gpu():
+        gpu_result = gpu_cal_abscoefs(T_list, Q_list, Epp, gp, A, v, abundance)
+        if gpu_result is not None:
+            return gpu_result
+
     # Ensure numpy arrays
     T_arr = np.asarray(T_list)[:, None]  
     Q_arr = np.asarray(Q_list)[:, None] 
@@ -83,6 +95,13 @@ def cal_abscoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp, A,
     np.ndarray
         Non-LTE absorption coefficient 2D array, shape (n_temps, n_levels)
     """
+    if using_gpu():
+        gpu_result = gpu_cal_abscoefs_nlte_2T(
+            Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp, A, v, abundance
+        )
+        if gpu_result is not None:
+            return gpu_result
+
     # Ensure numpy arrays
     Tvib_arr = np.asarray(Tvib_list)[:, None]  
     Trot_arr = np.asarray(Trot_list)[:, None]  
@@ -129,6 +148,13 @@ def cal_abscoefs_nlte_nvib(T_list, Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v,
     np.ndarray
         Non-LTE absorption coefficient 2D array, shape (n_temps, n_levels)
     """
+    if using_gpu():
+        gpu_result = gpu_cal_abscoefs_nlte_nvib(
+            T_list, Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v, abundance
+        )
+        if gpu_result is not None:
+            return gpu_result
+
     # Ensure numpy arrays
     T_arr = np.asarray(T_list)[:, None]  
     Trot_arr = np.asarray(Trot_list)[:, None]  
@@ -172,6 +198,11 @@ def cal_abscoefs_nlte_pop(T_list, pop, gp, gpp, A, v, abundance):
     np.ndarray
         Non-LTE absorption coefficient 2D array, shape (n_temps, n_levels)
     """
+    if using_gpu():
+        gpu_result = gpu_cal_abscoefs_nlte_pop(T_list, pop, gp, gpp, A, v, abundance)
+        if gpu_result is not None:
+            return gpu_result
+
     # Ensure numpy arrays
     T_arr = np.asarray(T_list)[:, None]  
     pop_arr = np.asarray(pop)[None, :]

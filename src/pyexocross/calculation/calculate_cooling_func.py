@@ -7,6 +7,8 @@ the rate of energy loss through radiative transitions.
 import numpy as np
 import numexpr as ne
 from ..base.constants import hc, c2, PI
+from ..gpu.base_gpu import using_gpu
+from ..gpu.calculate_cooling_func_gpu import gpu_cal_cooling_func
 
 # Calculate Cooling Function
 def cal_cooling_func(A, v, Ep, gp, T, Q):
@@ -35,6 +37,11 @@ def cal_cooling_func(A, v, Ep, gp, T, Q):
     float
         Cooling function value
     """
+    if using_gpu():
+        gpu_result = gpu_cal_cooling_func(A, v, Ep, gp, T, Q)
+        if gpu_result is not None:
+            return gpu_result
+
     _sum = ne.evaluate('sum(A * hc * v * gp * exp(-c2 * Ep / T))')  
     cf = ne.evaluate('_sum / (4 * PI * Q)')
     return cf

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from ..base.utils import Timer, ensure_dir
+from .mpl_safety import configure_mpl_large_path_rendering
 
 # Plot Oscillator Strength
 def plot_oscillator_strength(oscillator_strength_df):
@@ -39,6 +40,7 @@ def plot_oscillator_strength(oscillator_strength_df):
     tp.start()
     oscillator_strength_df = oscillator_strength_df[np.isfinite(oscillator_strength_df['os'])]
     oscillator_strength_df = oscillator_strength_df.reset_index(drop=True)
+    configure_mpl_large_path_rendering()
     v = oscillator_strength_df['v']
     osc_str = oscillator_strength_df['os']
     parameters = {'axes.labelsize': 18, 

@@ -3,6 +3,37 @@
 This page contains complete, ready-to-run examples for every supported
 database and function.  Replace the paths with your own data locations.
 
+## CPU / GPU kwargs you can reuse
+
+```python
+# CPU (default)
+COMPUTE_CPU = dict(
+    ncputrans=4,
+    ncpufiles=1,
+    chunk_size=100000,
+    run_mode='CPU',
+)
+
+# GPU (AUTO backend)
+COMPUTE_GPU = dict(
+    ncputrans=4,
+    ncpufiles=1,
+    chunk_size=100000,
+    run_mode='GPU',
+    gpu_batch_lines=8192,    # memory-control knob
+    gpu_batch_grid=256,      # memory-control knob
+)
+```
+
+Use `COMPUTE_GPU` with GPU-enabled functions:
+
+```python
+px.cooling_functions(..., **COMPUTE_GPU)
+px.stick_spectra(..., **COMPUTE_GPU)
+px.cross_sections(..., **COMPUTE_GPU)
+px.stick_spectra_cross_section(..., **COMPUTE_GPU)
+```
+
 ---
 
 ## ExoMol Examples

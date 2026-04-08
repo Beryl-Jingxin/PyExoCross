@@ -89,6 +89,25 @@ For HITRAN/HITEMP:
 | `ncputrans`  | `int` | `4` | Number of CPU cores for processing each transitions file |
 | `ncpufiles`  | `int` | `1` | Number of transitions files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size when reading/calculating transitions |
+| `run_mode` | `str` | `'CPU'` | Compute backend mode: `'CPU'` (default) or `'GPU'` |
+| `gpu_batch_lines` | `int` | `8192` | Max number of lines per GPU batch (memory-control knob) |
+| `gpu_batch_grid` | `int` | `256` | Max number of grid points per GPU batch (memory-control knob) |
+
+GPU acceleration scope:
+- Enabled for `cooling_functions`, `stick_spectra`, `cross_sections`, and `stick_spectra_cross_section`
+- Other functions are CPU formula based
+
+Typical usage:
+
+```python
+# CPU (default)
+run_mode='CPU'
+
+# GPU (auto backend)
+run_mode='GPU'
+gpu_batch_lines=8192
+gpu_batch_grid=256
+```
 
 :::{tip}
 For large line lists (e.g. H2O with billions of lines), increase `chunk_size`

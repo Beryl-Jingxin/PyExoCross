@@ -7,6 +7,13 @@ under various thermodynamic conditions.
 import numpy as np
 import numexpr as ne
 from ..base.constants import hcInv4Pi, c2
+from ..gpu.base_gpu import using_gpu
+from ..gpu.calculate_emissivity_gpu import (
+    gpu_cal_emicoefs,
+    gpu_cal_emicoefs_nlte_2T,
+    gpu_cal_emicoefs_nlte_nvib,
+    gpu_cal_emicoefs_nlte_pop,
+)
 
 ## LTE emissivity
 # Calculate emission coefficient
@@ -38,6 +45,11 @@ def cal_emicoefs(T_list, Q_list, Ep, gp, A, v, abundance):
     np.ndarray
         Emission coefficient 2D array, shape (n_temps, n_levels)
     """
+    if using_gpu():
+        gpu_result = gpu_cal_emicoefs(T_list, Q_list, Ep, gp, A, v, abundance)
+        if gpu_result is not None:
+            return gpu_result
+
     # Ensure numpy arrays 
     T_arr = np.asarray(T_list)[:, None]  
     Q_arr = np.asarray(Q_list)[:, None] 
@@ -82,6 +94,13 @@ def cal_emicoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibp, Erotp, gp, A, v
     np.ndarray
         Non-LTE emission coefficient 2D array, shape (n_temps, n_levels)
     """
+    if using_gpu():
+        gpu_result = gpu_cal_emicoefs_nlte_2T(
+            Tvib_list, Trot_list, Qnlte_arr, Evibp, Erotp, gp, A, v, abundance
+        )
+        if gpu_result is not None:
+            return gpu_result
+
     # Ensure numpy arrays
     Tvib_arr = np.asarray(Tvib_list)[:, None]  
     Trot_arr = np.asarray(Trot_list)[:, None]  
@@ -126,6 +145,13 @@ def cal_emicoefs_nlte_nvib(Trot_list, Qnlte_arr, nvib, Erotp, gp, A, v, abundanc
     np.ndarray
         Non-LTE emission coefficient 2D array, shape (n_temps, n_levels)
     """
+    if using_gpu():
+        gpu_result = gpu_cal_emicoefs_nlte_nvib(
+            Trot_list, Qnlte_arr, nvib, Erotp, gp, A, v, abundance
+        )
+        if gpu_result is not None:
+            return gpu_result
+
     # Ensure numpy arrays
     Trot_arr = np.asarray(Trot_list)[:, None]  
     nvib_arr = np.asarray(nvib)[None, :]
@@ -160,6 +186,11 @@ def cal_emicoefs_nlte_pop(pop, A, v, abundance):
     np.ndarray
         Non-LTE emission coefficient 2D array, shape (1, n_levels)
     """
+    if using_gpu():
+        gpu_result = gpu_cal_emicoefs_nlte_pop(pop, A, v, abundance)
+        if gpu_result is not None:
+            return gpu_result
+
     emicoef_nlte_arr = ne.evaluate('A * v * hcInv4Pi * pop * abundance')[None, :]
     return emicoef_nlte_arr
     

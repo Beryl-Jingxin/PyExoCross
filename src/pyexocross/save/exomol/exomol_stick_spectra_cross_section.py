@@ -397,8 +397,14 @@ def save_exomol_stick_spectra_cross_section(
         
         # Combine and save stick spectra results for this temperature (one file per temperature)
         if len(stick_spectra_results[temp_idx]) > 0:
+            valid_frames = [
+                df for df in stick_spectra_results[temp_idx]
+                if df is not None and not df.empty and not df.dropna(how='all').empty
+            ]
+            if not valid_frames:
+                continue
             any_results_ss = True
-            stick_spectra_df = pd.concat(stick_spectra_results[temp_idx], ignore_index=True)
+            stick_spectra_df = pd.concat(valid_frames, ignore_index=True)
             
             # Plot stick spectra for this temperature
             if PlotStickSpectraYN == 'Y':

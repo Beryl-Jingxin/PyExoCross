@@ -72,6 +72,28 @@ Python packages version (see `requirements.txt` for installable bounds; tested o
 | dask              | >=2022.5, <2025            |
 | pandarallel       | >=1.6.5,<2.0.0             |
 
+### Optional GPU Acceleration
+
+PyExoCross now supports selectable compute mode:
+
+- `RunMode CPU` (default)
+- `RunMode GPU` (uses CUDA backend when available)
+
+GPU mode is optional and automatically falls back to CPU if CUDA runtime
+packages or devices are unavailable. To keep GPU memory usage bounded, use:
+
+- `GPUBatchLines` (default `8192`)
+- `GPUBatchGrid` (default `256`)
+
+When using API kwargs, the equivalent parameters are `run_mode`,
+`gpu_batch_lines`, and `gpu_batch_grid`.
+
+Runtime packages (optional):
+
+- CUDA: install `cupy` (preferred) or `torch` with CUDA support.
+
+**Note: macOS MPS GPU cannot use GPU mode because it only uses float32 which lacks precision, so please use Nvidia GPU (CUDA) or use macOS CPU mode instead.**
+
 ### Run PyExoCross program
 
 In the terminal, use the following commands to run PyExoCross:
