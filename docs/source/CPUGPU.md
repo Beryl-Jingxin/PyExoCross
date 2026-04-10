@@ -1,4 +1,4 @@
-# CPU / GPU Usage
+# CPU and GPU
 
 This page explains how to run ***PyExoCross*** in CPU mode or GPU mode, and which functions support GPU acceleration.
 
