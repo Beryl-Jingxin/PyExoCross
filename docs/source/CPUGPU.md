@@ -6,12 +6,17 @@ This page explains how to run ***PyExoCross*** in CPU mode or GPU mode, and whic
 
 If you do not set GPU options, ***PyExoCross*** runs on CPU by default.
 
+```bash
+RunMode                                 CPU                       # CPU(default) or GPU
+```
+
 ```python
-import ***PyExoCross*** as px
+import pyexocross as px
 
 px.cross_sections(
     ...,
     run_mode='CPU',
+    ...,
 )
 ```
 
@@ -26,6 +31,13 @@ Enable GPU mode with:
 - `run_mode='GPU'`
 - optional `gpu_backend` selection
 
+```bash
+RunMode                                 GPU                       # CPU(default) or GPU
+GPUBackend                              AUTO                      # AUTO(default), CUDA, CuPy-CUDA, PyTorch-CUDA, or MPS (used only when RunMode=GPU)
+GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+```
+
 ```python
 import pyexocross as px
 
@@ -35,6 +47,7 @@ px.cross_sections(
     gpu_backend='AUTO',
     gpu_batch_lines=8192,
     gpu_batch_grid=256,
+    ...,
 )
 ```
 
@@ -66,6 +79,3 @@ Only the following three functions support GPU acceleration:
 | Oscillator Strengths   | ❌          |
 | Stick Spectra          | ✅          |
 | Cross Sections         | ✅          |
-
-All other functions run on CPU.
-
