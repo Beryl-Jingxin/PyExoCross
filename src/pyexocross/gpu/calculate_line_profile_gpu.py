@@ -280,28 +280,26 @@ def gpu_cross_section(
         sigma_np = np.asarray(sigma, dtype=np.float64) if sigma is not None else None
         eta_np = np.asarray(eta, dtype=np.float64) if eta is not None else None
 
+        # Keep line filtering consistent with CPU behavior: only drop clearly
+        # invalid line centers/coefficients. Width parameters are sanitized
+        # below instead of filtering out whole lines.
         valid = np.isfinite(v_np) & np.isfinite(coef_np)
-        if alpha_np is not None:
-            valid &= np.isfinite(alpha_np) & (alpha_np > 0.0)
-        if gamma_np is not None:
-            valid &= np.isfinite(gamma_np) & (gamma_np > 0.0)
-        if sigma_np is not None:
-            valid &= np.isfinite(sigma_np) & (sigma_np > 0.0)
-        if eta_np is not None:
-            valid &= np.isfinite(eta_np)
         if not np.any(valid):
             return np.zeros_like(wn_grid_np)
 
         v_np = v_np[valid]
         coef_np = np.nan_to_num(coef_np[valid], nan=0.0, posinf=0.0, neginf=0.0)
         if alpha_np is not None:
-            alpha_np = alpha_np[valid]
+            alpha_np = np.nan_to_num(alpha_np[valid], nan=_EPS, posinf=_EPS, neginf=_EPS)
+            alpha_np = np.where(alpha_np > _EPS, alpha_np, _EPS)
         if gamma_np is not None:
-            gamma_np = gamma_np[valid]
+            gamma_np = np.nan_to_num(gamma_np[valid], nan=_EPS, posinf=_EPS, neginf=_EPS)
+            gamma_np = np.where(gamma_np > _EPS, gamma_np, _EPS)
         if sigma_np is not None:
-            sigma_np = sigma_np[valid]
+            sigma_np = np.nan_to_num(sigma_np[valid], nan=_EPS, posinf=_EPS, neginf=_EPS)
+            sigma_np = np.where(sigma_np > _EPS, sigma_np, _EPS)
         if eta_np is not None:
-            eta_np = eta_np[valid]
+            eta_np = np.nan_to_num(eta_np[valid], nan=0.5, posinf=0.5, neginf=0.5)
 
         start, end = _window_bounds(wn_grid_np, v_np, cutoff)
         xsec = np.zeros_like(wn_grid_np, dtype=np.float64)

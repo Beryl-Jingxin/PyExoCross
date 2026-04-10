@@ -18,7 +18,7 @@ PyExoCross uses CPU by default.  You can explicitly select compute mode with:
 | Kwarg | Type | Default | Description |
 |---|---|---|---|
 | `run_mode` | `str` | `'CPU'` | `'CPU'` or `'GPU'` |
-| `gpu_backend` | `str` | `'AUTO'` | GPU backend policy: `'AUTO'`, `'CUDA'`, or `'MPS'` |
+| `gpu_backend` | `str` | `'AUTO'` | GPU backend policy: `'AUTO'`, `'CUDA'`, `'CuPy-CUDA'`, `'PyTorch-CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | GPU line-batch size for memory control |
 | `gpu_batch_grid` | `int` | `256` | GPU grid-batch size for memory control |
 
@@ -51,8 +51,14 @@ px.cross_sections(
     gpu_batch_grid=256,
 )
 
-# Force CUDA
+# CUDA policy: CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback
 px.cross_sections(..., run_mode='GPU', gpu_backend='CUDA')
+
+# Force CuPy CUDA only
+px.cross_sections(..., run_mode='GPU', gpu_backend='CuPy-CUDA')
+
+# Force PyTorch CUDA only
+px.cross_sections(..., run_mode='GPU', gpu_backend='PyTorch-CUDA')
 
 # Force MPS
 px.cross_sections(..., run_mode='GPU', gpu_backend='MPS')
@@ -256,7 +262,7 @@ compute backend kwargs:
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `run_mode` | `str` | `'CPU'` | `'CPU'` or `'GPU'` |
-| `gpu_backend` | `str` | `'AUTO'` | `'AUTO'`, `'CUDA'`, or `'MPS'` |
+| `gpu_backend` | `str` | `'AUTO'` | `'AUTO'`, `'CUDA'`, `'CuPy-CUDA'`, `'PyTorch-CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | GPU line-batch size (memory control) |
 | `gpu_batch_grid` | `int` | `256` | GPU grid-batch size (memory control) |
 
@@ -436,7 +442,7 @@ Calculate LTE or Non-LTE stick spectra (absorption or emission).
 | `ncpufiles` | `int` | `1` | Files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size |
 | `run_mode` | `str` | `'CPU'` | `'CPU'` or `'GPU'` |
-| `gpu_backend` | `str` | `'AUTO'` | `'AUTO'`, `'CUDA'`, or `'MPS'` |
+| `gpu_backend` | `str` | `'AUTO'` | `'AUTO'`, `'CUDA'`, `'CuPy-CUDA'`, `'PyTorch-CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | GPU line-batch size (memory control) |
 | `gpu_batch_grid` | `int` | `256` | GPU grid-batch size (memory control) |
 | **Plotting** | | | |

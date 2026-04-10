@@ -22,10 +22,9 @@ COMMON = dict(
     database='ExoMolHR',
     molecule='NO',
     isotopologue='14N-16O',
-    species_id=81,
-    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/',
-    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/',
-    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exomolhr.log',
+    read_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoMolHR/', # '/Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/',
+    save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/',
+    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/NO_ExoMolHR_gpu_cupy.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exomolhr.log',
 )
 
 # Spectral range parameters
@@ -51,34 +50,18 @@ NLTE_PARAMS = dict(
 
 # Cores and chunks
 COMPUTE_PARAMS = dict(
-    ncputrans=1,                # Number of CPU threads for each transition file (default: 4)
-    ncpufiles=1,                # Number of CPU files for transition calculation (default: 1)
-    chunk_size=10000,           # Chunk size for transition calculation (default: 100000)
+    ncputrans=4,                    # Number of CPU threads for each transition file (default: 4)
+    ncpufiles=1,                    # Number of CPU files for transition calculation (default: 1)
+    chunk_size=10000,               # Chunk size for transition calculation (default: 100000)
+    run_mode='GPU',                 # Run mode: 'CPU' or 'GPU' (default: 'CPU')
+    gpu_backend='CuPy-CUDA',        # GPU backend: 'AUTO', 'CUDA', 'PyTorch-CUDA', 'CuPy-CUDA', 'MPS' (default: 'AUTO')
+    # gpu_batch_lines=8192,         # GPU line-batch size (default: 8192)
+    # gpu_batch_grid=256,           # GPU grid-batch size (default: 256)
 )
 
 # ---------------------------------------------------------------------------
 # Test functions
 # ---------------------------------------------------------------------------
-def test_conversion():
-    """Test ExoMolHR -> HITRAN conversion."""
-    print('\n' + '='*70)
-    print('TEST: px.conversion()  [ExoMolHR -> HITRAN]')
-    print('='*70)
-    px.conversion(
-        **COMMON,
-        **COMPUTE_PARAMS,
-        conversion_format='HITRAN',
-        conversion_min_freq=24,         # Minimum wavenumber in unit of cm⁻¹
-        conversion_max_freq=53452,      # Maximum wavenumber in unit of cm⁻¹
-        conversion_unc=0.01,            # Uncertainty filter (default: None)
-        conversion_threshold=1e-30,     # Threshold filter (default: None)
-        global_qn_label_list=['ElecState', 'v', 'Omega'],       # Quantum number label for global quantum numbers
-        global_qn_format_list=['%9s', '%2d', '%4s'],            # Quantum number format for global quantum numbers
-        local_qn_label_list=['J', 'e/f'],                       # Quantum number label for local quantum numbers
-        local_qn_format_list=['%7.1f', '%1s'],                  # Quantum number format for local quantum numbers
-    )
-    print('PASSED: conversion()')
-    
 def test_stick_spectra():
     """Test stick spectra calculation."""
     print('\n' + '='*70)
@@ -86,7 +69,7 @@ def test_stick_spectra():
     print('='*70)
     px.stick_spectra(
         **COMMON,
-        **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,              # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         plot=True,                    # Whether to plot results (default: False)
@@ -104,7 +87,7 @@ def test_cross_sections():
     print('='*70)
     px.cross_sections(
         **COMMON,
-        **NLTE_PARAMS,                  # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         pressures=[1.0],                # Pressure in unit bar (default: [1.0])
@@ -131,7 +114,7 @@ def test_stick_spectra_cross_section():
     print('='*70)
     px.stick_spectra_cross_section(
         **COMMON,
-        **NLTE_PARAMS,                  # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         pressures=[1.0],                # Pressure in unit bar (default: [1.0])
@@ -159,7 +142,6 @@ if __name__ == '__main__':
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
-        test_conversion,
         test_stick_spectra,
         test_cross_sections,
         test_stick_spectra_cross_section,

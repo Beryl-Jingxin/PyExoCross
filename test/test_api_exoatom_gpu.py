@@ -22,10 +22,9 @@ COMMON = dict(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
-    species_id=601,
-    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/', #'/home/jingxin/LHD/Program/Databases/ExoAtom/',
-    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
-    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exoatom.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_exoatom.log', 
+    read_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoAtom/', # '/Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/', 
+    save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/',
+    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log', 
 )
 
 # Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
@@ -37,7 +36,7 @@ QN_PARAMS = dict(
 # NLTE parameters (needed by stick_spectra and cross_sections)
 NLTE_PARAMS = dict(
     nlte_method='P',                # Non-LTE: Population 
-    nlte_path='/home/jingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv',
+    nlte_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv', # '/home/jingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv',
 )
 
 # Spectral range parameters
@@ -57,62 +56,16 @@ COMPUTE_PARAMS = dict(
     ncputrans=4,                    # Number of CPU threads for each transition file (default: 4)
     ncpufiles=1,                    # Number of CPU files for transition calculation (default: 1)
     chunk_size=10000,               # Chunk size for transition calculation (default: 100000)
+    run_mode='GPU',                 # Run mode: 'CPU' or 'GPU' (default: 'CPU')
+    gpu_backend='AUTO',             # GPU backend: 'AUTO', 'CUDA', 'PyTorch-CUDA', 'CuPy-CUDA', 'MPS' (default: 'AUTO')
+    # gpu_batch_lines=8192,         # GPU line-batch size (default: 8192)
+    # gpu_batch_grid=256,           # GPU grid-batch size (default: 256)
 )
 
 
 # ---------------------------------------------------------------------------
 # Test functions
 # ---------------------------------------------------------------------------
-def test_conversion():
-    """Test ExoAtom -> HITRAN conversion."""
-    print('\n' + '='*70)
-    print('TEST: px.conversion()  [ExoAtom -> HITRAN]')
-    print('='*70)
-    px.conversion(
-        **COMMON,
-        **QN_PARAMS,
-        **COMPUTE_PARAMS,
-        conversion_format='HITRAN',
-        conversion_min_freq=0,          # Minimum wavenumber in unit of cm⁻¹
-        conversion_max_freq=115400,     # Maximum wavenumber in unit of cm⁻¹
-        conversion_unc=None,            # Uncertainty filter (default: None)
-        conversion_threshold=None,      # Threshold filter (default: None)
-        global_qn_label_list=['configuration'],             # Quantum number label for global quantum numbers
-        global_qn_format_list=['%20s'],                     # Quantum number format for global quantum numbers
-        local_qn_label_list=['J', 'Multiple', 'parity'],    # Quantum number label for local quantum numbers
-        local_qn_format_list=['%5.1f', '%10s', '%1s'],      # Quantum number format for local quantum numbers
-    )
-    print('PASSED: conversion()')
-
-
-def test_partition_functions():
-    """Test partition function calculation."""
-    print('\n' + '='*70)
-    print('TEST: px.partition_functions()')
-    print('='*70)
-    px.partition_functions(
-        **COMMON,
-        **COMPUTE_PARAMS,
-        ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
-        tmax=600,                   # Maximum temperature in unit of K (default: 5000)
-    )
-    print('PASSED: partition_functions()')
-
-
-def test_specific_heats():
-    """Test specific heat calculation."""
-    print('\n' + '='*70)
-    print('TEST: px.specific_heats()')
-    print('='*70)
-    px.specific_heats(
-        **COMMON,
-        **COMPUTE_PARAMS,
-        ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
-        tmax=600,                   # Maximum temperature in unit of K (default: 5000)
-    )
-    print('PASSED: specific_heats()')
-
-
 def test_cooling_functions():
     """Test cooling function calculation."""
     print('\n' + '='*70)
@@ -125,37 +78,6 @@ def test_cooling_functions():
         tmax=600,                   # Maximum temperature in unit of K (default: 5000)
     )
     print('PASSED: cooling_functions()')
-
-
-def test_lifetimes():
-    """Test radiative lifetime calculation."""
-    print('\n' + '='*70)
-    print('TEST: px.lifetimes()')
-    print('='*70)
-    px.lifetimes(
-        **COMMON,
-        **COMPUTE_PARAMS,
-        compress=False,               # Whether to compress the states file (default: False)
-    )
-    print('PASSED: lifetimes()')
-
-
-def test_oscillator_strengths():
-    """Test oscillator strength calculation."""
-    print('\n' + '='*70)
-    print('TEST: px.oscillator_strengths()')
-    print('='*70)
-    px.oscillator_strengths(
-        **COMMON,
-        **COMPUTE_PARAMS,
-        gf_or_f='f',                  # 'gf' for weighted oscillator strength, 'f' for f-value (default: 'f')
-        plot=True,                    # Whether to plot results (default: False)
-        plot_method='log',            # Plot in linear (lin) or logarithm (log) (default: 'log')
-        plot_wn_wl='WN',              # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
-        plot_unit='cm-1',             # Unit for plotting axis (default: cm⁻¹)
-        limit_yaxis=1e-30,            # Lower limit for y-axis (default: 1e-30)
-    )
-    print('PASSED: oscillator_strengths()')
 
 
 def test_stick_spectra():
@@ -249,12 +171,7 @@ if __name__ == '__main__':
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
-        test_conversion,
-        test_partition_functions,
-        test_specific_heats,
         test_cooling_functions,
-        test_lifetimes,
-        test_oscillator_strengths,
         test_stick_spectra,
         test_cross_sections,
         test_stick_spectra_cross_section,

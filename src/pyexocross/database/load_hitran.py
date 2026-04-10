@@ -45,8 +45,8 @@ def _resolve_hitran_par_path(read_path):
             if os.path.exists(par_path):
                 return par_path
         raise ValueError(
-            "Missing HITRAN line list file. Expected one of: "
-            f"{candidates[0]} or {candidates[1]}"
+            "Missing HITRAN line list file. Expected: "
+            f"{candidates[0]}"
         )
 
     if not os.path.exists(clean_path):

@@ -1,12 +1,34 @@
 import numpy as np
 import pandas as pd
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 
 from pyexocross.base.utils import Timer, ensure_dir
 from pyexocross.base.log import log_tqdm, print_file_info
 from pyexocross.calculation.calculate_para import cal_Ep
 from pyexocross.calculation.calculate_cooling_func import cal_cooling_func
 from pyexocross.database.load_hitran import read_hitran_pf
+from pyexocross.gpu.base_gpu import using_gpu
+
+
+_USE_THREAD_POOL = False
+
+
+def _executor_context(max_workers):
+    """
+    Match ExoMol strategy:
+    - GPU mode: use threads (avoid CUDA+fork re-init failure)
+    - CPU mode: prefer process pool, fallback to threads on restricted systems
+    """
+    global _USE_THREAD_POOL
+    if using_gpu():
+        return ThreadPoolExecutor(max_workers=max_workers)
+    if _USE_THREAD_POOL:
+        return ThreadPoolExecutor(max_workers=max_workers)
+    try:
+        return ProcessPoolExecutor(max_workers=max_workers)
+    except PermissionError:
+        _USE_THREAD_POOL = True
+        return ThreadPoolExecutor(max_workers=max_workers)
 
 
 def save_hitran_cooling_func(hitran_df, Ntemp, Tmax):
@@ -35,8 +57,9 @@ def save_hitran_cooling_func(hitran_df, Ntemp, Tmax):
     Ep = cal_Ep(hitran_df['Epp'].values,v)
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     Qs = read_hitran_pf(Ts)
-    # Parallelize per-temperature cooling evaluation
-    with ProcessPoolExecutor(max_workers=ncputrans) as executor:
+    # Parallelize per-temperature cooling evaluation.
+    # GPU mode uses threads to avoid CUDA re-init in forked subprocesses.
+    with _executor_context(max_workers=ncputrans) as executor:
         futures = [executor.submit(cal_cooling_func, A, v, Ep, gp, T_val, Q_val)
                    for T_val, Q_val in log_tqdm(zip(Ts, Qs), desc='Calculating')]
         cooling_func = [future.result() for future in futures]

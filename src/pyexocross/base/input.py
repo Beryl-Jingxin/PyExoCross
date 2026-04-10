@@ -296,7 +296,11 @@ def inp_para(inp_filepath):
     if run_mode not in ('CPU', 'GPU'):
         raise ValueError("RunMode must be 'CPU' or 'GPU' in the input file.")
     gpu_backend_rows = inp_df[col0.isin(['GPUBackend'])]
-    gpu_backend = 'CUDA'
+    from pyexocross.gpu.base_gpu import normalize_gpu_backend
+    if not gpu_backend_rows.empty:
+        gpu_backend = normalize_gpu_backend(gpu_backend_rows[1].iloc[0])
+    else:
+        gpu_backend = 'CUDA'
     gpu_batch_lines_rows = inp_df[col0.isin(['GPUBatchLines'])]
     gpu_batch_grid_rows = inp_df[col0.isin(['GPUBatchGrid'])]
     gpu_batch_lines = int(gpu_batch_lines_rows[1].iloc[0]) if not gpu_batch_lines_rows.empty else 8192

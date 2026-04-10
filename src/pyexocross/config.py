@@ -103,9 +103,9 @@ class Config:
         self.ncputrans = kwargs.get('ncputrans', getattr(self, 'ncputrans', 4))
         self.ncpufiles = kwargs.get('ncpufiles', getattr(self, 'ncpufiles', 1))
         self.chunk_size = kwargs.get('chunk_size', getattr(self, 'chunk_size', 100000))
-        from pyexocross.gpu.base_gpu import normalize_run_mode
+        from pyexocross.gpu.base_gpu import normalize_run_mode, normalize_gpu_backend
         self.run_mode = normalize_run_mode(kwargs.get('run_mode', getattr(self, 'run_mode', 'CPU')))
-        self.gpu_backend = 'CUDA'
+        self.gpu_backend = normalize_gpu_backend(kwargs.get('gpu_backend', getattr(self, 'gpu_backend', 'CUDA')))
         self.gpu_batch_lines = int(kwargs.get('gpu_batch_lines', getattr(self, 'gpu_batch_lines', 8192)))
         self.gpu_batch_grid = int(kwargs.get('gpu_batch_grid', getattr(self, 'gpu_batch_grid', 256)))
         if self.gpu_batch_lines <= 0 or self.gpu_batch_grid <= 0:

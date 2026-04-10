@@ -28,13 +28,21 @@ run_mode='CPU'
 
 # GPU mode with automatic backend selection (recommended)
 run_mode='GPU'
-gpu_backend='AUTO'   # CUDA -> MPS -> CPU fallback
+gpu_backend='AUTO'   # CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback
 gpu_batch_lines=8192
 gpu_batch_grid=256
 
-# Force CUDA (NVIDIA)
+# CUDA mode (CuPy-CUDA first, then PyTorch-CUDA, then MPS fallback)
 run_mode='GPU'
 gpu_backend='CUDA'
+
+# Force CuPy CUDA only
+run_mode='GPU'
+gpu_backend='CuPy-CUDA'
+
+# Force PyTorch CUDA only
+run_mode='GPU'
+gpu_backend='PyTorch-CUDA'
 
 # Force MPS (Apple Metal)
 run_mode='GPU'

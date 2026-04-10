@@ -97,7 +97,7 @@ NCPUtrans                               4
 NCPUfiles                               1
 ChunkSize                               1000000
 RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, or MPS (used only when RunMode=GPU)
+GPUBackend                              AUTO                      # AUTO(default), CUDA, CuPy-CUDA, PyTorch-CUDA, or MPS (used only when RunMode=GPU)
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 
@@ -152,7 +152,7 @@ NCPUtrans                               1
 NCPUfiles                               1
 ChunkSize                               100000
 RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, or MPS (used only when RunMode=GPU)
+GPUBackend                              AUTO                      # AUTO(default), CUDA, CuPy-CUDA, PyTorch-CUDA, or MPS (used only when RunMode=GPU)
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 
@@ -201,7 +201,7 @@ NCPUtrans                               1
 NCPUfiles                               1
 ChunkSize                               10000
 RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, or MPS (used only when RunMode=GPU)
+GPUBackend                              AUTO                      # AUTO(default), CUDA, CuPy-CUDA, PyTorch-CUDA, or MPS (used only when RunMode=GPU)
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 
@@ -258,10 +258,6 @@ CrossSections                           0
 NCPUtrans                               16
 NCPUfiles                               1
 ChunkSize                               1000000
-RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, or MPS (used only when RunMode=GPU)
-GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
-GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 
 
 # Quantum numbers for conversion, stick spectra and cross sections 

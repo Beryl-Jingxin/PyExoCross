@@ -410,7 +410,7 @@ NCPUtrans                               2
 NCPUfiles                               4
 ChunkSize                               500000
 RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, or MPS (used only when RunMode=GPU)
+GPUBackend                              AUTO                      # AUTO(default), CUDA, CuPy-CUDA, PyTorch-CUDA, or MPS (used only when RunMode=GPU)
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 ```
@@ -422,15 +422,32 @@ NCPUtrans                               8
 NCPUfiles                               1
 ChunkSize                               1000000
 RunMode                                 GPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default): CUDA -> MPS -> CPU fallback
+GPUBackend                              AUTO                      # AUTO(default): CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 ```
 
 ```bash
-# Force CUDA (NVIDIA)
+# CUDA policy (NVIDIA)
+# Priority: CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback
 RunMode                                 GPU
 GPUBackend                              CUDA
+GPUBatchLines                           8192
+GPUBatchGrid                            256
+```
+
+```bash
+# Force CuPy CUDA only
+RunMode                                 GPU
+GPUBackend                              CuPy-CUDA
+GPUBatchLines                           8192
+GPUBatchGrid                            256
+```
+
+```bash
+# Force PyTorch CUDA only
+RunMode                                 GPU
+GPUBackend                              PyTorch-CUDA
 GPUBatchLines                           8192
 GPUBatchGrid                            256
 ```

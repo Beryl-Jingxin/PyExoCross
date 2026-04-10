@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 import sys
+import platform
+import subprocess
 import datetime
 import atexit
 import pandas as pd
@@ -126,6 +128,60 @@ def setup_logging(log_file_path):
     sys.stderr = TeeStream(_ORIGINAL_STDERR, _LOG_FILE_HANDLE)
     atexit.register(_close_log_file)
     print(f'Logging to file: {final_log_path}')
+
+
+def _safe_cpu_model():
+    """Best-effort CPU model detection across Linux/macOS/Windows."""
+    # Linux: /proc/cpuinfo is reliable and fast.
+    try:
+        if os.path.exists('/proc/cpuinfo'):
+            with open('/proc/cpuinfo', 'r', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    if 'model name' in line:
+                        return line.split(':', 1)[1].strip()
+    except Exception:
+        pass
+
+    # Generic fallback.
+    model = platform.processor() or platform.machine()
+    if model:
+        return model
+    return 'Unknown'
+
+
+def get_cpu_device_info():
+    """Return a compact dict of current CPU/system information."""
+    info = {
+        'python': sys.version.split()[0],
+        'platform': platform.platform(),
+        'machine': platform.machine(),
+        'processor': platform.processor() or 'Unknown',
+        'cpu_model': _safe_cpu_model(),
+        'logical_cores': os.cpu_count(),
+    }
+    return info
+
+
+def print_cpu_device_info(prefix='CPU'):
+    """Print CPU/system information for logs."""
+    info = get_cpu_device_info()
+    print(f"\n=== {prefix} Device Info ===")
+    print("Python:", info['python'])
+    print("Platform:", info['platform'])
+    print("Machine:", info['machine'])
+    print("Processor:", info['processor'])
+    print("CPU model:", info['cpu_model'])
+    print("Logical cores:", info['logical_cores'])
+    # Optional richer summary when available.
+    try:
+        out = subprocess.run(['lscpu'], capture_output=True, text=True, check=True)
+        lines = [ln for ln in out.stdout.splitlines() if ln.startswith(('Architecture:', 'CPU(s):', 'Model name:'))]
+        if lines:
+            print("\n[lscpu]")
+            for ln in lines:
+                print(ln)
+    except Exception:
+        pass
 
 def parse_logging_info(inp_filepath):
     """
