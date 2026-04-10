@@ -17,6 +17,7 @@ Welcome to PyExoCross's documentation!
    requirements.md
    examples.md
    basicinfo.md
+   cpugpu.md
    conversion.md
    partitionfunc.md
    specificheats.md
