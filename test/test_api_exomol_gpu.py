@@ -61,7 +61,7 @@ COMPUTE_PARAMS = dict(
     ncpufiles=1,                # Number of CPU files for transition calculation (default: 1)
     chunk_size=100000,          # Chunk size for transition calculation (default: 100000)
     run_mode='GPU',             # Run mode: 'CPU' or 'GPU' (default: 'CPU')
-    gpu_backend='MPS',         # GPU backend: 'AUTO', 'CUDA', 'PyTorch-CUDA', 'CuPy-CUDA', 'MPS' (default: 'AUTO')
+    gpu_backend='MPS',          # GPU backend: 'AUTO', 'CUDA', 'PyTorch-CUDA', 'CuPy-CUDA', 'MPS' (default: 'AUTO')
     # gpu_batch_lines=8192,     # GPU line-batch size (default: 8192)
     # gpu_batch_grid=256,       # GPU grid-batch size (default: 256)
 )

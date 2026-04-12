@@ -6,7 +6,7 @@ and other line profiles used in cross-section calculations.
 """
 import numpy as np
 import numexpr as ne
-from scipy.special import voigt_profile, wofz, erf, roots_hermite
+from scipy.special import voigt_profile, wofz, erf, erfcx, roots_hermite
 from ..base.constants import (
     get_doppler_constants,
     Tref,
@@ -597,12 +597,12 @@ def PseudoRoccoVoigt(alpha, gamma):
         eta array is a function of Voigt profile half width at half maximum (HWHM) parameters, shape (n_levels,)
     """
     y = gamma*Sqrtln2/alpha
-    erfy = erf(y)
-    bhalfy = ne.evaluate('y+Sqrtln2*exp(-0.6055*y+0.0718*y**2-0.0049*y**3+0.000136*y**4)')
-    Vy = ne.evaluate('bhalfy*exp(y**2)*(1-erfy)')
-    hV = ne.evaluate('alpha / Sqrtln2 * bhalfy')
+    y_safe = np.minimum(y, 10.0)
+    erfcx_y = erfcx(y_safe)
+    bhalfy = ne.evaluate('y_safe+Sqrtln2*exp(-0.6055*y_safe+0.0718*y_safe**2-0.0049*y_safe**3+0.000136*y_safe**4)')
+    Vy = ne.evaluate('bhalfy*erfcx_y')
     eta = ne.evaluate('(Vy-Sqrtln2)/(Vy*OneminSqrtPIln2)')
-    return (eta)
+    return np.where(y > 10.0, 1.0, eta)
 
 def BinnedGaussian_profile(dv, alpha):
     """
