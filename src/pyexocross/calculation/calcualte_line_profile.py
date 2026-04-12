@@ -25,7 +25,6 @@ from ..base.constants import (
     InvSqrt2ln2,
     TwoSqrt2ln2,
     Sqrtln2InvPi,
-    Sqrt2NAkBln2mInvc,
     binSizeHalf,
     OneminSqrtPIln2
 )
@@ -42,7 +41,7 @@ def _get_line_profile_config():
         _line_profile_config = get_config()
     return _line_profile_config
 
-def Doppler_HWHM(v, T, mass=None):
+def Doppler_HWHM(v, T):
     """
     Calculate the Doppler half-width at half-maximum (HWHM).
 
@@ -62,13 +61,7 @@ def Doppler_HWHM(v, T, mass=None):
     np.ndarray
         Doppler HWHM (alpha) array, shape (n_levels,)
     """
-    # If no explicit mass is provided, use the precomputed module constant
-    # from pyexocross.base.constants (legacy behavior). Otherwise compute from mass.
-    if mass is None:
-        doppler_const = Sqrt2NAkBln2mInvc
-    else:
-        doppler_const = get_doppler_constants(mass)
-    alpha = ne.evaluate('doppler_const * sqrt(T) * v')
+    alpha = ne.evaluate('Sqrt2NAkBln2mInvc * sqrt(T) * v')
     return alpha
 
 def Gaussian_standard_deviation(alpha):

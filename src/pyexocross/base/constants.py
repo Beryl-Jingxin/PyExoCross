@@ -48,14 +48,6 @@ InvSqrt2ln2 = 1 / np.sqrt(2 * np.log(2))
 TwoSqrt2ln2 = 2 * np.sqrt(2 * np.log(2))
 Sqrtln2InvPi = np.sqrt(np.log(2) / np.pi)
 
-# Legacy/derived constants expected by older modules.
-# They are initialized with safe defaults and updated later once bin_size
-# and mass information are available.
-#
-# Doppler-related constant (updated per-mass inside Doppler_HWHM in
-# calcualte_line_profile.py; this default is only to satisfy imports).
-Sqrt2NAkBln2mInvc = 0.0
-
 # Bin-size–related constants. These are updated from bin_size via
 # get_bin_size_constants(...) inside the core execution flow.
 binSize2 = 1.0

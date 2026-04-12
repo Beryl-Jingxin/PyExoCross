@@ -70,6 +70,11 @@ def get_results(config):
     bin_const_dict = _const_mod.get_bin_size_constants(config.bin_size)
     for _name, _val in bin_const_dict.items():
         setattr(_const_mod, _name, _val)
+        
+    # Pre-calculate Doppler HWHM constant outside the def and inject it
+    # as a global constant for Doppler_HWHM to use directly.
+    import pyexocross.calculation.calcualte_line_profile as _calc_mod
+    _calc_mod.Sqrt2NAkBln2mInvc = _const_mod.get_doppler_constants(config.mass)
     
     # Access globals (set by config.to_globals())
     database = config.database
