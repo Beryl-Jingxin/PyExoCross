@@ -134,6 +134,7 @@ dmypy.json
 # Test folder
 .old/
 .note/
+note/
 .test/
 .input/
 .output/
