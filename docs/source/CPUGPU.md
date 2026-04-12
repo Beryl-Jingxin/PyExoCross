@@ -33,7 +33,7 @@ Enable GPU mode with:
 
 ```bash
 RunMode                                 GPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, CuPy-CUDA, PyTorch-CUDA, or MPS (used only when RunMode=GPU)
+GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when RunMode=GPU)
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 ```
@@ -55,8 +55,8 @@ px.cross_sections(
 
 | `gpu_backend` | Meaning | Selection / fallback order |
 |---|---|---|
-| `AUTO` | Recommended automatic mode | `CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU` |
-| `CUDA` | CUDA policy mode | `CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU` |
+| `AUTO` | Recommended automatic mode | `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU` |
+| `CUDA` | CUDA policy mode | `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU` |
 | `CuPy-CUDA` | Force CuPy CUDA only | `CuPy-CUDA -> CPU` |
 | `PyTorch-CUDA` | Force PyTorch CUDA only | `PyTorch-CUDA -> CPU` |
 | `MPS` | Force Apple Metal backend | `MPS -> CPU` |

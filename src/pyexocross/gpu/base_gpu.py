@@ -146,9 +146,9 @@ def normalize_gpu_backend(value: Any) -> str:
 
     Accepted values:
     - AUTO
-    - CUDA (legacy auto-select: prefer CuPy then Torch)
-    - CUPY-CUDA
+    - CUDA (legacy auto-select: prefer PyTorch then CuPy)
     - PYTORCH-CUDA
+    - CUPY-CUDA
     - MPS
     """
     if value is None:
@@ -164,10 +164,10 @@ def normalize_gpu_backend(value: Any) -> str:
         'CUPYCUDA': 'CUPY-CUDA',
     }
     backend = aliases.get(backend, backend)
-    if backend in ('AUTO', 'CUDA', 'MPS', 'CUPY-CUDA', 'PYTORCH-CUDA'):
+    if backend in ('AUTO', 'CUDA', 'PYTORCH-CUDA', 'CUPY-CUDA', 'MPS'):
         return backend
     raise ValueError(
-        "gpu_backend must be one of: 'AUTO', 'CUDA', 'CUPY-CUDA', 'PYTORCH-CUDA', or 'MPS'."
+        "gpu_backend must be one of: 'AUTO', 'CUDA', 'PYTORCH-CUDA', 'CUPY-CUDA', or 'MPS'."
     )
 
 
@@ -213,6 +213,10 @@ def _try_import_torch() -> Optional[Any]:
 
 def _select_cuda_provider() -> tuple[Optional[str], str, Optional[str], Optional[str]]:
     """Return (provider, reason, torch_device, active_backend)."""
+    torch = _try_import_torch()
+    if torch is not None and bool(torch.cuda.is_available()):
+        return ('torch', 'CUDA enabled with Torch', 'cuda', 'CUDA')
+
     cp = _try_import_cupy()
     if cp is not None:
         try:
@@ -222,11 +226,15 @@ def _select_cuda_provider() -> tuple[Optional[str], str, Optional[str], Optional
         if n_dev > 0:
             return ('cupy', f'CUDA enabled with CuPy ({n_dev} device(s))', None, 'CUDA')
 
+    return (None, 'CUDA requested but no CUDA-capable runtime was detected', None, None)
+
+
+def _select_torch_cuda_provider() -> tuple[Optional[str], str, Optional[str], Optional[str]]:
+    """Return (provider, reason, torch_device, active_backend) for PyTorch-CUDA."""
     torch = _try_import_torch()
     if torch is not None and bool(torch.cuda.is_available()):
         return ('torch', 'CUDA enabled with Torch', 'cuda', 'CUDA')
-
-    return (None, 'CUDA requested but no CUDA-capable runtime was detected', None, None)
+    return (None, 'PyTorch-CUDA requested but Torch CUDA runtime is unavailable', None, None)
 
 
 def _select_cupy_provider() -> tuple[Optional[str], str, Optional[str], Optional[str]]:
@@ -240,14 +248,6 @@ def _select_cupy_provider() -> tuple[Optional[str], str, Optional[str], Optional
         if n_dev > 0:
             return ('cupy', f'CUDA enabled with CuPy ({n_dev} device(s))', None, 'CUDA')
     return (None, 'CuPy-CUDA requested but CuPy CUDA runtime is unavailable', None, None)
-
-
-def _select_torch_cuda_provider() -> tuple[Optional[str], str, Optional[str], Optional[str]]:
-    """Return (provider, reason, torch_device, active_backend) for PyTorch-CUDA."""
-    torch = _try_import_torch()
-    if torch is not None and bool(torch.cuda.is_available()):
-        return ('torch', 'CUDA enabled with Torch', 'cuda', 'CUDA')
-    return (None, 'PyTorch-CUDA requested but Torch CUDA runtime is unavailable', None, None)
 
 
 def _select_mps_provider() -> tuple[Optional[str], str, Optional[str], Optional[str]]:
@@ -300,14 +300,14 @@ def configure_runtime(
 
         if requested_gpu_backend in ('AUTO', 'CUDA'):
             provider, reason, torch_device, active_backend = _select_cuda_provider()
-        elif requested_gpu_backend == 'CUPY-CUDA':
-            provider, reason, torch_device, active_backend = _select_cupy_provider()
         elif requested_gpu_backend == 'PYTORCH-CUDA':
             provider, reason, torch_device, active_backend = _select_torch_cuda_provider()
+        elif requested_gpu_backend == 'CUPY-CUDA':
+            provider, reason, torch_device, active_backend = _select_cupy_provider()
 
         # Keep a CUDA->MPS fallback to support environments where input/API
         # still requests CUDA by default but only local MPS is available.
-        if provider is None and requested_gpu_backend in ('AUTO', 'MPS', 'CUDA'):
+        if provider is None and requested_gpu_backend in ('AUTO', 'CUDA', 'MPS'):
             mps_provider, mps_reason, mps_device, mps_backend = _select_mps_provider()
             if mps_provider is not None:
                 provider = mps_provider

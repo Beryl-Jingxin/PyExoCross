@@ -90,7 +90,7 @@ For HITRAN/HITEMP:
 | `ncpufiles`  | `int` | `1` | Number of transitions files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size when reading/calculating transitions |
 | `run_mode` | `str` | `'CPU'` | Compute backend mode: `'CPU'` (default) or `'GPU'` |
-| `gpu_backend` | `str` | `'AUTO'` | GPU backend policy when `run_mode='GPU'`: `'AUTO'`, `'CUDA'`, `'CuPy-CUDA'`, `'PyTorch-CUDA'`, or `'MPS'` |
+| `gpu_backend` | `str` | `'AUTO'` | GPU backend policy when `run_mode='GPU'`: `'AUTO'`, `'CUDA'`, `'PyTorch-CUDA'`, `'CuPy-CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | Max number of lines per GPU batch (memory-control knob) |
 | `gpu_batch_grid` | `int` | `256` | Max number of grid points per GPU batch (memory-control knob) |
 
@@ -99,10 +99,10 @@ GPU acceleration scope:
 - Other functions are CPU formula based
 
 `gpu_backend` behavior:
-- `'AUTO'` (recommended): `CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback`
-- `'CUDA'`: `CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback`
-- `'CuPy-CUDA'`: CuPy CUDA only; otherwise CPU fallback
-- `'PyTorch-CUDA'`: PyTorch CUDA only; otherwise CPU fallback
+- `'AUTO'` (recommended): `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback`
+- `'CUDA'`: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback`
+- `'PyTorch-CUDA'`: NVIDIA PyTorch CUDA only; otherwise CPU fallback
+- `'CuPy-CUDA'`: NVIDIA CuPy CUDA only; otherwise CPU fallback
 - `'MPS'`: Apple Metal (MPS) only; otherwise CPU fallback
 
 Typical usage:
@@ -117,17 +117,17 @@ gpu_backend='AUTO'
 gpu_batch_lines=8192
 gpu_batch_grid=256
 
-# GPU (auto CUDA provider priority: CuPy first, then PyTorch)
+# GPU (auto CUDA provider priority: PyTorch first, then CuPy)
 run_mode='GPU'
 gpu_backend='CUDA'
-
-# GPU (force CuPy CUDA only)
-run_mode='GPU'
-gpu_backend='CuPy-CUDA'
 
 # GPU (force PyTorch CUDA only)
 run_mode='GPU'
 gpu_backend='PyTorch-CUDA'
+
+# GPU (force CuPy CUDA only)
+run_mode='GPU'
+gpu_backend='CuPy-CUDA'
 
 # GPU (force MPS)
 run_mode='GPU'

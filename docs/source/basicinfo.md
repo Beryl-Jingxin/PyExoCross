@@ -373,9 +373,11 @@ The program will run on different cores together.
 
 `GPUBackend`: GPU backend selection (only used when `RunMode=GPU`):
 
-- `AUTO` (recommended): try CUDA first, then try MPS, then fall back to CPU.
-- `CUDA`: prefer NVIDIA CUDA backend (if unavailable, PyExoCross will try MPS; otherwise CPU fallback).
-- `MPS`: prefer Apple Metal backend via PyTorch MPS.
+- `'AUTO'` (recommended): `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback`
+- `'CUDA'`: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback`
+- `'PyTorch-CUDA'`: NVIDIA PyTorch CUDA only; otherwise CPU fallback
+- `'CuPy-CUDA'`: NVIDIA CuPy CUDA only; otherwise CPU fallback
+- `'MPS'`: Apple Metal (MPS) only; otherwise CPU fallback
 
 **Note**
 
@@ -410,7 +412,7 @@ NCPUtrans                               2
 NCPUfiles                               4
 ChunkSize                               500000
 RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, CuPy-CUDA, PyTorch-CUDA, or MPS (used only when RunMode=GPU)
+GPUBackend                              AUTO                      # AUTO(default): PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 ```
@@ -422,24 +424,16 @@ NCPUtrans                               8
 NCPUfiles                               1
 ChunkSize                               1000000
 RunMode                                 GPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default): CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback
+GPUBackend                              AUTO                      # AUTO(default): PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
 ```
 
 ```bash
 # CUDA policy (NVIDIA)
-# Priority: CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback
+# Priority: PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
 RunMode                                 GPU
 GPUBackend                              CUDA
-GPUBatchLines                           8192
-GPUBatchGrid                            256
-```
-
-```bash
-# Force CuPy CUDA only
-RunMode                                 GPU
-GPUBackend                              CuPy-CUDA
 GPUBatchLines                           8192
 GPUBatchGrid                            256
 ```
@@ -448,6 +442,14 @@ GPUBatchGrid                            256
 # Force PyTorch CUDA only
 RunMode                                 GPU
 GPUBackend                              PyTorch-CUDA
+GPUBatchLines                           8192
+GPUBatchGrid                            256
+```
+
+```bash
+# Force CuPy CUDA only
+RunMode                                 GPU
+GPUBackend                              CuPy-CUDA
 GPUBatchLines                           8192
 GPUBatchGrid                            256
 ```
