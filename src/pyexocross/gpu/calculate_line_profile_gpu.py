@@ -66,6 +66,17 @@ def _safe_nonzero(provider, mod, arr, eps=_EPS):
     return mod.where(mod.abs(arr) > eps, arr, sign * eps)
 
 
+def _backend_atan(mod):
+    """Inverse tangent on the active array module.
+
+    CuPy exposes ``arctan`` but not ``atan``; PyTorch provides ``atan`` (and ``arctan``).
+    """
+    fn = getattr(mod, "atan", None)
+    if fn is not None:
+        return fn
+    return mod.arctan
+
+
 def _cupy_humlicek_profile(cp, dv, alpha, gamma):
     alpha = cp.where(alpha > _EPS, alpha, cp.full_like(alpha, _EPS))
     gamma = cp.where(gamma > _EPS, gamma, cp.full_like(gamma, _EPS))
@@ -396,13 +407,15 @@ def gpu_cross_section(
                 elif kind == 'binned_lorentzian':
                     gamma_safe = _safe_positive(provider, mod, gamma_g)
                     bnorm_g = _to_backend_array(provider, mod, bnorm_np[l0:l1])
+                    _atan = _backend_atan(mod)
                     profile = (
-                        mod.atan((dv + bin_half) / gamma_safe[None, :])
-                        - mod.atan((dv - bin_half) / gamma_safe[None, :])
+                        _atan((dv + bin_half) / gamma_safe[None, :])
+                        - _atan((dv - bin_half) / gamma_safe[None, :])
                     ) * bnorm_g[None, :]
                 elif kind == 'binned_voigt':
                     sigma_safe = _safe_positive(provider, mod, sigma_g)
                     gamma_safe = _safe_positive(provider, mod, gamma_g)
+                    _atan = _backend_atan(mod)
                     # Build quadrature tensors: [g, l, q]
                     roots_g = _to_backend_array(provider, mod, roots)
                     weights_g = _to_backend_array(provider, mod, weights)
@@ -410,15 +423,15 @@ def gpu_cross_section(
                     # bnormq: [l, q]
                     vxsigma = v_g[:, None] + roots_g[None, :] * sigma_safe[:, None]
                     bnormq_den = (
-                        mod.atan((wngrid_end - vxsigma) / gamma_safe[:, None])
-                        - mod.atan((wngrid_start - vxsigma) / gamma_safe[:, None])
+                        _atan((wngrid_end - vxsigma) / gamma_safe[:, None])
+                        - _atan((wngrid_start - vxsigma) / gamma_safe[:, None])
                     )
                     bnormq = 1.0 / _safe_nonzero(provider, mod, bnormq_den)
 
                     dvx = dv[:, :, None] - roots_g[None, None, :] * sigma_safe[None, :, None]
                     lorenz = (
-                        mod.atan((dvx + bin_half) / gamma_safe[None, :, None])
-                        - mod.atan((dvx - bin_half) / gamma_safe[None, :, None])
+                        _atan((dvx + bin_half) / gamma_safe[None, :, None])
+                        - _atan((dvx - bin_half) / gamma_safe[None, :, None])
                     )
                     profile = mod.sum(weights_g[None, None, :] * bnormq[None, :, :] * lorenz, axis=2)
                 else:
