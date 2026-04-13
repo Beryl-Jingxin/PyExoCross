@@ -518,7 +518,8 @@ def print_stick_info(unc_unit, threshold_unit):
     else:
         pass
     print()
-    print('{:25s} : {} {}'.format('Intensity', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission'), stick_unit))
+    print('{:25s} : {}'.format('Intensity', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission')))
+    print('{:25s} : {}'.format('Unit', stick_unit))
     # NLTE_case = (NLTEMethod.replace('L', 'LTE').replace('T', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
     # NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
     #              .replace('T', 'Treanor distribution with Tvib and Trot')
@@ -653,7 +654,8 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
     # Print the parameters information.
     print()
     print('{:25s} : {}'.format('Line profile', profile_label+' profile'))
-    print('{:25s} : {} {}'.format('Cross section', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission'), xsec_unit))
+    print('{:25s} : {}'.format('Cross section', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission')))
+    print('{:25s} : {}'.format('Unit', xsec_unit))
     # NLTE_case = (NLTEMethod.replace('L', 'LTE').replace('T', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
     # NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
     #              .replace('T', 'Treanor distribution with Tvib and Trot')
