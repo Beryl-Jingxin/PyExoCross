@@ -183,9 +183,14 @@ def plot_stick_spectra(stick_spectra_df, T=None, Tvib=None, Trot=None):
         plt.close()
         return
     
+    if abs_emi == 'Ab':
+        stick_y_unit = 'cm/molecule'
+    else:
+        stick_y_unit = 'erg (s molecule sr)⁻¹'
+
     # Debug: Check data ranges
     if len(v_value) > 0 and len(S) > 0:
-        print(f'Info: Plotting stick spectra {len(v_value)} points, v range: [{np.min(v_value):.2f}, {np.max(v_value):.2f}] {wn_wl_unit.replace("um", "μm").replace("cm-1", "cm⁻¹")}, S range: [{np.min(S):.2e}, {np.max(S):.2e}] cm/molecule')
+        print(f'Info: Plotting stick spectra {len(v_value)} points, v range: [{np.min(v_value):.2f}, {np.max(v_value):.2f}] {wn_wl_unit.replace("um", "μm").replace("cm-1", "cm⁻¹")}, S range: [{np.min(S):.2e}, {np.max(S):.2e}] {stick_y_unit}')
     
     # Recalculate y-axis limits based on filtered S if needed
     if PlotStickSpectraMethod == 'LOG':
@@ -196,7 +201,7 @@ def plot_stick_spectra(stick_spectra_df, T=None, Tvib=None, Trot=None):
         max_S_val = max(S) if len(S) > 0 else max(S_original)
         ax.set_ylim([limitYaxisStickSpectra, 1.05*max_S_val])
     
-    ax.set_ylabel('Intensity, cm/molecule')
+    ax.set_ylabel(f'Intensity, {stick_y_unit}')
     # T, Tvib, Trot should be passed as parameters
     T_val = None
     Tvib_val = None

@@ -121,6 +121,12 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
         ts.end()
         # File info printed once by caller
         print('Cross sections file has been saved:', xsec_filepath)
+        
+        if abs_emi == 'Ab':
+            xsec_y_unit = 'cm²/molecule'
+        else:
+            xsec_y_unit = 'erg cm (s molecule sr)⁻¹'
+
         if PlotCrossSectionYN == 'Y':
             print('\nPlotting cross sections ...')
             tp = Timer()
@@ -224,7 +230,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
                     return
                 else:
                     # Debug: Check data ranges
-                    print(f'Info: Plotting cross sections: {len(v_value)} points, v range: [{np.min(v_value):.2f}, {np.max(v_value):.2f}] {wn_wl_unit.replace("um", "μm").replace("cm-1", "cm⁻¹")}, xsec range: [{np.min(xsec_plot):.2e}, {np.max(xsec_plot):.2e}] cm²/molecule, non-zero xsec count: {np.sum(xsec_plot > 0)}')
+                    print(f'Info: Plotting cross sections: {len(v_value)} points, v range: [{np.min(v_value):.2f}, {np.max(v_value):.2f}] {wn_wl_unit.replace("um", "μm").replace("cm-1", "cm⁻¹")}, xsec range: [{np.min(xsec_plot):.2e}, {np.max(xsec_plot):.2e}] {xsec_y_unit}, non-zero xsec count: {np.sum(xsec_plot > 0)}')
             else:
                 print(f'Warning: xsec_plot is empty after filtering. Original xsec length: {len(xsec)}, non-zero xsec count: {np.sum(xsec > 0) if len(xsec) > 0 else 0}. Skipping plot.')
                 plt.close()
@@ -284,7 +290,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
                 else:
                     print(f"Warning: Invalid max_xsec_val ({max_xsec_val}), skipping ylim setting")
             # plt.title(database+' '+data_info[0]+' '+abs_emi+' Cross-Section with '+ profile_label)
-            plt.ylabel('Cross-section, cm²/molecule')
+            plt.ylabel(f'Cross-section, {xsec_y_unit}')
             plt.legend()
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():
@@ -354,6 +360,12 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
         ts.end()
         # File info printed once by caller
         print('Cross sections file has been saved:', xsec_filepath)       
+        
+        if abs_emi == 'Ab':
+            xsec_y_unit = 'cm²/molecule'
+        else:
+            xsec_y_unit = 'erg cm (s molecule sr)⁻¹'
+
         if PlotCrossSectionYN == 'Y':
             print('\nPlotting cross sections ...')
             tp = Timer()
@@ -391,6 +403,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
                 v_value = 1e7/wn
             else:
                 raise ValueError('Please wirte the unit of wavelength in the input file: um or nm.')   
+
             if NLTEMethod == 'L' or NLTEMethod == 'P':
                 label_str = f'T = {T} K, {profile_label}' if T is not None else f'T = {min(T_list)}-{max(T_list)} K, {profile_label}'
                 plt.plot(v_value, xsec, label=label_str, linewidth=0.4)  
@@ -423,7 +436,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
                 plt.ylim([limitYaxisXsec, 1.05*max(xsec)])
             #plt.title(database+' '+data_info[0]+' '+abs_emi+' Cross-Section with '+ profile_label) 
             plt.xlabel(plot_unit_str)
-            plt.ylabel('Cross-section, cm²/molecule')
+            plt.ylabel(f'Cross-section, {xsec_y_unit}')
             plt.legend()
             leg = plt.legend()                  # Get the legend object.
             for line in leg.get_lines():

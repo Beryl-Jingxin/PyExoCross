@@ -428,7 +428,12 @@ def print_conversion_info(ConversionMinFreq, ConversionMaxFreq, GlobalQNLabel_li
         pass
     # If threshold filter is applied, print the threshold filter information.
     if ConversionThreshold != 'None':
-        print('{:25s} : {:<6} {}'.format('Threshold filter', ConversionThreshold, 'cm/molecule'))
+        from pyexocross.core import abs_emi
+        if abs_emi == 'Ab':
+            threshold_unit = 'cm/molecule'
+        else:
+            threshold_unit = 'erg (s molecule sr)⁻¹'
+        print('{:25s} : {:<6} {}'.format('Threshold filter', ConversionThreshold, threshold_unit))
     else:
         pass
     print()
@@ -500,13 +505,20 @@ def print_stick_info(unc_unit, threshold_unit):
         print('{:25s} : {:<6} {}'.format('Uncertainty filter', UncFilter, unc_unit))
     else:
         pass
+    
+    # Set the units for threshold based on the absorption or emission
+    if abs_emi == 'Ab':
+        stick_unit = 'cm/molecule'
+    else:
+        stick_unit = 'erg (s molecule sr)⁻¹'
+        
     # If threshold filter is applied, print the threshold filter information.
     if threshold != 'None':
-        print('{:25s} : {:<6} {}'.format('Threshold filter', threshold, threshold_unit))
+        print('{:25s} : {:<6} {}'.format('Threshold filter', threshold, stick_unit))
     else:
         pass
     print()
-    print('{:25s} : {}'.format('Intensity', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission')))
+    print('{:25s} : {} {}'.format('Intensity', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission'), stick_unit))
     # NLTE_case = (NLTEMethod.replace('L', 'LTE').replace('T', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
     # NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
     #              .replace('T', 'Treanor distribution with Tvib and Trot')
@@ -624,6 +636,15 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
         print('{:25s} : {:<6} {}'.format('Uncertainty filter', UncFilter, unc_unit))
     else:
         pass
+    
+    # Set the units for threshold and cross section based on the absorption or emission
+    if abs_emi == 'Ab':
+        threshold_unit = 'cm/molecule'
+        xsec_unit = 'cm²/molecule'
+    else:
+        threshold_unit = 'erg (s molecule sr)⁻¹'
+        xsec_unit = 'erg cm (s molecule sr)⁻¹'
+    
     # If threshold filter is applied, print the threshold filter information.
     if threshold != 'None':
         print('{:25s} : {:<6} {}'.format('Threshold filter', threshold, threshold_unit))
@@ -632,7 +653,7 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
     # Print the parameters information.
     print()
     print('{:25s} : {}'.format('Line profile', profile_label+' profile'))
-    print('{:25s} : {}'.format('Intensity', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission')))
+    print('{:25s} : {} {}'.format('Cross section', abs_emi.replace('Ab', 'Absorption').replace('Em', 'Emission'), xsec_unit))
     # NLTE_case = (NLTEMethod.replace('L', 'LTE').replace('T', 'Non-LTE').replace('D','Non-LTE').replace('P','Non-LTE'))
     # NLTE_desc = (NLTEMethod.replace('L', 'Boltzmann distribution')
     #              .replace('T', 'Treanor distribution with Tvib and Trot')
