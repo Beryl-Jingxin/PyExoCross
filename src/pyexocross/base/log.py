@@ -423,12 +423,12 @@ def print_conversion_info(ConversionMinFreq, ConversionMaxFreq, GlobalQNLabel_li
         pass
     # If uncertainty filter is applied, print the uncertainty filter information.
     if ConversionUnc != 'None':
-        print('{:25s} : {:<6}'.format('Uncertainty filter', ConversionUnc), 'cm⁻¹')
+        print('{:25s} : {:<6} {}'.format('Uncertainty filter', ConversionUnc, 'cm⁻¹'))
     else:
         pass
     # If threshold filter is applied, print the threshold filter information.
     if ConversionThreshold != 'None':
-        print('{:25s} : {:<6}'.format('Threshold filter', ConversionThreshold), 'cm/molecule')
+        print('{:25s} : {:<6} {}'.format('Threshold filter', ConversionThreshold, 'cm/molecule'))
     else:
         pass
     print()
@@ -497,12 +497,12 @@ def print_stick_info(unc_unit, threshold_unit):
             pass
     # If uncertainty filter is applied, print the uncertainty filter information.
     if UncFilter != 'None':
-        print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), unc_unit)
+        print('{:25s} : {:<6} {}'.format('Uncertainty filter', UncFilter, unc_unit))
     else:
         pass
     # If threshold filter is applied, print the threshold filter information.
     if threshold != 'None':
-        print('{:25s} : {:<6}'.format('Threshold filter', threshold), threshold_unit)
+        print('{:25s} : {:<6} {}'.format('Threshold filter', threshold, threshold_unit))
     else:
         pass
     print()
@@ -521,12 +521,12 @@ def print_stick_info(unc_unit, threshold_unit):
         print('{:25s} : {}'.format('Non-LTE', 'Custom vibrational density nvib and Trot'))
     elif NLTEMethod == 'P':
         print('{:25s} : {}'.format('Non-LTE', 'Custom rovibrational population'))
-    print('{:25s} : {:<6}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
+    print('{:25s} : {:<6} {}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
     if NLTEMethod == 'T':
-        print('{:25s} : {:<6}'.format('Vibrational temperatures', str(sorted(list(set(Tvib_list)))), 'K'))
-        print('{:25s} : {:<6}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
+        print('{:25s} : {:<6} {}'.format('Vibrational temperatures', str(sorted(list(set(Tvib_list)))), 'K'))
+        print('{:25s} : {:<6} {}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
     elif NLTEMethod == 'D':
-        print('{:25s} : {:<6}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
+        print('{:25s} : {:<6} {}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
     elif NLTEMethod == 'P':
         pass
     if wn_wl == 'WN':
@@ -621,12 +621,12 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
             pass
     # If uncertainty filter is applied, print the uncertainty filter information.
     if UncFilter != 'None':
-        print('{:25s} : {:<6}'.format('Uncertainty filter', UncFilter), unc_unit)
+        print('{:25s} : {:<6} {}'.format('Uncertainty filter', UncFilter, unc_unit))
     else:
         pass
     # If threshold filter is applied, print the threshold filter information.
     if threshold != 'None':
-        print('{:25s} : {:<6}'.format('Threshold filter', threshold), threshold_unit)
+        print('{:25s} : {:<6} {}'.format('Threshold filter', threshold, threshold_unit))
     else:
         pass
     # Print the parameters information.
@@ -647,31 +647,31 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
         print('{:25s} : {}'.format('Non-LTE', 'Custom vibrational density nvib and Trot'))
     elif NLTEMethod == 'P':
         print('{:25s} : {}'.format('Non-LTE', 'Custom rovibrational population'))
-    print('{:25s} : {:<6}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
+    print('{:25s} : {:<6} {}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
     if NLTEMethod == 'T':
-        print('{:25s} : {:<6}'.format('Vibrational temperatures', str(sorted(list(set(Tvib_list)))), 'K'))
-        print('{:25s} : {:<6}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
+        print('{:25s} : {:<6} {}'.format('Vibrational temperatures', str(sorted(list(set(Tvib_list)))), 'K'))
+        print('{:25s} : {:<6} {}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
     elif NLTEMethod == 'D':
-        print('{:25s} : {:<6}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
+        print('{:25s} : {:<6} {}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
     elif NLTEMethod == 'P':
         pass
-    print('{:25s} : {:<6}'.format('Pressures', str(P_list)), 'bar')
+    print('{:25s} : {:<6} {}'.format('Pressures', str(P_list), 'bar'))
     if wn_wl == 'WN':
         print('{:25s} : {} {} {} {} {}'.format('Wavenumber range selected', min_wn, unc_unit, '-', max_wn, unc_unit))
-        print('{:25s} : {:<6}'.format('Bin size', bin_size), unc_unit)
+        print('{:25s} : {:<6} {}'.format('Bin size', bin_size, unc_unit))
     elif wn_wl == 'WL' and wn_wl_unit == 'um':
         print('{:25s} : {} {} {} {} {}'.format('Wavelength range selected', min_wnl, 'μm', '-', max_wnl, 'μm'))
-        print('{:25s} : {:<6}'.format('Bin size', bin_size), 'μm')
+        print('{:25s} : {:<6} {}'.format('Bin size', bin_size, 'μm'))
     elif wn_wl == 'WL' and wn_wl_unit == 'nm':
         print('{:25s} : {} {} {} {} {}'.format('Wavelength range selected', min_wnl, 'nm', '-', max_wnl, 'nm'))
-        print('{:25s} : {:<6}'.format('Bin size', bin_size), 'nm')
+        print('{:25s} : {:<6} {}'.format('Bin size', bin_size, 'nm'))
     else:
         raise ValueError("Please type the correct wavenumber or wavelength choice 'wn' or 'wl' into the input file and give the unit of wavelength in the input file.")
     print('{:25s} : {:<6}'.format('Number of points', N_point))
     if cutoff != 'None':
-        print('{:25s} : {:<6}'.format('Wing cutoff', cutoff), unc_unit)
+        print('{:25s} : {:<6} {}'.format('Wing cutoff', cutoff, unc_unit))
     else:
-        print('{:25s} : {:<6}'.format('Wing cutoff', 'None'), unc_unit)
+        print('{:25s} : {:<6} {}'.format('Wing cutoff', 'None', unc_unit))
     if predissocYN == 'Y':
         print('{:25s} : {}'.format('Predissociation', 'Yes'))
     else:
