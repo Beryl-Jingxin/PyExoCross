@@ -57,7 +57,7 @@ def process_exomol_cooling_func_chunk(states_df,Ts,trans_df):
         Cooling function array, shape (n_temps,)
     """
     # Import legacy-style configuration variables from core (set via Config.to_globals()).
-    from pyexocross.core import read_path, data_info, Tmax 
+    from pyexocross.core import ncputrans, read_path, data_info, Tmax 
 
     # Optimized: use indexed lookup instead of two merges to reduce memory
     if isinstance(states_df, dd.DataFrame):

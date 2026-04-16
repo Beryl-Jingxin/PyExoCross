@@ -31,7 +31,7 @@ Functions
 - ``px.stick_spectra_cross_section(...)``   -- Stick spectra and Cross section calculation simultaneously
 """
 
-__version__ = "1.1.0.dev10"
+__version__ = "1.1.0.dev11"
 
 from pyexocross.api import (
     # Run from .inp file
