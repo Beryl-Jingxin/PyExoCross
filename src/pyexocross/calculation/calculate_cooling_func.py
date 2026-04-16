@@ -13,7 +13,7 @@ from ..gpu.calculate_cooling_func_gpu import gpu_cal_cooling_func
 # Calculate Cooling Function
 def cal_cooling_func(A, v, Ep, gp, T, Q):
     """
-    Calculate the cooling function at a given temperature.
+    Calculate the cooling function at one or more temperatures.
 
     cooling_func = sum(A * h * c * v * gp * exp(-c2 * Ep / T)) / (4 * pi * Q)
 
