@@ -97,10 +97,13 @@ def process_exomol_cooling_func_chunk(states_df,Ts,trans_df):
     
     num = len(v)
     if num > 0:
-        with _executor_context(max_workers=ncputrans) as executor:
-            futures = [executor.submit(cal_cooling_func, A, v, Ep, gp, T_val, Q_val)
-                    for T_val, Q_val in log_tqdm(zip(Ts, Qs), desc='Calculating')]
-            cooling_func = [future.result() for future in futures] 
+        # with _executor_context(max_workers=ncputrans) as executor:
+        #     futures = [executor.submit(cal_cooling_func, A, v, Ep, gp, T_val, Q_val)
+        #             for T_val, Q_val in log_tqdm(zip(Ts, Qs), desc='Calculating')]
+        #     cooling_func = [future.result() for future in futures] 
+            
+        cooling_func = cal_cooling_func(A, v, Ep, gp, Ts, Qs)
+            
     else:
         cooling_func = np.zeros(len(Ts))
     return cooling_func
