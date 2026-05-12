@@ -49,12 +49,12 @@ def process_exomol_oscillator_strength_chunk(states_df,trans_df):
     states_df : pd.DataFrame
         States DataFrame with 'id', 'E', 'g' columns
     trans_df : pd.DataFrame
-        Transition DataFrame chunk with columns ['u', 'l', 'A']
+        Transition DataFrame chunk with columns ['uid', 'lid', 'A']
 
     Returns
     -------
     pd.DataFrame
-        DataFrame with columns: u, l, os (oscillator strength), v (wavenumber)
+        DataFrame with columns: uid, lid, os (oscillator strength), v (wavenumber)
     """
     # Optimized: use indexed lookup instead of two merges to reduce memory
     if isinstance(states_df, dd.DataFrame):
@@ -66,38 +66,38 @@ def process_exomol_oscillator_strength_chunk(states_df,trans_df):
     states_indexed = states_df.set_index('id')
     
     # Filter trans_df to only include transitions where both states exist
-    valid_mask = trans_df['u'].isin(states_indexed.index) & trans_df['l'].isin(states_indexed.index)
+    valid_mask = trans_df['uid'].isin(states_indexed.index) & trans_df['lid'].isin(states_indexed.index)
     trans_df = trans_df[valid_mask]
     
     if len(trans_df) == 0:
-        return pd.DataFrame(columns=['u','l','os','v'])
+        return pd.DataFrame(columns=['uid','lid','os','v'])
     
     # Use vectorized lookup instead of merge (much faster and less memory)
-    Ep = states_indexed.loc[trans_df['u'], 'E'].values
-    Epp = states_indexed.loc[trans_df['l'], 'E'].values
-    gp = states_indexed.loc[trans_df['u'], 'g'].values
-    gpp = states_indexed.loc[trans_df['l'], 'g'].values
+    Ep = states_indexed.loc[trans_df['uid'], 'E'].values
+    Epp = states_indexed.loc[trans_df['lid'], 'E'].values
+    gp = states_indexed.loc[trans_df['uid'], 'g'].values
+    gpp = states_indexed.loc[trans_df['lid'], 'g'].values
     A = trans_df['A'].values
     
     v = cal_v(Ep, Epp)
     # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
     valid_v_mask = v >= 0
     if not valid_v_mask.any():
-        return pd.DataFrame(columns=['u','l','os','v'])
+        return pd.DataFrame(columns=['uid','lid','os','v'])
     
     # Apply filter to all arrays
     gp = gp[valid_v_mask]
     gpp = gpp[valid_v_mask]
     A = A[valid_v_mask]
     v = v[valid_v_mask]
-    u_values = trans_df['u'].values[valid_v_mask]
-    l_values = trans_df['l'].values[valid_v_mask]
+    u_values = trans_df['uid'].values[valid_v_mask]
+    l_values = trans_df['lid'].values[valid_v_mask]
     
     oscillator_strength = cal_oscillator_strength(gp, gpp, A, v)
     
     oscillator_strength_df = pd.DataFrame({
-        'u': u_values,
-        'l': l_values,
+        'uid': u_values,
+        'lid': l_values,
         'os': oscillator_strength,
         'v': v
     })
@@ -127,7 +127,7 @@ def process_exomol_oscillator_strength(states_df, trans_filepath):
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
-    use_names = ['u','l','A']
+    use_names = ['uid','lid','A']
     large_file = is_large_trans_file(trans_filepath)
     trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
     desc = 'Processing ' + trans_filename + (' (streaming)' if large_file else '')
@@ -141,11 +141,11 @@ def process_exomol_oscillator_strength(states_df, trans_filepath):
         if result_frames:
             oscillator_strength_df = pd.concat(result_frames, ignore_index=True)
         else:
-            oscillator_strength_df = pd.DataFrame(columns=['u','l','os','v'])
+            oscillator_strength_df = pd.DataFrame(columns=['uid','lid','os','v'])
     else:
         trans_chunks = list(trans_reader)
         if len(trans_chunks) == 0:
-            oscillator_strength_df = pd.DataFrame(columns=['u','l','os','v'])
+            oscillator_strength_df = pd.DataFrame(columns=['uid','lid','os','v'])
         else:
             with _executor_context(max_workers=ncputrans) as trans_executor:
                 futures = [trans_executor.submit(process_exomol_oscillator_strength_chunk, states_df, chunk)
@@ -157,7 +157,7 @@ def process_exomol_oscillator_strength(states_df, trans_filepath):
                 if chunk_frames:
                     oscillator_strength_df = pd.concat(chunk_frames, ignore_index=True)
                 else:
-                    oscillator_strength_df = pd.DataFrame(columns=['u','l','os','v'])
+                    oscillator_strength_df = pd.DataFrame(columns=['uid','lid','os','v'])
     return oscillator_strength_df
 
 def save_exomol_oscillator_strength(states_df):
@@ -200,7 +200,7 @@ def save_exomol_oscillator_strength(states_df):
         if result_frames:
             oscillator_strength_df = pd.concat(result_frames, ignore_index=True)
         else:
-            oscillator_strength_df = pd.DataFrame(columns=['u','l','os','v'])
+            oscillator_strength_df = pd.DataFrame(columns=['uid','lid','os','v'])
     oscillator_strength_df.sort_values(by=['v'], ascending=True, inplace=True)  
     # oscillator_strength_df  = oscillator_strength_df.sort_values('v').reset_index(drop=True)
     tot.end()

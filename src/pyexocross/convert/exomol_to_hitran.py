@@ -198,7 +198,7 @@ def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
     states_unc_df : pd.DataFrame
         States DataFrame with uncertainty filtering applied
     trans_part_df : pd.DataFrame
-        Transition DataFrame chunk with columns ['u', 'l', 'A']
+        Transition DataFrame chunk with columns ['uid', 'lid', 'A']
 
     Returns
     -------
@@ -222,15 +222,15 @@ def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
     states_indexed = states_unc_df.set_index('id')
     
     # Filter trans_df to only include transitions where both states exist
-    valid_mask = trans_part_df['u'].isin(states_indexed.index) & trans_part_df['l'].isin(states_indexed.index)
+    valid_mask = trans_part_df['uid'].isin(states_indexed.index) & trans_part_df['lid'].isin(states_indexed.index)
     trans_part_df = trans_part_df[valid_mask]
     
     if len(trans_part_df) == 0:
         return (pd.DataFrame(), pd.Series(dtype=float), np.array([]), np.array([]), np.array([]), np.array([]), np.array([]))
     
     # Get upper and lower state data using vectorized lookup
-    u_states = states_indexed.loc[trans_part_df['u']].reset_index(drop=True)
-    l_states = states_indexed.loc[trans_part_df['l']].reset_index(drop=True)
+    u_states = states_indexed.loc[trans_part_df['uid']].reset_index(drop=True)
+    l_states = states_indexed.loc[trans_part_df['lid']].reset_index(drop=True)
     
     # Rename columns with suffixes (id column is already dropped by reset_index)
     u_states.columns = [col + "'" for col in u_states.columns]
@@ -495,7 +495,7 @@ def process_exomol2hitran_linelist(states_df, trans_filepath):
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
-    use_names = ['u','l','A']
+    use_names = ['uid','lid','A']
     large_file = is_large_trans_file(trans_filepath)
     trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
     desc = 'Processing ' + trans_filename + (' (limited streaming)' if large_file else '')

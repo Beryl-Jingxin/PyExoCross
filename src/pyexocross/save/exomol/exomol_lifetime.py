@@ -57,7 +57,7 @@ def process_exomol_lifetime(states_df, trans_filepath):
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
-    use_names = ['u','l','A']
+    use_names = ['uid','lid','A']
     trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
     desc = 'Processing ' + trans_filename
     trans_chunks = list(trans_reader)

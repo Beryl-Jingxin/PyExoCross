@@ -219,7 +219,7 @@ def get_results(config):
                     trans_filename = trans_filepath.split('/')[-1]
                     print('Processing transitions file for predissociation lifetime:', trans_filename)
                     use_cols = [0, 1, 2]
-                    use_names = ['u', 'l', 'A']
+                    use_names = ['uid', 'lid', 'A']
                     trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
                     trans_chunks = list(trans_reader)
                     if len(trans_chunks) == 0:

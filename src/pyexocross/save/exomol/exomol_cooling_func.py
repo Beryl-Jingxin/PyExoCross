@@ -49,7 +49,7 @@ def process_exomol_cooling_func_chunk(states_df,Ts,trans_df):
     Ts : np.ndarray
         Temperature array
     trans_df : pd.DataFrame
-        Transition DataFrame chunk with columns ['u', 'l', 'A']
+        Transition DataFrame chunk with columns ['uid', 'lid', 'A']
 
     Returns
     -------
@@ -69,16 +69,16 @@ def process_exomol_cooling_func_chunk(states_df,Ts,trans_df):
     states_indexed = states_df.set_index('id')
     
     # Filter trans_df to only include transitions where both states exist
-    valid_mask = trans_df['u'].isin(states_indexed.index) & trans_df['l'].isin(states_indexed.index)
+    valid_mask = trans_df['uid'].isin(states_indexed.index) & trans_df['lid'].isin(states_indexed.index)
     trans_df = trans_df[valid_mask]
     
     if len(trans_df) == 0:
         return np.zeros(len(Ts))
     
     # Use vectorized lookup instead of merge (much faster and less memory)
-    Ep = states_indexed.loc[trans_df['u'], 'E'].values
-    Epp = states_indexed.loc[trans_df['l'], 'E'].values
-    gp = states_indexed.loc[trans_df['u'], 'g'].values
+    Ep = states_indexed.loc[trans_df['uid'], 'E'].values
+    Epp = states_indexed.loc[trans_df['lid'], 'E'].values
+    gp = states_indexed.loc[trans_df['uid'], 'g'].values
     A = trans_df['A'].values
     
     v = cal_v(Ep, Epp)
@@ -134,7 +134,7 @@ def process_exomol_cooling_func(states_df, Ts, trans_filepath):
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
-    use_names = ['u','l','A']
+    use_names = ['uid','lid','A']
     large_file = is_large_trans_file(trans_filepath)
     trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
     desc = 'Processing ' + trans_filename + (' (streaming)' if large_file else '')

@@ -65,9 +65,9 @@ def read_all_trans(read_path):
             all_trans_df = pd.concat([all_trans_df,chunk])
     ncolumn = len(all_trans_df.columns)
     if ncolumn == 3: 
-        trans_col_name={0:'u', 1:'l', 2:'A'}
+        trans_col_name={0:'uid', 1:'lid', 2:'A'}
     else:
-        trans_col_name={0:'u', 1:'l', 2:'A', 3:'v'}
+        trans_col_name={0:'uid', 1:'lid', 2:'A', 3:'v'}
     all_trans_df = all_trans_df.rename(columns=trans_col_name)                
     print('Finished reading all transitions!\n')                         
     return(all_trans_df, ncolumn)
@@ -79,20 +79,20 @@ def cal_v(Ep, Epp):
 states_df = read_all_states(read_path)
 (all_trans_df, ncolumn) = read_all_trans(read_path)
     
-id_u = all_trans_df['u'].values
-id_l = all_trans_df['l'].values
+id_u = all_trans_df['uid'].values
+id_l = all_trans_df['lid'].values
 states_df['id'] = pd.to_numeric(states_df['id'])
 states_df.set_index(['id'], inplace=True, drop=False)
 id_s = states_df['id']
-all_trans_df.set_index(['u'], inplace=True, drop=False)
+all_trans_df.set_index(['uid'], inplace=True, drop=False)
 id_us = list(set(id_u).intersection(set(id_s)))
 trans_us_df = all_trans_df.loc[id_us]
-id_l = trans_us_df['l'].values
+id_l = trans_us_df['lid'].values
 id_ls = list(set(id_l).intersection(set(id_s)))
-trans_us_df.set_index(['l'], inplace=True, drop=False)
+trans_us_df.set_index(['lid'], inplace=True, drop=False)
 trans_s_df = trans_us_df.loc[id_ls]
-id_su = trans_s_df['u'].values
-id_sl = trans_s_df['l'].values
+id_su = trans_s_df['uid'].values
+id_sl = trans_s_df['lid'].values
 states_u_df = states_df.loc[id_su]
 states_l_df = states_df.loc[id_sl]
 
@@ -109,7 +109,7 @@ else:
 
 trans_s_df['v'] = v
 trans_s_df.sort_values('v',inplace=True)
-trans_s_df3 = trans_s_df[['u','l','A']]
+trans_s_df3 = trans_s_df[['uid','lid','A']]
 
 trans_path = (read_path + molecule + '/' + isotopologue + '/' + dataset + '/' + 
               isotopologue + '__' + dataset + '.trans.bz2')

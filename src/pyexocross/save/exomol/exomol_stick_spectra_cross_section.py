@@ -228,16 +228,16 @@ def save_exomol_stick_spectra_cross_section(
     # Determine columns needed for cross sections
     if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
         use_cols_xsec = [0,1,2,alpha_hwhm_colid, gamma_hwhm_colid]
-        use_names_xsec = ['u','l','A','alpha_hwhm', 'gamma_hwhm']
+        use_names_xsec = ['uid','lid','A','alpha_hwhm', 'gamma_hwhm']
     elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
         use_cols_xsec = [0,1,2,alpha_hwhm_colid]
-        use_names_xsec = ['u','l','A','alpha_hwhm']
+        use_names_xsec = ['uid','lid','A','alpha_hwhm']
     elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
         use_cols_xsec = [0,1,2,gamma_hwhm_colid]
-        use_names_xsec = ['u','l','A','gamma_hwhm']
+        use_names_xsec = ['uid','lid','A','gamma_hwhm']
     else:
         use_cols_xsec = [0,1,2]
-        use_names_xsec = ['u','l','A']
+        use_names_xsec = ['uid','lid','A']
     
     # Check if profile is pressure-dependent (Lorentzian/Voigt need pressure)
     pressure_dependent = profile_label not in ['Gaussian', 'Doppler']
@@ -286,7 +286,7 @@ def save_exomol_stick_spectra_cross_section(
         if not large_file:
             # Cache chunks for small files
             use_cols_ss = [0,1,2]
-            use_names_ss = ['u','l','A']
+            use_names_ss = ['uid','lid','A']
             trans_reader_ss = read_trans_chunks(trans_filepath, use_cols_ss, use_names_ss)
             trans_chunks_cache_ss[trans_filepath] = list(trans_reader_ss)
             num_chunks_ss = len(trans_chunks_cache_ss[trans_filepath])

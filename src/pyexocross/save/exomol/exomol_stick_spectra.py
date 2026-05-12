@@ -66,7 +66,7 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
     Q_arr : np.ndarray
         Partition function array, shape (n_temps,)
     trans_part_df : pd.DataFrame
-        Transition DataFrame chunk with columns ['u', 'l', 'A']
+        Transition DataFrame chunk with columns ['uid', 'lid', 'A']
     temp_idx : int, optional
         Temperature index to process single temperature (for memory efficiency)
 
@@ -97,7 +97,7 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
     states_indexed = states_part_df.set_index('id')
     
     # Filter trans_df to only include transitions where both states exist
-    valid_mask = trans_part_df['u'].isin(states_indexed.index) & trans_part_df['l'].isin(states_indexed.index)
+    valid_mask = trans_part_df['uid'].isin(states_indexed.index) & trans_part_df['lid'].isin(states_indexed.index)
     trans_part_df = trans_part_df[valid_mask]
     
     if len(trans_part_df) == 0:
@@ -111,8 +111,8 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
         return pd.DataFrame(columns=col_stick_spectra)
     
     # Get upper and lower state data using vectorized lookup
-    u_states = states_indexed.loc[trans_part_df['u']].reset_index(drop=True)
-    l_states = states_indexed.loc[trans_part_df['l']].reset_index(drop=True)
+    u_states = states_indexed.loc[trans_part_df['uid']].reset_index(drop=True)
+    l_states = states_indexed.loc[trans_part_df['lid']].reset_index(drop=True)
     
     # Rename columns with suffixes (id column is already dropped by reset_index)
     u_states.columns = [col + "'" for col in u_states.columns]
@@ -191,7 +191,7 @@ def process_exomol_stick_spectra(states_part_df,T_list,Tvib_list,Trot_list,Q_arr
     trans_filename = trans_filepath.split('/')[-1]
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
-    use_names = ['u','l','A']
+    use_names = ['uid','lid','A']
     large_file = is_large_trans_file(trans_filepath)
     trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
     desc = 'Processing ' + trans_filename + (' (limited streaming)' if large_file else '')

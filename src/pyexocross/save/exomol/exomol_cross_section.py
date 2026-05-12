@@ -146,15 +146,15 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
     states_indexed = states_part_df.set_index('id')
     
     # Filter trans_df to only include transitions where both states exist
-    valid_mask = trans_part_df['u'].isin(states_indexed.index) & trans_part_df['l'].isin(states_indexed.index)
+    valid_mask = trans_part_df['uid'].isin(states_indexed.index) & trans_part_df['lid'].isin(states_indexed.index)
     trans_part_df = trans_part_df[valid_mask]
     
     if len(trans_part_df) == 0:
         return np.zeros_like(wn_grid)
     
     # Get upper and lower state data using vectorized lookup
-    u_states = states_indexed.loc[trans_part_df['u']].reset_index(drop=True)
-    l_states = states_indexed.loc[trans_part_df['l']].reset_index(drop=True)
+    u_states = states_indexed.loc[trans_part_df['uid']].reset_index(drop=True)
+    l_states = states_indexed.loc[trans_part_df['lid']].reset_index(drop=True)
     
     # Rename columns with suffixes (id column is already dropped by reset_index)
     u_states.columns = [col + "'" for col in u_states.columns]
@@ -396,16 +396,16 @@ def process_exomol_cross_section(states_part_df,T_list,Tvib_list,Trot_list,P,Q_a
     print('Processeing transitions file:', trans_filename)
     if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
         use_cols = [0,1,2,alpha_hwhm_colid, gamma_hwhm_colid]
-        use_names = ['u','l','A','alpha_hwhm', 'gamma_hwhm']
+        use_names = ['uid','lid','A','alpha_hwhm', 'gamma_hwhm']
     elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
         use_cols = [0,1,2,alpha_hwhm_colid]
-        use_names = ['u','l','A','alpha_hwhm']
+        use_names = ['uid','lid','A','alpha_hwhm']
     elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
         use_cols = [0,1,2,gamma_hwhm_colid]
-        use_names = ['u','l','A','gamma_hwhm']
+        use_names = ['uid','lid','A','gamma_hwhm']
     else:
         use_cols = [0,1,2]
-        use_names = ['u','l','A']
+        use_names = ['uid','lid','A']
     large_file = is_large_trans_file(trans_filepath)
     trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
     desc = 'Processing ' + trans_filename + (' (streaming)' if large_file else '')

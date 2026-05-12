@@ -109,18 +109,18 @@ def convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df):
     upper_QNlabel = list(hitran2exomol_upper_df.columns[5:])
     upper_idAv = hitran2exomol_upper_df.merge(hitran2exomol_states_id, on=['g']+upper_QNlabel, how='inner').drop(columns=upper_QNlabel)
     upper_idAv['diffE'] = np.abs(upper_idAv['E_x']-upper_idAv['E_y'])
-    upper_AvEid = upper_idAv.loc[upper_idAv.groupby(['v'])['diffE'].idxmin()][['id','A','v','E_y']].rename(columns={'id':'u','E_y':'Ep'})
+    upper_AvEid = upper_idAv.loc[upper_idAv.groupby(['v'])['diffE'].idxmin()][['id','A','v','E_y']].rename(columns={'id':'uid','E_y':'Ep'})
 
     lower_QNlabel = list(hitran2exomol_lower_df.columns[5:])
     lower_idAv = hitran2exomol_lower_df.merge(hitran2exomol_states_id, on=['g']+lower_QNlabel, how='inner').drop(columns=lower_QNlabel)
     lower_idAv['diffE'] = np.abs(lower_idAv['E_x']-lower_idAv['E_y'])
-    lower_AvEid = lower_idAv.loc[lower_idAv.groupby(['v'])['diffE'].idxmin()][['id','A','v','E_y',]].rename(columns={'id':'l','E_y':'Epp'})
+    lower_AvEid = lower_idAv.loc[lower_idAv.groupby(['v'])['diffE'].idxmin()][['id','A','v','E_y',]].rename(columns={'id':'lid','E_y':'Epp'})
 
     hitran2exomol_idAv = upper_AvEid.merge(lower_AvEid, on=['v'], how='inner').drop(columns=['A_y']).rename(columns={'A_x':'A','v':'v_x'})
     hitran2exomol_idAv['v'] = hitran2exomol_idAv['Ep']-hitran2exomol_idAv['Epp']
-    diff = hitran2exomol_idAv[['u','l','A','v','v_x']].copy()
+    diff = hitran2exomol_idAv[['uid','lid','A','v','v_x']].copy()
     diff.loc[:, 'diffv'] = np.abs(diff['v_x'] - diff['v'])
-    hitran2exomol_trans_df = diff.loc[diff.groupby(['v'])['diffv'].idxmin()][['u','l','A','v']].sort_values('v')
+    hitran2exomol_trans_df = diff.loc[diff.groupby(['v'])['diffv'].idxmin()][['uid','lid','A','v']].sort_values('v')
     
     # States
     hitran2exomol_states_df = convert_QNValues_hitran2exomol(hitran2exomol_states_id, GlobalQNLabel_list, LocalQNLabel_list)
@@ -221,7 +221,7 @@ def conversion_trans(hitran2exomol_trans_df, conversion_folder):
     trans_format = "%12d %12d %10.4e %15.6f"
     save_large_txt(conversion_trans_path, hitran2exomol_trans_df, fmt=trans_format)
     t.end()
-    print_file_info('Converted ExoMol transitions', ['u', 'l', 'A', 'v'], ['%12d', '%12d', '%10.4e', '%15.6f'])
+    print_file_info('Converted ExoMol transitions', ['uid', 'lid', 'A', 'v'], ['%12d', '%12d', '%10.4e', '%15.6f'])
     print('Converted transitions file has been saved:', conversion_trans_path)
     print('Converted transitions file has been saved!\n')  
     
