@@ -57,8 +57,8 @@ px.cross_sections(
 |---|---|---|
 | `AUTO` | Recommended automatic mode | `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU` |
 | `CUDA` | CUDA policy mode | `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU` |
-| `CuPy-CUDA` | Force CuPy CUDA only | `CuPy-CUDA -> CPU` |
 | `PyTorch-CUDA` | Force PyTorch CUDA only | `PyTorch-CUDA -> CPU` |
+| `CuPy-CUDA` | Force CuPy CUDA only | `CuPy-CUDA -> CPU` |
 | `MPS` | Force Apple Metal backend | `MPS -> CPU` |
 
 Notes:

@@ -20,23 +20,15 @@ COMPUTE_GPU_AUTO = dict(
     ncpufiles=1,
     chunk_size=100000,
     run_mode='GPU',
-    gpu_backend='AUTO',      # CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback
+    gpu_backend='AUTO',      # PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
     gpu_batch_lines=8192,    # memory-control knob
     gpu_batch_grid=256,      # memory-control knob
 )
 
-# GPU (CUDA policy: CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback)
+# GPU (CUDA policy: PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback)
 COMPUTE_GPU_CUDA = dict(
     run_mode='GPU',
     gpu_backend='CUDA',
-    gpu_batch_lines=8192,
-    gpu_batch_grid=256,
-)
-
-# GPU (force CuPy CUDA only)
-COMPUTE_GPU_CUPY = dict(
-    run_mode='GPU',
-    gpu_backend='CuPy-CUDA',
     gpu_batch_lines=8192,
     gpu_batch_grid=256,
 )
@@ -49,7 +41,15 @@ COMPUTE_GPU_TORCH = dict(
     gpu_batch_grid=256,
 )
 
-# GPU (force MPS)
+# GPU (force CuPy CUDA only)
+COMPUTE_GPU_CUPY = dict(
+    run_mode='GPU',
+    gpu_backend='CuPy-CUDA',
+    gpu_batch_lines=8192,
+    gpu_batch_grid=256,
+)
+
+# GPU (force PyTorch MPS)
 COMPUTE_GPU_MPS = dict(
     run_mode='GPU',
     gpu_backend='MPS',

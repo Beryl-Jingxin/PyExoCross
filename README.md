@@ -118,9 +118,9 @@ When using API kwargs, the equivalent parameters are `run_mode`,
 
 Runtime packages (optional):
 
-- CUDA: install `cupy` (preferred) or `torch` with CUDA support.
+- CUDA: install `torch` (preferred) or `cupy` with CUDA support.
 
-**Note: macOS MPS GPU cannot use GPU mode because it only uses float32 which lacks precision, so please use Nvidia GPU (CUDA) or use macOS CPU mode instead.**
+**Note: macOS MPS GPU can use GPU mode but it only uses float32 which lacks precision, so please use Nvidia GPU (CUDA) or use macOS CPU mode instead for high precision calculations.**
 
 ### Run PyExoCross program
 

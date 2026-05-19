@@ -4,7 +4,7 @@ This module centralizes compute backend selection for PyExoCross:
 - CPU
 - GPU(CUDA / MPS)
 
-CUDA can run with CuPy or Torch backend.
+CUDA can run with Torch or CuPy backend.
 MPS uses Torch backend.
 """
 
@@ -28,11 +28,11 @@ _RUNTIME = {
     'requested_gpu_backend': 'AUTO',
     'active_mode': 'CPU',
     'active_gpu_backend': 'CPU',
-    'provider': None,  # 'cupy' | 'torch' | None
-    'cupy': None,
-    'cupy_checked': False,
+    'provider': None,  # 'torch' | 'cupy' | None
     'torch': None,
     'torch_checked': False,
+    'cupy': None,
+    'cupy_checked': False,
     'torch_device': None,
     'reason': 'GPU mode not requested',
     'gpu_batch_lines': _DEFAULT_GPU_BATCH_LINES,

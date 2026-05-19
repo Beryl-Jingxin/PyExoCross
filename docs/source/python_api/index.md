@@ -79,19 +79,19 @@ PyExoCross uses CPU mode by default.  You can switch to GPU mode with
 # Default CPU mode
 px.cross_sections(..., run_mode='CPU')
 
-# Auto-select GPU backend
-# Priority: CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback
+# Auto-select GPU backend (recommended)
+# Priority: PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
 px.cross_sections(..., run_mode='GPU', gpu_backend='AUTO')
 
 # CUDA policy
-# Priority: CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU fallback
+# Priority: PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
 px.cross_sections(..., run_mode='GPU', gpu_backend='CUDA')
-
-# Force CuPy CUDA only
-px.cross_sections(..., run_mode='GPU', gpu_backend='CuPy-CUDA')
 
 # Force PyTorch CUDA only
 px.cross_sections(..., run_mode='GPU', gpu_backend='PyTorch-CUDA')
+
+# Force CuPy CUDA only
+px.cross_sections(..., run_mode='GPU', gpu_backend='CuPy-CUDA')
 
 # Force Apple Metal (MPS)
 px.cross_sections(..., run_mode='GPU', gpu_backend='MPS')
@@ -103,7 +103,7 @@ GPU memory-control knobs:
 px.cross_sections(
     ...,
     run_mode='GPU',
-    gpu_backend='AUTO',   # AUTO (recommended), CUDA, CuPy-CUDA, PyTorch-CUDA, or MPS
+    gpu_backend='AUTO',   # AUTO (recommended), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS
     gpu_batch_lines=8192,
     gpu_batch_grid=256,
 )
@@ -111,8 +111,8 @@ px.cross_sections(
 
 Notes:
 - If GPU backend is unavailable, execution falls back to CPU formulas.
-- `AUTO` order: `CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU`.
-- `CUDA` order: `CuPy-CUDA -> PyTorch-CUDA -> MPS -> CPU`.
+- `AUTO` order: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU`.
+- `CUDA` order: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU`.
 - On Apple Silicon, MPS uses float32 kernels so tiny numeric differences vs CPU/CUDA are expected.
 - GPU acceleration applies to:
   `cooling_functions`, `stick_spectra`, `cross_sections`,

@@ -60,7 +60,7 @@ px.cross_sections(..., run_mode='GPU', gpu_backend='PyTorch-CUDA')
 # Force CuPy CUDA only
 px.cross_sections(..., run_mode='GPU', gpu_backend='CuPy-CUDA')
 
-# Force MPS
+# Force PyTorch MPS only
 px.cross_sections(..., run_mode='GPU', gpu_backend='MPS')
 ```
 
