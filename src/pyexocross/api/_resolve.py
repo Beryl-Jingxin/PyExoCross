@@ -103,7 +103,7 @@ def _resolve_exomol(read_path, data_info, species_id=None):
 
     raise FileNotFoundError(
         f"ExoMol definition file not found. "
-        f"Looked for: {json_path} and {def_path}"
+        f"Looked for: {json_path} or {def_path}"
     )
 
 

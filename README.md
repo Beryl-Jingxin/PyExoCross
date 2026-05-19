@@ -1,7 +1,9 @@
 <h1 align="center">PyExoCross</h1>
 
-<p align="center" style="font-weight: bold">
+<p align="center">
+  <strong>
   A Python framework for LTE and non-LTE spectroscopic post-processing of atomic and molecular line lists
+  </strong>
 </p>
 
 <p align="center">

@@ -24,14 +24,14 @@ def _read_readme() -> str:
 if __name__ == "__main__":
     setup(
         name="pyexocross",
-        version="1.1.1",
+        version="1.1.2",
         description="A Python package for generating molecular and atomic spectra and cross sections",
         long_description=_read_readme(),
         long_description_content_type="text/markdown",
         author="Jingxin Zhang",
         author_email="jingxin.zhang.19@ucl.ac.uk",
         url="https://github.com/Beryl-Jingxin/PyExoCross",
-        license="GPL-3.0-only",
+        license="GPL-3.0",
         python_requires=">=3.8,<3.13",
         packages=find_packages(where="src", include=["pyexocross*"]),
         package_dir={"": "src"},
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         },
         entry_points={"console_scripts": ["pyexocross=pyexocross.cli:main"]},
         classifiers=[
-            "Development Status :: 4 - Beta",
+            "Development Status :: 5 - Production/Stable",
             "Intended Audience :: Science/Research",
             "Topic :: Scientific/Engineering :: Physics",
             "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
@@ -71,5 +71,5 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.11",
             "Programming Language :: Python :: 3.12",
         ],
-        keywords=["spectroscopy", "molecule", "atom", "cross section", "exomol", "hitran"],
+        keywords=["spectroscopy", "molecule", "atom", "cross section", "exomol", "hitran", "non-LTE"],
     )

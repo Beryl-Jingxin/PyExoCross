@@ -31,7 +31,7 @@ COMMON = dict(
 # Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
 QN_PARAMS = dict(
     qnslabel_list=['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega'],
-    qnsformat_list=['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f'],
+    qnsformat_list=['%1s', '%1s', '%12s', '%3d', '%5d', '%5d', '%5d'],
 )
 
 # NLTE parameters (needed by stick_spectra and cross_sections)

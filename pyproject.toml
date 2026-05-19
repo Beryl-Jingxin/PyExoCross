@@ -4,20 +4,20 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyexocross"
-version = "1.1.1"
+version = "1.1.2"
 description = "A Python package for generating molecular and atomic spectra and cross sections"
 readme = "README.md"
 requires-python = ">=3.8,<3.13"
-license = {text = "GPL-3.0-only"}
+license = {text = "GPL-3.0"}
 authors = [
     {
         name = "Jingxin Zhang",
         email = "jingxin.zhang.19@ucl.ac.uk"
     }
 ]
-keywords = ["spectroscopy", "molecule", "atom", "cross section", "exomol", "hitran"]
+keywords = ["spectroscopy", "molecule", "atom", "cross section", "exomol", "hitran", "non-LTE"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Physics",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

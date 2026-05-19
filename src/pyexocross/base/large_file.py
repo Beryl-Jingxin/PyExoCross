@@ -5,6 +5,7 @@ This module provides functions for efficiently processing large transition files
 that may not fit in memory, using chunked reading and parallel processing.
 """
 import os
+from pathlib import Path
 import bz2
 import subprocess
 import numpy as np
@@ -62,8 +63,8 @@ def command_decompress(trans_filename):
         - Flag indicating if decompression was performed (1) or file already existed (0)
     """
     # Directory where the decompressed .trans files will be saved
-    trans_dir = read_path + '/'.join(data_info) + '/decompressed/'
-    ensure_dir(trans_dir)
+    trans_dir = Path(trans_filename).parent / 'decompressed'
+    ensure_dir(str(trans_dir))
     trans_file = os.path.join(trans_dir, trans_filename.split('/')[-1].replace('.bz2', ''))
     if os.path.exists(trans_file):
         num = 0
@@ -253,4 +254,3 @@ def save_large_txt(filepath_or_buffer, data, fmt, header=None, comments='', chun
     finally:
         if close_after:
             f.close()
-            
