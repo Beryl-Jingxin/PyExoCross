@@ -10,7 +10,7 @@
   <a href="https://pypi.org/project/pyexocross/"><img src="https://img.shields.io/pypi/v/pyexocross?style=for-the-badge&logo=pypi&logoColor=white" alt="PyPI"></a>
   <a href="https://pepy.tech/project/PyExoCross"><img src="https://img.shields.io/pepy/dt/PyExoCross?style=for-the-badge&color=yellow&logo=pypi&logoColor=white" alt="PyPI Total Downloads"></a>
   <img src="https://img.shields.io/pypi/dm/pyexocross?style=for-the-badge&logo=pypi&logoColor=white" alt="PyPI Monthly Downloads">
-  <img src="https://img.shields.io/pypi/status/pyexocross?style=for-the-badge&color=lightgrey&logo=pypi&logoColor=white" alt="PyPI Status">
+  <img src="https://img.shields.io/pypi/status/pyexocross?style=for-the-badge&color=lightgrey&logo=pypi&logoColor=white&cacheSeconds=300" alt="PyPI Status">
 </p>
 
 <p align="center">
