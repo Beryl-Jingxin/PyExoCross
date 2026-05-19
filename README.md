@@ -1,4 +1,8 @@
-# PyExoCross
+<h1 align="center">PyExoCross</h1>
+
+<p align="center" style="font-weight: bold">
+  A Python framework for LTE and non-LTE spectroscopic post-processing of atomic and molecular line lists
+</p>
 
 <p align="center">
   <a href="https://pypi.org/project/pyexocross/"><img src="https://img.shields.io/pypi/v/pyexocross?style=for-the-badge&logo=pypi&logoColor=white" alt="PyPI"></a>
@@ -23,9 +27,6 @@
   <a href="https://doi.org/10.1093/rasti/rzae016"><img src="https://img.shields.io/badge/PyExoCross 1.0-DOI-gold?style=for-the-badge&logo=doi" alt="DOI"></a>
   <a href="https://arxiv.org/abs/2406.03977"><img src="https://img.shields.io/badge/arXiv-2406.03977-orange?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"></a>
 </p>
-
-
-**PyExoCross is a python package and program for generating molecular and atomic spectra and cross sections**
 
 ## Description
 
