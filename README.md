@@ -1,5 +1,30 @@
 # PyExoCross
 
+<p align="center">
+  <a href="https://pypi.org/project/pyexocross/"><img src="https://img.shields.io/pypi/v/pyexocross?style=for-the-badge&logo=pypi&logoColor=white" alt="PyPI"></a>
+  <a href="https://pepy.tech/project/PyExoCross"><img src="https://img.shields.io/pepy/dt/PyExoCross?style=for-the-badge&color=yellow&logo=pypi&logoColor=white" alt="PyPI Total Downloads"></a>
+  <img src="https://img.shields.io/pypi/dm/pyexocross?style=for-the-badge&logo=pypi&logoColor=white" alt="PyPI Monthly Downloads">
+  <img src="https://img.shields.io/pypi/status/pyexocross?style=for-the-badge&color=lightgrey&logo=pypi&logoColor=white" alt="PyPI Status">
+</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/pyexocross/"><img src="https://img.shields.io/pypi/pyversions/pyexocross.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://github.com/Beryl-Jingxin/PyExoCross"><img src="https://img.shields.io/badge/github-code-green?style=for-the-badge&logo=github" alt="Code"></a>
+  <a href="https://pyexocross.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/pyexocross/badge/?version=latest&style=for-the-badge" alt="Documentation"></a>
+  <a href="https://github.com/Beryl-Jingxin/PyExoCross/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Beryl-Jingxin/PyExoCross?style=for-the-badge" alt="License"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/GPU%20CUDA-PyTorch/CuPy-lightblue?style=for-the-badge&logo=Nvidia&logoColor=white" alt="CUDA GPU acceleration with PyTorch and CuPy">
+  <img src="https://img.shields.io/badge/GPU%20MPS-PyTorch-skyblue?style=for-the-badge&logo=Apple&logoColor=white" alt="MPS GPU acceleration with PyTorch">
+</p>
+
+<p align="center">
+  <a href="https://doi.org/10.1093/rasti/rzae016"><img src="https://img.shields.io/badge/PyExoCross 1.0-DOI-gold?style=for-the-badge&logo=doi" alt="DOI"></a>
+  <a href="https://arxiv.org/abs/2406.03977"><img src="https://img.shields.io/badge/arXiv-2406.03977-orange?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"></a>
+</p>
+
+
 **PyExoCross is a python package and program for generating molecular and atomic spectra and cross sections**
 
 ## Description
