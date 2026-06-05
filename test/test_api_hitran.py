@@ -31,16 +31,16 @@ COMMON = dict(
 
 # Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
 QN_PARAMS = dict(
-    qnslabel_list=['J', 'X', 'Omega', 'v1', 'Sym', 'F'],
+    qnslabel_list=['J', 'X', 'Omega', 'v', 'Sym', 'F'],
     qnsformat_list=['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s'],
 )
 
 # Conversion QN labels (for HITRAN functions that internally perform conversion)
 CONVERSION_QN = dict(
-    global_qn_label_list=['X', 'Omega', 'v1'],      # Quantum number label for global quantum numbers
+    global_qn_label_list=['X', 'Omega', 'v'],      # Quantum number label for global quantum numbers
     global_qn_format_list=['%2s', '%3s', '%2d'],    # Quantum number format for global quantum numbers
-    local_qn_label_list=['Br', 'Sym', 'F'],         # Quantum number label for local quantum numbers
-    local_qn_format_list=['%2s', '%1s', '%5s'],     # Quantum number format for local quantum numbers
+    local_qn_label_list=['Sym', 'F'],         # Quantum number label for local quantum numbers
+    local_qn_format_list=['%1s', '%5s'],     # Quantum number format for local quantum numbers
 )
 
 # NLTE parameters (needed by stick_spectra and cross_sections)

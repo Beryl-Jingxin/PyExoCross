@@ -217,6 +217,27 @@ class Config:
         # Set defaults for other parameters
         self._set_defaults(**kwargs)
         
+        # Automatic QN aliasing for Class 1 HITRAN/HITEMP molecules to avoid 'v' collision
+        if self.database in ('HITRAN', 'HITEMP'):
+            class1_molecules = ['CO','HF','HCl','HBr','HI','N2','NO+','NO_p','H2','CS', 'O2','NO','OH','ClO','SO','S2']
+            if self.molecule in class1_molecules:
+                if hasattr(self, 'global_qn_label_list'):
+                    self.global_qn_label_list = ['v1' if x == 'v' else x for x in self.global_qn_label_list]
+                if hasattr(self, 'qnslabel_list'):
+                    self.qnslabel_list = ['v1' if x == 'v' else x for x in self.qnslabel_list]
+                if hasattr(self, 'qns_label'):
+                    self.qns_label = ['v1' if x == 'v' else x for x in self.qns_label]
+                if hasattr(self, 'qns_filter') and isinstance(self.qns_filter, list):
+                    new_qns_filter = []
+                    for qf in self.qns_filter:
+                        if qf.startswith('v['):
+                            new_qns_filter.append('v1[' + qf[2:])
+                        elif qf == 'v':
+                            new_qns_filter.append('v1')
+                        else:
+                            new_qns_filter.append(qf)
+                    self.qns_filter = new_qns_filter
+        
         # Resolve database-specific metadata from definition files
         self._resolve_metadata()
         

@@ -176,7 +176,7 @@ def localQNgroups(data_info):
                       'llabel': ['none','Br1','N','Br2','J','F','M'],
                       'lformat':['%1s','%1s','%3d','%1s','%3d','%5s','%1s']}
     localQNgroup7a = {'group':['NO','ClO'],
-                      'ulabel':['none','none','F'],     # m, none, F
+                      'ulabel':['m','none','F'],
                       'uformat':['%1s','%9s','%5s'],
                       'llabel': ['none','Br','J','Sym','F'],
                       'lformat':['%2s','%2s','%5.1f','%1s','%5s']}
@@ -303,6 +303,15 @@ def separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerL
         LQNl_df['J'] = pd.to_numeric(LQNl_df['J'])
         LQNu_df['J'] = LQNl_df['Br'] + LQNl_df['J']
         LQNl_df = LQNl_df.drop(columns=['Br'])
+    
+    if 'm' in LocalQNupperLabels:
+        LQNu_df = LQNu_df.drop(columns=['m'])
+    if 'M' in LocalQNupperLabels:
+        LQNu_df = LQNu_df.drop(columns=['M'])
+    if 'm' in LocalQNlowerLabels:
+        LQNl_df = LQNl_df.drop(columns=['m'])
+    if 'M' in LocalQNlowerLabels:
+        LQNl_df = LQNl_df.drop(columns=['M'])
 
     if 'F' not in LocalQNupperLabels:
         LQNu_df['F'] = LQNu_df['J']
