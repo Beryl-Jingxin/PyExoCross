@@ -321,7 +321,7 @@ def get_results(config):
                                             ConversionUnc,ConversionThreshold).reset_index().drop(columns='index')
             (hitran_states_col, hitran_states_fmt) = conversion_hitran2exomol(hitran_df)
         # Use ExoMol functions
-        NuseExoMolFunc = PartitionFunctions+SpecificHeats+Lifetimes
+        NuseExoMolFunc = SpecificHeats+Lifetimes
         if NuseExoMolFunc > 0:
             read_hitran2exomol_path = save_path + 'conversion/HITRAN2ExoMol/'
             conversion_foldername = read_hitran2exomol_path+'/'.join(data_info)+'/'
@@ -339,17 +339,17 @@ def get_results(config):
                 config.states_col,
                 config.states_fmt,
             )
-            if PartitionFunctions == 1:
-                save_hitran_partition_func(states_df, Ntemp, Tmax)
             if SpecificHeats == 1:
                 save_hitran_specific_heat(states_df, Ntemp, Tmax)
             if Lifetimes == 1:
                 save_hitran_lifetime(read_hitran2exomol_path, states_df, hitran_states_col, hitran_states_fmt)
         # Use HITRAN functions
         # Calculate cooling functions or oscillator strengths
-        NeedWholeHITRAN = CoolingFunctions + OscillatorStrengths
+        NeedWholeHITRAN = PartitionFunctions + CoolingFunctions + OscillatorStrengths
         if NeedWholeHITRAN != 0:
             hitran_df = read_hitran_parfile(read_path, parfile_df, min_wn, max_wn, 'None', 'None').reset_index().drop(columns='index')
+        if PartitionFunctions == 1:
+            save_hitran_partition_func(hitran_df, Ntemp, Tmax)
         if CoolingFunctions == 1:
             save_hitran_cooling_func(hitran_df, Ntemp, Tmax)
         if OscillatorStrengths == 1:

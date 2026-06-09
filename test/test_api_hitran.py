@@ -37,10 +37,10 @@ QN_PARAMS = dict(
 
 # Conversion QN labels (for HITRAN functions that internally perform conversion)
 CONVERSION_QN = dict(
-    global_qn_label_list=['X', 'Omega', 'v'],      # Quantum number label for global quantum numbers
+    global_qn_label_list=['X', 'Omega', 'v'],       # Quantum number label for global quantum numbers
     global_qn_format_list=['%2s', '%3s', '%2d'],    # Quantum number format for global quantum numbers
-    local_qn_label_list=['Sym', 'F'],         # Quantum number label for local quantum numbers
-    local_qn_format_list=['%1s', '%5s'],     # Quantum number format for local quantum numbers
+    local_qn_label_list=['Sym', 'F'],               # Quantum number label for local quantum numbers
+    local_qn_format_list=['%1s', '%5s'],            # Quantum number format for local quantum numbers
 )
 
 # NLTE parameters (needed by stick_spectra and cross_sections)
@@ -48,7 +48,7 @@ NLTE_PARAMS = dict(
     nlte_method='T',            # Non-LTE: 2T NLTE (default: 'T')
     tvib_list=[1000, 2000],     # Vibrational temperatures in unit of K
     trot_list=[300, 400],       # Rotational temperatures in unit of K
-    vib_label=['v1', 'X'],      # Vibrational quantum numbers
+    vib_label=['v', 'X'],       # Vibrational quantum numbers
     rot_label=['J'],            # Rotational quantum numbers
 )
 
@@ -99,13 +99,9 @@ def test_partition_functions():
     print('\n' + '='*70)
     print('TEST: px.partition_functions()')
     print('='*70)
-    # HITRAN partition functions require QN labels for internal HITRAN->ExoMol
-    # conversion to produce .states files.
     px.partition_functions(
         **COMMON,
-        **QN_PARAMS,
         **COMPUTE_PARAMS,
-        **CONVERSION_QN,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
         tmax=5000,                   # Maximum temperature in unit of K (default: 5000)
     )

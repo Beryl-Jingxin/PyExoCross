@@ -328,7 +328,7 @@ In current version, *PyExoCross* can convert data format between the ExoMol (Exo
 
 If users use `.inp` input files:
 
-*PyExoCross* provides computations of cooling function, oscillator strengths, LTE and non-LTE stick spectra and cross sections for data from the HITRAN format databases. If you want to use the other functions, please convert the data format from the HITRAN format to the ExoMol format at first and then treat the data as the ExoMol data to use *PyExoCross*. 
+*PyExoCross* can calculate partition functions, cooling functions, oscillator strengths, LTE and non-LTE stick spectra and cross sections directly for data from the HITRAN format databases. Specific heats and lifetimes still require HITRAN data to be converted to the ExoMol format first and then treated as ExoMol data in *PyExoCross*. 
 
 If users use Python package:
 

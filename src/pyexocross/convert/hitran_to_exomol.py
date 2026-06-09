@@ -13,6 +13,90 @@ from ..process.hitran_qn import globalQNclasses, localQNgroups, separate_QN_hitr
 from ..base.large_file import save_large_txt
 from ..process.hitran_qn import globalQNclasses
 
+
+def normalize_hitran_lower_symmetry(value):
+    text = str(value).strip()
+    if len(text) == 2 and all(char in 'ef+-' for char in text):
+        return text[1]
+    return text
+
+
+def normalize_hitran_upper_symmetry(value):
+    text = str(value).strip()
+    if len(text) == 2 and all(char in 'ef+-' for char in text):
+        return text[0]
+    return text
+
+
+def flip_hitran_symmetry(value):
+    text = str(value).strip()
+    return {'e': 'f', 'f': 'e', '+': '-', '-': '+'}.get(text, text)
+
+
+def format_hitran_angular_momentum(value):
+    text = str(value).strip()
+    if text != '':
+        number = pd.to_numeric(text, errors='coerce')
+        if pd.isna(number):
+            return text
+    else:
+        number = pd.to_numeric(value, errors='coerce')
+        if pd.isna(number):
+            return ''
+    if np.isclose(number, round(number)):
+        return str(int(round(number)))
+    return f'{number:.1f}'
+
+
+def infer_hitran_j_format(j_values):
+    first_j = pd.to_numeric(j_values.dropna().iloc[0], errors='coerce')
+    if pd.isna(first_j):
+        return '%7s'
+    if np.isclose(first_j, round(first_j)):
+        return '%7d'
+    return '%7.1f'
+
+
+def add_missing_upper_symmetry(upper_df, lower_df):
+    if 'Sym' not in lower_df.columns or 'Sym' in upper_df.columns:
+        return upper_df, lower_df
+
+    raw_lower_sym = lower_df['Sym'].astype(str).str.strip()
+    upper_df = upper_df.copy()
+    lower_df = lower_df.copy()
+
+    two_char_sym = raw_lower_sym.str.len().eq(2) & raw_lower_sym.map(
+        lambda value: all(char in 'ef+-' for char in value)
+    )
+    upper_sym = raw_lower_sym.map(normalize_hitran_upper_symmetry)
+
+    if 'J' in upper_df.columns and 'J' in lower_df.columns:
+        same_j = (
+            pd.to_numeric(upper_df['J'], errors='coerce')
+            == pd.to_numeric(lower_df['J'], errors='coerce')
+        )
+        single_char_sym = ~two_char_sym
+        upper_sym.loc[single_char_sym & same_j] = raw_lower_sym.loc[
+            single_char_sym & same_j
+        ].map(flip_hitran_symmetry)
+        upper_sym.loc[single_char_sym & ~same_j] = raw_lower_sym.loc[
+            single_char_sym & ~same_j
+        ].map(normalize_hitran_lower_symmetry)
+
+    lower_df['Sym'] = raw_lower_sym.map(normalize_hitran_lower_symmetry)
+    upper_df['Sym'] = upper_sym
+    return upper_df, lower_df
+
+
+def fill_blank_hitran_hyperfine(df):
+    if 'F' not in df.columns or 'J' not in df.columns:
+        return df
+    df = df.copy()
+    blank_f = df['F'].astype(str).str.strip() == ''
+    df.loc[blank_f, 'F'] = '-'
+    return df
+
+
 ## HITRAN to ExoMol
 def convert_QNValues_hitran2exomol(hitran2exomol_states_df, GlobalQNLabel_list, LocalQNLabel_list):
     """
@@ -86,13 +170,16 @@ def convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df):
     hitran2exomol_upper_df.columns = list(map(lambda x: x.replace('gp','g').replace('Ep','E'), list(hitran2exomol_upper_df.columns)))
     hitran2exomol_lower_df.columns = list(map(lambda x: x.replace('gpp','g').replace('Epp','E'), list(hitran2exomol_lower_df.columns)))
 
-    # hitran2exomol_lower_df = hitran2exomol_lower_df.reset_index(drop=True)
-    # hitran2exomol_upper_df = hitran2exomol_upper_df.reset_index(drop=True)
-    # if ('Sym"' in QNl_col) and ("Sym'" not in QNu_col):
-    #     hitran2exomol_upper_df['Sym'] = hitran2exomol_lower_df['Sym']
-    #     index_change_sym = np.where(np.array(hitran2exomol_lower_df['J']-hitran2exomol_upper_df['J'])==0.0)[0]
-    #     hitran2exomol_upper_df['Sym'][index_change_sym] = (hitran2exomol_upper_df['Sym'][index_change_sym]
-    #                                                        .replace('e','e2f').replace('f','e').replace('e2f','f'))
+    hitran2exomol_upper_df, hitran2exomol_lower_df = add_missing_upper_symmetry(
+        hitran2exomol_upper_df,
+        hitran2exomol_lower_df,
+    )
+    if 'Sym' in hitran2exomol_upper_df.columns:
+        hitran2exomol_upper_df['Sym'] = hitran2exomol_upper_df['Sym'].map(normalize_hitran_upper_symmetry)
+    if 'Sym' in hitran2exomol_lower_df.columns:
+        hitran2exomol_lower_df['Sym'] = hitran2exomol_lower_df['Sym'].map(normalize_hitran_lower_symmetry)
+    hitran2exomol_upper_df = fill_blank_hitran_hyperfine(hitran2exomol_upper_df)
+    hitran2exomol_lower_df = fill_blank_hitran_hyperfine(hitran2exomol_lower_df)
         
     hitran2exomol_ul_df = pd.concat([hitran2exomol_upper_df, hitran2exomol_lower_df], axis=0)
 
@@ -102,8 +189,11 @@ def convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df):
     hitran2exomol_states_id = hitran2exomol_states_noid
     hitran2exomol_states_id['id'] = hitran2exomol_states_noid.index+1
 
-    states_columns_order = ['id','E','g','F','Unc']+[x for x in hitranQNlabels if x != 'F']
+    states_columns_order = ['id','E','g','J','Unc']+[x for x in hitranQNlabels if x != 'J']
     hitran2exomol_states_id = hitran2exomol_states_id[states_columns_order]
+    if 'F' in hitran2exomol_states_id.columns:
+        blank_f = hitran2exomol_states_id['F'].astype(str).str.strip() == ''
+        hitran2exomol_states_id.loc[blank_f, 'F'] = hitran2exomol_states_id.loc[blank_f, 'J']
 
     # Transitions
     upper_QNlabel = list(hitran2exomol_upper_df.columns[5:])
@@ -123,6 +213,8 @@ def convert_hitran2StatesTrans(hitran_df, QNu_df, QNl_df):
     hitran2exomol_trans_df = diff.loc[diff.groupby(['v'])['diffv'].idxmin()][['uid','lid','A','v']].sort_values('v')
     
     # States
+    if 'F' in hitran2exomol_states_id.columns:
+        hitran2exomol_states_id['F'] = hitran2exomol_states_id['F'].map(format_hitran_angular_momentum)
     hitran2exomol_states_df = convert_QNValues_hitran2exomol(hitran2exomol_states_id, GlobalQNLabel_list, LocalQNLabel_list)
     # Convert HITRAN uncertainty codes to float values for ExoMol format (%12.6f)
     # HITRAN codes: 0-10 map to uncertainty values
@@ -185,16 +277,14 @@ def conversion_states(hitran2exomol_states_df, conversion_folder):
     conversion_states_path = conversion_folder + '__'.join(data_info[-2:]) + '.states'
     hitranQNlabels_noF = hitran2exomol_states_df.columns[5:].tolist()
     hitranQNformats = [QNsformat_list[j] for j in [QNslabel_list.index(i) for i in hitranQNlabels_noF]]
-    # states_format = ("%12s %12.6f %6s %7s %12.6f " 
-    #                  + str(QNsformat_list).replace("['","").replace("']","")
-    #                  .replace("'","").replace(",","").replace("d","s").replace("i","s"))
-    states_format = ("%12s %12.6f %6s %7s %12.6f " 
+    j_format = infer_hitran_j_format(hitran2exomol_states_df['J'])
+    states_format = ("%12s %12.6f %6s " + j_format + " %12.6f "
                     + str(hitranQNformats).replace("['","").replace("']","")
                     .replace("'","").replace(",","").replace("d","s").replace("i","s"))
     np.savetxt(conversion_states_path, hitran2exomol_states_df, fmt=states_format)
     t.end()
     states_col = hitran2exomol_states_df.columns
-    states_fmt = ['%12s', '%12.6f', '%6d', '%7s', '%12.6f'] + hitranQNformats
+    states_fmt = ['%12s', '%12.6f', '%6d', j_format, '%12.6f'] + hitranQNformats
     print_file_info('Converted ExoMol states', states_col, states_fmt)
     print('Converted states file has been saved:', conversion_states_path)
     print('Converted states file has been saved!\n')   

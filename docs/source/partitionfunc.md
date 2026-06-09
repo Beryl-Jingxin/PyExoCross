@@ -58,7 +58,8 @@ Tmax                                    5000                      # Maximal temp
 
 **Note**
 
-If the line lists data is not in the ExoMol format, please convert your
-data format into the ExoMol format at first and then compute partition
-functions with *PyExoCross*. 
-So please read [**Conversion**](`https://pyexocross.readthedocs.io/en/latest/conversion.html`) and write ``1`` after ``Conversion``, ``2`` after ``ConversionFormat`` and fill ``Conversion`` section.
+For HITRAN/HITEMP input, partition functions are calculated directly from the
+line list records; format conversion and quantum number settings are not
+required. At high temperature, the result may differ from HITRAN/TIPS values
+because a `.par` file is a transition list and may not contain a complete set
+of high energy states.
