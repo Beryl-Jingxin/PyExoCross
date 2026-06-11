@@ -27,7 +27,8 @@ def cal_lifetime(states_df, trans_df):
     np.ndarray
         Lifetime array corresponding to states in states_df, shape (n_states,)
     """
-    A_sum = trans_df.groupby('u')['A'].sum()
+    u_col = 'u' if 'u' in trans_df.columns else 'uid'
+    A_sum = trans_df.groupby(u_col)['A'].sum()
     ids = states_df['id']
     lifetime_whole = np.zeros(max(ids)+1)
     lifetime_whole[A_sum.index] = A_sum.values
