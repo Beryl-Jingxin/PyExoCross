@@ -184,6 +184,10 @@ However, users can also rename the CSV filenames in any formats as long as `Isot
 
 &#x2705; `Molecule`__`Isotopologue`__T.csv
 
+&#x2705; `Molecule`__`Isotopologue`__T__WNmin-WNmax__Smin.csv
+
+**Note**: This folder should contain only one .csv file.
+
 ```
 └── exomolhr_results
            ├── C2H2
@@ -196,7 +200,7 @@ However, users can also rename the CSV filenames in any formats as long as `Isot
            ├── NO
            │     └── 14N-16O
            │             ├── 14N-16O__XABC.pf
-           │             └── 20260311080614__14N-16O__1000K.csv
+           │             └── NO__14N-16O__T500__0-1000__Smin1e-30.csv
            ├── MgH
            │     ├── 24Mg-1H
            │     │       ├── 24Mg-1H__XAB.pf

@@ -255,8 +255,12 @@ def linelist_ExoMol2HITRAN(states_unc_df,trans_part_df):
     gp = merged_df["g'"].values
     gpp = merged_df['g"'].values
     exomolst_df = merged_df.drop(columns=['A',"E'",'E"','v',"g'",'g"'])
-    unc = cal_uncertainty(exomolst_df["unc'"], exomolst_df['unc"'])
-    exomolst_df.drop(columns=["unc'",'unc"'], inplace=True)
+    from pyexocross.core import check_uncertainty
+    if check_uncertainty:
+        unc = cal_uncertainty(exomolst_df["unc'"], exomolst_df['unc"'])
+        exomolst_df.drop(columns=["unc'",'unc"'], inplace=True)
+    else:
+        unc = np.zeros(len(v))
     return (exomolst_df, v, A, Epp, gp, gpp, unc)
 
 def broadener_ExoMol2HITRAN(exomolst_df):
@@ -339,15 +343,15 @@ def convert_QNFormat_exomol2hitran(exomolst_df, GlobalQNLabel_list, GlobalQNForm
                 exomolst_df[gQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+"'"].values)).parallel_map(gQN_format.format)
                 exomolst_df[gQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+'"'].values)).parallel_map(gQN_format.format)
             elif 's' in gQN_format or 'a' in gQN_format: 
-                exomolst_df[gQN_label+"'"] = pd.Series(exomolst_df[gQN_label+"'"].str.replace('(','').str.replace(')','')).parallel_map(gQN_format.format)
-                exomolst_df[gQN_label+'"'] = pd.Series(exomolst_df[gQN_label+'"'].str.replace('(','').str.replace(')','')).parallel_map(gQN_format.format)
+                exomolst_df[gQN_label+"'"] = pd.Series(exomolst_df[gQN_label+"'"].fillna('').astype(str).str.replace('(','').str.replace(')','')).parallel_map(gQN_format.format)
+                exomolst_df[gQN_label+'"'] = pd.Series(exomolst_df[gQN_label+'"'].fillna('').astype(str).str.replace('(','').str.replace(')','')).parallel_map(gQN_format.format)
         except:
             if 'd' in gQN_format or 'f' in gQN_format: 
                 exomolst_df[gQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+"'"].values)).map(gQN_format.format)
                 exomolst_df[gQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+'"'].values)).map(gQN_format.format)
             elif 's' in gQN_format or 'a' in gQN_format: 
-                exomolst_df[gQN_label+"'"] = pd.Series(exomolst_df[gQN_label+"'"].str.replace('(','').str.replace(')','')).map(gQN_format.format)
-                exomolst_df[gQN_label+'"'] = pd.Series(exomolst_df[gQN_label+'"'].str.replace('(','').str.replace(')','')).map(gQN_format.format)
+                exomolst_df[gQN_label+"'"] = pd.Series(exomolst_df[gQN_label+"'"].fillna('').astype(str).str.replace('(','').str.replace(')','')).map(gQN_format.format)
+                exomolst_df[gQN_label+'"'] = pd.Series(exomolst_df[gQN_label+'"'].fillna('').astype(str).str.replace('(','').str.replace(')','')).map(gQN_format.format)
     try:
         globalQNp = exomolst_df[[GlobalQNLabel_list[i]+"'" for i in range(n_gQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)  
         globalQNpp = exomolst_df[[GlobalQNLabel_list[i]+'"' for i in range(n_gQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)    
@@ -364,15 +368,15 @@ def convert_QNFormat_exomol2hitran(exomolst_df, GlobalQNLabel_list, GlobalQNForm
                 exomolst_df[lQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+"'"].values)).parallel_map(lQN_format.format)
                 exomolst_df[lQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+'"'].values)).parallel_map(lQN_format.format)
             elif 's' in lQN_format or 'a' in lQN_format: 
-                exomolst_df[lQN_label+"'"] = pd.Series(exomolst_df[lQN_label+"'"].str.replace('(','').str.replace(')','')).parallel_map(lQN_format.format)
-                exomolst_df[lQN_label+'"'] = pd.Series(exomolst_df[lQN_label+'"'].str.replace('(','').str.replace(')','')).parallel_map(lQN_format.format)
+                exomolst_df[lQN_label+"'"] = pd.Series(exomolst_df[lQN_label+"'"].fillna('').astype(str).str.replace('(','').str.replace(')','')).parallel_map(lQN_format.format)
+                exomolst_df[lQN_label+'"'] = pd.Series(exomolst_df[lQN_label+'"'].fillna('').astype(str).str.replace('(','').str.replace(')','')).parallel_map(lQN_format.format)
         except:
             if 'd' in lQN_format or 'f' in lQN_format: 
                 exomolst_df[lQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+"'"].values)).map(lQN_format.format)
                 exomolst_df[lQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+'"'].values)).map(lQN_format.format)
-            elif 's' in lQN_format or 'a' in gQN_format: 
-                exomolst_df[lQN_label+"'"] = pd.Series(exomolst_df[lQN_label+"'"].str.replace('(','').str.replace(')','')).map(lQN_format.format)
-                exomolst_df[lQN_label+'"'] = pd.Series(exomolst_df[lQN_label+'"'].str.replace('(','').str.replace(')','')).map(lQN_format.format)
+            elif 's' in lQN_format or 'a' in lQN_format: 
+                exomolst_df[lQN_label+"'"] = pd.Series(exomolst_df[lQN_label+"'"].fillna('').astype(str).str.replace('(','').str.replace(')','')).map(lQN_format.format)
+                exomolst_df[lQN_label+'"'] = pd.Series(exomolst_df[lQN_label+'"'].fillna('').astype(str).str.replace('(','').str.replace(')','')).map(lQN_format.format)
     try:
         localQNp = exomolst_df[[LocalQNLabel_list[i]+"'" for i in range(n_lQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)  
         localQNpp = exomolst_df[[LocalQNLabel_list[i]+'"' for i in range(n_lQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)            

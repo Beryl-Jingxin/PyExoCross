@@ -23,9 +23,9 @@ PyExoCross uses CPU by default.  You can explicitly select compute mode with:
 | `gpu_batch_grid` | `int` | `256` | GPU grid-batch size for memory control |
 
 GPU acceleration is available for:
-- `px.cooling_functions`
-- `px.stick_spectra`
-- `px.cross_sections`
+- `px.cooling_functions` -> Recommend to use CPU mode
+- `px.stick_spectra` -> Recommend to use CPU mode
+- `px.cross_sections` 
 - `px.stick_spectra_cross_section`
 
 CPU formulas are used for:
@@ -228,14 +228,14 @@ This will save the URLs to `/path/to/ExoMol/url/exomol__urls.txt` and print them
 px.conversion(inp_filepath=None, **kwargs)
 ```
 
-Convert between ExoMol/ExoAtom and HITRAN line-list formats.
+Convert between ExoMol/ExoMolHR/ExoAtom and HITRAN line-list formats.
 
 **Parameters**
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `inp_filepath` | `str` | `None` | Path to `.inp` file |
-| `database` | `str` | `'ExoMol'` | `'ExoMol'`, `'ExoAtom'`, `'HITRAN'`, or `'HITEMP'` |
+| `database` | `str` | `'ExoMol'` | `'ExoMol'`, `'ExoMolHR'`, `'ExoAtom'`, `'HITRAN'`, or `'HITEMP'` |
 | `molecule` | `str` | `None` | Molecule name (e.g. `'MgH'`, `'NO'`) |
 | `atom` | `str` | `None` | Atom name for ExoAtom (e.g. `'Ar'`, `'Li'`) |
 | `isotopologue` | `str` | `None` | Isotopologue (e.g. `'24Mg-1H'`, `'14N-16O'`) |

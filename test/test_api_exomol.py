@@ -1,7 +1,6 @@
 """
 Test all PyExoCross API functions using ExoMol MgH parameters.
 
-Parameters are derived from: input/MgH_ExoMol.inp
 """
 import sys
 import os
@@ -82,9 +81,6 @@ def test_download():
             'MgH': {
                 '24Mg-1H': {'wn_range': None},
                 '25Mg-1H': {'wn_range': None},
-            },
-            'H2O': {
-                '1H2-16O': {'wn_range': [41000, 41200]},
             },
         },
         download=True,

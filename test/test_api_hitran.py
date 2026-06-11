@@ -1,7 +1,6 @@
 """
 Test all PyExoCross API functions using HITRAN NO parameters.
 
-Parameters are derived from: input/NO_HITRAN.inp
 """
 import sys
 import os
@@ -87,9 +86,6 @@ def test_download():
             'NO': {
                 '14N-16O': {'wn_range': [0,100]},
                 '15N-16O': {'wn_range': [100,150]},
-            },
-            'H2O': {
-                '1H2-16O': {'wn_range': [100, 110]},
             },
         },
         download=True,

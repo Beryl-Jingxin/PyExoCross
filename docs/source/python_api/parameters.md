@@ -10,9 +10,9 @@ by PyExoCross API functions.  Parameters are organized by category.
 | Parameter | Type | Default | Description | Databases |
 |---|---|---|---|---|
 | `database` | `str` | `'ExoMol'` | Database type | All |
-| `molecule` | `str` | `None` | Molecule name (e.g. `'H2O'`, `'MgH'`, `'NO'`) | ExoMol, HITRAN, HITEMP |
+| `molecule` | `str` | `None` | Molecule name (e.g. `'H2O'`, `'MgH'`, `'NO'`) | ExoMol, ExoMolHR, HITRAN, HITEMP |
 | `atom` | `str` | `None` | Atom name (e.g. `'Ar'`, `'Li'`, `'Al'`) | ExoAtom |
-| `isotopologue` | `str` | `None` | Isotopologue (e.g. `'1H2-16O'`, `'24Mg-1H'`) | ExoMol, HITRAN, HITEMP |
+| `isotopologue` | `str` | `None` | Isotopologue (e.g. `'1H2-16O'`, `'24Mg-1H'`) | ExoMol, ExoMolHR, HITRAN, HITEMP |
 | `dataset` | `str` | `None` | Dataset name (e.g. `'POKAZATEL'`, `'XAB'`, `'NIST'`) | All |
 | `species_id` | `int` | `0` | Numeric species identifier | All |
 
@@ -20,7 +20,8 @@ by PyExoCross API functions.  Parameters are organized by category.
 
 | Value | Description |
 |---|---|
-| `'ExoMol'` | ExoMol molecular database (default) |
+| `'ExoMol'` | ExoMol molecular database |
+| `'ExoMolHR'` | ExoMolHR molecular database |
 | `'ExoAtom'` | ExoAtom atomic database |
 | `'HITRAN'` | HITRAN molecular spectroscopic database |
 | `'HITEMP'` | HITEMP high-temperature extension of HITRAN |
@@ -37,6 +38,7 @@ species_id = species_main_id * 10 + species_sub_id
 | Database | Example | `species_id` | Main ID | Sub ID | Meaning |
 |---|---|---|---|---|---|
 | ExoMol | MgH (24Mg-1H) | `501` | `50` | `1` | HITRAN molecule ID #50, isotopologue ID #1 |
+| ExoMolHR | MgH (24Mg-1H) | `501` | `50` | `1` | HITRAN molecule ID #50, isotopologue ID #1 |
 | ExoAtom | Ar | `601` | `60` | `1` | HITRAN atom ID #60, isotope ID #1 |
 | HITRAN | H2O (1H2-16O) | `11` | `1` | `1` | HITRAN molecule ID #1, isotopologue ID #1 |
 | HITRAN | CO2 (12C-16O2) | `21` | `2` | `1` | HITRAN molecule ID #2, isotopologue ID #1 |
@@ -57,15 +59,22 @@ species_id = species_main_id * 10 + species_sub_id
 
 | Database | `read_path` Format | Example |
 |---|---|---|
-| ExoMol  | Root directory of ExoMol database  | `'/data/ExoMol/'`  |
-| ExoAtom | Root directory of ExoAtom database | `'/data/ExoAtom/'` |
-| HITRAN  | Root directory of HITRAN database  | `'/data/HITRAN/'`  |
-| HITEMP  | Root directory of HITEMP database  | `'/data/HITEMP/'`  |
+| ExoMol   | Root directory of ExoMol database   | `'/data/ExoMol/'`   |
+| ExoMolHR | Root directory of ExoMolHR database | `'/data/ExoMolHR/'` |
+| ExoAtom  | Root directory of ExoAtom database  | `'/data/ExoAtom/'`  |
+| HITRAN   | Root directory of HITRAN database   | `'/data/HITRAN/'`   |
+| HITEMP   | Root directory of HITEMP database   | `'/data/HITEMP/'`   |
 
-For ExoMol, the code automatically resolves the full path as:
+For ExoMol:
 
 ```
 {read_path}/{molecule}/{isotopologue}/{dataset}/
+```
+
+For ExoMolHR, this folder should contain only one .csv file:
+
+```
+{read_path}/{molecule}/{isotopologue}/
 ```
 
 For ExoAtom:

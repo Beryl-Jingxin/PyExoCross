@@ -1,7 +1,6 @@
 """
 Test all PyExoCross API functions using ExoMolHR NO parameters.
 
-Parameters are derived from: .input/AlCl_ExoMolHR.inp
 """
 import os
 import sys
@@ -68,12 +67,8 @@ def test_download():
         file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/',    # Write that file_path or save_path are the same in download
         database='ExoMolHR',
         species_info={
-            'MgH': {
-                '24Mg-1H': {'T': 1000, 'wn_range': [0, 500], 'threshold': 1e-30},
-                '25Mg-1H': None,
-            },
-            'AlH': {
-                '27Al-1H': {'T': 500, 'wn_range': [0, 500], 'threshold': 1e-30}
+            'NO': {
+                '14N-16O': {'T': 500, 'wn_range': [0, 1000], 'threshold': 1e-30}
             },
         },
         download=True,

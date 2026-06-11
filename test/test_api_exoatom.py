@@ -1,7 +1,6 @@
 """
 Test all PyExoCross API functions using ExoAtom Ar parameters.
 
-Parameters are derived from: input/Ar_NIST.inp
 """
 import sys
 import os
@@ -72,9 +71,7 @@ def test_download():
         file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/',    # Write that file_path or save_path are the same in download
         database='ExoAtom',
         species_info={
-            'He': {'dataset': 'NIST'},
-            'He_p': {'3He_p': {'dataset': 'NIST'}},
-            'Ar_p': {'dataset': 'Kurucz'},
+            'Ar': {'dataset': ['NIST', 'Kurucz']},
         },
         download=True,
     )
@@ -140,7 +137,7 @@ def test_cooling_functions():
         **COMMON,
         **COMPUTE_PARAMS,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
-        tmax=600,                   # Maximum temperature in unit of K (default: 5000)
+        tmax=600,                    # Maximum temperature in unit of K (default: 5000)
     )
     print('PASSED: cooling_functions()')
 
