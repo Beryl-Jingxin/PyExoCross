@@ -29,6 +29,8 @@ Functions
 - ``px.stick_spectra(...)``                 -- Stick spectra
 - ``px.cross_sections(...)``                -- Cross sections
 - ``px.stick_spectra_cross_section(...)``   -- Stick spectra and Cross section calculation simultaneously
+- ``px.download(...)``                      -- Download database files
+- ``px.download_exomol(...)``               -- Download ExoMol line-list files
 """
 
 __version__ = "1.1.2"
@@ -60,6 +62,17 @@ from pyexocross.api import (
     cross_section,
     stick_spectra_cross_section,
 )
+from pyexocross.download import (
+    download,
+    download_exoatom,
+    download_exomol,
+    download_exomolhr,
+    download_hitran,
+    get_exoatom_urls,
+    get_exomol_urls,
+    get_exomolhr_urls,
+    get_hitran_targets,
+)
 
 __all__ = [
     # Run from .inp
@@ -87,4 +100,13 @@ __all__ = [
     'stick_spectra',
     'cross_section',
     'stick_spectra_cross_section',
+    'download',
+    'download_exoatom',
+    'download_exomol',
+    'download_exomolhr',
+    'download_hitran',
+    'get_exoatom_urls',
+    'get_exomol_urls',
+    'get_exomolhr_urls',
+    'get_hitran_targets',
 ]

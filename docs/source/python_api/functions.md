@@ -99,6 +99,129 @@ px.run('/path/to/MgH_ExoMol.inp', force_reload=True)
 
 ---
 
+## `px.download`
+
+```python
+px.download(database, file_path=None, **kwargs)
+```
+
+Download database files from external servers. Supported databases are ExoMol, ExoMolHR, ExoAtom, and HITRAN.
+
+**Parameters**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `database` | `str` | Yes | Name of the database to download: `'ExoMol'`, `'ExoMolHR'`, `'ExoAtom'`, or `'HITRAN'`. |
+| `file_path` | `str` | Yes | Path to save the downloaded files (e.g. `/path/to/database/`), can also use `save_path`. |
+| `species_info` | `dict` | Yes | Molecule/isotopologue or atom configuration dictionary. |
+| `download` | `bool` | Yes | If `True` (default), download the files. If `False`, only generate the URL file. |
+| `wn_range` | `list` | Optional | Filter transitions by wavenumber range (cm⁻¹). |
+| `T` | `int` | Optional | Temperature in Kelvin. |
+| `threshold` | `float` | Optional | Minimum line intensity threshold in cm/molecule. |
+| `dataset` | `str` | Optional | The dataset to use. Can be either `'NIST'` or `'Kurucz'`. |
+
+### Species Configuration Options (`species_info`)
+
+Inside `species_info`, you can configure the following optional settings:
+- **`wn_range`** (list/tuple of `[wn_min, wn_max]`): Filter transitions by wavenumber range (cm⁻¹). Supported by ExoMol (downloads only segmented transition files fully within range), ExoMolHR, and HITRAN.
+- **`T`** or **`temperature`** (int): Temperature in Kelvin. Required for ExoMolHR online query downloads.
+- **`threshold`** or **`Smin`** (float): Minimum line intensity threshold in cm/molecule. Required for ExoMolHR online query downloads to filter out weaker lines.
+- **`dataset`** (str): The dataset to use. Required for ExoAtom downloads. Can be either `'NIST'` (critically evaluated and recommended for accuracy) or `'Kurucz'` (recommended for completeness).
+
+| Database | Required Parameters | Optional Parameters |
+| :--- | :--- | :--- |
+| `'ExoMol'` | `database`, `file_path`, `species_info`, `download` | `wn_range` |
+| `'ExoMolHR'` | `database`, `file_path`, `species_info`, `download` | `T`, `threshold`, `wn_range` |
+| `'ExoAtom'`| `database`, `file_path`, `species_info`, `download` | `dataset` |
+| `'HITRAN'` | `database`, `file_path`, `species_info`, `download` | `wn_range` |
+
+**Examples**
+
+### ExoMol Download
+```python
+px.download(
+    database='ExoMol',
+    file_path='/path/to/ExoMol/',
+    species_info={
+        'MgH': {
+            '24Mg-1H': {'wn_range': None},
+            '25Mg-1H': {'wn_range': None},
+        },
+        'H2O': {
+            '1H2-16O': {'wn_range': [41000, 41200]},
+        },
+    },
+    download=True,
+)
+```
+
+### ExoMolHR Download
+```python
+px.download(
+    database='ExoMolHR',
+    file_path='/path/to/ExoMolHR/',
+    species_info={
+        'MgH': {
+            '24Mg-1H': {'T': 1000, 'wn_range': [0, 500], 'threshold': 1e-30},
+            '25Mg-1H': None,
+        },
+        'AlH': {
+            '27Al-1H': {'T': 500, 'wn_range': [0, 500], 'threshold': 1e-30}
+        },
+    },
+    download=True,
+)
+```
+
+### ExoAtom Download
+```python
+px.download(
+    database='ExoAtom',
+    file_path='/path/to/ExoAtom/',
+    species_info={
+        'He': {'dataset': 'NIST'},
+        'He_p': {'3He_p': {'dataset': 'NIST'}},
+        'Ar_p': {'dataset': 'Kurucz'},
+    },
+    download=True,
+)
+```
+
+### HITRAN Download
+```python
+px.download(
+    database='HITRAN',
+    file_path='/path/to/HITRAN/',
+    species_info={
+        'NO': {
+            '14N-16O': {'wn_range': [0, 100]},
+            '15N-16O': {'wn_range': [100, 150]},
+        },
+        'H2O': {
+            '1H2-16O': {'wn_range': [100, 110]},
+        },
+    },
+    download=True,
+)
+```
+
+### Generating URLs Only
+
+If you only want to generate the list of URLs to be downloaded later, set `download=False`:
+
+```python
+px.download(
+    database='ExoMol',
+    file_path='/path/to/ExoMol/',
+    species_info={'MgH': {'24Mg-1H': None}},
+    download=False,
+)
+```
+
+This will save the URLs to `/path/to/ExoMol/url/exomol__urls.txt` and print them to the console.
+
+---
+
 ## `px.conversion`
 
 ```python

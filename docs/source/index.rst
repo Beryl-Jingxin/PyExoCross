@@ -16,6 +16,7 @@ Welcome to PyExoCross's documentation!
    command.md
    requirements.md
    examples.md
+   download.md
    basicinfo.md
    cpugpu.md
    conversion.md

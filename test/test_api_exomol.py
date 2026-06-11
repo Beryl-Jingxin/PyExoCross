@@ -70,6 +70,28 @@ COMPUTE_PARAMS = dict(
 # ---------------------------------------------------------------------------
 # Test functions
 # ---------------------------------------------------------------------------
+def test_download():
+    """Test download ExoMol files."""
+    print('\n' + '='*70)
+    print('TEST: px.download()')
+    print('='*70)
+    px.download(    
+        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMol/',    # Write that file_path or save_path are the same in download
+        database='ExoMol',
+        species_info={
+            'MgH': {
+                '24Mg-1H': {'wn_range': None},
+                '25Mg-1H': {'wn_range': None},
+            },
+            'H2O': {
+                '1H2-16O': {'wn_range': [41000, 41200]},
+            },
+        },
+        download=True,
+    )
+    print('PASSED: download()')
+    
+    
 def test_conversion():
     """Test ExoMol -> HITRAN conversion."""
     print('\n' + '='*70)
@@ -228,7 +250,7 @@ def test_stick_spectra_cross_section():
     px.stick_spectra_cross_section(
         **COMMON,
         **QN_PARAMS,
-        # **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
+        # **NLTE_PARAMS,        # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
         pressures=[1.0],        # Pressure in unit bar (default: [1.0])
@@ -258,6 +280,7 @@ if __name__ == '__main__':
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
+        test_download,
         test_conversion,
         test_partition_functions,
         test_specific_heats,

@@ -59,6 +59,28 @@ COMPUTE_PARAMS = dict(
 # ---------------------------------------------------------------------------
 # Test functions
 # ---------------------------------------------------------------------------
+def test_download():
+    """Test download ExoMolHR files."""
+    print('\n' + '='*70)
+    print('TEST: px.download()')
+    print('='*70)
+    px.download(    
+        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/',    # Write that file_path or save_path are the same in download
+        database='ExoMolHR',
+        species_info={
+            'MgH': {
+                '24Mg-1H': {'T': 1000, 'wn_range': [0, 500], 'threshold': 1e-30},
+                '25Mg-1H': None,
+            },
+            'AlH': {
+                '27Al-1H': {'T': 500, 'wn_range': [0, 500], 'threshold': 1e-30}
+            },
+        },
+        download=True,
+    )
+    print('PASSED: download()')
+    
+    
 def test_conversion():
     """Test ExoMolHR -> HITRAN conversion."""
     print('\n' + '='*70)
@@ -159,6 +181,7 @@ if __name__ == '__main__':
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
+        test_download,
         test_conversion,
         test_stick_spectra,
         test_cross_sections,

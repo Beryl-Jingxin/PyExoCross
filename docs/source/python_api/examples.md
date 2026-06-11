@@ -71,6 +71,25 @@ px.stick_spectra_cross_section(..., **COMPUTE_GPU_AUTO)
 
 ## ExoMol Examples
 
+### Download ExoMol Data
+
+```python
+px.download(
+    database='ExoMol',
+    file_path='/path/to/ExoMol/',
+    species_info={
+        'MgH': {
+            '24Mg-1H': {'wn_range': None},
+            '25Mg-1H': {'wn_range': None},
+        },
+        'H2O': {
+            '1H2-16O': {'wn_range': [41000, 41200]},
+        },
+    },
+    download=True,
+)
+```
+
 ### Conversion (ExoMol -> HITRAN)
 
 ```python
@@ -357,6 +376,25 @@ px.cross_sections(
 
 ## ExoMolHR Examples
 
+### Download ExoMolHR Data
+
+```python
+px.download(
+    database='ExoMolHR',
+    file_path='/path/to/ExoMolHR/',
+    species_info={
+        'MgH': {
+            '24Mg-1H': {'T': 1000, 'wn_range': [0, 500], 'threshold': 1e-30},
+            '25Mg-1H': None,
+        },
+        'AlH': {
+            '27Al-1H': {'T': 500, 'wn_range': [0, 500], 'threshold': 1e-30}
+        },
+    },
+    download=True,
+)
+```
+
 ### Conversion (ExoMolHR -> HITRAN)
 
 ```python
@@ -532,6 +570,21 @@ px.cross_sections(
 ---
 
 ## ExoAtom Examples
+
+### Download ExoAtom Data
+
+```python
+px.download(
+    database='ExoAtom',
+    file_path='/path/to/ExoAtom/',
+    species_info={
+        'He': {'dataset': 'NIST'},
+        'He_p': {'3He_p': {'dataset': 'NIST'}},
+        'Ar_p': {'dataset': 'Kurucz'},
+    },
+    download=True,
+)
+```
 
 ### Conversion (ExoAtom -> HITRAN)
 
@@ -851,6 +904,25 @@ px.cross_sections(
 ---
 
 ## HITRAN Examples
+
+### Download HITRAN Data
+
+```python
+px.download(
+    database='HITRAN',
+    file_path='/path/to/HITRAN/',
+    species_info={
+        'NO': {
+            '14N-16O': {'wn_range': [0, 100]},
+            '15N-16O': {'wn_range': [100, 150]},
+        },
+        'H2O': {
+            '1H2-16O': {'wn_range': [100, 110]},
+        },
+    },
+    download=True,
+)
+```
 
 ### Conversion (HITRAN -> ExoMol)
 

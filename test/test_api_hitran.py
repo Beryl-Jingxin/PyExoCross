@@ -75,6 +75,28 @@ COMPUTE_PARAMS = dict(
 # ---------------------------------------------------------------------------
 # Test functions
 # ---------------------------------------------------------------------------
+def test_download():
+    """Test download HITRAN files."""
+    print('\n' + '='*70)
+    print('TEST: px.download()')
+    print('='*70)
+    px.download(    
+        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/',    # Write that file_path or save_path are the same in download
+        database='HITRAN',
+        species_info={
+            'NO': {
+                '14N-16O': {'wn_range': [0,100]},
+                '15N-16O': {'wn_range': [100,150]},
+            },
+            'H2O': {
+                '1H2-16O': {'wn_range': [100, 110]},
+            },
+        },
+        download=True,
+    )
+    print('PASSED: download()')  
+    
+    
 def test_conversion():
     """Test HITRAN -> ExoMol conversion."""
     print('\n' + '='*70)
@@ -255,6 +277,7 @@ if __name__ == '__main__':
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
+        test_download,
         test_conversion,
         test_partition_functions,
         test_specific_heats,

@@ -63,6 +63,24 @@ COMPUTE_PARAMS = dict(
 # ---------------------------------------------------------------------------
 # Test functions
 # ---------------------------------------------------------------------------
+def test_download():
+    """Test download ExoAtom files."""
+    print('\n' + '='*70)
+    print('TEST: px.download()')
+    print('='*70)
+    px.download(    
+        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/',    # Write that file_path or save_path are the same in download
+        database='ExoAtom',
+        species_info={
+            'He': {'dataset': 'NIST'},
+            'He_p': {'3He_p': {'dataset': 'NIST'}},
+            'Ar_p': {'dataset': 'Kurucz'},
+        },
+        download=True,
+    )
+    print('PASSED: download()')
+    
+    
 def test_conversion():
     """Test ExoAtom -> HITRAN conversion."""
     print('\n' + '='*70)
@@ -249,6 +267,7 @@ if __name__ == '__main__':
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
+        test_download,
         test_conversion,
         test_partition_functions,
         test_specific_heats,
