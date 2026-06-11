@@ -33,7 +33,7 @@ $$
    \left(\frac{c_2 \tilde{E}_n}{T}\right)^2\exp\left(\frac{c_2 \tilde{E}_n}{T}\right).
 $$
 
-*Example*
+*Example: ExoMol*
 
 ```bash   
 # Data source #
@@ -62,8 +62,8 @@ CrossSections                           0
 
 
 # Cores and chunks #
-NCPUtrans                               4
-NCPUfiles                               4
+NCPUtrans                               1
+NCPUfiles                               1
 ChunkSize                               1000000
 
 
@@ -72,9 +72,41 @@ Ntemp                                   1                         # The number o
 Tmax                                    5000                      # Maximal temperature in K 
 ```
 
-**Note**
+*Example: HITRAN*
 
-If the line lists data is not in the ExoMol format, please convert your
-data format into the ExoMol format at first and then compute specific
-heats with *PyExoCross*. 
-So please read [**Conversion**](`https://pyexocross.readthedocs.io/en/latest/conversion.html`) and write ``1`` after ``Conversion``, ``2`` after ``ConversionFormat`` and fill ``Conversion`` section.
+```bash
+# Data source #
+Database                                HITRAN
+Molecule                                NO
+Isotopologue                            14N-16O
+Dataset                                 NO-HITRAN
+SpeciesID                               81
+
+
+# File path #
+ReadPath                                /home/jingxin/data/HITRAN/
+SavePath                                /home/jingxin/data/pyexocross/
+LogFilePath                             /home/jingxin/data/pyexocross/log/NO_HITRAN_cp.log
+
+
+# Functions #
+Conversion                              0
+PartitionFunctions                      0
+SpecificHeats                           1
+CoolingFunctions                        0
+Lifetimes                               0
+OscillatorStrengths                     0
+StickSpectra                            0
+CrossSections                           0
+
+
+# Cores and chunks #
+NCPUtrans                               1
+NCPUfiles                               1
+ChunkSize                               1000000
+
+
+# Calculate partition, specific heats or cooling functions #
+Ntemp                                   1                         # The number of temperature steps
+Tmax                                    5000                      # Maximal temperature in K
+```

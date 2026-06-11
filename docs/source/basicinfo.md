@@ -328,7 +328,7 @@ In current version, *PyExoCross* can convert data format between the ExoMol (Exo
 
 If users use `.inp` input files:
 
-*PyExoCross* can calculate partition functions, cooling functions, oscillator strengths, LTE and non-LTE stick spectra and cross sections directly for data from the HITRAN format databases. Specific heats and lifetimes still require HITRAN data to be converted to the ExoMol format first and then treated as ExoMol data in *PyExoCross*. 
+*PyExoCross* can calculate partition functions, specific heats, cooling functions, oscillator strengths, LTE and non-LTE stick spectra and cross sections directly for data from the HITRAN format databases. Lifetimes still require HITRAN data to be converted to the ExoMol format first and then treated as ExoMol data in *PyExoCross*. 
 
 If users use Python package:
 
@@ -467,7 +467,7 @@ GPUBatchGrid                            256
 Please provide the labels `QNslabel` and formats `QNsformat` of the quantum numbers when you use *PyExoCross* to convert data format, calculate stick spectra or cross sections if you need the quantum filter.
 
 * The definition files `.def`, `.def.json`, and `.adef.json` of ExoMol and ExoAtom databases (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
-* HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
+* HITRAN2024 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
 
 **Note**
 

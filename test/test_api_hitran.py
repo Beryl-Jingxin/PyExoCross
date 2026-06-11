@@ -115,9 +115,7 @@ def test_specific_heats():
     print('='*70)
     px.specific_heats(
         **COMMON,
-        **QN_PARAMS,
         **COMPUTE_PARAMS,
-        **CONVERSION_QN,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
         tmax=5000,                   # Maximum temperature in unit of K (default: 5000)
     )

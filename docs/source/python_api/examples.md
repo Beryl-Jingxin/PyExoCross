@@ -916,8 +916,6 @@ px.specific_heats(
     save_path='/path/to/output/',
     logs_path='/path/to/output/log/hitran_cp.log',
     chunk_size=100000,
-    qnslabel_list=['J', 'X', 'Omega', 'v1', 'Sym', 'F'],
-    qnsformat_list=['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s'],
     ntemp=1,
     tmax=5000
 )
