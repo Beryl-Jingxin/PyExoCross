@@ -38,6 +38,7 @@ Available functions (snake_case, following PEP 8):
 import os
 from ..config import Config
 from ..core import get_results
+from ..base.log import close_logging
 
 
 def _ensure_logging(inp_filepath=None, logs_path=None):
@@ -451,6 +452,12 @@ def stick_spectra(inp_filepath=None, **kwargs):
         limit_yaxis : float, optional
             Lower limit for y-axis (default: 1e-30).
 
+        Notes
+        -----
+        ``wn_wl`` and ``wn_wl_unit`` control the calculation range, output file
+        naming, and the first column in the saved stick spectra. Plotting
+        options only control the figure x-axis.
+
     Examples
     --------
     >>> import pyexocross as px
@@ -496,7 +503,7 @@ def cross_sections(inp_filepath=None, **kwargs):
             Choices include 'Gaussian', 'Doppler', 'Lorentzian',
             'Voigt', 'SciPyVoigt', 'PseudoVoigt', etc.
         bin_size : float, optional
-            Bin size for wavenumber grid (default: 0.1 cm-1).
+            Bin size in the selected ``wn_wl_unit`` (default: 0.1).
             Mutually exclusive with ``n_point``.
         n_point : int, optional
             Number of grid points. Mutually exclusive with ``bin_size``.
@@ -524,6 +531,14 @@ def cross_sections(inp_filepath=None, **kwargs):
             Unit for plotting axis (default: 'cm-1').
         limit_yaxis : float, optional
             Lower limit for y-axis (default: 1e-30).
+
+        Notes
+        -----
+        ``wn_wl`` and ``wn_wl_unit`` control the calculation range, output file
+        naming, cross-section grid unit, and the first column in the saved
+        cross sections. With ``wn_wl='WL'``, ``bin_size`` is a wavelength
+        interval in ``wn_wl_unit``. Line-profile widths and ``cutoff`` remain
+        in cm-1 because profiles are evaluated internally in wavenumber space.
 
     Examples
     --------
@@ -568,6 +583,13 @@ def stick_spectra_cross_section(inp_filepath=None, **kwargs):
         Path to .inp configuration file.
     **kwargs
         All parameters from :func:`stick_spectra` and :func:`cross_sections`.
+
+        Notes
+        -----
+        The same ``wn_wl`` and ``wn_wl_unit`` selection is used for both saved
+        outputs. The first columns of ``.stick`` and ``.xsec`` are wavenumber
+        for ``wn_wl='WN'`` and wavelength for ``wn_wl='WL'``. Cross-section
+        ``bin_size`` follows the same selected unit.
 
     Examples
     --------

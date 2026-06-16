@@ -49,8 +49,8 @@ ChunkSize                               1000000
 Compress(Y/N)                           Y                         # If Y, save as .states.bz2 file; otherwise, save as .states file
 ```
 
-**Note**
+***Note***
 
 If the line lists data is not in the ExoMol format, please convert your
-data format into the ExoMol format at first and then compute lifetime with *PyExoCross*.
+data format into the ExoMol format at first and then compute lifetime with *PyExoCross*. \
 So please read [**Conversion**](`https://pyexocross.readthedocs.io/en/latest/conversion.html`) and write ``1`` after ``Conversion``, ``2`` after ``ConversionFormat`` and fill ``Conversion`` section.

@@ -43,12 +43,12 @@ reference when migrating from `.inp`-based workflows to the Python API.
 | `CrossSections` | `px.cross_sections()` | `1` | Call function directly |
 | `StickSpectraCrossSection` | `px.stick_spectra_cross_section()` | `1` | Call function directly |
 
-:::{note}
+***Note***
+
 In the Python API, you don't need to set these toggle flags.  Simply calling
 a function (e.g. `px.cross_sections(...)`) automatically enables that
 function.  The toggle is only relevant in `.inp` files or when using
 `px.run()`.
-:::
 
 ---
 
@@ -122,7 +122,7 @@ px.cross_sections(..., run_mode='GPU', gpu_backend='CuPy-CUDA')
 px.cross_sections(..., run_mode='GPU', gpu_backend='MPS')
 ```
 
-Notes:
+***Notes***:
 - Omit these kwargs to use default CPU mode (`run_mode='CPU'`).
 - Use `gpu_backend='AUTO'` unless you explicitly want a fixed backend.
 - Backend fallback order for `AUTO`: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU`.
@@ -202,6 +202,10 @@ Notes:
 | `PlotStickSpectraWnWl` | `plot_wn_wl`, `plot_unit` | `wn cm-1` | `'WN'`, `'cm-1'` |
 | `Y-axisLimitStickSpectra` | `limit_yaxis` | `1e-30` | `float` |
 
+`WnWlUnit` and `Range` define the saved `.stick` coordinate. The first column
+is wavenumber for `wn cm-1` and wavelength for `wl nm` or `wl um`.
+`PlotStickSpectraWnWl` only controls the plot x-axis.
+
 ---
 
 ## Cross Sections
@@ -223,6 +227,11 @@ All stick spectra parameters above, plus:
 | `PlotCrossSectionMethod` | `plot_method` | `log` | `'log'` or `'linear'` |
 | `PlotCrossSectionWnWl` | `plot_wn_wl`, `plot_unit` | `wn cm-1` | `'WN'`, `'cm-1'` |
 | `Y-axisLimitXsec` | `limit_yaxis` | `1e-30` | `float` |
+
+`Npoints/BinSize` uses the same unit as `WnWlUnit`. Therefore `BinSize 0.01`
+means 0.01 nm for `wl nm`, 0.01 μm for `wl um`, and 0.01 cm⁻¹ for
+`wn cm-1`. The saved `.xsec` first column follows `WnWlUnit`; plotting can use
+a different coordinate via `PlotCrossSectionWnWl`.
 
 ---
 

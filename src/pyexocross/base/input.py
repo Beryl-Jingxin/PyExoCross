@@ -736,10 +736,10 @@ def inp_para(inp_filepath):
                 unit_change = 1e7
             else:
                 raise ValueError("Please wirte the unit of wavelength in the input file: um or nm.")
-            if min_wnl == 0:
-                raise ValueError("Please set the minimum wavenumber greater than 0 in the input file.")
+            if min_wnl <= 0 or max_wnl <= 0:
+                raise ValueError("Please set the wavelength range greater than 0 in the input file.")
             wl_grid = np.linspace(min_wnl, max_wnl, N_point)
-            wn_grid = unit_change / wl_grid
+            wn_grid = np.sort(unit_change / wl_grid)
 
     else:
         bin_size = 'None'

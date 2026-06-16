@@ -61,7 +61,7 @@ px.cross_sections(
 | `CuPy-CUDA` | Force CuPy CUDA only | `CuPy-CUDA -> CPU` |
 | `MPS` | Force Apple Metal backend | `MPS -> CPU` |
 
-Notes:
+***Notes:***
 - `gpu_batch_lines` and `gpu_batch_grid` are memory-control knobs for GPU calculations.
 - If the requested backend is not available, ***PyExoCross*** falls back to CPU.
 

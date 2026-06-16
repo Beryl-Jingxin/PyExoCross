@@ -4,11 +4,20 @@
 If you choose `LTE`, please ignore `# Calculate non-LTE #` section. \
 If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://pyexocross.readthedocs.io/en/latest/nonlte.html`).
 
+`Absorption/Emission`: Choose `Absorption` or `Emission`.
+
 `WnWlUnit`: Choose to provide the range of wavenumber `wn` in unit of `cm-1` (cm⁻¹), or wavelength in unit of `um` (μm) or `nm`.
 
 `Range`: Give two values as the minimum and maximum of the wavenumber range in unit of cm⁻¹ or wavelength range in unit of μm or nm. Please use the same unit as `WnWlUnit`. Don't use `,` or `;` between these two numbers, just leave blank here. 
 
-`Absorption/Emission`: Choose `Absorption` or `Emission`.
+***Note***
+
+`WnWlUnit` controls the calculation range, saved file name, and the first column in the saved `.stick` file. \
+If `WnWlUnit` is `wn cm-1`, the first column is wavenumber in cm⁻¹. \
+If `WnWlUnit` is `wl nm` or `wl um`, the first
+column is wavelength in that unit. \
+`PlotStickSpectraWnWl` only controls the
+x-axis used for plotting and does not change the saved `.stick` file.
 
 The LTE intensity equation is:
 
@@ -98,7 +107,7 @@ PlotStickSpectraWnWl                    wl         nm             # Wavenumber (
 Y-axisLimitStickSpectra                 1e-30                     # Default value is 1e-30 cm/molecule
 ```
 
-Save wavenumber in unit of μm in the file and 
+Save wavelength in unit of μm in the file and 
 plot linear stick spectra in unit of cm/molecule and wavelength in unit of nm.
 
 ```bash
@@ -106,7 +115,7 @@ plot linear stick spectra in unit of cm/molecule and wavelength in unit of nm.
 LTE/Non-LTE                             LTE                       # 'LTE' or 'Non-LTE'
 Temperatures                            300                       # Temperatures in unit of K
 WnWlUnit                                wl         um             # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
-Range                                   0          30000          # Same unit as WnWlUnit
+Range                                   0.3        10             # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
 UncFilter(Y/N)                          Y          0.01           # If Y, default value 0.01 cm-1
 Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule

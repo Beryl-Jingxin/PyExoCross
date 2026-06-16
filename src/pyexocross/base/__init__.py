@@ -50,6 +50,7 @@ from .utils import ensure_dir, Timer
 from .log import (
     TeeStream,
     setup_logging,
+    close_logging,
     parse_logging_info,
     _ProgressLogger,
     log_tqdm,

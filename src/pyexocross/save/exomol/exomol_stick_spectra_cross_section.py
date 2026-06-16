@@ -240,7 +240,7 @@ def save_exomol_stick_spectra_cross_section(
         use_names_xsec = ['uid','lid','A']
     
     # Check if profile is pressure-dependent (Lorentzian/Voigt need pressure)
-    pressure_dependent = profile_label not in ['Gaussian', 'Doppler']
+    pressure_dependent = profile_label not in ['Gaussian', 'Doppler', 'Binned Doppler', 'Binned Gaussion']
     
     # ntemp: L=len(T_list), T/D=len(Trot_list), P=1 (no temperature dimension)
     ntemp = get_ntemp(NLTEMethod, T_list, Trot_list)

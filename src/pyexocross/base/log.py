@@ -102,6 +102,13 @@ def _close_log_file():
         # This prevents "Exception ignored in sys.unraisablehook" messages
         pass
 
+def close_logging():
+    """
+    Close the active log file and restore original stdout/stderr streams.
+    Call this to finalize a log and allow subsequent calls to start a new log file.
+    """
+    _close_log_file()
+
 def setup_logging(log_file_path):
     """
     Set up logging to both console and file with date suffix.

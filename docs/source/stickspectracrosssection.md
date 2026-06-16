@@ -11,6 +11,15 @@ This calculation combines all parameters from both stick spectra and cross secti
 3. **Line profiles**: Used for cross section profiles.
 4. **Plotting**: Plots can be generated for both simultaneously using their respective configuration parameters (`PlotStickSpectra(Y/N)` and `PlotCrossSection(Y/N)`).
 
+***Note***
+In combined stick-spectra and cross-section runs, `WnWlUnit` is shared by both outputs. \
+With `wn cm-1`, the first column of both saved files is wavenumber in cm⁻¹. \
+With `wl nm` or `wl um`, the first column of both saved files is wavelength in that unit. \
+Cross-section `BinSize` uses the same unit as
+`WnWlUnit`. \
+The plotting options (`PlotStickSpectraWnWl` and
+`PlotCrossSectionWnWl`) only control plot x-axes.
+
 ### Example Configuration
 
 ```bash

@@ -60,6 +60,6 @@ Tmax                                    5000                      # Maximal temp
 
 For HITRAN/HITEMP input, partition functions are calculated directly from the
 line list records; format conversion and quantum number settings are not
-required. At high temperature, the result may differ from HITRAN/TIPS values
-because a `.par` file is a transition list and may not contain a complete set
+required. \
+At high temperature, the result may differ from HITRAN/TIPS values because a `.par` file is a transition list and may not contain a complete set
 of high energy states.

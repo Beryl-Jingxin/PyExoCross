@@ -113,6 +113,8 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
         cutoff,
         min_wnl,
         max_wnl,
+        min_wn,
+        max_wn,
         QNsFilter,
         QNs_value,
         QNs_label,
@@ -171,9 +173,9 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
     # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
     st_df = st_df[st_df['v'] >= 0]
     if cutoff == 'None':
-        st_df = st_df[st_df['v'].between(min_wnl, max_wnl)]
+        st_df = st_df[st_df['v'].between(min_wn, max_wn)]
     else:
-        st_df = st_df[st_df['v'].between(min_wnl - cutoff, max_wnl + cutoff)]
+        st_df = st_df[st_df['v'].between(min_wn - cutoff, max_wn + cutoff)]
     if len(st_df) != 0 and QNsFilter != []:
         st_df = QNfilter_linelist(st_df, QNs_value, QNs_label)
 

@@ -12,7 +12,18 @@ If you choose `Non-LTE`, more details can be found from [**Non-LTE**](`https://p
 
 
 
-`Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSiza` is the interval size of the grid , use the same unit as `WnWlUnit`.
+`Npoints/BinSize`: `Npoints` is the number of the points in grid. `BinSize` is the interval size of the grid; use the same unit as `WnWlUnit`.
+
+***Note***
+
+`WnWlUnit` controls the calculation range, saved file name, the cross-section grid unit, and the first column in the saved `.xsec` file. \
+If `WnWlUnit` is `wn cm-1`, the grid and first column are wavenumber in cm⁻¹. \
+If `WnWlUnit` is `wl nm` or `wl um`, the grid and first column are wavelength in that unit, and
+`BinSize` is also interpreted in that wavelength unit. \
+`PlotCrossSectionWnWl` only controls the x-axis used for plotting and does not change the saved
+`.xsec` file.
+
+Line-profile widths and `Cutoff(Y/N)` are still specified in cm⁻¹ because the profiles are evaluated internally in wavenumber space, even when the user selects a wavelength grid for the saved output.
 
 `PredissocXsec(Y/N)`: If `PredissocXsec(Y/N)` is yes, predissociation lifetimes will be used or calculated when calculating cross sections with Voigt profile.
 

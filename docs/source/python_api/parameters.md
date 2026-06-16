@@ -234,6 +234,13 @@ Used by `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross
 | `max_range` | `float` | `30000` | Maximum of range (in `wn_wl_unit`) |
 | `abs_emi` | `str` | `'Ab'` | `'Ab'` = absorption, `'Em'` = emission |
 
+***Note***
+
+`wn_wl` and `wn_wl_unit` define the calculation and saved-output coordinate, not just labels. \
+With `wn_wl='WN'`, saved `.stick` and `.xsec` files use wavenumber as the first column. \
+With `wn_wl='WL'`, saved files use wavelength as the first column in `wn_wl_unit`. \
+Plotting parameters can use a different coordinate and only affect figure x-axes.
+
 ---
 
 ## Non-LTE Parameters
@@ -367,10 +374,13 @@ Used by `px.cross_sections()`.
 | `bin_size` | `float` | `0.1` | Bin size in `wn_wl_unit` (mutually exclusive with `n_point`) |
 | `n_point` | `int` | `None` | Number of grid points (mutually exclusive with `bin_size`) |
 
-:::{note}
-If both `bin_size` and `n_point` are specified, `n_point` takes precedence
-and `bin_size` is calculated from the range.
-:::
+***Note***
+
+If both `bin_size` and `n_point` are specified, `n_point` takes precedence and `bin_size` is calculated from the range. \
+For wavelength calculations, `bin_size` is a wavelength interval. \
+For example, `wn_wl='WL'`, `wn_wl_unit='nm'`, and `bin_size=0.01` means a 0.01 nm grid
+spacing. \
+`cutoff`, `alpha_hwhm`, and `gamma_hwhm` remain in cm⁻¹ because line profiles are evaluated in wavenumber space internally.
 
 ---
 
@@ -386,8 +396,8 @@ Used by `px.oscillator_strengths()`, `px.stick_spectra()`, `px.cross_sections()`
 | `plot_unit` | `str` | `'cm-1'` | X-axis unit: `'cm-1'`, `'um'`, or `'nm'` |
 | `limit_yaxis` | `float` | `1e-30` | Lower limit for y-axis |
 
-:::{note}
-These are **convenience** kwargs that get remapped internally to
-function-specific names.  For example, `plot=True` in
+***Note***
+
+These are **convenience** kwargs that get remapped internally to function-specific names. \
+For example, `plot=True` in
 `px.cross_sections()` becomes `plot_cross_section=True`.
-:::

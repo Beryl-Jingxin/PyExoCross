@@ -110,7 +110,7 @@ px.cross_sections(
 )
 ```
 
-Notes:
+***Notes:***
 - If GPU backend is unavailable, execution falls back to CPU formulas.
 - `AUTO` order: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU`.
 - `CUDA` order: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU`.

@@ -83,10 +83,10 @@ command line.
 | `inp_filepath` | `str` | Yes | Path to the `.inp` configuration file |
 | `force_reload` | `bool` | No | Force re-parse of `.inp` even when cached in current Python process (default: `False`) |
 
-:::{note}
+***Note***
+
 If you edit the same `.inp` file repeatedly in a long-lived session (e.g. Jupyter),
 use `force_reload=True` to avoid reusing stale cached parameters.
-:::
 
 **Example**
 
@@ -575,6 +575,14 @@ Calculate LTE or Non-LTE stick spectra (absorption or emission).
 | `plot_unit` | `str` | `'cm-1'` | `'cm-1'`, `'um'`, or `'nm'` |
 | `limit_yaxis` | `float` | `1e-30` | Lower limit for y-axis (cm/molecule) |
 
+***Note***
+
+`wn_wl` and `wn_wl_unit` define the calculation range, saved file name, and the
+first column of the saved `.stick` file. \
+Use `wn_wl='WN', wn_wl_unit='cm-1'`
+to save wavenumber, or `wn_wl='WL', wn_wl_unit='nm'/'um'` to save wavelength. \
+`plot_wn_wl` and `plot_unit` only control the plot x-axis.
+
 ### Quantum Number Filter (`qns_filter`)
 
 The `qns_filter` parameter accepts a dictionary where keys are quantum number
@@ -645,6 +653,16 @@ All parameters from [`px.stick_spectra`](#pxstick_spectra), plus:
 | `plot_wn_wl` | `str` | `'WN'` | X-axis: `'WN'` or `'WL'` |
 | `plot_unit` | `str` | `'cm-1'` | `'cm-1'`, `'um'`, or `'nm'` |
 | `limit_yaxis` | `float` | `1e-30` | Lower limit for y-axis (cm$^2$/molecule) |
+
+***Note***
+
+The cross-section grid is built in the selected `wn_wl_unit`. \
+For example,
+with `wn_wl='WL', wn_wl_unit='nm'`, `min_range`, `max_range`, `bin_size`, the
+saved file name, and the first column of the saved `.xsec` file all use nm. \
+The plot axis can be changed independently with `plot_wn_wl` and `plot_unit`.
+Line-profile widths and `cutoff` remain in cm⁻¹.
+
 
 ### Available Line Profiles
 
@@ -725,6 +743,10 @@ Calculate LTE or Non-LTE stick spectra and cross sections simultaneously.
 **Parameters**
 
 All parameters from [`px.stick_spectra`](#pxstick_spectra) and [`px.cross_sections`](#pxcross_sections).
+
+The same `wn_wl`/`wn_wl_unit` selection is used for both saved outputs:
+`.stick` and `.xsec` first columns are both wavenumber for `WN` and wavelength
+for `WL`. Cross-section `bin_size` follows the same unit.
 
 **Example**
 

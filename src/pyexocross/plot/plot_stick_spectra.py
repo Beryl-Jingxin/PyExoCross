@@ -14,6 +14,38 @@ from ..base.utils import Timer, ensure_dir
 from ..process.stick_xsec_filepath import temperature_string_base
 from .mpl_safety import configure_mpl_large_path_rendering
 
+
+def _axis_values_from_wavenumber(v, values, axis_kind, axis_unit):
+    """Return paired x/value arrays in the requested axis unit, sorted by x."""
+    v = np.asarray(v)
+    values = np.asarray(values)
+    if axis_kind == 'WN':
+        x_value = v
+        value_out = values
+        unit_fn = 'cm-1__'
+        axis_label = 'Wavenumber, cm⁻¹'
+    elif axis_kind == 'WL' and axis_unit == 'um':
+        mask = v > 0
+        x_value = 1e4 / v[mask]
+        value_out = values[mask]
+        unit_fn = 'um__'
+        axis_label = 'Wavelength, μm'
+    elif axis_kind == 'WL' and axis_unit == 'nm':
+        mask = v > 0
+        x_value = 1e7 / v[mask]
+        value_out = values[mask]
+        unit_fn = 'nm__'
+        axis_label = 'Wavelength, nm'
+    else:
+        raise ValueError('Please wirte the unit of wavelength in the input file: um or nm.')
+
+    valid = np.isfinite(x_value) & np.isfinite(value_out)
+    x_value = x_value[valid]
+    value_out = value_out[valid]
+    order = np.argsort(x_value)
+    return x_value[order], value_out[order], unit_fn, axis_label
+
+
 # Plot stick spectra
 def plot_stick_spectra(stick_spectra_df, T=None, Tvib=None, Trot=None):
     """
@@ -81,102 +113,16 @@ def plot_stick_spectra(stick_spectra_df, T=None, Tvib=None, Trot=None):
     
     # Store original S for y-axis limits (before any filtering)
     S_original = S.copy()
-    if PlotStickSpectraWnWl == 'WN':
-        ax.set_xlabel('Wavenumber, cm⁻¹')
-        unit_fn = 'cm-1__'
-        if wn_wl == 'WN':
-            ax.set_xlim([min_v, max_v])
-            v_value = v
-        elif wn_wl == 'WL' and wn_wl_unit == 'um':
-            # Filter out zeros before conversion
-            nonzero_mask = v > 0
-            if np.sum(nonzero_mask) == 0:
-                print(f'Warning: All wavenumbers are zero or negative. Cannot plot wavelength.')
-                plt.close()
-                return
-            v_value = 1e4/v[nonzero_mask]
-            S = S[nonzero_mask]
-            # Calculate axis limits from FILTERED data
-            if len(v_value) > 0:
-                ax.set_xlim([np.min(v_value), np.max(v_value)])
-            else:
-                print(f'Warning: No valid data after filtering. Skipping plot.')
-                plt.close()
-                return
-        elif wn_wl == 'WL' and wn_wl_unit == 'nm':
-            # Filter out zeros before conversion
-            nonzero_mask = v > 0
-            if np.sum(nonzero_mask) == 0:
-                print(f'Warning: All wavenumbers are zero or negative. Cannot plot wavelength.')
-                plt.close()
-                return
-            v_value = 1e7/v[nonzero_mask]
-            S = S[nonzero_mask]
-            # Calculate axis limits from FILTERED data
-            if len(v_value) > 0:
-                ax.set_xlim([np.min(v_value), np.max(v_value)])
-            else:
-                print(f'Warning: No valid data after filtering. Skipping plot.')
-                plt.close()
-                return
-        else:
-            raise ValueError('Please wirte the unit of wavelength in the input file: um or nm.')
-    elif PlotStickSpectraWnWl == 'WL' and PlotStickSpectraUnit == 'um':
-        ax.set_xlabel('Wavelength, μm')
-        unit_fn = 'um__'
-        if wn_wl == 'WN':
-            # Filter out zeros before conversion
-            nonzero_mask = v > 0
-            if np.sum(nonzero_mask) == 0:
-                print(f'Warning: All wavenumbers are zero or negative. Cannot plot wavelength.')
-                plt.close()
-                return
-            v_value = 1e4/v[nonzero_mask]
-            S = S[nonzero_mask]
-            # Calculate axis limits from FILTERED data
-            if len(v_value) > 0:
-                ax.set_xlim([np.min(v_value), np.max(v_value)])
-            else:
-                print(f'Warning: No valid data after filtering. Skipping plot.')
-                plt.close()
-                return
-        elif wn_wl == 'WL' and wn_wl_unit == 'um':
-            ax.set_xlim([min_v, max_v])
-            v_value = v
-        elif wn_wl == 'WL' and wn_wl_unit == 'nm':
-            ax.set_xlim([min_v/1e3, max_v/1e3])
-            v_value = v/1e3
-        else:
-            raise ValueError('Please wirte the unit of wavelength in the input file: um or nm.')
-    elif PlotStickSpectraWnWl == 'WL' and PlotStickSpectraUnit == 'nm':
-        ax.set_xlabel('Wavelength, nm')
-        unit_fn = 'nm__'
-        if wn_wl == 'WN':
-            # Filter out zeros before conversion
-            nonzero_mask = v > 0
-            if np.sum(nonzero_mask) == 0:
-                print(f'Warning: All wavenumbers are zero or negative. Cannot plot wavelength.')
-                plt.close()
-                return
-            v_value = 1e7/v[nonzero_mask]
-            S = S[nonzero_mask]
-            # Calculate axis limits from FILTERED data
-            if len(v_value) > 0:
-                ax.set_xlim([np.min(v_value), np.max(v_value)])
-            else:
-                print(f'Warning: No valid data after filtering. Skipping plot.')
-                plt.close()
-                return
-        elif wn_wl == 'WL' and wn_wl_unit == 'um':
-            ax.set_xlim([min_v*1e3, max_v*1e3])
-            v_value = v*1e3
-        elif wn_wl == 'WL' and wn_wl_unit == 'nm':
-            ax.set_xlim([min_v, max_v])
-            v_value = v
-        else:
-            raise ValueError('Please wirte the unit of wavelength in the input file: um or nm.')
+    v_value, S, unit_fn, axis_label = _axis_values_from_wavenumber(
+        v, S, PlotStickSpectraWnWl, PlotStickSpectraUnit
+    )
+    ax.set_xlabel(axis_label)
+    if len(v_value) > 0:
+        ax.set_xlim([np.min(v_value), np.max(v_value)])
     else:
-        raise ValueError('Please wirte the unit of wavelength in the input file: um or nm.')      
+        print(f'Warning: No valid data after filtering. Skipping plot.')
+        plt.close()
+        return
     # Check if we have data after filtering
     if len(v_value) == 0 or len(S) == 0:
         print(f'Warning: No valid data to plot after filtering (v length: {len(v_value)} {wn_wl_unit}, S length: {len(S)}) . Skipping plot.')
@@ -223,8 +169,10 @@ def plot_stick_spectra(stick_spectra_df, T=None, Tvib=None, Trot=None):
     leg = ax.legend()                  # Get the legend object.
     # for line in leg.legend_handles:
     #     line.set_height(1.5)           # Change the line width for the legend.
-    str_min_wnl = str(int(np.floor(min_v)))
-    str_max_wnl = str(int(np.ceil(max_v)))
+    plot_min_v = np.min(v_value)
+    plot_max_v = np.max(v_value)
+    str_min_wnl = str(int(np.floor(plot_min_v)))
+    str_max_wnl = str(int(np.ceil(plot_max_v)))
     T_str = temperature_string_base(T_val, Tvib_val, Trot_val, NLTEMethod)
     ss_plot = (ss_plot_folder + '__'.join(data_info) + '__' + T_str + '__' + PlotStickSpectraWnWl.lower()
                + str_min_wnl + '-' + str_max_wnl + unit_fn

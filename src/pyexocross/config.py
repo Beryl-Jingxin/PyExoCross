@@ -125,14 +125,29 @@ class Config:
             self.P_list = [1.0]
         
         # Wavenumber/wavelength settings
-        self.wn_wl = kwargs.get('wn_wl', getattr(self, 'wn_wl', 'WN'))
-        self.wn_wl_unit = kwargs.get('wn_wl_unit', getattr(self, 'wn_wl_unit', 'cm-1'))
+        self.wn_wl = kwargs.get('wn_wl', getattr(self, 'wn_wl', 'WN')).upper()
+        self.wn_wl_unit = kwargs.get('wn_wl_unit', getattr(self, 'wn_wl_unit', 'cm-1')).lower().replace('cm^-1', 'cm-1')
         
         min_range = kwargs.get('min_range', getattr(self, 'min_wnl', 0))
         max_range = kwargs.get('max_range', getattr(self, 'max_wnl', 30000))
         
-        self.min_wn = min_range if self.wn_wl == 'WN' else 1e4/max_range if self.wn_wl_unit == 'um' else 1e7/max_range
-        self.max_wn = max_range if self.wn_wl == 'WN' else 1e4/min_range if self.wn_wl_unit == 'um' else 1e7/min_range
+        if self.wn_wl == 'WN':
+            self.min_wn = min_range
+            self.max_wn = max_range
+        elif self.wn_wl == 'WL':
+            if min_range <= 0 or max_range <= 0:
+                raise ValueError("Wavelength range values must be greater than 0.")
+            if self.wn_wl_unit == 'um':
+                unit_change = 1e4
+            elif self.wn_wl_unit == 'nm':
+                unit_change = 1e7
+            else:
+                raise ValueError("Please give the unit of wavelength as 'um' or 'nm'.")
+            wl_bounds_as_wn = [unit_change / min_range, unit_change / max_range]
+            self.min_wn = min(wl_bounds_as_wn)
+            self.max_wn = max(wl_bounds_as_wn)
+        else:
+            raise ValueError("Please choose wavenumber or wavelength with wn_wl='WN' or wn_wl='WL'.")
         self.min_wnl = min_range
         self.max_wnl = max_range
         
@@ -144,16 +159,19 @@ class Config:
         
         if _n_point is not None:
             self.N_point = int(_n_point)
-            self.bin_size = (self.max_wn - self.min_wn) / max(self.N_point - 1, 1)
+            self.bin_size = abs(max_range - min_range) / max(self.N_point - 1, 1)
         elif _bin_size is not None:
-            bs = _bin_size if self.wn_wl == 'WN' else (_bin_size * 1e-4 if self.wn_wl_unit == 'um' else _bin_size * 1e-7)
-            self.bin_size = bs
-            self.N_point = int((self.max_wn - self.min_wn) / self.bin_size) + 1
+            self.bin_size = float(_bin_size)
+            self.N_point = int(abs(max_range - min_range) / self.bin_size) + 1
         elif not hasattr(self, 'N_point') or not hasattr(self, 'bin_size'):
-            # Default: bin_size = 0.1 cm-1
+            # Default bin size is in the selected WnWlUnit.
             self.bin_size = 0.1
-            self.N_point = int((self.max_wn - self.min_wn) / self.bin_size) + 1
-        self.wn_grid = np.linspace(self.min_wn, self.max_wn, self.N_point)
+            self.N_point = int(abs(max_range - min_range) / self.bin_size) + 1
+        if self.wn_wl == 'WN':
+            self.wn_grid = np.linspace(self.min_wn, self.max_wn, self.N_point)
+        else:
+            wl_grid = np.linspace(min_range, max_range, self.N_point)
+            self.wn_grid = np.sort(unit_change / wl_grid)
         
         # Filters (None = disabled, float/int value = enabled)
         current_threshold = getattr(self, 'threshold', 'None')

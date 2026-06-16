@@ -42,7 +42,7 @@ For one quantum number label, write in one `[]`, you can provide more than one p
 * The definition file `.def`, `.def.json`, or `.adef.json` of ExoMol database format (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
 * HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
 
-**Note**
+***Note***
 
 You can define the quantum number column name by yourself, but please make sure it has letters without any blanks.
 e.g. 'c1', 'c2', 'v1', 'v2', 'electronicState', 'electronic_state', '1v', '2v', 'M/E/C'.
