@@ -52,6 +52,10 @@ For 3 different symmetry indices and inversional parity labels, please write wri
 
 Here, the quantum number formats are the formats of quantum numbers you want to save in the output file.
 
+For ExoMol and ExoAtom input, these format rows are optional when the labels in `GlobalQNLabel` and `LocalQNLabel` can be found in the definition metadata files (`.def.json`, `.def`, or `.adef.json`). *PyExoCross* uses shortened metadata labels, for example `Herzberg:n1` becomes `n1`. Provide `GlobalQNFormat` and `LocalQNFormat` only when you need to override the metadata-derived formats.
+
+For HITRAN, HITEMP, or custom files without ExoMol metadata, provide the quantum number formats explicitly.
+
 In the standard HITRAN2004 format, both global and local quantum numbers have 15 characters.
 
 ## Filters
@@ -279,5 +283,5 @@ ConvThreshold(Y/N)                      N          1e-30          # If Y, defaul
 **Note**
 
 1. ExoMol format definition files `.def`, `.def.json`, and `.adef.json` (available at [exomol.com](https://www.exomol.com/)) provide the labels and formats of the quantum numbers for each species for reference.
-2. ExoMolHR format can be found from ExoMolHR website [https://www.exomol.com/exomolhr/](https://www.exomol.com/exomolhr/).
+2. ExoMolHR format can be found from ExoMolHR website [https://www.exomol.com/exomolhr/qn/](https://www.exomol.com/exomolhr/qn/).
 3. HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.

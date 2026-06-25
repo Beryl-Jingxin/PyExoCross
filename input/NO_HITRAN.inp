@@ -7,9 +7,9 @@ SpeciesID                               81
 
 
 # File path #
-ReadPath                                /home/jingxin/data/HITRAN/
-SavePath                                /home/jingxin/data/pyexocross/
-LogFilePath                             /home/jingxin/data/pyexocross/log/NO_HITRAN.log
+ReadPath                                /Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/
+SavePath                                /Users/beryl/Academic/UCL/PhD/Data/pyexocross/
+LogFilePath                             /Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/NO_HITRAN.log
 
 
 # Functions #
@@ -31,6 +31,7 @@ RunMode                                 CPU                       # CPU(default)
 GPUBackend                              AUTO                      # AUTO, CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (only used when RunMode=GPU)
 GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
 GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+
 
 # Quantum numbers for conversion, stick spectra and cross sections #
 QNslabel                                J       X     Omega   v1      Sym    F

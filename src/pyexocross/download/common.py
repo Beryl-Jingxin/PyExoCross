@@ -31,9 +31,9 @@ def default_url_path(save_path, database_name):
     return os.path.join(save_path, 'url', f'{database_name.lower()}__urls.txt')
 
 
-def download_url_file(url_path, save_path):
+def download_url_file(url_path, save_path, cut_dirs=1):
     """Download files listed in ``url_path`` using wget."""
-    command = ['wget', '-r', '-nH', '--cut-dirs=1', '-P', save_path, '-i', url_path]
+    command = ['wget', '-r', '-nH', f'--cut-dirs={cut_dirs}', '-P', save_path, '-i', url_path]
     subprocess.run(command, check=True)
 
 

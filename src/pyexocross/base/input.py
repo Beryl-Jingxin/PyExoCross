@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 
 from .constants import num_cpus
+from .qn_metadata import qn_labels_formats_from_states, qn_formats_for_labels
 from .utils import ensure_dir
 
 
@@ -330,7 +331,8 @@ def inp_para(inp_filepath):
             QNslabel_list = exomolhr_meta['qnslabel_list']
             QNsformat_list = exomolhr_meta['qnsformat_list']
         else:
-            raise ValueError("Please provide QNslabel and QNsformat in the input file.")
+            QNslabel_list = []
+            QNsformat_list = []
     else:
         QNslabel_list = []
         QNsformat_list = []  
@@ -354,9 +356,11 @@ def inp_para(inp_filepath):
         ConversionMinFreq = float(inp_df[col0.isin(['ConversionFrequncyRange'])][1].iloc[0])
         ConversionMaxFreq = float(inp_df[col0.isin(['ConversionFrequncyRange'])][2].iloc[0])
         GlobalQNLabel_list = list(inp_df[col0.isin(['GlobalQNLabel'])].iloc[0].dropna())[1:]
-        GlobalQNFormat_list = list(inp_df[col0.isin(['GlobalQNFormat'])].iloc[0].dropna())[1:]
+        global_qn_format_rows = inp_df[col0.isin(['GlobalQNFormat'])]
+        GlobalQNFormat_list = list(global_qn_format_rows.iloc[0].dropna())[1:] if not global_qn_format_rows.empty else []
         LocalQNLabel_list = list(inp_df[col0.isin(['LocalQNLabel'])].iloc[0].dropna())[1:]
-        LocalQNFormat_list = list(inp_df[col0.isin(['LocalQNFormat'])].iloc[0].dropna())[1:]
+        local_qn_format_rows = inp_df[col0.isin(['LocalQNFormat'])]
+        LocalQNFormat_list = list(local_qn_format_rows.iloc[0].dropna())[1:] if not local_qn_format_rows.empty else []
         
         # # Read GlobalQN / LocalQN labels and formats from input file
         # _gqn_rows = inp_df[col0.isin(['GlobalQNLabel'])]
@@ -507,7 +511,7 @@ def inp_para(inp_filepath):
                 else:
                     # No bracket means select all values for this QN
                     QNs_value.append([''])
-            QNs_format = [QNsformat_list[j] for j in [QNslabel_list.index(i) for i in QNs_label]]
+            QNs_format = []
         elif QNsFilterYN == 'N':
             QNsFilter = []
             QNs_label = []
@@ -939,6 +943,33 @@ def inp_para(inp_filepath):
         print(
             "Predissociation cross sections are enabled (PredissocXsec='Y') and a non-Lorentzian profile is selected.\n"
             "The program may take a long time because predissociative lifetimes must be calculated before the cross sections.\n"
+        )
+
+    if NeedQNs != 0 and not QNslabel_list and states_col and states_fmt:
+        QNslabel_list, QNsformat_list = qn_labels_formats_from_states(states_col, states_fmt)
+    if QNs_label and not QNs_format:
+        QNs_format = qn_formats_for_labels(
+            QNs_label,
+            QNslabel_list,
+            QNsformat_list,
+            states_col,
+            states_fmt,
+        )
+    if GlobalQNLabel_list and len(GlobalQNFormat_list) != len(GlobalQNLabel_list):
+        GlobalQNFormat_list = qn_formats_for_labels(
+            GlobalQNLabel_list,
+            QNslabel_list,
+            QNsformat_list,
+            states_col,
+            states_fmt,
+        )
+    if LocalQNLabel_list and len(LocalQNFormat_list) != len(LocalQNLabel_list):
+        LocalQNFormat_list = qn_formats_for_labels(
+            LocalQNLabel_list,
+            QNslabel_list,
+            QNsformat_list,
+            states_col,
+            states_fmt,
         )
             
     return (database, data_info, read_path, save_path, logs_path,

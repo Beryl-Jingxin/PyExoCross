@@ -15,6 +15,7 @@ from tabulate import tabulate
 from pyexocross.base.input import inp_para, parse_TP_values
 from pyexocross.base.utils import ensure_dir
 from pyexocross.base.constants import *
+from pyexocross.base.qn_metadata import qn_formats_for_labels
 
 class Config:
     """
@@ -483,19 +484,37 @@ class Config:
         self.check_lifetime = meta['check_lifetime']
         self.check_gfactor = meta['check_gfactor']
         self.check_predissoc = meta['check_predissoc']
+        if not getattr(self, 'qnslabel_list', []):
+            self.qnslabel_list = meta.get('qnslabel_list', [])
+        if not getattr(self, 'qnsformat_list', []):
+            self.qnsformat_list = meta.get('qnsformat_list', [])
+        if getattr(self, 'qns_label', []) and not getattr(self, 'qns_format', []):
+            self.qns_format = qn_formats_for_labels(
+                self.qns_label,
+                self.qnslabel_list,
+                self.qnsformat_list,
+                self.states_col,
+                self.states_fmt,
+            )
+        if getattr(self, 'global_qn_label_list', []) and len(getattr(self, 'global_qn_format_list', [])) != len(self.global_qn_label_list):
+            self.global_qn_format_list = qn_formats_for_labels(
+                self.global_qn_label_list,
+                self.qnslabel_list,
+                self.qnsformat_list,
+                self.states_col,
+                self.states_fmt,
+            )
+        if getattr(self, 'local_qn_label_list', []) and len(getattr(self, 'local_qn_format_list', [])) != len(self.local_qn_label_list):
+            self.local_qn_format_list = qn_formats_for_labels(
+                self.local_qn_label_list,
+                self.qnslabel_list,
+                self.qnsformat_list,
+                self.states_col,
+                self.states_fmt,
+            )
         if self.database == 'ExoMolHR':
             self.dataset = meta.get('dataset', self.dataset)
             self.data_info = [self.molecule, self.isotopologue, self.dataset]
-            if not getattr(self, 'qnslabel_list', []):
-                self.qnslabel_list = meta.get('qnslabel_list', [])
-            if not getattr(self, 'qnsformat_list', []):
-                self.qnsformat_list = meta.get('qnsformat_list', [])
-            if getattr(self, 'qns_label', []) and not getattr(self, 'qns_format', []):
-                self.qns_format = [
-                    self.qnsformat_list[self.qnslabel_list.index(label)]
-                    for label in self.qns_label
-                    if label in self.qnslabel_list
-                ]
         resolved_species_main_id = meta['species_main_id']
         resolved_species_sub_id = meta['species_sub_id']
         # For ExoMol/ExoAtom, keep non-zero IDs that were already parsed from

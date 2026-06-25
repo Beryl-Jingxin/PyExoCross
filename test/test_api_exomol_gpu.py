@@ -1,7 +1,6 @@
 """
 Test all PyExoCross API functions using ExoMol MgH parameters.
 
-Parameters are derived from: input/MgH_ExoMol.inp
 """
 import sys
 import os
@@ -28,11 +27,6 @@ COMMON = dict(
     logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/MgH_ExoMol_gpu.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/log/MgH_ExoMol_gpu.log', 
 )
 
-# Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
-QN_PARAMS = dict(
-    qnslabel_list=['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega'],
-    qnsformat_list=['%1s', '%1s', '%12s', '%3d', '%5d', '%5d', '%5d'],
-)
 
 # NLTE parameters (needed by stick_spectra and cross_sections)
 NLTE_PARAMS = dict(
@@ -91,7 +85,6 @@ def test_stick_spectra():
     print('='*70)
     px.stick_spectra(
         **COMMON,
-        **QN_PARAMS,
         # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
@@ -117,7 +110,6 @@ def test_cross_sections():
     print('='*70)
     px.cross_sections(
         **COMMON,
-        **QN_PARAMS,
         # **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
@@ -146,7 +138,6 @@ def test_stick_spectra_cross_section():
     print('='*70)
     px.stick_spectra_cross_section(
         **COMMON,
-        **QN_PARAMS,
         # **NLTE_PARAMS,          # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,

@@ -84,7 +84,7 @@ def test_download():
         database='HITRAN',
         species_info={
             'NO': {
-                '14N-16O': {'wn_range': [0,100]},
+                '14N-16O': {'wn_range': None},
                 '15N-16O': {'wn_range': [100,150]},
             },
         },

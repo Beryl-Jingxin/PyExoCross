@@ -10,11 +10,13 @@ if src_root not in sys.path:
 import pyexocross as px
 
 def main():
-    px.run('/home/jingxin/LHD/Program/PyExoCross/.input/MgH_ExoMol.inp')
+    px.run('/Users/beryl/Academic/UCL/PhD/Code/PyExoCross/input/MgH_ExoMol_recommended.inp')
+    
+    px.run('/Users/beryl/Academic/UCL/PhD/Code/PyExoCross/input/NO_ExoMolHR.inp')
 
-    px.run('/home/jingxin/LHD/Program/PyExoCross/.input/Ar_QDB_nlte.inp')
+    px.run('/Users/beryl/Academic/UCL/PhD/Code/PyExoCross/input/Ar_QDB_nlte.inp')
 
-    px.run('/home/jingxin/LHD/Program/PyExoCross/.input/NO_HITRAN.inp')
+    px.run('/Users/beryl/Academic/UCL/PhD/Code/PyExoCross/input/NO_HITRAN.inp')
 
 
 if __name__ == '__main__':

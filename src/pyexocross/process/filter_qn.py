@@ -31,9 +31,10 @@ def QNfilter_linelist(linelist_df, QNs_value, QNs_label):
     """
     for i in range(len(QNs_label)):
         if QNs_value[i] != ['']:
-            linelist_df[i] = linelist_df[[QNs_label[i]+"'",QNs_label[i]+'"']].fillna('').agg(','.join, axis=1).astype(str).str.replace(' ', '')
-            uval = linelist_df[QNs_label[i]+"'"].astype(str).str.replace(' ', '').drop_duplicates().values
-            lval = linelist_df[QNs_label[i]+'"'].astype(str).str.replace(' ', '').drop_duplicates().values
+            qn_pair = linelist_df[[QNs_label[i]+"'",QNs_label[i]+'"']].fillna('').astype(str).replace('nan', '')
+            linelist_df[i] = qn_pair.agg(','.join, axis=1).astype(str).str.replace(' ', '')
+            uval = qn_pair[QNs_label[i]+"'"].str.replace(' ', '').drop_duplicates().values
+            lval = qn_pair[QNs_label[i]+'"'].str.replace(' ', '').drop_duplicates().values
             vallist = []
             ulist = []
             llist = []

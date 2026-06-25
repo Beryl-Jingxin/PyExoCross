@@ -51,6 +51,8 @@ $$
 
 `UncFilter(Y/N)`, `Threshold(Y/N)`, and `QNsFilter(Y/N)` are filters, please see [**Filters**](`https://pyexocross.readthedocs.io/en/latest/filters.html`).
 
+For ExoMol, ExoMolHR, and ExoAtom input, QN labels and formats used by `QNsFilter(Y/N)` are derived from the metadata by default. The `QNslabel` and `QNsformat` rows in examples are optional overrides for custom or legacy files.
+
 ## Plot stick spectra
 
 `PlotStickSpectra(Y/N)`: If you need plot a figure of stick spectra (intensity or emisivity), please write `Y` after `PlotStickSpectra(Y/N)`, otherwise, write `N`.

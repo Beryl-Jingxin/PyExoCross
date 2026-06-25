@@ -14,6 +14,8 @@ import re
 import numpy as np
 import pandas as pd
 
+from pyexocross.base.qn_metadata import qn_labels_formats_from_states
+
 
 def resolve_database_metadata(database, read_path, data_info, species_id=None):
     """
@@ -121,10 +123,13 @@ def _parse_exomol_json_def(json_path):
 
     abundance = 1.0
     mass = def_df['isotopologue']['mass_in_Da']
+    qnslabel_list, qnsformat_list = qn_labels_formats_from_states(states_col, states_fmt)
 
     return {
         'states_col': states_col,
         'states_fmt': states_fmt,
+        'qnslabel_list': qnslabel_list,
+        'qnsformat_list': qnsformat_list,
         'check_uncertainty': bool(check_uncertainty),
         'check_lifetime': bool(check_lifetime),
         'check_gfactor': bool(check_gfactor),
@@ -162,10 +167,13 @@ def _parse_exomol_text_def(def_path):
 
     abundance = 1.0
     mass = float(def_df[def_df['4'].isin(['mass'])]['0'].values[0])
+    qnslabel_list, qnsformat_list = qn_labels_formats_from_states(states_col, states_fmt)
 
     return {
         'states_col': states_col,
         'states_fmt': states_fmt,
+        'qnslabel_list': qnslabel_list,
+        'qnsformat_list': qnsformat_list,
         'check_uncertainty': check_uncertainty,
         'check_lifetime': check_lifetime,
         'check_gfactor': check_gfactor,
@@ -287,10 +295,13 @@ def _resolve_exoatom(read_path, data_info, species_id=None):
 
     abundance = 1.0
     mass = float(def_df['species']['mass_in_Da'])
+    qnslabel_list, qnsformat_list = qn_labels_formats_from_states(states_col, states_fmt)
 
     return {
         'states_col': states_col,
         'states_fmt': states_fmt,
+        'qnslabel_list': qnslabel_list,
+        'qnsformat_list': qnsformat_list,
         'check_uncertainty': bool(check_uncertainty),
         'check_lifetime': bool(check_lifetime),
         'check_gfactor': bool(check_gfactor),

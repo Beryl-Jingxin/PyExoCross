@@ -7,9 +7,9 @@ SpeciesID                               501
 
 
 # File path #
-ReadPath                                /mnt/data/exomol/exomol3_data/
-SavePath                                /home/jingxin/data/pyexocross/
-LogFilePath                             /home/jingxin/data/pyexocross/log/MgH_ExoMol.log
+ReadPath                                /Users/beryl/Academic/UCL/PhD/Data/database/ExoMol/
+SavePath                                /Users/beryl/Academic/UCL/PhD/Data/pyexocross/
+LogFilePath                             /Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/MgH_ExoMol.log
 
 
 # Functions #

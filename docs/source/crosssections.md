@@ -25,6 +25,8 @@ If `WnWlUnit` is `wl nm` or `wl um`, the grid and first column are wavelength in
 
 Line-profile widths and `Cutoff(Y/N)` are still specified in cm⁻¹ because the profiles are evaluated internally in wavenumber space, even when the user selects a wavelength grid for the saved output.
 
+For ExoMol, ExoMolHR, and ExoAtom input, QN labels and formats used by quantum number filters are derived from the metadata by default. The `QNslabel` and `QNsformat` rows in examples are optional overrides for custom or legacy files.
+
 `PredissocXsec(Y/N)`: If `PredissocXsec(Y/N)` is yes, predissociation lifetimes will be used or calculated when calculating cross sections with Voigt profile.
 
 `Cutoff(Y/N)`: If `Cutoff(Y/N)` is yes, you can provide wing cutoff here in unit of cm⁻¹.

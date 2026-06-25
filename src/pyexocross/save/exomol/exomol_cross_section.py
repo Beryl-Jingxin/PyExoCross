@@ -23,7 +23,7 @@ from pyexocross.base.large_file import (
     read_trans_chunks
 )
 from pyexocross.database import read_broad, get_part_transfiles
-from pyexocross.database.load_exomol import extract_broad
+from pyexocross.database.load_exomol import broad_required_line_columns, extract_broad
 from pyexocross.calculation.calculate_para import cal_v
 from pyexocross.calculation.calculate_intensity import (
     cal_abscoefs,
@@ -63,6 +63,14 @@ from pyexocross.calculation.calculate_cross_section import (
 from pyexocross.process.T_n_val import get_ntemp, get_temp_vals
 from pyexocross.process.S_for_LTE_NLTE_Ab_Em import S_for_LTE_NLTE_Ab_Em
 from pyexocross.plot.plot_cross_section import save_xsec_file_plot
+
+def numeric_columns(df, columns):
+    """Convert present columns to numeric values for line-shape calculations."""
+    for col in columns:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    return df
+
 
 ## Line list for calculating cross sections
 def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list,P,Q_arr,
@@ -168,6 +176,29 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
         u_states,
         l_states
     ], axis=1)
+    numeric_columns(
+        st_df,
+        [
+            'A',
+            "E'",
+            'E"',
+            "g'",
+            'g"',
+            "J'",
+            'J"',
+            "tau'",
+            'alpha_hwhm',
+            'gamma_hwhm',
+            "Evib'",
+            'Evib"',
+            "Erot'",
+            'Erot"',
+            "nvib'",
+            'nvib"',
+            "pop'",
+            'pop"',
+        ],
+    )
     
     st_df['v'] = cal_v(st_df["E'"].values, st_df['E"'].values)
     # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
@@ -199,24 +230,28 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
     else:
         extra_col = []
 
+    broad_match_col = broad_required_line_columns(broad_dfs, st_df.columns)
+    def _keep_cols(cols):
+        return list(dict.fromkeys(cols + broad_match_col))
+
     if predissocYN == 'Y' and 'VOI' in profile:
         if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm','gamma_hwhm']+extra_col]
+            st_df = st_df[_keep_cols(['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm','gamma_hwhm']+extra_col)]
         elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm']+extra_col]
+            st_df = st_df[_keep_cols(['A','v',"g'","E'",'E"','J"',"tau'",'alpha_hwhm']+extra_col)]
         elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'",'gamma_hwhm']+extra_col]
+            st_df = st_df[_keep_cols(['A','v',"g'","E'",'E"','J"',"tau'",'gamma_hwhm']+extra_col)]
         else:
-            st_df = st_df[['A','v',"g'","E'",'E"','J"',"tau'"]+extra_col]
+            st_df = st_df[_keep_cols(['A','v',"g'","E'",'E"','J"',"tau'"]+extra_col)]
     else:
         if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm','gamma_hwhm']+extra_col]
+            st_df = st_df[_keep_cols(['A','v',"g'","E'",'E"','J"','alpha_hwhm','gamma_hwhm']+extra_col)]
         elif DopplerHWHMYN == 'U' and LorentzianHWHMYN != 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"','alpha_hwhm']+extra_col]
+            st_df = st_df[_keep_cols(['A','v',"g'","E'",'E"','J"','alpha_hwhm']+extra_col)]
         elif DopplerHWHMYN != 'U' and LorentzianHWHMYN == 'U':
-            st_df = st_df[['A','v',"g'","E'",'E"','J"','gamma_hwhm']+extra_col]
+            st_df = st_df[_keep_cols(['A','v',"g'","E'",'E"','J"','gamma_hwhm']+extra_col)]
         else:
-            st_df = st_df[['A','v',"g'","E'",'E"','J"']+extra_col]
+            st_df = st_df[_keep_cols(['A','v',"g'","E'",'E"','J"']+extra_col)]
         
     num = len(st_df)
     if num > 0:
@@ -226,6 +261,7 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
         st_df.drop(columns=['A',"g'","E'",'E"'], inplace=True)
         if threshold != 'None':
             st_df = st_df[st_df['coef'] >= threshold]  
+        numeric_columns(st_df, ['v', 'coef', 'alpha_hwhm', 'gamma_hwhm', "tau'"])
         v = st_df['v'].values
         num = len(st_df)         
 

@@ -1,7 +1,6 @@
 """
 Test all PyExoCross API functions using HITRAN NO parameters.
 
-Parameters are derived from: input/NO_HITRAN.inp
 """
 import sys
 import os

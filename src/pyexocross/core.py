@@ -185,6 +185,8 @@ def get_results(config):
                 config.check_lifetime,
                 config.check_gfactor,
                 config.qnslabel_list,
+                config.states_col,
+                config.states_fmt,
                 config.qns_label,
                 config.qns_filter,
                 config.qns_value,

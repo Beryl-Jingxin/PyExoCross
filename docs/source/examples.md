@@ -2,6 +2,8 @@
 
 The examples of the whole input files for databases can be obtained from the `input` folder of *PyExoCross*'s ***GitHub*** : [https://github.com/Beryl-Jingxin/PyExoCross](https://github.com/Beryl-Jingxin/PyExoCross).
 
+For ExoMol, ExoMolHR, and ExoAtom examples, `QNslabel` and `QNsformat` are optional overrides when the same labels can be resolved from metadata. HITRAN and HITEMP examples still provide explicit QN labels and formats.
+
 ## Example for the ExoMol database
 
 ```bash

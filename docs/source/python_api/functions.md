@@ -253,8 +253,8 @@ Convert between ExoMol/ExoMolHR/ExoAtom and HITRAN line-list formats.
 | `global_qn_format_list` | `list[str]` | `[]` | Global QN format specifiers (total 15 chars in HITRAN2004) |
 | `local_qn_label_list` | `list[str]` | `[]` | Local quantum number labels for HITRAN output |
 | `local_qn_format_list` | `list[str]` | `[]` | Local QN format specifiers (total 15 chars in HITRAN2004) |
-| `qnslabel_list` | `list[str]` | `[]` | Quantum number labels from `.states` file |
-| `qnsformat_list` | `list[str]` | `[]` | Quantum number format specifiers |
+| `qnslabel_list` | `list[str]` | `[]` | Optional quantum number label override; ExoMol/ExoMolHR/ExoAtom labels are derived from definition metadata by default |
+| `qnsformat_list` | `list[str]` | `[]` | Optional quantum number format override; ExoMol/ExoMolHR/ExoAtom formats are derived from definition metadata by default |
 | `ncputrans` | `int` | `4` | CPU cores for processing transitions |
 | `ncpufiles` | `int` | `1` | Files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size for transitions |
@@ -558,8 +558,8 @@ Calculate LTE or Non-LTE stick spectra (absorption or emission).
 | `unc_filter` | `float` or `None` | `None` | Uncertainty filter (cm⁻¹); `None` to disable |
 | `qns_filter` | `dict` or `None` | `None` | Quantum number filter (see below) |
 | **Quantum numbers** | | | |
-| `qnslabel_list` | `list[str]` | `[]` | QN labels from `.states` file |
-| `qnsformat_list` | `list[str]` | `[]` | QN format specifiers |
+| `qnslabel_list` | `list[str]` | `[]` | Optional QN label override; ExoMol/ExoAtom labels are derived from definition metadata by default |
+| `qnsformat_list` | `list[str]` | `[]` | Optional QN format override; ExoMol/ExoAtom formats are derived from definition metadata by default |
 | **Computing** | | | |
 | `ncputrans` | `int` | `4` | CPU cores for transitions |
 | `ncpufiles` | `int` | `1` | Files processed simultaneously |

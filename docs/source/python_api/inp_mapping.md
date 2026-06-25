@@ -139,6 +139,13 @@ px.cross_sections(..., run_mode='GPU', gpu_backend='MPS')
 | `QNslabel` | `qnslabel_list` | `+/- e/f ElecState v Lambda Sigma Omega` | `['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega']` |
 | `QNsformat` | `qnsformat_list` | `%1s %1s %12s %3d %3d %5.1f %5.1f` | `['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f']` |
 
+
+For ExoMol and ExoAtom input, QN labels and formats are derived from
+`.def.json`, `.def`, or `.adef.json` when these rows are omitted. Namespace
+prefixes are shortened before matching, for example `Herzberg:n1` is used as
+`n1`.\
+For ExoMolHR input, QN labels and formats are derived from the default metadata inside PyExoCross automatically.
+
 ---
 
 ## Conversion

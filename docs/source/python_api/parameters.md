@@ -172,6 +172,12 @@ Used by `px.conversion()`.
 The global and local quantum number format strings follow HITRAN2004 convention.
 Each format field is a C/Fortran-style specifier:
 
+For ExoMol, ExoMolHR, and ExoAtom input, `global_qn_format_list` and `local_qn_format_list`
+can be omitted when all requested labels are available in the definition
+metadata. Metadata namespaces are shortened before matching, so labels such as
+`Herzberg:n1` are requested as `n1`. \
+
+
 ```python
 global_qn_label_list  = ['ElecState', 'v', 'Omega']
 global_qn_format_list = ['%9s', '%2d', '%4s']    # Total: 15 chars
@@ -303,22 +309,32 @@ qns_filter = {
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `qnslabel_list` | `list[str]` | `[]` | Quantum number column labels |
-| `qnsformat_list` | `list[str]` | `[]` | Quantum number format specifiers |
+| `qnslabel_list` | `list[str]` | `[]` | Optional quantum number label |
+| `qnsformat_list` | `list[str]` | `[]` | Optional quantum number format |
 
-The labels and formats must correspond to the columns in the `.states` file
-**after** the standard columns (ID, energy, degeneracy, lifetime).
+For ExoMol and ExoAtom input, the labels and formats are read from the
+definition metadata (`.def.json`, `.def`, or `.adef.json`) by default. \
+For ExoMolHR input, the labels and formats are read from the
+default metadata automatically.\
+Namespace prefixes are removed, for example `Herzberg:n1` becomes `n1` and
+`qn:configuration` becomes `configuration`. Optional state columns such as
+uncertainty, lifetime, and oscillator strength are not added to the automatic
+quantum number list.
+
+Provide `qnslabel_list` and `qnsformat_list` only for custom/legacy files or
+when you need to override the metadata. In that case, the labels and formats
+must correspond to the quantum number columns in the `.states` file.
 
 **ExoMolHR** No need.
 
-**ExoMol Example** (MgH XAB):
+**ExoMol override example** (MgH XAB):
 
 ```python
 qnslabel_list  = ['+/-', 'e/f', 'ElecState', 'v', 'Lambda', 'Sigma', 'Omega']
 qnsformat_list = ['%1s', '%1s', '%12s', '%3d', '%3d', '%5.1f', '%5.1f']
 ```
 
-**ExoAtom Example** (Ar NIST):
+**ExoAtom override example** (Ar NIST):
 
 ```python
 qnslabel_list  = ['configuration', 'Multiple', 'parity']

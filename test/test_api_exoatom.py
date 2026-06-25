@@ -27,11 +27,6 @@ COMMON = dict(
     logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exoatom.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_exoatom.log', 
 )
 
-# Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
-QN_PARAMS = dict(
-    qnslabel_list=['configuration', 'Multiple', 'parity'],
-    qnsformat_list=['%20s', '%10s', '%2s'],
-)
 
 # NLTE parameters (needed by stick_spectra and cross_sections)
 NLTE_PARAMS = dict(
@@ -85,7 +80,6 @@ def test_conversion():
     print('='*70)
     px.conversion(
         **COMMON,
-        **QN_PARAMS,
         **COMPUTE_PARAMS,
         conversion_format='HITRAN',
         conversion_min_freq=0,          # Minimum wavenumber in unit of cm⁻¹
@@ -180,7 +174,6 @@ def test_stick_spectra():
     print('='*70)
     px.stick_spectra(
         **COMMON,
-        **QN_PARAMS,
         # **NLTE_PARAMS,        # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
@@ -205,7 +198,6 @@ def test_cross_sections():
     print('='*70)
     px.cross_sections(
         **COMMON,
-        **QN_PARAMS,
         # **NLTE_PARAMS,        # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,
@@ -234,7 +226,6 @@ def test_stick_spectra_cross_section():
     print('='*70)
     px.stick_spectra_cross_section(
         **COMMON,
-        **QN_PARAMS,
         # **NLTE_PARAMS,        # If Non-LTE is enabled, this parameter is required.
         **RANGE_PARAMS,
         **COMPUTE_PARAMS,

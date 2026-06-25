@@ -1,7 +1,6 @@
 """
 Test all PyExoCross API functions using ExoMolHR NO parameters.
 
-Parameters are derived from: .input/AlCl_ExoMolHR.inp
 """
 import os
 import sys
@@ -25,6 +24,7 @@ COMMON = dict(
     read_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoMolHR/', # '/Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/',
     save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/',
     logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/NO_ExoMolHR_gpu_cupy.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exomolhr.log',
+
 )
 
 # Spectral range parameters
@@ -35,7 +35,7 @@ RANGE_PARAMS = dict(
     min_range=24,               # Minimum wavenumber in unit of cm⁻¹
     max_range=53452,            # Maximum wavenumber in unit of cm⁻¹
     abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
-    unc_filter=0.01,            # Uncertainty filter (default: None)
+    # unc_filter=0.01,            # Uncertainty filter (default: None)
     threshold=1e-30,            # Threshold filter (default: None)
 )
 

@@ -12,6 +12,8 @@
 
 ``QNsRotLabel``: Please provide rotational quantum number labels seperated by ``,``.
 
+For ExoMol and ExoAtom input, these labels use the metadata-derived short names, for example `Herzberg:n1` should be written as `n1`. The `QNslabel` and `QNsformat` rows in examples are optional overrides for custom or legacy files.
+
 ## Temperatures
 
 ``Tvib``: Please provide vibrational temperatures in unit of K.

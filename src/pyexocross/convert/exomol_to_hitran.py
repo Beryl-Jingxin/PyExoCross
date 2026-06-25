@@ -5,6 +5,7 @@ This module provides functions for converting ExoMol states and transitions
 to HITRAN format, including quantum number conversion and format translation.
 """
 import glob
+import re
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
@@ -26,9 +27,10 @@ from ..base.large_file import (
     read_trans_chunks,
     process_large_chunks,
 )
+from ..base.qn_metadata import normalized_states_columns
 from ..calculation.calculate_para import cal_v, cal_uncertainty
 from ..calculation.calculate_intensity import cal_abscoefs
-from ..database.load_exomol import get_transfiles, read_exomol_pf, extract_broad
+from ..database.load_exomol import get_part_transfiles, read_exomol_pf, extract_broad, read_broad_file
 
 _USE_THREAD_POOL = True
 
@@ -64,6 +66,7 @@ def _ensure_conversion_globals():
         check_lifetime,
         check_gfactor,
         QNslabel_list,
+        states_col,
         read_path,
         save_path,
         data_info,
@@ -88,6 +91,7 @@ def _ensure_conversion_globals():
             check_lifetime=check_lifetime,
             check_gfactor=check_gfactor,
             QNslabel_list=QNslabel_list,
+            states_col=states_col,
             read_path=read_path,
             save_path=save_path,
             data_info=data_info,
@@ -141,9 +145,22 @@ def read_unc_states(states_df):
         col_gfac = ['gfac']
     else:
         col_gfac = []
-    fullcolname = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNslabel_list
-    states_unc_df = states_unc_df.iloc[:, : len(fullcolname)]
-    states_unc_df.columns = fullcolname  
+    fullcolname = normalized_states_columns(states_col, states_unc_df.shape[1]) if 'states_col' in globals() and len(states_col) >= states_unc_df.shape[1] else []
+    requested_labels = list(dict.fromkeys(GlobalQNLabel_list + LocalQNLabel_list))
+    if fullcolname and all(label in fullcolname for label in requested_labels):
+        states_unc_df = states_unc_df.iloc[:, : len(fullcolname)]
+        states_unc_df.columns = fullcolname
+    else:
+        fullcolname = ['id','E','g','J'] + col_unc + col_lifetime + col_gfac + QNslabel_list
+        states_unc_df = states_unc_df.iloc[:, : len(fullcolname)]
+        states_unc_df.columns = fullcolname
+        missing_labels = [label for label in requested_labels if label not in states_unc_df.columns]
+        if missing_labels:
+            raise ValueError(
+                'Requested conversion quantum-number labels are missing from the parsed states columns: '
+                + ', '.join(missing_labels)
+                + '. Please use a .def/.def.json file with full states metadata or check the requested Global/Local QN labels.'
+            )
     colnames = ['id','E','g'] + col_unc + GlobalQNLabel_list + LocalQNLabel_list
     states_unc_df = states_unc_df[colnames] 
     states_unc_df = convert_QNValues_exomol2hitran(states_unc_df, GlobalQNLabel_list, LocalQNLabel_list)
@@ -293,7 +310,7 @@ def broadener_ExoMol2HITRAN(exomolst_df):
     pattern_air = read_path + data_info[0] + '/**/*air.broad'
     if glob.glob(pattern_air, recursive=True) != []:
         for fname_air in glob.glob(pattern_air, recursive=True):
-            air_broad_df = pd.read_csv(fname_air, sep='\s+', names=broad_col_name, header=None, engine='python')
+            air_broad_df = read_broad_file(fname_air)
             gamma_air = extract_broad(air_broad_df,exomolst_df)[0].values
             n_air = extract_broad(air_broad_df,exomolst_df)[1].values
     else:
@@ -302,11 +319,69 @@ def broadener_ExoMol2HITRAN(exomolst_df):
     pattern_self = read_path + data_info[0] + '/**/*self.broad'
     if glob.glob(pattern_self, recursive=True) != []:
         for fname_self in glob.glob(pattern_self, recursive=True):
-            self_broad_df = pd.read_csv(fname_self, sep='\s+', names=broad_col_name, header=None, engine='python')
+            self_broad_df = read_broad_file(fname_self)
             gamma_self = extract_broad(self_broad_df,exomolst_df)[0].values
     else:
         gamma_self= np.full((1,rows),default_broad_df['gamma_L'][0])[0]  
     return (gamma_air, gamma_self, n_air)
+
+
+def python_qn_format(fmt):
+    """Convert a printf-style QN format to a Python format string."""
+    return fmt.replace("%", "{: >") + "}"
+
+
+def qn_format_width(fmt):
+    match = re.search(r'%\s*(\d+)', fmt)
+    return int(match.group(1)) if match else 0
+
+
+def format_qn_series(values, fmt):
+    """Format QN values after coercing them to the dtype required by fmt."""
+    py_fmt = python_qn_format(fmt)
+    width = qn_format_width(fmt)
+    source = values if isinstance(values, pd.Series) else pd.Series(values)
+
+    def finite_int_or_blank(value):
+        if pd.isna(value):
+            return ''
+        value = float(value)
+        if not np.isfinite(value):
+            return ''
+        return int(round(value))
+
+    def float_or_blank(value):
+        if pd.isna(value):
+            return ''
+        return float(value)
+
+    if 'd' in fmt:
+        numeric = pd.to_numeric(source, errors='coerce')
+        prepared = numeric.map(finite_int_or_blank)
+    elif 'f' in fmt:
+        numeric = pd.to_numeric(source, errors='coerce')
+        prepared = numeric.map(float_or_blank)
+    elif 's' in fmt or 'a' in fmt:
+        prepared = (
+            source
+            .fillna('')
+            .astype(str)
+            .str.replace('(', '', regex=False)
+            .str.replace(')', '', regex=False)
+        )
+    else:
+        prepared = source.fillna('').astype(str)
+    def format_value(value):
+        if value == '':
+            return ' ' * width
+        return py_fmt.format(value)
+
+    try:
+        formatted = prepared.parallel_map(format_value)
+    except AttributeError:
+        formatted = prepared.map(format_value)
+    return formatted
+
 
 def convert_QNFormat_exomol2hitran(exomolst_df, GlobalQNLabel_list, GlobalQNFormat_list, 
                                    LocalQNLabel_list, LocalQNFormat_list):
@@ -336,22 +411,10 @@ def convert_QNFormat_exomol2hitran(exomolst_df, GlobalQNLabel_list, GlobalQNForm
     """
     n_gQN = len(GlobalQNLabel_list)
     for i in range(n_gQN):
-        gQN_format = GlobalQNFormat_list[i].replace("%",'{: >')+'}'
+        gQN_format = GlobalQNFormat_list[i]
         gQN_label = GlobalQNLabel_list[i]
-        try:
-            if 'd' in gQN_format or 'f' in gQN_format: 
-                exomolst_df[gQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+"'"].values)).parallel_map(gQN_format.format)
-                exomolst_df[gQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+'"'].values)).parallel_map(gQN_format.format)
-            elif 's' in gQN_format or 'a' in gQN_format: 
-                exomolst_df[gQN_label+"'"] = pd.Series(exomolst_df[gQN_label+"'"].fillna('').astype(str).str.replace('(','').str.replace(')','')).parallel_map(gQN_format.format)
-                exomolst_df[gQN_label+'"'] = pd.Series(exomolst_df[gQN_label+'"'].fillna('').astype(str).str.replace('(','').str.replace(')','')).parallel_map(gQN_format.format)
-        except:
-            if 'd' in gQN_format or 'f' in gQN_format: 
-                exomolst_df[gQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+"'"].values)).map(gQN_format.format)
-                exomolst_df[gQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[gQN_label+'"'].values)).map(gQN_format.format)
-            elif 's' in gQN_format or 'a' in gQN_format: 
-                exomolst_df[gQN_label+"'"] = pd.Series(exomolst_df[gQN_label+"'"].fillna('').astype(str).str.replace('(','').str.replace(')','')).map(gQN_format.format)
-                exomolst_df[gQN_label+'"'] = pd.Series(exomolst_df[gQN_label+'"'].fillna('').astype(str).str.replace('(','').str.replace(')','')).map(gQN_format.format)
+        exomolst_df[gQN_label+"'"] = format_qn_series(exomolst_df[gQN_label+"'"], gQN_format)
+        exomolst_df[gQN_label+'"'] = format_qn_series(exomolst_df[gQN_label+'"'], gQN_format)
     try:
         globalQNp = exomolst_df[[GlobalQNLabel_list[i]+"'" for i in range(n_gQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)  
         globalQNpp = exomolst_df[[GlobalQNLabel_list[i]+'"' for i in range(n_gQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)    
@@ -361,22 +424,10 @@ def convert_QNFormat_exomol2hitran(exomolst_df, GlobalQNLabel_list, GlobalQNForm
                 
     n_lQN = len(LocalQNLabel_list)
     for i in range(n_lQN):
-        lQN_format = LocalQNFormat_list[i].replace("%",'{: >')+'}'
+        lQN_format = LocalQNFormat_list[i]
         lQN_label = LocalQNLabel_list[i]
-        try:
-            if 'd' in lQN_format or 'f' in lQN_format: 
-                exomolst_df[lQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+"'"].values)).parallel_map(lQN_format.format)
-                exomolst_df[lQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+'"'].values)).parallel_map(lQN_format.format)
-            elif 's' in lQN_format or 'a' in lQN_format: 
-                exomolst_df[lQN_label+"'"] = pd.Series(exomolst_df[lQN_label+"'"].fillna('').astype(str).str.replace('(','').str.replace(')','')).parallel_map(lQN_format.format)
-                exomolst_df[lQN_label+'"'] = pd.Series(exomolst_df[lQN_label+'"'].fillna('').astype(str).str.replace('(','').str.replace(')','')).parallel_map(lQN_format.format)
-        except:
-            if 'd' in lQN_format or 'f' in lQN_format: 
-                exomolst_df[lQN_label+"'"] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+"'"].values)).map(lQN_format.format)
-                exomolst_df[lQN_label+'"'] = pd.Series(pd.to_numeric(exomolst_df[lQN_label+'"'].values)).map(lQN_format.format)
-            elif 's' in lQN_format or 'a' in lQN_format: 
-                exomolst_df[lQN_label+"'"] = pd.Series(exomolst_df[lQN_label+"'"].fillna('').astype(str).str.replace('(','').str.replace(')','')).map(lQN_format.format)
-                exomolst_df[lQN_label+'"'] = pd.Series(exomolst_df[lQN_label+'"'].fillna('').astype(str).str.replace('(','').str.replace(')','')).map(lQN_format.format)
+        exomolst_df[lQN_label+"'"] = format_qn_series(exomolst_df[lQN_label+"'"], lQN_format)
+        exomolst_df[lQN_label+'"'] = format_qn_series(exomolst_df[lQN_label+'"'], lQN_format)
     try:
         localQNp = exomolst_df[[LocalQNLabel_list[i]+"'" for i in range(n_lQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)  
         localQNpp = exomolst_df[[LocalQNLabel_list[i]+'"' for i in range(n_lQN)]].astype(str).sum(axis=1).parallel_map('{: >15}'.format)            
@@ -563,13 +614,23 @@ def conversion_exomol2hitran(states_df):
     tot = Timer()
     tot.start()
     print('Reading transitions and converting data format from ExoMol to HITRAN ...')    
-    trans_filepaths = get_transfiles(read_path, data_info)
+    trans_filepaths = get_part_transfiles(read_path, data_info, ConversionMinFreq, ConversionMaxFreq)
+    if len(trans_filepaths) == 0:
+        raise ValueError(
+            'No transition files overlap the requested conversion wavenumber range '
+            f'({ConversionMinFreq}-{ConversionMaxFreq} cm-1).'
+        )
     # Process multiple files in parallel
     with _executor_context(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file
         futures = [executor.submit(process_exomol2hitran_linelist,states_df,
                                    trans_filepath) for trans_filepath in tqdm(trans_filepaths)]
         hitran_res_df = pd.concat([future.result() for future in futures])
+    if len(hitran_res_df) == 0:
+        raise ValueError(
+            'No transitions found in the requested conversion wavenumber range '
+            f'({ConversionMinFreq}-{ConversionMaxFreq} cm-1).'
+        )
     hitran_res_df.sort_values(by=['v'], ascending=True, inplace=True)  
     tot.end()
     print('Finished reading all transitions and converting data format from ExoMol to HITRAN!\n')

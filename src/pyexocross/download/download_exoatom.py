@@ -9,6 +9,14 @@ EXOATOM_BASE_URL = 'https://www.exomol.com/exoatom/db'
 EXOATOM_EXTENSIONS = ['.adef.json', '.states', '.trans', '.pf']
 
 
+def _as_dataset_list(dataset):
+    if dataset is None:
+        return []
+    if isinstance(dataset, (list, tuple, set)):
+        return list(dataset)
+    return [dataset]
+
+
 def _dataset_from_config(config):
     if isinstance(config, dict):
         return config.get('dataset')
@@ -25,8 +33,8 @@ def _normalize_atom_datasets(species_info):
             raise ValueError(f'Invalid ExoAtom config for {atom}: {config}')
 
         dataset = config.get('dataset')
-        if dataset is not None:
-            normalized.append((atom, None, dataset))
+        for dataset_name in _as_dataset_list(dataset):
+            normalized.append((atom, None, dataset_name))
 
         for isotopologue, isotope_config in config.items():
             if isotopologue == 'dataset':
@@ -34,7 +42,8 @@ def _normalize_atom_datasets(species_info):
             isotope_dataset = _dataset_from_config(isotope_config)
             if isotope_dataset is None:
                 raise ValueError(f'Missing dataset for ExoAtom {atom} isotopologue {isotopologue}.')
-            normalized.append((atom, isotopologue, isotope_dataset))
+            for dataset_name in _as_dataset_list(isotope_dataset):
+                normalized.append((atom, isotopologue, dataset_name))
     return normalized
 
 
@@ -73,7 +82,7 @@ def download_exoatom(
     print('\nAll ExoAtom URLs have been saved to', url_path)
 
     if download:
-        download_url_file(url_path, save_path)
+        download_url_file(url_path, save_path, cut_dirs=2)
         print('\nAll ExoAtom files have been downloaded to', save_path, 'folder!')
 
     return urls

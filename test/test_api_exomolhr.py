@@ -68,7 +68,7 @@ def test_download():
         database='ExoMolHR',
         species_info={
             'NO': {
-                '14N-16O': {'T': 500, 'wn_range': [0, 1000], 'threshold': 1e-30}
+                '14N-16O': {'T': 500, 'wn_range': [0, 60000], 'threshold': 1e-30}
             },
         },
         download=True,
@@ -176,7 +176,7 @@ if __name__ == '__main__':
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
-        test_download,
+        # test_download,
         test_conversion,
         test_stick_spectra,
         test_cross_sections,

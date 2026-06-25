@@ -6,6 +6,8 @@ If you want to calculate stick spectra and cross sections simultaneously, you ca
 
 This calculation combines all parameters from both stick spectra and cross section calculations. For detailed descriptions of each parameter, please refer to [**Stick spectra**](`https://pyexocross.readthedocs.io/en/latest/stickspectra.html`) and [**Cross sections**](`https://pyexocross.readthedocs.io/en/latest/crosssections.html`).
 
+For ExoMol, ExoMolHR, and ExoAtom input, QN labels and formats are derived from the metadata by default. The `QNslabel` and `QNsformat` rows in examples are optional overrides for custom or legacy files.
+
 1. **Temperatures and Wavenumber/Wavelength Ranges**: Shared parameters for both calculations.
 2. **Pressures and Broadeners**: Applied to the cross section calculations.
 3. **Line profiles**: Used for cross section profiles.

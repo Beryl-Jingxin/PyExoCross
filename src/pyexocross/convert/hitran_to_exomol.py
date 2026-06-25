@@ -341,12 +341,16 @@ def conversion_broad(hitran2exomol_air_df, hitran2exomol_self_df, conversion_fol
     broad_format = "%2s %6.4f %6.3f %7s"    
     if nair != 0:
         conversion_airbroad_path = conversion_folder + data_info[-2] + '__air.broad'
+        hitran2exomol_air_df = hitran2exomol_air_df.copy()
+        hitran2exomol_air_df['code'] = hitran2exomol_air_df['code'].astype(str).str.lower()
         np.savetxt(conversion_airbroad_path, hitran2exomol_air_df, fmt=broad_format)
         print('Converted air broadening file have been saved:', conversion_airbroad_path)
     else:
         print('No air broadening file.')
     if nself != 0:
         conversion_selfbroad_path = conversion_folder + data_info[-2] + '__self.broad'
+        hitran2exomol_self_df = hitran2exomol_self_df.copy()
+        hitran2exomol_self_df['code'] = hitran2exomol_self_df['code'].astype(str).str.lower()
         np.savetxt(conversion_selfbroad_path, hitran2exomol_self_df, fmt=broad_format)
         print('Converted self broadening file have been saved:', conversion_selfbroad_path)
     else:

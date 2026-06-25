@@ -44,6 +44,19 @@ from pyexocross.database import get_part_transfiles
 from pyexocross.process.filter_qn import QNfilter_linelist
 from pyexocross.plot.plot_stick_spectra import plot_stick_spectra
 
+def stick_spectra_qn_output_columns(columns, col_main, qns_filter, qns_label):
+    """Return only the QN columns requested by the QN filter."""
+    if qns_filter == []:
+        return []
+    qn_cols = []
+    for suffix in ("'", '"'):
+        for label in qns_label:
+            col = label + suffix
+            if col in columns and col not in col_main:
+                qn_cols.append(col)
+    return list(dict.fromkeys(qn_cols))
+
+
 # Stick Spectra
 # Process LTE or NLTE linelist
 def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list,Q_arr,trans_part_df,temp_idx=None):
@@ -108,7 +121,7 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
         l_cols = [col + '"' for col in states_cols]
         combined_cols = ['A'] + u_cols + l_cols
         col_main = ['v','S',"J'","E'",'J"','E"']
-        col_qn = [col for col in combined_cols if col not in col_main]
+        col_qn = stick_spectra_qn_output_columns(combined_cols, col_main, QNsFilter, QNs_label)
         col_stick_spectra = col_main + col_qn
         return pd.DataFrame(columns=col_stick_spectra)
     
@@ -155,7 +168,7 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
         raise ValueError("Please choose one non-LTE method from: 'T', 'D' or 'P'.")
     stick_spectra_df.drop(columns=col_list, inplace=True)
     col_main = ['v','S',"J'","E'",'J"','E"']
-    col_qn = [col for col in stick_spectra_df.columns if col not in col_main]
+    col_qn = stick_spectra_qn_output_columns(stick_spectra_df.columns, col_main, QNsFilter, QNs_label)
     col_stick_spectra = col_main + col_qn
     stick_spectra_df = stick_spectra_df[col_stick_spectra]  
     return stick_spectra_df

@@ -112,6 +112,34 @@ def insert_exomol_lifetime_column(states_df, lifetime, states_col, states_fmt):
     states_lifetime_df.insert(insert_at, 'tau', lifetime)     
     return (states_lifetime_df, states_lifetime_fmt)
 
+
+def energy_width12_format(values, max_precision=6):
+    """
+    Return a fixed-width E-column format that keeps values within 12 chars.
+    """
+    numeric = pd.to_numeric(values, errors='coerce')
+    finite = numeric[np.isfinite(numeric)]
+    if finite.empty:
+        return '%12.6f'
+    max_abs = float(finite.abs().max())
+    int_digits = len(str(int(np.floor(max_abs)))) if max_abs >= 1 else 1
+    if (finite < 0).any():
+        int_digits += 1
+    precision = max(0, min(max_precision, 11 - int_digits))
+    return f'%12.{precision}f'
+
+
+def adapt_energy_format(states_lifetime_df, states_lifetime_fmt):
+    """Adapt E format to preserve a total width of 12 characters."""
+    if 'E' not in states_lifetime_df.columns:
+        return states_lifetime_fmt
+    fmt = list(states_lifetime_fmt)
+    e_idx = list(states_lifetime_df.columns).index('E')
+    if e_idx < len(fmt):
+        fmt[e_idx] = energy_width12_format(states_lifetime_df['E'])
+    return fmt
+
+
 def convert_dtype_by_format(df, fmt_list):
     """
     Convert DataFrame column dtypes based on format strings.
@@ -184,6 +212,7 @@ def save_exomol_lifetime(read_path, states_df, states_col, states_fmt):
     
     # Insert lifetime column into states_df
     (states_lifetime_df, states_lifetime_fmt) = insert_exomol_lifetime_column(states_df, lifetime, states_col, states_fmt)
+    states_lifetime_fmt = adapt_energy_format(states_lifetime_df, states_lifetime_fmt)
     states_lifetime_df = convert_dtype_by_format(states_lifetime_df, states_lifetime_fmt)
 
     lf_folder = save_path + 'lifetime/'

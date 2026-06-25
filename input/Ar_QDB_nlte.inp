@@ -6,9 +6,9 @@ SpeciesID                               601
 
 
 # File path #
-ReadPath                                /mnt/data/exoatom/exoatom_data/      #/home/jingxin/data/NLTE/        
-SavePath                                /home/jingxin/data/pyexocross/
-LogFilePath                             /home/jingxin/data/pyexocross/log/Ar_QDB_nlte.log
+ReadPath                                /Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/
+SavePath                                /Users/beryl/Academic/UCL/PhD/Data/pyexocross/
+LogFilePath                             /Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/Ar_QDB_nlte.log
 
 
 # Functions #
@@ -77,7 +77,7 @@ QNsFilter(Y/N)                          Y          configuration[]     Multiple[
 
 
 # Calculate non-LTE #
-NLTEMethod                              P           /home/jingxin/data/NLTE/Ar/NIST/Ar_Ids.csv     # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+NLTEMethod                              P           /Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/Ar/NIST/Ar_Ids.csv  #/home/jingxin/data/NLTE/Ar/NIST/Ar_Ids.csv     # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
 Tvib                                    2000
 Trot                                    296
 QNsVibLabel                             Multiple

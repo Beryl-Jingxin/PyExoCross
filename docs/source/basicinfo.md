@@ -468,9 +468,16 @@ GPUBatchGrid                            256
 
 ## Quantum numbers
 
-Please provide the labels `QNslabel` and formats `QNsformat` of the quantum numbers when you use *PyExoCross* to convert data format, calculate stick spectra or cross sections if you need the quantum filter.
+For ExoMol and ExoAtom input, *PyExoCross* reads the quantum number labels and formats from the definition metadata files (`.def.json`, `.def`, or `.adef.json`) when they are needed for data conversion, stick spectra, cross sections, or quantum number filters. \
+For ExoMolHR input, *PyExoCross* reads the quantum number labels and formats from the default metadata automatically.
 
-* The definition files `.def`, `.def.json`, and `.adef.json` of ExoMol and ExoAtom databases (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
+* Metadata labels with a namespace are shortened before use, for example `Herzberg:n1` is used as `n1` and `qn:configuration` is used as `configuration`.
+* Optional non-quantum-number state columns such as uncertainty, lifetime, and oscillator strength are not added to the automatic quantum number list.
+* `QNslabel` and `QNsformat` are optional overrides for custom or legacy files. Standard ExoMol, ExoMolHR, and ExoAtom runs can usually omit them.
+* `GlobalQNFormat` and `LocalQNFormat` can also be omitted for ExoMol, ExoMolHR, and ExoAtom conversion when the corresponding `GlobalQNLabel` and `LocalQNLabel` entries are present in the metadata. Provide the formats only when you need to override the metadata-derived formats.
+* HITRAN and HITEMP input do not have ExoMol definition metadata, so provide the required quantum number labels and formats explicitly for those conversions or filters.
+* The definition files `.def`, `.def.json`, and `.adef.json` of ExoMol and ExoAtom databases (available at [exomol.com](https://www.exomol.com/)) provide the labels and formats of the quantum numbers for each species for reference.
+* The quantum number metadata for ExoMolHR database can be accessed from [https://www.exomol.com/exomolhr/qn/](https://www.exomol.com/exomolhr/qn/).
 * HITRAN2024 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
 
 **Note**

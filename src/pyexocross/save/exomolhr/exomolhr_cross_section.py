@@ -34,6 +34,7 @@ from pyexocross.calculation.calcualte_line_profile import (
     line_profile,
 )
 from pyexocross.database import extract_broad, read_broad
+from pyexocross.database.load_exomol import broad_required_line_columns
 from pyexocross.database.load_exomolhr import process_exomolhr_linelist_Q
 from pyexocross.plot.plot_cross_section import save_xsec_file_plot
 from pyexocross.process.T_n_val import get_ntemp, get_temp_vals
@@ -84,7 +85,15 @@ def process_exomolhr_cross_section_chunk(exomolhr_df, T, P, Q, profile_label,
         Evibpp,
         Erotpp,
     )
-    ll_df = exomolhr_df[['v', 'J"']].copy()
+    broad = []
+    ratio = []
+    nbroad = 0
+    broad_dfs = []
+    if 'DOP' not in profile_label.upper() and 'GAU' not in profile_label.upper():
+        broad, ratio, nbroad, broad_dfs = read_broad(read_path)
+
+    broad_match_cols = broad_required_line_columns(broad_dfs, exomolhr_df.columns)
+    ll_df = exomolhr_df[list(dict.fromkeys(['v'] + broad_match_cols))].copy()
     ll_df['coef'] = coef
     if threshold != 'None':
         ll_df = ll_df[ll_df['coef'] >= threshold]
@@ -96,7 +105,6 @@ def process_exomolhr_cross_section_chunk(exomolhr_df, T, P, Q, profile_label,
     num = len(ll_df)
 
     if 'DOP' not in profile_label.upper() and 'GAU' not in profile_label.upper():
-        broad, ratio, nbroad, broad_dfs = read_broad(read_path)
         gamma_L = {}
         n_air = {}
         for i in range(nbroad):

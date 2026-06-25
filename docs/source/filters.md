@@ -18,8 +18,13 @@ If `QNsFilter(Y/N)` is yes, program will do filter on quantum numbers.
 
 ### Quantum number label filters
 
-Write the quantum number labels required here, the spelling of the quantum number labels must be the same as `QNslabel`. 
-The other quantum number labels which are in `QNslabel` but not in `QNsFilter(Y/N)` will not be stored in the result file. 
+Write the quantum number labels required here. For ExoMol and ExoAtom input, the labels are resolved from the definition metadata files (`.def.json`, `.def`, or `.adef.json`) unless you provide `QNslabel` and `QNsformat` as an override. Namespace prefixes are removed, for example `Herzberg:n1` is filtered as `n1`.
+
+For ExoMolHR database, the labels and formats are listed as metadata in program which can be used automatically. For reference only, you can refer to [link](https://www.exomol.com/exomolhr/qn/).
+
+For HITRAN, HITEMP, or custom files without ExoMol metadata, the spelling of the quantum number labels must match the explicit `QNslabel` values.
+
+When no quantum number filter is used, stick spectra save only the basic output columns. When a quantum number filter is used, only the requested quantum number labels in `QNsFilter(Y/N)` are stored in the result file.
 
 ### Quantum number value filters
 
@@ -39,7 +44,8 @@ For one quantum number label, write in one `[]`, you can provide more than one p
 `v1[1,1;2,2]` means you want quantum number label v1 and you want when v1' = 1, v1" = 1; when v1' = 2, v1" = 2. \
 `v1[1,;,0;5,5]  v2[]` means you want quantum number labels v1 and v2. For v1, you want all lines with v1' = 1 , all lines with v1" = 0 and the lines with v1' = 5 and at the same time v1" = 5. Meanwhile, you want all lines for v2.
 
-* The definition file `.def`, `.def.json`, or `.adef.json` of ExoMol database format (available at [exomol.com](https://www.exomol.com/)) provides the labels and formats of the quantum numbers for each species for reference.
+* The definition file `.def`, `.def.json`, or `.adef.json` of ExoMol and ExoAtom database format provides the labels and formats of the quantum numbers for each species for reference.
+* ExoMolHR database provides the quantum number labels and formats table at [link](https://www.exomol.com/exomolhr/qn/).
 * HITRAN2020 supplementary material ([link](https://hitran.org/media/refs/HITRAN_QN_formats.pdf)) provides the notation and format for quanta identifications for reference.
 
 ***Note***
