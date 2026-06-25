@@ -466,6 +466,8 @@ def save_exomol_cross_section(states_part_df, T_list, Tvib_list, Trot_list, P_li
         UncFilter,
         min_wnl,
         max_wnl,
+        min_wn,
+        max_wn,
         data_info,
         wn_grid,
         database,
@@ -505,7 +507,7 @@ def save_exomol_cross_section(states_part_df, T_list, Tvib_list, Trot_list, P_li
                     'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)', broad, ratio)
     
     print('Reading transitions and calculating cross sections ...')    
-    trans_filepaths = get_part_transfiles(read_path, data_info)
+    trans_filepaths = get_part_transfiles(read_path, data_info, min_wn, max_wn)
     
     # Process each (T, P) combination separately to save memory
     any_results = False

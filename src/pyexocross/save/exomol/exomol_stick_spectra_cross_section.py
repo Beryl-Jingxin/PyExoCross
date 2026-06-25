@@ -37,6 +37,8 @@ if TYPE_CHECKING:
         QNs_format,
         min_wnl,
         max_wnl,
+        min_wn,
+        max_wn,
         UncFilter,
         threshold,
         abs_emi,
@@ -83,6 +85,8 @@ def _ensure_exomol_globals():
         QNs_format,
         min_wnl,
         max_wnl,
+        min_wn,
+        max_wn,
         UncFilter,
         threshold,
         abs_emi,
@@ -108,6 +112,8 @@ def _ensure_exomol_globals():
             QNs_format=QNs_format,
             min_wnl=min_wnl,
             max_wnl=max_wnl,
+            min_wn=min_wn,
+            max_wn=max_wn,
             UncFilter=UncFilter,
             threshold=threshold,
             abs_emi=abs_emi,
@@ -210,7 +216,7 @@ def save_exomol_stick_spectra_cross_section(
     profile_label = line_profile(profile)
     
     print('Reading transitions ONCE for all temperatures (will be used for both stick spectra and cross sections) ...')    
-    trans_filepaths = get_part_transfiles(read_path, data_info)
+    trans_filepaths = get_part_transfiles(read_path, data_info, min_wn, max_wn)
     
     # Prepare file format strings
     QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")

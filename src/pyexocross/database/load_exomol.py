@@ -253,7 +253,7 @@ def get_transfiles(read_path, data_info):
     print('{:45s} : {}'.format('Number of new decompressed transitions files', decompress_num))
     return trans_filepaths  
 
-def get_part_transfiles(read_path, data_info):
+def get_part_transfiles(read_path, data_info, min_wn, max_wn):
     """
     Get transition file paths filtered by wavenumber range.
 
@@ -266,6 +266,10 @@ def get_part_transfiles(read_path, data_info):
         Base path to ExoMol database directory
     data_info : list[str]
         Dataset info used to build transition file paths
+    min_wn : float
+        Minimum wavenumber in cm^-1 used for selecting transition files
+    max_wn : float
+        Maximum wavenumber in cm^-1 used for selecting transition files
 
     Returns
     -------

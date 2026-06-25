@@ -261,6 +261,8 @@ def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_ar
         database,
         min_wnl,
         max_wnl,
+        min_wn,
+        max_wn,
         UncFilter,
         threshold,
         NLTEMethod,
@@ -293,7 +295,7 @@ def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_ar
             pass
     
     print('\nReading transitions and calculating stick spectra ...')    
-    trans_filepaths = get_part_transfiles(read_path, data_info)
+    trans_filepaths = get_part_transfiles(read_path, data_info, min_wn, max_wn)
     
     # Process each temperature separately to save memory
     QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")
