@@ -49,8 +49,8 @@ def test_download_exomolhr():
         database='ExoMolHR',
         molecule_isotopologues={
             'MgH': {
-                '24Mg-1H': {'T': 1000, 'wn_range': [0, 500], 'threshold': 1e-30},
-                '25Mg-1H': None,
+                '24Mg-1H': None,
+                '25Mg-1H': {'T': 1000, 'wn_range': [0, 500], 'threshold': 1e-30},
             },
             'AlH': {
                 '27Al-1H': {'T': 500, 'wn_range': [0, 500], 'threshold': 1e-30}
