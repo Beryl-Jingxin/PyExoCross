@@ -3,6 +3,7 @@ Core execution module for PyExoCross.
 
 Contains the main get_results function that orchestrates all calculations.
 """
+import copy
 import glob
 import os
 import numpy as np
@@ -10,7 +11,7 @@ from tabulate import tabulate
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 
-def get_results(config):
+def get_results(config, data=None):
     """
     Main function to execute PyExoCross calculations.
 
@@ -28,7 +29,7 @@ def get_results(config):
     from pyexocross.process.filter_qn import QNfilter_linelist
     from pyexocross.process.hitran_qn import hitran_linelist_QN
     from pyexocross.calculation.calculate_lifetime import cal_lifetime
-    from pyexocross.base.large_file import read_trans_chunks
+    from pyexocross.base.large_file import read_trans_chunks, sourcename
     from pyexocross.convert.exomol_to_hitran import conversion_exomol2hitran
     from pyexocross.convert.hitran_to_exomol import conversion_hitran2exomol
     from pyexocross.convert.exomolhr_to_hitran import conversion_exomolhr2hitran
@@ -145,54 +146,129 @@ def get_results(config):
         # Functions
         Nfunctions = (Conversion + PartitionFunctions + SpecificHeats + Lifetimes
                      + CoolingFunctions + OscillatorStrengths + StickSpectra + CrossSections)
-        if Nfunctions > 0:
-            states_df = read_all_states(
-                read_path,
-                data_info,
-                config.check_uncertainty,
-                config.states_col,
-                config.states_fmt,
+        NeedPartStates = StickSpectra + CrossSections
+        NeedConversionTransitions = int(Conversion == 1 and ConversionFormat == 'HITRAN')
+        NeedAllTransitions = Lifetimes + CoolingFunctions + OscillatorStrengths
+        if (
+            predissocYN == 'Y'
+            and check_predissoc + check_lifetime == 0
+            and 'VOI' in profile
+        ):
+            NeedAllTransitions += 1
+        UsesTransitions = NeedAllTransitions + NeedPartStates + NeedConversionTransitions
+        if data is not None and NeedAllTransitions > 0 and not data.alltrans:
+            raise ValueError(
+                'This calculation needs every transition file. '
+                'Call px.load(..., all_transitions=True).'
             )
+        if data is None and UsesTransitions > 0 and config.cache != 'none':
+            from pyexocross.database.data import loaddata
+
+            loadconfig = config
+            if NeedAllTransitions == 0 and NeedConversionTransitions > 0:
+                loadconfig = copy.copy(config)
+                if NeedPartStates > 0:
+                    loadconfig.min_wn = min(config.min_wn, ConversionMinFreq)
+                    loadconfig.max_wn = max(config.max_wn, ConversionMaxFreq)
+                else:
+                    loadconfig.min_wn = ConversionMinFreq
+                    loadconfig.max_wn = ConversionMaxFreq
+                loadconfig.cutoff = 'None'
+            data = loaddata(
+                loadconfig,
+                cache=config.cache,
+                cachedir=config.cache_dir,
+                maxmemory=config.max_memory,
+                refresh=config.refresh_cache,
+                alltrans=NeedAllTransitions > 0,
+                preparestates=NeedPartStates > 0,
+            )
+        if Nfunctions > 0:
+            if data is None:
+                states_df = read_all_states(
+                    read_path,
+                    data_info,
+                    config.check_uncertainty,
+                    config.states_col,
+                    config.states_fmt,
+                )
+            else:
+                states_df = data.states.copy()
         else:
             raise ValueError("Please choose functions which you want to calculate.")
         
         # These functions need whole states
         NeedAllStates = (Conversion + PartitionFunctions + SpecificHeats
                         + Lifetimes + CoolingFunctions + OscillatorStrengths)
+        all_trans_sources = (
+            data.transitions
+            if data is not None and data.alltrans
+            else None
+        )
         if NeedAllStates > 0:
             if (Conversion == 1 and ConversionFormat == 'HITRAN'):
-                conversion_exomol2hitran(states_df)
+                conversion_sources = (
+                    data.sources(ConversionMinFreq, ConversionMaxFreq)
+                    if data is not None
+                    else None
+                )
+                conversion_exomol2hitran(
+                    states_df,
+                    trans_sources=conversion_sources,
+                )
             if PartitionFunctions == 1:
                 save_exomol_partition_func(states_df, Ntemp, Tmax)
             if SpecificHeats == 1:
                 save_exomol_specific_heat(states_df, Ntemp, Tmax)
             if Lifetimes == 1:
-                save_exomol_lifetime(read_path, states_df, states_col, states_fmt)
+                save_exomol_lifetime(
+                    read_path,
+                    states_df,
+                    states_col,
+                    states_fmt,
+                    trans_sources=all_trans_sources,
+                )
             if CoolingFunctions == 1:
-                save_exomol_cooling_func(states_df, Ntemp, Tmax)
+                save_exomol_cooling_func(
+                    states_df,
+                    Ntemp,
+                    Tmax,
+                    trans_sources=all_trans_sources,
+                )
             if OscillatorStrengths == 1:
-                save_exomol_oscillator_strength(states_df)
+                save_exomol_oscillator_strength(
+                    states_df,
+                    trans_sources=all_trans_sources,
+                )
         
         # Only calculating stick spectra and cross sections need part of states
-        NeedPartStates = StickSpectra + CrossSections
         if NeedPartStates > 0:
-            states_part_df = read_part_states(
-                states_df,
-                config.unc_filter,
-                config.nlte_method,
-                config.nlte_path,
-                config.check_uncertainty,
-                config.check_lifetime,
-                config.check_gfactor,
-                config.qnslabel_list,
-                config.states_col,
-                config.states_fmt,
-                config.qns_label,
-                config.qns_filter,
-                config.qns_value,
-                config.vib_label,
-                config.rot_label,
-            )
+            if data is None:
+                states_part_df = read_part_states(
+                    states_df,
+                    config.unc_filter,
+                    config.nlte_method,
+                    config.nlte_path,
+                    config.check_uncertainty,
+                    config.check_lifetime,
+                    config.check_gfactor,
+                    config.qnslabel_list,
+                    config.states_col,
+                    config.states_fmt,
+                    config.qns_label,
+                    config.qns_filter,
+                    config.qns_value,
+                    config.vib_label,
+                    config.rot_label,
+                )
+                trans_sources = None
+            else:
+                states_part_df = data.preparedstates.copy()
+                trans_sources = data.sources(
+                    config.min_wn,
+                    config.max_wn,
+                    config.cutoff,
+                )
             Q_arr = cal_pf_multiT(
                 T_list,
                 Tvib_list,
@@ -210,7 +286,11 @@ def get_results(config):
                 t = Timer()
                 t.start()
                 print('Reading all transitions and calculating lifetimes ...')
-                trans_filepaths = get_transfiles(read_path, data_info)
+                trans_filepaths = (
+                    all_trans_sources
+                    if all_trans_sources is not None
+                    else get_transfiles(read_path, data_info)
+                )
                 # For each transitions file, stream chunks and run cal_lifetime in parallel.
                 # Keep cal_lifetime API unchanged: it takes (states_df, trans_df_chunk).
                 # Use the full states_df for lifetime accumulation so transition indices
@@ -218,7 +298,7 @@ def get_results(config):
                 # resulting tau values back to states_part_df.
                 lifetime_sum = np.zeros(len(states_df), dtype=float)
                 for trans_filepath in trans_filepaths:
-                    trans_filename = trans_filepath.split('/')[-1]
+                    trans_filename = sourcename(trans_filepath)
                     print('Processing transitions file for predissociation lifetime:', trans_filename)
                     use_cols = [0, 1, 2]
                     use_names = ['uid', 'lid', 'A']
@@ -258,11 +338,27 @@ def get_results(config):
                     config.check_uncertainty,
                     config.check_lifetime,
                     config.check_gfactor,
+                    trans_sources=trans_sources,
                 )
             elif StickSpectra == 1:
-                save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_arr)
+                save_exomol_stick_spectra(
+                    states_part_df,
+                    T_list,
+                    Tvib_list,
+                    Trot_list,
+                    Q_arr,
+                    trans_sources=trans_sources,
+                )
             elif CrossSections == 1:
-                save_exomol_cross_section(states_part_df, T_list, Tvib_list, Trot_list, P_list, Q_arr)
+                save_exomol_cross_section(
+                    states_part_df,
+                    T_list,
+                    Tvib_list,
+                    Trot_list,
+                    P_list,
+                    Q_arr,
+                    trans_sources=trans_sources,
+                )
     
     elif database == 'ExoMolHR':
         unsupported_funcs = PartitionFunctions + SpecificHeats + Lifetimes + CoolingFunctions + OscillatorStrengths
@@ -274,18 +370,46 @@ def get_results(config):
             raise ValueError("Predissociation cross sections are not supported for ExoMolHR.")
         if Conversion + StickSpectra + CrossSections == 0:
             raise ValueError("Please choose conversion, stick spectra, or cross sections for ExoMolHR.")
+        if data is None and config.cache != 'none':
+            from pyexocross.database.data import loaddata
+
+            data = loaddata(
+                config,
+                cache=config.cache,
+                cachedir=config.cache_dir,
+                maxmemory=config.max_memory,
+                refresh=config.refresh_cache,
+            )
         
         # Conversion: ExoMolHR → HITRAN
         if Conversion == 1 and ConversionFormat == 'HITRAN':
-            from pyexocross.database.load_exomolhr import read_exomolhr_df as _read_exomolhr
-            conv_exomolhr_df = _read_exomolhr(read_path, data_info,
-                                              config.conversion_min_freq,
-                                              config.conversion_max_freq,
-                                              config.conversion_unc)
+            if data is None:
+                conv_exomolhr_df = read_exomolhr_df(
+                    read_path,
+                    data_info,
+                    config.conversion_min_freq,
+                    config.conversion_max_freq,
+                    config.conversion_unc,
+                )
+            else:
+                conv_exomolhr_df = data.lines(
+                    config.conversion_min_freq,
+                    config.conversion_max_freq,
+                    config.conversion_unc,
+                )
             conversion_exomolhr2hitran(conv_exomolhr_df)
         
         if StickSpectra + CrossSections > 0:
-            exomolhr_df = read_exomolhr_df(read_path, data_info, min_wn, max_wn, UncFilter)
+            if data is None:
+                exomolhr_df = read_exomolhr_df(
+                    read_path,
+                    data_info,
+                    min_wn,
+                    max_wn,
+                    UncFilter,
+                )
+            else:
+                exomolhr_df = data.lines(min_wn, max_wn, UncFilter)
             if config.qns_filter != []:
                 exomolhr_df = QNfilter_linelist(exomolhr_df, config.qns_value, config.qns_label)
             QNs_col = [label + "'" for label in config.qnslabel_list] + [label + '"' for label in config.qnslabel_list]
@@ -317,10 +441,34 @@ def get_results(config):
                 )
 
     elif database == 'HITRAN' or database == 'HITEMP':
-        parfile_df = read_parfile(read_path)
+        if data is None and config.cache != 'none':
+            from pyexocross.database.data import loaddata
+
+            data = loaddata(
+                config,
+                cache=config.cache,
+                cachedir=config.cache_dir,
+                maxmemory=config.max_memory,
+                refresh=config.refresh_cache,
+            )
+        parfile_df = read_parfile(read_path) if data is None else None
         if (Conversion == 1 and ConversionFormat == 'ExoMol'):
-            hitran_df = read_hitran_parfile(read_path,parfile_df,ConversionMinFreq,ConversionMaxFreq,
-                                            ConversionUnc,ConversionThreshold).reset_index().drop(columns='index')
+            if data is None:
+                hitran_df = read_hitran_parfile(
+                    read_path,
+                    parfile_df,
+                    ConversionMinFreq,
+                    ConversionMaxFreq,
+                    ConversionUnc,
+                    ConversionThreshold,
+                ).reset_index(drop=True)
+            else:
+                hitran_df = data.lines(
+                    ConversionMinFreq,
+                    ConversionMaxFreq,
+                    ConversionUnc,
+                    ConversionThreshold,
+                )
             (hitran_states_col, hitran_states_fmt) = conversion_hitran2exomol(hitran_df)
         # Use ExoMol functions
         NuseExoMolFunc = Lifetimes
@@ -330,8 +478,22 @@ def get_results(config):
             if os.path.exists(conversion_foldername):
                 states_list = glob.glob(conversion_foldername + '__'.join(data_info[-2:]) + '.states.bz2')
                 trans_list = glob.glob(conversion_foldername + '__'.join(data_info[-2:]) + '*.trans.bz2')
-                hitran_df = read_hitran_parfile(read_path,parfile_df,ConversionMinFreq,ConversionMaxFreq,
-                                                'None','None').reset_index().drop(columns='index')
+                if data is None:
+                    hitran_df = read_hitran_parfile(
+                        read_path,
+                        parfile_df,
+                        ConversionMinFreq,
+                        ConversionMaxFreq,
+                        'None',
+                        'None',
+                    ).reset_index(drop=True)
+                else:
+                    hitran_df = data.lines(
+                        ConversionMinFreq,
+                        ConversionMaxFreq,
+                        'None',
+                        'None',
+                    )
                 (hitran_states_col, hitran_states_fmt) = conversion_hitran2exomol(hitran_df)
             # These functions need whole states
             states_df = read_all_states(
@@ -347,7 +509,17 @@ def get_results(config):
         # Calculate cooling functions or oscillator strengths
         NeedWholeHITRAN = PartitionFunctions + SpecificHeats + CoolingFunctions + OscillatorStrengths
         if NeedWholeHITRAN != 0:
-            hitran_df = read_hitran_parfile(read_path, parfile_df, min_wn, max_wn, 'None', 'None').reset_index().drop(columns='index')
+            if data is None:
+                hitran_df = read_hitran_parfile(
+                    read_path,
+                    parfile_df,
+                    min_wn,
+                    max_wn,
+                    'None',
+                    'None',
+                ).reset_index(drop=True)
+            else:
+                hitran_df = data.lines(min_wn, max_wn, 'None', 'None')
         if PartitionFunctions == 1:
             save_hitran_partition_func(hitran_df, Ntemp, Tmax)
         if SpecificHeats == 1:
@@ -357,8 +529,17 @@ def get_results(config):
         if OscillatorStrengths == 1:
             save_hitran_oscillator_strength(hitran_df)
         if (StickSpectra + CrossSections > 0):
-            hitran_df = read_hitran_parfile(read_path, parfile_df, min_wn, max_wn,
-                                           UncFilter, threshold).reset_index().drop(columns='index')
+            if data is None:
+                hitran_df = read_hitran_parfile(
+                    read_path,
+                    parfile_df,
+                    min_wn,
+                    max_wn,
+                    UncFilter,
+                    threshold,
+                ).reset_index(drop=True)
+            else:
+                hitran_df = data.lines(min_wn, max_wn, UncFilter, threshold)
             (hitran_linelist_df, QNs_col) = hitran_linelist_QN(hitran_df)
         if StickSpectra == 1 and CrossSections == 1:
             # Use combined function for both stick spectra and cross sections

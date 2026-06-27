@@ -2,29 +2,13 @@
 
 There are some issues to solve the problems which you may meet when the program gives the following possible error reports.
 
-###### Please type the correct uncertainty filter choice 'Y' or 'N' into the input file.
-
-You need to enter `Y`, `YES`, `Yes`, `y`, `yes` or `N`, `NO`, `No`, `n`, `no` in the input file.
-
-###### Please type the correct threshold choice 'Y' or 'N' into the input file.
-
-You need to enter `Y`, `YES`, `Yes`, `y`, `yes` or `N`, `NO`, `No`, `n`, `no` in the input file.
-
-###### Please type the correct quantum number filter choice 'Y' or 'N' into the input file.
+###### Please type the correct xxx choice 'Y' or 'N' into the input file.
 
 You need to enter `Y`, `YES`, `Yes`, `y`, `yes` or `N`, `NO`, `No`, `n`, `no` in the input file.
 
 ###### Please type the correct grid choice 'Npoints' or 'BinSize' into the input file.
 
 You need to enter `Npoints` or `BinSize`  and corresponding value in the input file.
-
-###### Please type the correct predissociative choice 'Y' or 'N' into the input file.
-
-You need to enter `Y`, `YES`, `Yes`, `y`, `yes` or `N`, `NO`, `No`, `n`, `no` in the input file.
-
-###### Please type the correct cutoff choice 'Y' or 'N' into the input file.
-
-You need to enter `Y`, `YES`, `Yes`, `y`, `yes` or `N`, `NO`, `No`, `n`, `no` in the input file.
 
 ###### Gaussian line profile requires a HWHM. Please choose 'Y' and give a value for Doppler HWHM in the input file. Otherwise, please choose Doppler line profile (with calculated temperature-dependent Doppler HWHM).
 
@@ -87,4 +71,10 @@ Each line list file is tooooo large when program running on many cores, so that 
 
 ###### ModuleNotFoundError: No module named 'distutils'.
 Unfortunately, you're using the newly released Python, which removed distutils after it being deprecated since Python 3.10. Try to sideload distutils from a third party source (e.g. a system package, like apt install python3-distutils), or
-downgrade to an older version of Python (3.10 or older). Recommend version 3.9 and 3.10.
+downgrade to an older version of Python (3.10 or older). Recommend version 3.9 and 3.10. \
+Try to install all required packages by 
+```bash
+pip install pyexocross
+```
+
+

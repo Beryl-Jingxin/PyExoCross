@@ -293,9 +293,16 @@ def inp_para(inp_filepath):
     ncpufiles = int(inp_df[col0.isin(['NCPUfiles'])][1].iloc[0])
     chunk_size = int(inp_df[col0.isin(['ChunkSize'])][1].iloc[0])
     run_mode_rows = inp_df[col0.isin(['RunMode'])]
-    run_mode = str(run_mode_rows[1].iloc[0]).strip().upper() if not run_mode_rows.empty else 'CPU'
+    device_rows = inp_df[col0.isin(['Device'])]
+    if not run_mode_rows.empty and not device_rows.empty:
+        old_mode = str(run_mode_rows[1].iloc[0]).strip().upper()
+        new_mode = str(device_rows[1].iloc[0]).strip().upper()
+        if old_mode != new_mode:
+            raise ValueError('Device and RunMode must request the same CPU/GPU mode.')
+    mode_rows = device_rows if not device_rows.empty else run_mode_rows
+    run_mode = str(mode_rows[1].iloc[0]).strip().upper() if not mode_rows.empty else 'CPU'
     if run_mode not in ('CPU', 'GPU'):
-        raise ValueError("RunMode must be 'CPU' or 'GPU' in the input file.")
+        raise ValueError("Device/RunMode must be 'CPU' or 'GPU' in the input file.")
     gpu_backend_rows = inp_df[col0.isin(['GPUBackend'])]
     from pyexocross.gpu.base_gpu import normalize_gpu_backend
     if not gpu_backend_rows.empty:

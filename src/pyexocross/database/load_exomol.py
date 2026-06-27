@@ -33,6 +33,31 @@ BROAD_RECIPE_QN_COLUMNS = {
 # Read Input Files
 ## Read ExoMol Database Files
 ### Read States File
+def preferred_files(folder, suffix):
+    """Return matching files with uncompressed variants preferred over .bz2."""
+    selected = {}
+    plain_files = glob.glob(os.path.join(folder, f'*{suffix}'))
+    compressed_files = glob.glob(os.path.join(folder, f'*{suffix}.bz2'))
+    for filepath in plain_files + compressed_files:
+        logical_path = filepath[:-4] if filepath.endswith('.bz2') else filepath
+        if logical_path not in selected or not filepath.endswith('.bz2'):
+            selected[logical_path] = filepath
+    return sorted(selected.values())
+
+
+def get_statesfile(read_path, data_info):
+    """Return the preferred states file, choosing .states over .states.bz2."""
+    folder = read_path + '/'.join(data_info) + '/'
+    basename = '__'.join(data_info[-2:]) + '.states'
+    plain = os.path.join(folder, basename)
+    compressed = plain + '.bz2'
+    if os.path.exists(plain):
+        return plain
+    if os.path.exists(compressed):
+        return compressed
+    raise ValueError("No such states file, please check the read path and states filename format!")
+
+
 def read_all_states(read_path, data_info, check_uncertainty, states_col, states_fmt):
     """
     Read complete ExoMol states file.
@@ -54,19 +79,18 @@ def read_all_states(read_path, data_info, check_uncertainty, states_col, states_
     t = Timer()
     t.start()
     print('Reading states ...')
-    states_df = pd.DataFrame()
-    states_filename = read_path + '/'.join(data_info) + '/' + '__'.join(data_info[-2:]) + '.states.bz2'
-    if os.path.exists(states_filename):    
-        chunks = pd.read_csv(states_filename, compression='bz2', sep='\s+', header=None,
-                             chunksize=500_000, iterator=True, low_memory=False, dtype=object)
-    elif os.path.exists(states_filename.replace('.bz2','')):
-        chunks = pd.read_csv(states_filename.replace('.bz2',''), sep='\s+', header=None,
-                             chunksize=500_000, iterator=True, low_memory=False, dtype=object)
-    else:
-        raise ValueError("No such states file, please check the read path and states filename format!")
-
-    for chunk in chunks:
-        states_df = pd.concat([states_df, chunk])
+    states_filename = get_statesfile(read_path, data_info)
+    read_kwargs = dict(
+        sep=r'\s+',
+        header=None,
+        chunksize=500_000,
+        iterator=True,
+        low_memory=False,
+        dtype=object,
+    )
+    if states_filename.endswith('.bz2'):
+        read_kwargs['compression'] = 'bz2'
+    states_df = pd.concat(pd.read_csv(states_filename, **read_kwargs), ignore_index=True)
     if check_uncertainty == True:
         states_df = states_df.rename(columns={0:'id',1:'E',2:'g',3:'J',4:'unc'})
         # Use float64 for Unc column to avoid precision issues with very small values
@@ -197,7 +221,7 @@ def read_part_states(
     return states_part_df
 
 ### Get transitions File
-def get_transfiles(read_path, data_info):
+def get_transfiles(read_path, data_info, prepare=True):
     """
     Get all transition file paths from ExoMol database directory.
 
@@ -217,9 +241,8 @@ def get_transfiles(read_path, data_info):
         List of transition file paths (decompressed if necessary)
     """
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
-    trans_filepaths_all = glob.glob((read_path + '/'.join(data_info) + '/' + '*.trans.bz2'))
-    if trans_filepaths_all == []:
-        trans_filepaths_all = glob.glob((read_path + '/'.join(data_info) + '/' + '*.trans'))
+    folder = read_path + '/'.join(data_info) + '/'
+    trans_filepaths_all = preferred_files(folder, '.trans')
     num_transfiles_all = len(trans_filepaths_all)    # The number of all transitions files including the older version files.
     trans_filepaths = []    # The list of the lastest transitions files.
     all_decompress_num = 0
@@ -250,7 +273,7 @@ def get_transfiles(read_path, data_info):
             original_path = trans_filepaths_all[i]
             file_size_bytes = os.path.getsize(original_path)
             trans_filepath = original_path
-            if original_path.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
+            if prepare and original_path.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
                 (trans_filepath, num_dec) = command_decompress(original_path)
                 all_decompress_num += 1
                 decompress_num += num_dec
@@ -267,7 +290,7 @@ def get_transfiles(read_path, data_info):
     print('{:45s} : {}'.format('Number of new decompressed transitions files', decompress_num))
     return trans_filepaths  
 
-def get_part_transfiles(read_path, data_info, min_wn, max_wn):
+def get_part_transfiles(read_path, data_info, min_wn, max_wn, prepare=True):
     """
     Get transition file paths filtered by wavenumber range.
 
@@ -291,9 +314,8 @@ def get_part_transfiles(read_path, data_info, min_wn, max_wn):
         List of transition file paths within the specified wavenumber range
     """
     # Get all the transitions files from the folder including the older version files which are named by vn(version number).
-    trans_filepaths_all = glob.glob(read_path + '/'.join(data_info) + '/' + '*.trans.bz2')
-    if trans_filepaths_all == []:
-        trans_filepaths_all = glob.glob(read_path + '/'.join(data_info) + '/' + '*.trans')
+    folder = read_path + '/'.join(data_info) + '/'
+    trans_filepaths_all = preferred_files(folder, '.trans')
     num_transfiles_all = len(trans_filepaths_all)    # The number of all transitions files including the older version files.
     trans_filepaths = []    # The list of the lastest transitions files.
     all_decompress_num = 0
@@ -321,8 +343,14 @@ def get_part_transfiles(read_path, data_info, min_wn, max_wn):
         # The fourth format filenames only leave the updated date, e.g. 20170330.
         # This program only process the lastest data, so extract the filenames named by the first two formats.
         if num == 1:     
-            if split_version[0] == data_info[-1]:        
-                trans_filepaths.append(trans_filepaths_all[i])
+            if split_version[0] == data_info[-1]:
+                trans_filepath = trans_filepaths_all[i]
+                file_size_bytes = os.path.getsize(trans_filepath)
+                if prepare and trans_filepath.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
+                    (trans_filepath, num_dec) = command_decompress(trans_filepath)
+                    all_decompress_num += 1
+                    decompress_num += num_dec
+                trans_filepaths.append(trans_filepath)
             elif len(split_version[0].split('-')) == 2:
                 lower = int(split_version[0].split('-')[0])
                 upper = int(split_version[0].split('-')[1])
@@ -331,7 +359,7 @@ def get_part_transfiles(read_path, data_info, min_wn, max_wn):
                     (lower <= int(max_wn) < upper)):
                     file_size_bytes = os.path.getsize(trans_filepaths_all[i])
                     trans_filepath = trans_filepaths_all[i]
-                    if trans_filepath.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
+                    if prepare and trans_filepath.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
                         (trans_filepath, num_dec) = command_decompress(trans_filepath)
                         all_decompress_num += 1
                         decompress_num += num_dec

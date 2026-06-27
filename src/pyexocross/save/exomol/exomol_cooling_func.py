@@ -14,6 +14,7 @@ from pyexocross.base.log import log_tqdm, print_file_info
 from pyexocross.base.large_file import (
     is_large_trans_file,
     read_trans_chunks,
+    sourcename,
 )
 from pyexocross.calculation.calculate_para import cal_v
 from pyexocross.calculation.calculate_cooling_func import cal_cooling_func
@@ -128,7 +129,7 @@ def process_exomol_cooling_func(states_df, Ts, trans_filepath):
     # Import legacy-style configuration variables from core (set via Config.to_globals()).
     from pyexocross.core import ncputrans 
 
-    trans_filename = trans_filepath.split('/')[-1]
+    trans_filename = sourcename(trans_filepath)
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
     use_names = ['uid','lid','A']
@@ -156,7 +157,7 @@ def process_exomol_cooling_func(states_df, Ts, trans_filepath):
                 cooling_func = np.sum([future.result() for future in log_tqdm(futures, desc='Combining '+trans_filename)], axis=0)
     return cooling_func
 
-def save_exomol_cooling_func(states_df, Ntemp, Tmax):
+def save_exomol_cooling_func(states_df, Ntemp, Tmax, trans_sources=None):
     """
     Main function to calculate and save cooling functions for ExoMol database.
 
@@ -181,7 +182,11 @@ def save_exomol_cooling_func(states_df, Ntemp, Tmax):
     t.start()
     Ts = np.array(range(Ntemp, Tmax+1, Ntemp)) 
     print('Reading all transitions and calculating cooling functions ...')
-    trans_filepaths = get_transfiles(read_path, data_info)
+    trans_filepaths = (
+        trans_sources
+        if trans_sources is not None
+        else get_transfiles(read_path, data_info)
+    )
     # Process multiple files in parallel
     with _executor_context(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file

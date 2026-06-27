@@ -20,6 +20,7 @@ Quick start::
 Functions
 ---------
 - ``px.run(inp_filepath)``                  -- Run all functions from .inp file
+- ``px.load(...)``                          -- Load reusable ExoMol/ExoAtom data
 - ``px.conversion(...)``                    -- Format conversion
 - ``px.partition_functions(...)``           -- Partition functions
 - ``px.specific_heats(...)``                -- Specific heats
@@ -41,6 +42,8 @@ from pyexocross.api import (
     # Logging reset
     close_logging,
     # Primary API (snake_case plurals)
+    load,
+    load_data,
     conversion,
     partition_functions,
     specific_heats,
@@ -80,6 +83,8 @@ __all__ = [
     # Run from .inp
     'run',
     # Primary API
+    'load',
+    'load_data',
     'conversion',
     'partition_functions',
     'specific_heats',

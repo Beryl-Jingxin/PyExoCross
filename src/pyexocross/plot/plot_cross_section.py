@@ -8,7 +8,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from ..base.utils import Timer, ensure_dir
-from ..process.stick_xsec_filepath import cross_section_filepath, temperature_pressure_string
+from ..process.stick_xsec_filepath import (
+    cross_section_filepath,
+    crosssectiondetails,
+    temperature_pressure_string,
+)
 from .mpl_safety import configure_mpl_large_path_rendering
 
 
@@ -86,6 +90,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
         LTE_NLTE,
         photo,
         bin_size,
+        cutoff,
         T_list,
     )
     xsecs_foldername = save_path+'xsecs/files/'+data_info[0]+'/'+database+'/'
@@ -153,6 +158,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
             database,
             abs_emi,
             bin_size,
+            cutoff,
             profile_label,
             LTE_NLTE,
             photo,
@@ -284,7 +290,8 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
             xsec_plotpath = (plots_foldername + '__'.join(data_info) + '__' + T_str + '__' + PlotCrossSectionWnWl.lower()
                              + str_min_wnl + '-' + str_max_wnl + unit_fn + 'unc' + str(UncFilter)
                              + '__thres' + str(threshold) + '__' + database + '__' + abs_emi
-                             + '__BinSize' + str(bin_size) + bin_unit_fn + profile_label.replace(' ','') + photo + LTE_NLTE +'.png')
+                             + crosssectiondetails(bin_size, bin_unit_fn, cutoff, profile_label)
+                             + photo + LTE_NLTE + '.png')
             plt.savefig(xsec_plotpath, dpi=500)
             plt.close()  # Close figure to free memory and ensure it's saved
             tp.end()
@@ -333,6 +340,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
             database,
             abs_emi,
             bin_size,
+            cutoff,
             profile_label,
             LTE_NLTE,
             photo,
@@ -420,7 +428,8 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
             xsec_plotpath = (plots_foldername+'__'.join(data_info)+'__'+T_str+'__'+PlotCrossSectionWnWl.lower()
                              +str_min_wnl+'-'+str_max_wnl+unit_pfn+'unc'+str(UncFilter)
                              +'__thres'+str(threshold)+'__'+database+'__'+abs_emi 
-                             +'__BinSize'+str(bin_size)+unit_ffn+profile_label.replace(' ','')+photo+LTE_NLTE+'.png')
+                             + crosssectiondetails(bin_size, unit_ffn, cutoff, profile_label)
+                             + photo + LTE_NLTE + '.png')
             plt.savefig(xsec_plotpath, dpi=500)
             plt.close()  # Close figure to free memory and ensure it's saved
             tp.end()

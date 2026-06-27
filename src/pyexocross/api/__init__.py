@@ -25,6 +25,7 @@ Usage::
 Available functions (snake_case, following PEP 8):
 
 - ``px.run(inp_filepath)``                  -- Run all functions from .inp file
+- ``px.load(...)``                          -- Load reusable ExoMol/ExoAtom data
 - ``px.conversion(...)``                    -- ExoMol-to-HITRAN or HITRAN-to-ExoMol
 - ``px.partition_functions(...)``           -- Partition function calculation
 - ``px.specific_heats(...)``                -- Specific heat calculation
@@ -39,6 +40,8 @@ import os
 from ..config import Config
 from ..core import get_results
 from ..base.log import close_logging
+from ..base.utils import Timer
+from ..database.data import LoadedData, loaddata
 
 
 def _ensure_logging(inp_filepath=None, logs_path=None):
@@ -85,6 +88,116 @@ def _remap_plot_kwargs(kwargs, plot_map):
     for generic, specific in plot_map.items():
         if generic in kwargs:
             kwargs[specific] = kwargs.pop(generic)
+
+
+def _calculation_config(inp_filepath, data, kwargs, **flags):
+    """Build a direct or LoadedData-backed calculation configuration."""
+    if data is None:
+        options = dict(kwargs)
+        options.update(flags)
+        return Config(inp_filepath=inp_filepath, **options)
+    if inp_filepath is not None:
+        raise ValueError('inp_filepath cannot be combined with data from px.load.')
+    if not isinstance(data, LoadedData):
+        raise TypeError('data must be returned by px.load.')
+    config = data.configfor(**kwargs)
+    for name, value in flags.items():
+        setattr(config, name, value)
+    return config
+
+
+def requirealltransitions(data):
+    """Expand range-loaded ExoMol/ExoAtom data when a whole-list calculation needs it."""
+    if (
+        data is None
+        or data.config.database not in ('ExoMol', 'ExoAtom')
+        or data.alltrans
+    ):
+        return data
+
+    print('Loading all transitions required by this calculation ...')
+    expanded = loaddata(
+        data.config,
+        cache=data.cache,
+        cachedir=data.cachedir,
+        maxmemory=data.config.max_memory,
+        refresh=data.config.refresh_cache,
+        alltrans=True,
+        preparestates=data.preparedstates is not None,
+    )
+    data.states = expanded.states
+    data.preparedstates = expanded.preparedstates
+    data.transitions = expanded.transitions
+    data.storage = expanded.storage
+    data.alltrans = True
+    return data
+
+
+# ---------------------------------------------------------------------------
+# Reusable data loading
+# ---------------------------------------------------------------------------
+def load(
+    inp_filepath=None,
+    cache='auto',
+    cache_dir=None,
+    max_memory=512,
+    refresh=False,
+    all_transitions=False,
+    **kwargs,
+):
+    """
+    Read and preprocess reusable line-list data.
+
+    Parameters
+    ----------
+    cache : {'auto', 'parquet', 'none'}
+        ``auto`` keeps small transitions in memory and converts large inputs to
+        Parquet. ``parquet`` always uses a persistent Parquet cache. ``none``
+        keeps the original transition files as streaming sources.
+    cache_dir : str, optional
+        Parquet cache directory. Defaults to ``.pyexocross_cache`` inside the
+        selected input dataset directory.
+    max_memory : int, optional
+        Maximum estimated transition data retained by ``auto`` in memory, in
+        MB. Default is 512.
+    refresh : bool, optional
+        Rebuild matching Parquet cache files.
+    all_transitions : bool, optional
+        Eagerly load every transition file. ExoMol/ExoAtom data is expanded
+        automatically when ``lifetimes``, ``cooling_functions``, or
+        ``oscillator_strengths`` first needs it. Default is False.
+    **kwargs
+        The same database, range, filtering, and preprocessing options accepted
+        by :func:`stick_spectra`. ExoMol, ExoAtom, ExoMolHR, HITRAN, and HITEMP
+        are supported.
+    """
+    _ensure_logging(inp_filepath, kwargs.get('logs_path'))
+    timer = Timer().start()
+    print('Loading reusable line-list data ...')
+    config = Config(
+        inp_filepath=inp_filepath,
+        stick_spectra=1,
+        cache=cache,
+        cache_dir=cache_dir,
+        max_memory=max_memory,
+        refresh=refresh,
+        **kwargs,
+    )
+    config.to_globals()
+    data = loaddata(
+        config,
+        cache=cache,
+        cachedir=cache_dir,
+        maxmemory=max_memory,
+        refresh=refresh,
+        alltrans=all_transitions,
+    )
+    print('Finished loading reusable line-list data!')
+    timer.end()
+    return data
+
+
+load_data = load
 
 
 # ---------------------------------------------------------------------------
@@ -147,7 +260,7 @@ def conversion(inp_filepath=None, **kwargs):
         conversion_min_freq : float, optional
             Minimum frequency for conversion (default: 0).
         conversion_max_freq : float, optional
-            Maximum frequency for conversion (default: 30000).
+            Maximum frequency for conversion (default: 1e10).
         conversion_unc : float or None, optional
             Uncertainty filter. ``None`` disables (default: ``None``).
         conversion_threshold : float or None, optional
@@ -168,9 +281,10 @@ def conversion(inp_filepath=None, **kwargs):
         chunk_size : int, optional
             Chunk size for transitions (default: 100000).
     """
+    data = kwargs.pop('data', None)
     _ensure_logging(inp_filepath, kwargs.get('logs_path'))
-    config = Config(inp_filepath=inp_filepath, conversion=1, **kwargs)
-    get_results(config)
+    config = _calculation_config(inp_filepath, data, kwargs, conversion=1)
+    get_results(config, data=data)
 
 
 # Keep legacy aliases for backward compatibility
@@ -272,9 +386,11 @@ def cooling_functions(inp_filepath=None, **kwargs):
     **kwargs
         Same as :func:`partition_functions`.
     """
+    data = kwargs.pop('data', None)
+    data = requirealltransitions(data)
     _ensure_logging(inp_filepath, kwargs.get('logs_path'))
-    config = Config(inp_filepath=inp_filepath, cooling_functions=1, **kwargs)
-    get_results(config)
+    config = _calculation_config(inp_filepath, data, kwargs, cooling_functions=1)
+    get_results(config, data=data)
 
 
 # Legacy alias
@@ -311,9 +427,11 @@ def lifetimes(inp_filepath=None, **kwargs):
         chunk_size : int, optional
             Chunk size for transitions (default: 100000).
     """
+    data = kwargs.pop('data', None)
+    data = requirealltransitions(data)
     _ensure_logging(inp_filepath, kwargs.get('logs_path'))
-    config = Config(inp_filepath=inp_filepath, lifetimes=1, **kwargs)
-    get_results(config)
+    config = _calculation_config(inp_filepath, data, kwargs, lifetimes=1)
+    get_results(config, data=data)
 
 
 # Legacy alias
@@ -368,8 +486,10 @@ def oscillator_strengths(inp_filepath=None, **kwargs):
         'plot_unit': 'plot_oscillator_strength_unit',
         'limit_yaxis': 'limit_yaxis_os',
     })
-    config = Config(inp_filepath=inp_filepath, oscillator_strengths=1, **kwargs)
-    get_results(config)
+    data = kwargs.pop('data', None)
+    data = requirealltransitions(data)
+    config = _calculation_config(inp_filepath, data, kwargs, oscillator_strengths=1)
+    get_results(config, data=data)
 
 
 # Legacy alias
@@ -416,7 +536,7 @@ def stick_spectra(inp_filepath=None, **kwargs):
         min_range : float, optional
             Minimum wavenumber/wavelength (default: 0).
         max_range : float, optional
-            Maximum wavenumber/wavelength (default: 30000).
+            Maximum wavenumber/wavelength (default: 1e10).
         wn_wl : str, optional
             'WN' for wavenumber, 'WL' for wavelength (default: 'WN').
         wn_wl_unit : str, optional
@@ -470,6 +590,7 @@ def stick_spectra(inp_filepath=None, **kwargs):
     ...     temperatures=[1000, 2000],
     ... )
     """
+    data = kwargs.pop('data', None)
     _ensure_logging(inp_filepath, kwargs.get('logs_path'))
     _remap_plot_kwargs(kwargs, {
         'plot': 'plot_stick_spectra',
@@ -478,8 +599,13 @@ def stick_spectra(inp_filepath=None, **kwargs):
         'plot_unit': 'plot_stick_spectra_unit',
         'limit_yaxis': 'limit_yaxis_stick_spectra',
     })
-    config = Config(inp_filepath=inp_filepath, stick_spectra=1, **kwargs)
-    get_results(config)
+    config = _calculation_config(
+        inp_filepath,
+        data,
+        kwargs,
+        stick_spectra=1,
+    )
+    get_results(config, data=data)
 
 
 # ---------------------------------------------------------------------------
@@ -554,6 +680,7 @@ def cross_sections(inp_filepath=None, **kwargs):
     ...     profile='SciPyVoigt',
     ... )
     """
+    data = kwargs.pop('data', None)
     _ensure_logging(inp_filepath, kwargs.get('logs_path'))
     _remap_plot_kwargs(kwargs, {
         'plot': 'plot_cross_section',
@@ -562,8 +689,13 @@ def cross_sections(inp_filepath=None, **kwargs):
         'plot_unit': 'plot_cross_section_unit',
         'limit_yaxis': 'limit_yaxis_xsec',
     })
-    config = Config(inp_filepath=inp_filepath, cross_sections=1, **kwargs)
-    get_results(config)
+    config = _calculation_config(
+        inp_filepath,
+        data,
+        kwargs,
+        cross_sections=1,
+    )
+    get_results(config, data=data)
 
 
 # Legacy alias
@@ -605,6 +737,7 @@ def stick_spectra_cross_section(inp_filepath=None, **kwargs):
     ...     profile='SciPyVoigt',
     ... )
     """
+    data = kwargs.pop('data', None)
     _ensure_logging(inp_filepath, kwargs.get('logs_path'))
     
     if 'plot' in kwargs:
@@ -628,10 +761,11 @@ def stick_spectra_cross_section(inp_filepath=None, **kwargs):
         kwargs.setdefault('limit_yaxis_stick_spectra', limit_val)
         kwargs.setdefault('limit_yaxis_xsec', limit_val)
 
-    config = Config(
-        inp_filepath=inp_filepath,
+    config = _calculation_config(
+        inp_filepath,
+        data,
+        kwargs,
         stick_spectra=1,
         cross_sections=1,
-        **kwargs
     )
-    get_results(config)
+    get_results(config, data=data)

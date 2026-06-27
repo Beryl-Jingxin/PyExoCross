@@ -139,6 +139,7 @@ note/
 .input/
 .output/
 output/
+.pyexocross_cache/
 
 # Test code
 .pyexocross.ipynb

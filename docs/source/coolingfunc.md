@@ -55,13 +55,17 @@ CrossSections                           0
 NCPUtrans                               4
 NCPUfiles                               32
 ChunkSize                               100000
-RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when RunMode=GPU)
-GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
-GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+Device                                  CPU                       # CPU(default) or GPU
+GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when Device=GPU)
+GPUBatchLines                           8192                      # GPU line-batch size (only used when Device=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when Device=GPU)
 
 
 # Calculate partition, specific heats or cooling functions #
 Ntemp                                   1                         # The number of temperature steps
 Tmax                                    10000                     # Maximal temperature in K 
 ```
+
+***Note***
+
+`CPU` mode is recommended for calculating cooling functions.

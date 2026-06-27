@@ -22,6 +22,7 @@ from pyexocross.base.large_file import (
     is_large_trans_file,
     read_trans_chunks,
     process_large_chunks,
+    sourcename,
 )
 from pyexocross.base.constants import MAX_LARGE_FILE_WORKERS
 from pyexocross.calculation.calculate_para import cal_v
@@ -203,7 +204,7 @@ def process_exomol_stick_spectra(states_part_df,T_list,Tvib_list,Trot_list,Q_arr
         Combined stick spectra DataFrame from all chunks
     """   
     from pyexocross.core import ncputrans
-    trans_filename = trans_filepath.split('/')[-1]
+    trans_filename = sourcename(trans_filepath)
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
     use_names = ['uid','lid','A']
@@ -242,7 +243,14 @@ def process_exomol_stick_spectra(states_part_df,T_list,Tvib_list,Trot_list,Q_arr
     return stick_spectra_df
 
 # Stick spectra for ExoMol database
-def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_arr):
+def save_exomol_stick_spectra(
+    states_part_df,
+    T_list,
+    Tvib_list,
+    Trot_list,
+    Q_arr,
+    trans_sources=None,
+):
     """
     Main function to calculate and save stick spectra for ExoMol database.
 
@@ -308,7 +316,11 @@ def save_exomol_stick_spectra(states_part_df, T_list, Tvib_list, Trot_list, Q_ar
             pass
     
     print('\nReading transitions and calculating stick spectra ...')    
-    trans_filepaths = get_part_transfiles(read_path, data_info, min_wn, max_wn)
+    trans_filepaths = (
+        trans_sources
+        if trans_sources is not None
+        else get_part_transfiles(read_path, data_info, min_wn, max_wn)
+    )
     
     # Process each temperature separately to save memory
     QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")

@@ -15,6 +15,7 @@ by PyExoCross API functions.  Parameters are organized by category.
 | `isotopologue` | `str` | `None` | Isotopologue (e.g. `'1H2-16O'`, `'24Mg-1H'`) | ExoMol, ExoMolHR, HITRAN, HITEMP |
 | `dataset` | `str` | `None` | Dataset name (e.g. `'POKAZATEL'`, `'XAB'`, `'NIST'`) | All |
 | `species_id` | `int` | `0` | Numeric species identifier | All |
+| `abundance` | `float` | `1.0` | Isotopic abundance multiplier; API calls use the supplied value or `1.0` by default | All |
 
 ### `database` Accepted Values
 
@@ -98,14 +99,24 @@ For HITRAN/HITEMP:
 | `ncputrans`  | `int` | `4` | Number of CPU cores for processing each transitions file |
 | `ncpufiles`  | `int` | `1` | Number of transitions files processed simultaneously |
 | `chunk_size` | `int` | `100000` | Chunk size when reading/calculating transitions |
-| `run_mode` | `str` | `'CPU'` | Compute backend mode: `'CPU'` (default) or `'GPU'` |
-| `gpu_backend` | `str` | `'AUTO'` | GPU backend policy when `run_mode='GPU'`: `'AUTO'`, `'CUDA'`, `'PyTorch-CUDA'`, `'CuPy-CUDA'`, or `'MPS'` |
+| `device` or `run_mode` | `str` | `'CPU'` | Compute backend mode: `'CPU'` or `'GPU'` |
+| `gpu_backend` | `str` | `'AUTO'` | GPU backend policy when `device='GPU'`: `'AUTO'`, `'CUDA'`, `'PyTorch-CUDA'`, `'CuPy-CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | Max number of lines per GPU batch (memory-control knob) |
 | `gpu_batch_grid` | `int` | `256` | Max number of grid points per GPU batch (memory-control knob) |
+| `cache` | `str` | `'auto'` | Transition cache: small inputs use memory and large inputs use Parquet; alternatives are `'parquet'` and `'none'` |
+| `cache_dir` | `str` or `None` | `None` | Cache directory; `None` uses a source-adjacent `.pyexocross_cache/` directory |
+| `max_memory` | `int` | `512` | Maximum transition data retained by `cache='auto'`, in MB; internally converted with `1024**2` bytes per MB |
+| `refresh` | `bool` | `False` | Rebuild matching Parquet cache files |
+| `all_transitions` | `bool` | `False` | `px.load` only: eagerly load every transition file; whole-list functions expand automatically when needed |
 
 GPU acceleration scope:
 - Enabled for `cooling_functions`, `stick_spectra`, `cross_sections`, and `stick_spectra_cross_section`
 - Other functions are CPU formula based
+
+Parquet caches are shared by CPU and GPU modes. PyArrow currently reads and
+decodes Parquet on the CPU, and the selected arrays are then transferred to the
+GPU. GPU mode accelerates supported numerical kernels; it does not currently
+accelerate file I/O or Parquet decoding.
 
 `gpu_backend` behavior:
 - `'AUTO'` (recommended): `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback`
@@ -118,28 +129,28 @@ Typical usage:
 
 ```python
 # CPU (default)
-run_mode='CPU'
+device='CPU'
 
 # GPU (auto backend)
-run_mode='GPU'
+device='GPU'
 gpu_backend='AUTO'
 gpu_batch_lines=8192
 gpu_batch_grid=256
 
 # GPU (auto CUDA provider priority: PyTorch first, then CuPy)
-run_mode='GPU'
+device='GPU'
 gpu_backend='CUDA'
 
 # GPU (force PyTorch CUDA only)
-run_mode='GPU'
+device='GPU'
 gpu_backend='PyTorch-CUDA'
 
 # GPU (force CuPy CUDA only)
-run_mode='GPU'
+device='GPU'
 gpu_backend='CuPy-CUDA'
 
 # GPU (force MPS)
-run_mode='GPU'
+device='GPU'
 gpu_backend='MPS'
 ```
 

@@ -20,7 +20,8 @@ from pyexocross.base.log import (
 )
 from pyexocross.base.large_file import (
     is_large_trans_file,
-    read_trans_chunks
+    read_trans_chunks,
+    sourcename,
 )
 from pyexocross.database import read_broad, get_part_transfiles
 from pyexocross.database.load_exomol import broad_required_line_columns, extract_broad
@@ -430,7 +431,7 @@ def process_exomol_cross_section(states_part_df,T_list,Tvib_list,Trot_list,P,Q_a
         wn_grid,
         ncputrans,
     )
-    trans_filename = trans_filepath.split('/')[-1]
+    trans_filename = sourcename(trans_filepath)
     print('Processeing transitions file:', trans_filename)
     if DopplerHWHMYN == 'U' and LorentzianHWHMYN == 'U':
         use_cols = [0,1,2,alpha_hwhm_colid, gamma_hwhm_colid]
@@ -471,7 +472,15 @@ def process_exomol_cross_section(states_part_df,T_list,Tvib_list,Trot_list,P,Q_a
     return xsecs
 
 # Cross sections for ExoMol database
-def save_exomol_cross_section(states_part_df, T_list, Tvib_list, Trot_list, P_list, Q_arr):
+def save_exomol_cross_section(
+    states_part_df,
+    T_list,
+    Tvib_list,
+    Trot_list,
+    P_list,
+    Q_arr,
+    trans_sources=None,
+):
     """
     Main function to calculate and save cross sections for ExoMol database.
 
@@ -543,7 +552,11 @@ def save_exomol_cross_section(states_part_df, T_list, Tvib_list, Trot_list, P_li
                     'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)', broad, ratio)
     
     print('Reading transitions and calculating cross sections ...')    
-    trans_filepaths = get_part_transfiles(read_path, data_info, min_wn, max_wn)
+    trans_filepaths = (
+        trans_sources
+        if trans_sources is not None
+        else get_part_transfiles(read_path, data_info, min_wn, max_wn)
+    )
     
     # Process each (T, P) combination separately to save memory
     any_results = False

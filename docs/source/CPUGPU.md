@@ -7,7 +7,7 @@ This page explains how to run ***PyExoCross*** in CPU mode or GPU mode, and whic
 If you do not set GPU options, ***PyExoCross*** runs on CPU by default.
 
 ```bash
-RunMode                                 CPU                       # CPU(default) or GPU
+Device                                  CPU                       # CPU(default) or GPU
 ```
 
 ```python
@@ -15,7 +15,7 @@ import pyexocross as px
 
 px.cross_sections(
     ...,
-    run_mode='CPU',
+    device='CPU',
     ...,
 )
 ```
@@ -28,14 +28,14 @@ Use CPU mode when:
 ## GPU mode (CUDA or MPS)
 
 Enable GPU mode with:
-- `run_mode='GPU'`
+- `device='GPU'`
 - optional `gpu_backend` selection
 
 ```bash
-RunMode                                 GPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when RunMode=GPU)
-GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
-GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+Device                                  GPU                       # CPU(default) or GPU
+GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when Device=GPU)
+GPUBatchLines                           8192                      # GPU line-batch size (only used when Device=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when Device=GPU)
 ```
 
 ```python
@@ -43,7 +43,7 @@ import pyexocross as px
 
 px.cross_sections(
     ...,
-    run_mode='GPU',
+    device='GPU',
     gpu_backend='AUTO',
     gpu_batch_lines=8192,
     gpu_batch_grid=256,

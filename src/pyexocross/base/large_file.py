@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import bz2
 import subprocess
+from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -21,6 +22,29 @@ from .constants import (
     LARGE_WRITE_CHUNK_ROWS,
 )
 from .utils import ensure_dir
+
+
+@dataclass(frozen=True)
+class TransSource:
+    """Reusable transition source backed by a file or an in-memory DataFrame."""
+
+    path: str
+    origin: str
+    frame: object = field(default=None, compare=False, hash=False, repr=False)
+    size: int = 0
+    minwn: object = None
+    maxwn: object = None
+
+
+def sourcepath(source):
+    """Return the physical or identifying path for a transition source."""
+    return source.path if isinstance(source, TransSource) else str(source)
+
+
+def sourcename(source):
+    """Return a display name for a transition source."""
+    return os.path.basename(sourcepath(source))
+
 
 def is_large_trans_file(trans_filepath):
     """
@@ -37,10 +61,11 @@ def is_large_trans_file(trans_filepath):
         True if the file size is greater than or equal to LARGE_TRANS_FILE_BYTES,
         False otherwise or if an error occurs accessing the file.
     """
-    try:
-        return os.path.getsize(trans_filepath) >= LARGE_TRANS_FILE_BYTES
-    except OSError:
+    if isinstance(trans_filepath, TransSource):
+        return trans_filepath.size >= LARGE_TRANS_FILE_BYTES
+    if not os.path.exists(trans_filepath):
         return False
+    return os.path.getsize(trans_filepath) >= LARGE_TRANS_FILE_BYTES
 
 # Decompress Large .trans.bz2 Files
 def command_decompress(trans_filename):
@@ -101,11 +126,37 @@ def read_trans_chunks(trans_filepath, usecols, names, chunk_sz=None):
     """
     if chunk_sz is None:
         chunk_sz = globals().get('chunk_size', DEFAULT_CHUNK_SIZE)
+    if isinstance(trans_filepath, TransSource) and trans_filepath.frame is not None:
+        frame = trans_filepath.frame
+
+        def memorychunks():
+            for start in range(0, len(frame), chunk_sz):
+                chunk = frame.iloc[start:start + chunk_sz, usecols].copy()
+                chunk.columns = names
+                yield chunk
+
+        return memorychunks()
+
+    path = sourcepath(trans_filepath)
+    if path.endswith('.parquet'):
+        import pyarrow.parquet as pq
+
+        columns = [f'c{col}' for col in usecols]
+
+        def parquetchunks():
+            parquet_file = pq.ParquetFile(path)
+            for batch in parquet_file.iter_batches(batch_size=chunk_sz, columns=columns):
+                chunk = batch.to_pandas()
+                chunk.columns = names
+                yield chunk
+
+        return parquetchunks()
+
     read_kwargs = dict(sep='\s+', header=None, usecols=usecols, names=names,
                        chunksize=chunk_sz, iterator=True, low_memory=False, encoding='utf-8')
-    if trans_filepath.endswith('.bz2'):
+    if path.endswith('.bz2'):
         read_kwargs['compression'] = 'bz2'
-    return pd.read_csv(trans_filepath, **read_kwargs)
+    return pd.read_csv(path, **read_kwargs)
 
 def process_large_chunks(trans_reader, handler, combine_fn, zero_factory, desc,
                          max_workers=MAX_LARGE_FILE_WORKERS, max_inflight=None, reducer=None,

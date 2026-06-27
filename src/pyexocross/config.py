@@ -61,6 +61,14 @@ class Config:
     
     def _load_from_kwargs(self, **kwargs):
         """Load configuration from keyword arguments with defaults."""
+        if 'abundance' in kwargs:
+            self._api_abundance = float(kwargs['abundance'])
+        elif not hasattr(self, '_api_abundance'):
+            self._api_abundance = 1.0
+        if not np.isfinite(self._api_abundance) or self._api_abundance < 0:
+            raise ValueError('abundance must be a finite non-negative number.')
+        self.abundance = self._api_abundance
+
         # Database info
         self.database = kwargs.get('database', getattr(self, 'database', 'ExoMol'))
         self.molecule = kwargs.get('molecule', getattr(self, 'molecule', None))
@@ -73,6 +81,16 @@ class Config:
         self.read_path = kwargs.get('read_path', getattr(self, 'read_path', './'))
         self.save_path = kwargs.get('save_path', getattr(self, 'save_path', './output/'))
         self.logs_path = kwargs.get('logs_path', getattr(self, 'logs_path', './pyexocross.log'))
+        self.cache = str(kwargs.get('cache', getattr(self, 'cache', 'auto'))).strip().lower()
+        if self.cache not in ('auto', 'parquet', 'none'):
+            raise ValueError("cache must be 'auto', 'parquet', or 'none'.")
+        self.cache_dir = kwargs.get('cache_dir', getattr(self, 'cache_dir', None))
+        self.max_memory = int(kwargs.get('max_memory', getattr(self, 'max_memory', 512)))
+        self.refresh_cache = bool(kwargs.get('refresh', kwargs.get(
+            'refresh_cache', getattr(self, 'refresh_cache', False)
+        )))
+        if self.max_memory < 0:
+            raise ValueError('max_memory must be zero or a positive number of MB.')
         
         # Ensure directories exist
         ensure_dir(self.save_path)
@@ -105,7 +123,12 @@ class Config:
         self.ncpufiles = kwargs.get('ncpufiles', getattr(self, 'ncpufiles', 1))
         self.chunk_size = kwargs.get('chunk_size', getattr(self, 'chunk_size', 100000))
         from pyexocross.gpu.base_gpu import normalize_run_mode, normalize_gpu_backend
-        self.run_mode = normalize_run_mode(kwargs.get('run_mode', getattr(self, 'run_mode', 'CPU')))
+        if 'device' in kwargs and 'run_mode' in kwargs:
+            if normalize_run_mode(kwargs['device']) != normalize_run_mode(kwargs['run_mode']):
+                raise ValueError('device and run_mode must request the same CPU/GPU mode.')
+        mode = kwargs.get('device', kwargs.get('run_mode', getattr(self, 'run_mode', 'CPU')))
+        self.run_mode = normalize_run_mode(mode)
+        self.device = self.run_mode
         self.gpu_backend = normalize_gpu_backend(kwargs.get('gpu_backend', getattr(self, 'gpu_backend', 'CUDA')))
         self.gpu_batch_lines = int(kwargs.get('gpu_batch_lines', getattr(self, 'gpu_batch_lines', 8192)))
         self.gpu_batch_grid = int(kwargs.get('gpu_batch_grid', getattr(self, 'gpu_batch_grid', 256)))
@@ -130,7 +153,7 @@ class Config:
         self.wn_wl_unit = kwargs.get('wn_wl_unit', getattr(self, 'wn_wl_unit', 'cm-1')).lower().replace('cm^-1', 'cm-1')
         
         min_range = kwargs.get('min_range', getattr(self, 'min_wnl', 0))
-        max_range = kwargs.get('max_range', getattr(self, 'max_wnl', 30000))
+        max_range = kwargs.get('max_range', getattr(self, 'max_wnl', 1e10))
         
         if self.wn_wl == 'WN':
             self.min_wn = min_range
@@ -308,7 +331,7 @@ class Config:
         # Conversion defaults
         self.conversion_format = kwargs.get('conversion_format', getattr(self, 'conversion_format', 'None'))
         self.conversion_min_freq = kwargs.get('conversion_min_freq', getattr(self, 'conversion_min_freq', 0))
-        self.conversion_max_freq = kwargs.get('conversion_max_freq', getattr(self, 'conversion_max_freq', 30000))
+        self.conversion_max_freq = kwargs.get('conversion_max_freq', getattr(self, 'conversion_max_freq', 1e10))
         
         curr_conv_unc = getattr(self, 'conversion_unc', 'None')
         _conv_unc = kwargs.get('conversion_unc', curr_conv_unc if curr_conv_unc != 'None' else None)
@@ -529,7 +552,7 @@ class Config:
         else:
             self.species_main_id = resolved_species_main_id
             self.species_sub_id = resolved_species_sub_id
-        self.abundance = meta['abundance']
+        self.abundance = getattr(self, '_api_abundance', meta['abundance'])
         self.mass = meta['mass']
     
     def _set_attributes(self, params):
@@ -576,6 +599,11 @@ class Config:
          self.tvib_list, self.trot_list, self.vib_label, self.rot_label,
          self.plot_cross_section_yn, self.plot_cross_section_method,
          self.plot_cross_section_wn_wl, self.plot_cross_section_unit, self.limit_yaxis_xsec) = params
+        self.device = self.run_mode
+        self.cache = 'auto'
+        self.cache_dir = None
+        self.max_memory = 512
+        self.refresh_cache = False
     
     def to_globals(self):
         """
@@ -606,6 +634,7 @@ class Config:
             'ncpufiles': 'ncpufiles',
             'chunk_size': 'chunk_size',
             'run_mode': 'run_mode',
+            'device': 'device',
             'gpu_backend': 'gpu_backend',
             'gpu_batch_lines': 'gpu_batch_lines',
             'gpu_batch_grid': 'gpu_batch_grid',
@@ -752,6 +781,7 @@ class Config:
             'ncpufiles': 'ncpufiles',
             'chunk_size': 'chunk_size',
             'run_mode': 'run_mode',
+            'device': 'device',
             'gpu_backend': 'gpu_backend',
             'gpu_batch_lines': 'gpu_batch_lines',
             'gpu_batch_grid': 'gpu_batch_grid',

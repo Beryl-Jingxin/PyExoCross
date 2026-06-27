@@ -43,6 +43,19 @@ def temperature_pressure_string(T, P, temp_idx, NLTEMethod,
     return T_str
 
 
+def binsizestring(bin_size):
+    """Format bin size consistently for output filenames."""
+    return f'{float(bin_size):.4f}'
+
+
+def crosssectiondetails(bin_size, unit_fn, cutoff, profile_label):
+    """Build the shared bin-size, cutoff, and profile filename segment."""
+    return (
+        '__BinSize' + binsizestring(bin_size) + unit_fn
+        + 'Cutoff' + str(cutoff) + '__' + profile_label.replace(' ', '')
+    )
+
+
 def stick_spectra_filepath(ss_folder, T, Tvib, Trot, str_min_wnl, str_max_wnl, unit_fn,
                            data_info, wn_wl, UncFilter, threshold, database, abs_emi, LTE_NLTE, photo,
                            NLTEMethod):
@@ -61,7 +74,7 @@ def cross_section_filepath(xsecs_folder, data_info,
                            Tvib_list, Trot_list,
                            str_min_v, str_max_v, unit_fn, wn_wl,
                            UncFilter, threshold, database, abs_emi,
-                           bin_size, profile_label, LTE_NLTE, photo,
+                           bin_size, cutoff, profile_label, LTE_NLTE, photo,
                            NLTEMethod, pressure_dependent):
     """
     Build cross-section (.xsec) output file path (shared naming for ExoMol and HITRAN).
@@ -81,6 +94,6 @@ def cross_section_filepath(xsecs_folder, data_info,
     prefix = '__'.join(data_info) + '__' + temp_part + '__'
     return (xsecs_folder + prefix + wn_wl.lower() + str_min_v + '-' + str_max_v + unit_fn
             + 'unc' + str(UncFilter) + '__thres' + str(threshold) 
-            + '__BinSize' + str(bin_size) + unit_fn + profile_label.replace(' ', '')
+            + crosssectiondetails(bin_size, unit_fn, cutoff, profile_label)
             + '__' + database + '__' + abs_emi + photo + LTE_NLTE + '.xsec'
     )

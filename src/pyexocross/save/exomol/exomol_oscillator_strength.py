@@ -15,6 +15,7 @@ from pyexocross.base.large_file import (
     is_large_trans_file,
     read_trans_chunks,
     save_large_txt,
+    sourcename,
 )
 from pyexocross.calculation.calculate_para import cal_v
 from pyexocross.calculation.calculate_oscillator_strength import cal_oscillator_strength
@@ -124,7 +125,7 @@ def process_exomol_oscillator_strength(states_df, trans_filepath):
     # Import legacy-style configuration variables from core (set via Config.to_globals()).
     from pyexocross.core import ncputrans 
 
-    trans_filename = trans_filepath.split('/')[-1]
+    trans_filename = sourcename(trans_filepath)
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
     use_names = ['uid','lid','A']
@@ -160,7 +161,7 @@ def process_exomol_oscillator_strength(states_df, trans_filepath):
                     oscillator_strength_df = pd.DataFrame(columns=['uid','lid','os','v'])
     return oscillator_strength_df
 
-def save_exomol_oscillator_strength(states_df):
+def save_exomol_oscillator_strength(states_df, trans_sources=None):
     """
     Main function to calculate and save oscillator strengths for ExoMol database.
 
@@ -187,7 +188,11 @@ def save_exomol_oscillator_strength(states_df):
     tot = Timer()
     tot.start()
     print('Reading transitions and calculating oscillator strengths ...')    
-    trans_filepaths = get_transfiles(read_path, data_info)
+    trans_filepaths = (
+        trans_sources
+        if trans_sources is not None
+        else get_transfiles(read_path, data_info)
+    )
     # Process multiple files in parallel
     with _executor_context(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file

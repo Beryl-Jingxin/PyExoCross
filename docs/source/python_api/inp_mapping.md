@@ -59,7 +59,7 @@ function.  The toggle is only relevant in `.inp` files or when using
 | `NCPUtrans` | `ncputrans` | `2` | `2` (int) |
 | `NCPUfiles` | `ncpufiles` | `4` | `4` (int) |
 | `ChunkSize` | `chunk_size` | `1000000` | `1000000` (int) |
-| `RunMode` | `run_mode` | `CPU` or `GPU` | `'CPU'` / `'GPU'` (str, default `'CPU'`) |
+| `Device` or `RunMode` | `device` or `run_mode` | `CPU` or `GPU` | `'CPU'` / `'GPU'` (str, default `'CPU'`) |
 | `GPUBackend` | `gpu_backend` | `AUTO` / `CUDA` / `PyTorch-CUDA` / `CuPy-CUDA` / `MPS` | `'AUTO'` / `'CUDA'` / `'PyTorch-CUDA'` / `'CuPy-CUDA'` / `'MPS'` (str, default `'AUTO'`) |
 | `GPUBatchLines` | `gpu_batch_lines` | `8192` | `8192` (int, optional) |
 | `GPUBatchGrid` | `gpu_batch_grid` | `256` | `256` (int, optional) |
@@ -101,14 +101,14 @@ GPUBatchGrid                            256
 ```python
 px.cross_sections(
     ...,
-    run_mode='CPU',
+    device='CPU',
 )
 ```
 
 ```python
 px.cross_sections(
     ...,
-    run_mode='GPU',
+    device='GPU',
     gpu_backend='AUTO',
     gpu_batch_lines=8192,
     gpu_batch_grid=256,
@@ -116,14 +116,14 @@ px.cross_sections(
 ```
 
 ```python
-px.cross_sections(..., run_mode='GPU', gpu_backend='CUDA')
-px.cross_sections(..., run_mode='GPU', gpu_backend='PyTorch-CUDA')
-px.cross_sections(..., run_mode='GPU', gpu_backend='CuPy-CUDA')
-px.cross_sections(..., run_mode='GPU', gpu_backend='MPS')
+px.cross_sections(..., device='GPU', gpu_backend='CUDA')
+px.cross_sections(..., device='GPU', gpu_backend='PyTorch-CUDA')
+px.cross_sections(..., device='GPU', gpu_backend='CuPy-CUDA')
+px.cross_sections(..., device='GPU', gpu_backend='MPS')
 ```
 
 ***Notes***:
-- Omit these kwargs to use default CPU mode (`run_mode='CPU'`).
+- Omit these kwargs to use default CPU mode (`device='CPU'`).
 - Use `gpu_backend='AUTO'` unless you explicitly want a fixed backend.
 - Backend fallback order for `AUTO`: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU`.
 - Backend fallback order for `CUDA`: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU`.

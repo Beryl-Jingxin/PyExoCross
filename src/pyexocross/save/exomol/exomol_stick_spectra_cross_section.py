@@ -19,6 +19,7 @@ from pyexocross.base.large_file import (
     is_large_trans_file,
     read_trans_chunks,
     save_large_txt,
+    sourcename,
 )
 from pyexocross.database import read_broad, get_part_transfiles
 from pyexocross.process.T_n_val import get_ntemp, get_temp_vals
@@ -144,6 +145,7 @@ def save_exomol_stick_spectra_cross_section(
     check_uncertainty,
     check_lifetime,
     check_gfactor,
+    trans_sources=None,
 ):
     """
     Combined function to calculate and save both stick spectra and cross sections.
@@ -216,7 +218,11 @@ def save_exomol_stick_spectra_cross_section(
     profile_label = line_profile(profile)
     
     print('Reading transitions ONCE for all temperatures (will be used for both stick spectra and cross sections) ...')    
-    trans_filepaths = get_part_transfiles(read_path, data_info, min_wn, max_wn)
+    trans_filepaths = (
+        trans_sources
+        if trans_sources is not None
+        else get_part_transfiles(read_path, data_info, min_wn, max_wn)
+    )
     
     # Prepare file format strings
     QNsfmf = (str(QNs_format).replace("'","").replace(",","").replace("[","").replace("]","")
@@ -285,7 +291,7 @@ def save_exomol_stick_spectra_cross_section(
     
     # Determine which files are large and cache small file chunks
     for trans_filepath in trans_filepaths:
-        trans_filename = trans_filepath.split('/')[-1]
+        trans_filename = sourcename(trans_filepath)
         large_file = is_large_trans_file(trans_filepath)
         large_files_list.append((trans_filepath, large_file))
         
@@ -316,7 +322,7 @@ def save_exomol_stick_spectra_cross_section(
         print('Warning: No transition files found to process.')
     else:
         for trans_filepath, large_file in log_tqdm(large_files_list, desc='Processing transition files'):
-            trans_filename = trans_filepath.split('/')[-1]
+            trans_filename = sourcename(trans_filepath)
             
             if large_file:
                 # For large files: stream ONCE, process each chunk for ALL temperatures
@@ -510,7 +516,7 @@ def save_exomol_stick_spectra_cross_section(
             
             # Process all transition files for this (T, P) combination
             for trans_filepath, large_file in large_files_list:
-                trans_filename = trans_filepath.split('/')[-1]
+                trans_filename = sourcename(trans_filepath)
                 
                 if large_file:
                     # Stream large files again for this (T, P) combination

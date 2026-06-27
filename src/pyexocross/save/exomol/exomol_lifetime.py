@@ -11,7 +11,7 @@ from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from pyexocross.base.utils import Timer, ensure_dir
 from pyexocross.base.log import print_file_info
-from pyexocross.base.large_file import read_trans_chunks
+from pyexocross.base.large_file import read_trans_chunks, sourcename
 from pyexocross.calculation.calculate_lifetime import cal_lifetime
 from pyexocross.database.load_exomol import get_transfiles
 
@@ -54,7 +54,7 @@ def process_exomol_lifetime(states_df, trans_filepath):
     from pyexocross.core import ncputrans  
 
     global _USE_THREAD_POOL
-    trans_filename = trans_filepath.split('/')[-1]
+    trans_filename = sourcename(trans_filepath)
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
     use_names = ['uid','lid','A']
@@ -169,7 +169,13 @@ def convert_dtype_by_format(df, fmt_list):
                 df[col] = df[col].astype('string')
     return df
 
-def save_exomol_lifetime(read_path, states_df, states_col, states_fmt):
+def save_exomol_lifetime(
+    read_path,
+    states_df,
+    states_col,
+    states_fmt,
+    trans_sources=None,
+):
     """
     Main function to calculate and save radiative lifetimes for ExoMol database.
 
@@ -195,7 +201,11 @@ def save_exomol_lifetime(read_path, states_df, states_col, states_fmt):
     t = Timer()
     t.start()
     print('Reading all transitions and calculating lifetimes ...')
-    trans_filepaths = get_transfiles(read_path, data_info)
+    trans_filepaths = (
+        trans_sources
+        if trans_sources is not None
+        else get_transfiles(read_path, data_info)
+    )
     # Process multiple files in parallel
     with _executor_context(max_workers=ncpufiles) as executor:
         # Submit reading tasks for each file

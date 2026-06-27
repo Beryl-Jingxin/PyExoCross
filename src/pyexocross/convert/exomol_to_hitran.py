@@ -26,6 +26,7 @@ from ..base.large_file import (
     is_large_trans_file,
     read_trans_chunks,
     process_large_chunks,
+    sourcename,
 )
 from ..base.qn_metadata import normalized_states_columns
 from ..calculation.calculate_para import cal_v, cal_uncertainty
@@ -547,7 +548,7 @@ def process_exomol2hitran_linelist(states_df, trans_filepath):
     """
     global _USE_THREAD_POOL
     _ensure_conversion_globals()
-    trans_filename = trans_filepath.split('/')[-1]
+    trans_filename = sourcename(trans_filepath)
     print('Processeing transitions file:', trans_filename)
     use_cols = [0,1,2]
     use_names = ['uid','lid','A']
@@ -595,7 +596,7 @@ def process_exomol2hitran_linelist(states_df, trans_filepath):
                 hitran_res_df = combine_fn([future.result() for future in tqdm(futures, desc='Combining '+trans_filename)])
     return hitran_res_df
 
-def conversion_exomol2hitran(states_df):
+def conversion_exomol2hitran(states_df, trans_sources=None):
     """
     Main function to convert ExoMol database format to HITRAN format.
 
@@ -606,6 +607,8 @@ def conversion_exomol2hitran(states_df):
     ----------
     states_df : pd.DataFrame
         Complete states DataFrame from ExoMol database
+    trans_sources : sequence, optional
+        Reusable transition sources returned by ``px.load``.
     """
     _ensure_conversion_globals()
     print('Convert data format from ExoMol to HITRAN.')  
@@ -614,7 +617,11 @@ def conversion_exomol2hitran(states_df):
     tot = Timer()
     tot.start()
     print('Reading transitions and converting data format from ExoMol to HITRAN ...')    
-    trans_filepaths = get_part_transfiles(read_path, data_info, ConversionMinFreq, ConversionMaxFreq)
+    trans_filepaths = (
+        trans_sources
+        if trans_sources is not None
+        else get_part_transfiles(read_path, data_info, ConversionMinFreq, ConversionMaxFreq)
+    )
     if len(trans_filepaths) == 0:
         raise ValueError(
             'No transition files overlap the requested conversion wavenumber range '

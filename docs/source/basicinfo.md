@@ -373,9 +373,9 @@ The program will run on different cores together.
 
 `ChunkSize`: The program splits each transitions file to many chunks when reading and calculating. `ChunkSize` is the size of each chunk.
 
-`RunMode`: Choose to run the program in CPU or GPU mode.
+`Device` or `RunMode`: Choose to run the program in CPU or GPU mode.
 
-`GPUBackend`: GPU backend selection (only used when `RunMode=GPU`):
+`GPUBackend`: GPU backend selection (only used when `Device=GPU`):
 
 - `'AUTO'` (recommended): `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback`
 - `'CUDA'`: `PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback`
@@ -415,10 +415,10 @@ Some suggestions on setting the number of `NCPUtrans` and `NCPUfiles`.
 NCPUtrans                               2
 NCPUfiles                               4
 ChunkSize                               500000
-RunMode                                 CPU                       # CPU(default) or GPU
+Device                                  CPU                       # CPU(default) or GPU
 GPUBackend                              AUTO                      # AUTO(default): PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
-GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
-GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+GPUBatchLines                           8192                      # GPU line-batch size (only used when Device=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when Device=GPU)
 ```
 
 
@@ -427,16 +427,16 @@ GPUBatchGrid                            256                       # GPU grid-bat
 NCPUtrans                               8
 NCPUfiles                               1
 ChunkSize                               1000000
-RunMode                                 GPU                       # CPU(default) or GPU
+Device                                  GPU                       # CPU(default) or GPU
 GPUBackend                              AUTO                      # AUTO(default): PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
-GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
-GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+GPUBatchLines                           8192                      # GPU line-batch size (only used when Device=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when Device=GPU)
 ```
 
 ```bash
 # CUDA policy (NVIDIA)
 # Priority: PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
-RunMode                                 GPU
+Device                                  GPU
 GPUBackend                              CUDA
 GPUBatchLines                           8192
 GPUBatchGrid                            256
@@ -444,7 +444,7 @@ GPUBatchGrid                            256
 
 ```bash
 # Force PyTorch CUDA only
-RunMode                                 GPU
+Device                                  GPU
 GPUBackend                              PyTorch-CUDA
 GPUBatchLines                           8192
 GPUBatchGrid                            256
@@ -452,7 +452,7 @@ GPUBatchGrid                            256
 
 ```bash
 # Force CuPy CUDA only
-RunMode                                 GPU
+Device                                  GPU
 GPUBackend                              CuPy-CUDA
 GPUBatchLines                           8192
 GPUBatchGrid                            256
@@ -460,7 +460,7 @@ GPUBatchGrid                            256
 
 ```bash
 # Force MPS (Apple Silicon)
-RunMode                                 GPU
+Device                                  GPU
 GPUBackend                              MPS
 GPUBatchLines                           8192
 GPUBatchGrid                            256

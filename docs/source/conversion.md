@@ -100,10 +100,10 @@ CrossSections                           0
 NCPUtrans                               4
 NCPUfiles                               1
 ChunkSize                               1000000
-RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when RunMode=GPU)
-GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
-GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+Device                                  CPU                       # CPU(default) or GPU
+GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when Device=GPU)
+GPUBatchLines                           8192                      # GPU line-batch size (only used when Device=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when Device=GPU)
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
@@ -155,10 +155,10 @@ CrossSections                           0
 NCPUtrans                               1
 NCPUfiles                               1
 ChunkSize                               100000
-RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when RunMode=GPU)
-GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
-GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+Device                                  CPU                       # CPU(default) or GPU
+GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when Device=GPU)
+GPUBatchLines                           8192                      # GPU line-batch size (only used when Device=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when Device=GPU)
 
 
 # Conversion #
@@ -204,10 +204,10 @@ CrossSections                           0
 NCPUtrans                               1
 NCPUfiles                               1
 ChunkSize                               10000
-RunMode                                 CPU                       # CPU(default) or GPU
-GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when RunMode=GPU)
-GPUBatchLines                           8192                      # GPU line-batch size (only used when RunMode=GPU)
-GPUBatchGrid                            256                       # GPU grid-batch size (only used when RunMode=GPU)
+Device                                  CPU                       # CPU(default) or GPU
+GPUBackend                              AUTO                      # AUTO(default), CUDA, PyTorch-CUDA, CuPy-CUDA, or MPS (used only when Device=GPU)
+GPUBatchLines                           8192                      # GPU line-batch size (only used when Device=GPU)
+GPUBatchGrid                            256                       # GPU grid-batch size (only used when Device=GPU)
 
 
 # Quantum numbers for conversion, stick spectra and cross sections #
