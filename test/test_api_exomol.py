@@ -35,7 +35,7 @@ COMPUTE_PARAMS = dict(
     ncputrans=4,                # Number of CPU threads for each transition file (default: 4)
     ncpufiles=1,                # Number of CPU files for transition calculation (default: 1)
     chunk_size=500000,          # Chunk size for transition calculation (default: 100000)
-    run_mode='CPU',             # Run mode: 'CPU' or 'GPU' (default: 'CPU')
+    device='CPU',               # Device: 'CPU' or 'GPU' (default: 'CPU')
 )
 
 
