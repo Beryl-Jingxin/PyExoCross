@@ -26,7 +26,7 @@ def save_hitran_partition_func(hitran_df, Ntemp, Tmax):
     # Import legacy-style configuration variables from core (set via Config.to_globals()).
     from pyexocross.core import save_path, data_info
 
-    print('Calculate partition functions.')  
+    print('\nCalculate partition functions.')  
     t = Timer()
     t.start()
     En, gn = hitran_state_arrays(hitran_df)

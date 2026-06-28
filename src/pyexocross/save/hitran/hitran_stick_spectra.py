@@ -130,7 +130,7 @@ def save_hitran_stick_spectra(hitran_linelist_df, QNs_col, T_list, Tvib_list, Tr
         photo,
     )
 
-    print('Calculate stick spectra.')  
+    print('\nCalculate stick spectra.')  
     print_stick_info('cm⁻¹', 'cm/molecule')
     tot = Timer()
     tot.start()
@@ -148,7 +148,7 @@ def save_hitran_stick_spectra(hitran_linelist_df, QNs_col, T_list, Tvib_list, Tr
     else:
         raise ValueError("Please choose one from: 'Absorption' or 'Emission'.")
     
-    print('Calculating stick spectra ...')    
+    print('\nCalculate stick spectra.')    
     
     # Process each temperature separately to save memory
     QN_format_noJ = [QNsformat_list[i] for i in [QNslabel_list.index(j) for j in QNs_label]]

@@ -153,7 +153,7 @@ class Config:
         self.wn_wl_unit = kwargs.get('wn_wl_unit', getattr(self, 'wn_wl_unit', 'cm-1')).lower().replace('cm^-1', 'cm-1')
         
         min_range = kwargs.get('min_range', getattr(self, 'min_wnl', 0))
-        max_range = kwargs.get('max_range', getattr(self, 'max_wnl', 1e10))
+        max_range = kwargs.get('max_range', getattr(self, 'max_wnl', 30000))
         
         if self.wn_wl == 'WN':
             self.min_wn = min_range
@@ -448,11 +448,10 @@ class Config:
         
         # Plotting defaults
         # Oscillator Strength
-        _plot_os_yn = kwargs.get('plot_oscillator_strength_yn', getattr(self, 'plot_oscillator_strength_yn', None))
-        if _plot_os_yn is not None:
-            self.plot_oscillator_strength_yn = _plot_os_yn
-        elif 'plot_oscillator_strength' in kwargs:
+        if 'plot_oscillator_strength' in kwargs:
             self.plot_oscillator_strength_yn = 'Y' if kwargs['plot_oscillator_strength'] else 'N'
+        elif 'plot_oscillator_strength_yn' in kwargs:
+            self.plot_oscillator_strength_yn = kwargs['plot_oscillator_strength_yn']
         elif not hasattr(self, 'plot_oscillator_strength_yn'):
             self.plot_oscillator_strength_yn = 'N'
 
@@ -462,11 +461,10 @@ class Config:
         self.limit_yaxis_os = kwargs.get('limit_yaxis_os', getattr(self, 'limit_yaxis_os', 1e-30))
         
         # Stick Spectra
-        _plot_ss_yn = kwargs.get('plot_stick_spectra_yn', getattr(self, 'plot_stick_spectra_yn', None))
-        if _plot_ss_yn is not None:
-            self.plot_stick_spectra_yn = _plot_ss_yn
-        elif 'plot_stick_spectra' in kwargs:
+        if 'plot_stick_spectra' in kwargs:
             self.plot_stick_spectra_yn = 'Y' if kwargs['plot_stick_spectra'] else 'N'
+        elif 'plot_stick_spectra_yn' in kwargs:
+            self.plot_stick_spectra_yn = kwargs['plot_stick_spectra_yn']
         elif not hasattr(self, 'plot_stick_spectra_yn'):
             self.plot_stick_spectra_yn = 'N'
             
@@ -476,11 +474,10 @@ class Config:
         self.limit_yaxis_stick_spectra = kwargs.get('limit_yaxis_stick_spectra', getattr(self, 'limit_yaxis_stick_spectra', 1e-30))
         
         # Cross Section
-        _plot_xs_yn = kwargs.get('plot_cross_section_yn', getattr(self, 'plot_cross_section_yn', None))
-        if _plot_xs_yn is not None:
-            self.plot_cross_section_yn = _plot_xs_yn
-        elif 'plot_cross_section' in kwargs:
+        if 'plot_cross_section' in kwargs:
             self.plot_cross_section_yn = 'Y' if kwargs['plot_cross_section'] else 'N'
+        elif 'plot_cross_section_yn' in kwargs:
+            self.plot_cross_section_yn = kwargs['plot_cross_section_yn']
         elif not hasattr(self, 'plot_cross_section_yn'):
             self.plot_cross_section_yn = 'N'
 
@@ -612,6 +609,9 @@ class Config:
         This is used to make configuration available to legacy code that uses
         global variables. Sets variables in the core module's globals.
         """
+        from pyexocross.base.config_manager import ConfigManager
+        ConfigManager._last_config = self
+
         import sys
         import pyexocross.core as core_module
         

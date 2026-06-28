@@ -20,7 +20,7 @@ def save_hitran_oscillator_strength(hitran_df):
         HITRAN DataFrame with columns: A, v, gp, gpp
     """
     from pyexocross.core import save_path, data_info, database, gfORf, PlotOscillatorStrengthYN
-    print('Calculate oscillator strengths.')  
+    print('\nCalculate oscillator strengths.')  
     t = Timer()
     t.start()
     A = hitran_df['A'].values

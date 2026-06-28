@@ -15,7 +15,6 @@ by PyExoCross API functions.  Parameters are organized by category.
 | `isotopologue` | `str` | `None` | Isotopologue (e.g. `'1H2-16O'`, `'24Mg-1H'`) | ExoMol, ExoMolHR, HITRAN, HITEMP |
 | `dataset` | `str` | `None` | Dataset name (e.g. `'POKAZATEL'`, `'XAB'`, `'NIST'`) | All |
 | `species_id` | `int` | `0` | Numeric species identifier | All |
-| `abundance` | `float` | `1.0` | Isotopic abundance multiplier; API calls use the supplied value or `1.0` by default | All |
 
 ### `database` Accepted Values
 
@@ -250,6 +249,7 @@ Used by `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross
 | `min_range` | `float` | `0` | Minimum of range (in `wn_wl_unit`) |
 | `max_range` | `float` | `30000` | Maximum of range (in `wn_wl_unit`) |
 | `abs_emi` | `str` | `'Ab'` | `'Ab'` = absorption, `'Em'` = emission |
+| `abundance` | `float` | `1.0` | Optional isotopic abundance multiplier |
 
 ***Note***
 

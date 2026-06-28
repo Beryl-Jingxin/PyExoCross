@@ -194,7 +194,7 @@ def save_exomol_lifetime(
         Format strings for each column
     """
     np.seterr(divide='ignore', invalid='ignore')
-    print('Calculate lifetimes.')  
+    print('\nCalculate lifetimes.')  
     # Import legacy-style configuration variables from core (set via Config.to_globals()).
     from pyexocross.core import data_info, ncpufiles, save_path, CompressYN  # type: ignore
 

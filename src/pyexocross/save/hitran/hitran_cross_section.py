@@ -217,7 +217,7 @@ def save_hitran_cross_section(hitran_linelist_df, T_list, P_list, Tvib_list, Tro
         wn_wl,
     )
 
-    print('Calculating cross sections ...')  
+    print('\nCalculate cross sections.')  
     t = Timer()
     t.start()
 
@@ -253,7 +253,7 @@ def save_hitran_cross_section(hitran_linelist_df, T_list, P_list, Tvib_list, Tro
     print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, 
                     'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)', [], [])
     
-    print('Calculating cross sections ...')    
+    print('\nCalculate cross sections.')    
     
     # Process each (T, P) combination separately to save memory
     any_results = False

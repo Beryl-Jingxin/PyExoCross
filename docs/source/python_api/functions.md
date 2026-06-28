@@ -76,7 +76,8 @@ data = px.load(..., cache='auto', cache_dir=None, max_memory=512,
 Loads and preprocesses reusable ExoMol, ExoAtom, ExoMolHR, HITRAN, or HITEMP
 data. `auto` keeps small inputs in memory and converts large inputs to Parquet;
 `parquet` forces persistent Parquet caching; `none` uses the original input
-format. Use the result with `data=` in `px.conversion`, `px.lifetimes`,
+format. Use the result with `data=` in `px.conversion`,
+`px.partition_functions`, `px.specific_heats`, `px.lifetimes`,
 `px.cooling_functions`, `px.oscillator_strengths`, `px.stick_spectra`,
 `px.cross_sections`, or `px.stick_spectra_cross_section`.
 
@@ -95,9 +96,10 @@ format. Use the result with `data=` in `px.conversion`, `px.lifetimes`,
 | `save_path` | `str` | No | Output root retained for later calculations; default `./output/` |
 | `logs_path` | `str` or `None` | No | Log path retained for later calculations; `None` disables file logging |
 | `min_range` | `float` | No | Initial minimum wavenumber/wavelength; default `0` |
-| `max_range` | `float` | No | Initial maximum wavenumber/wavelength; default `1e10` |
+| `max_range` | `float` | No | Initial maximum wavenumber/wavelength; default `30000` |
 | `wn_wl` | `str` | No | Range coordinate, `WN` or `WL`; default `WN` |
 | `wn_wl_unit` | `str` | No | `cm-1`, `um`, or `nm`; default `cm-1` |
+| `unc_filter` | `float` or `None` | No | Maximum uncertainty retained during preprocessing; default `None` |
 | `cache` | `str` | No | `auto`, `parquet`, or `none`; default `auto` |
 | `cache_dir` | `str` or `None` | No | Persistent cache directory; default is source-adjacent `.pyexocross_cache/` |
 | `max_memory` | `int` | No | Auto-mode memory threshold in MB; default `512` |
@@ -113,11 +115,28 @@ format. Use the result with `data=` in `px.conversion`, `px.lifetimes`,
 
 Later calculations may provide their own `min_range` and `max_range` as long
 as that interval is covered by the data loaded here. A wider interval requires
-another `px.load`. For ExoMol/ExoAtom, calling `px.lifetimes`,
-`px.cooling_functions`, or `px.oscillator_strengths` automatically expands a
-range-loaded object to all transitions and updates the same object for reuse.
-Set `all_transitions=True` only when this work should be done eagerly.
-Partition functions and specific heats do not use transition-loaded data.
+another `px.load`. The `cutoff` value does not expand the range required from
+`px.load`.
+Range errors report the exact recommended `min_range` and
+`max_range` for the next load.
+
+A later `unc_filter` may keep the loaded value or use a smaller, stricter value;
+PyExoCross then filters the loaded data further. A larger value, or changing a
+numeric filter to `None`, requires another `px.load` and the error reports the
+required filter value.
+
+For ExoMol and ExoAtom, a later `qns_filter` may add constraints or narrow the
+values retained by `px.load`. Empty value lists are wildcards and do not filter
+the loaded states. Removing an active constraint or adding values excluded by
+`px.load` requires loading the data again. HITRAN, HITEMP, and ExoMolHR retain
+the complete line table and apply QN filters during each calculation.
+
+For ExoMol/ExoAtom, calling `px.lifetimes`, `px.cooling_functions`, or
+`px.oscillator_strengths` automatically expands range-loaded data to all
+transitions and updates the same object for reuse. \
+Set `all_transitions=True` only when this work should be done eagerly. \
+Partition functions and specific heats reuse states and database metadata from
+LoadedData but do not read or expand transitions.
 
 **Example**
 
@@ -193,7 +212,8 @@ Its source path, size, and modification time
 are tracked in the same manifest instead of being embedded in the filename.
 
 HITRAN/HITEMP fixed-width files and ExoMolHR CSV files are normalized once and
-stored as database-prefixed `*.linelist.parquet` files. Their existing `v`
+stored as database-prefixed, range-named `*__00000-30000.linelist.parquet`
+files. Their existing `v`
 column is used for row-group range filtering, while uncertainty and intensity
 filters remain calculation parameters. With `cache_dir=None`, these caches are
 stored in `.pyexocross_cache` beside the source `.par` or `.csv` file.
@@ -375,7 +395,6 @@ Convert between ExoMol/ExoMolHR/ExoAtom and HITRAN line-list formats.
 | `isotopologue` | `str` | `None` | Isotopologue (e.g. `'24Mg-1H'`, `'14N-16O'`) |
 | `dataset` | `str` | `None` | Dataset name (e.g. `'XAB'`, `'NIST'`) |
 | `species_id` | `int` | `0` | Species identifier (e.g. `501`, `81`) |
-| `abundance` | `float` | `1.0` | Isotopic abundance multiplier; API calls use `1.0` unless an explicit value is supplied |
 | `read_path` | `str` | `'./'` | Path to input database |
 | `save_path` | `str` | `'./output/'` | Path for output files |
 | `logs_path` | `str` | `None` | Log file path |
@@ -682,9 +701,9 @@ Calculate LTE or Non-LTE stick spectra (absorption or emission).
 | `wn_wl` | `str` | `'WN'` | `'WN'` (wavenumber) or `'WL'` (wavelength) |
 | `wn_wl_unit` | `str` | `'cm-1'` | `'cm-1'`, `'um'`, or `'nm'` |
 | `min_range` | `float` | `0` | Minimum range value (in `wn_wl_unit`) |
-| `max_range` | `float` | `1e10` | Maximum range value (in `wn_wl_unit`) |
+| `max_range` | `float` | `30000` | Maximum range value (in `wn_wl_unit`) |
 | `abs_emi` | `str` | `'Ab'` | `'Ab'` for absorption, `'Em'` for emission |
-| `abundance` | `float` | No | Isotopic abundance multiplier; default `1.0` |
+| `abundance` | `float` | `1.0` | Optional isotopic abundance multiplier |
 | **Non-LTE** | | | |
 | `nlte_method` | `str` | `'L'` | `'L'`=LTE, `'T'`=Treanor, `'D'`=Density, `'P'`=Population |
 | `tvib_list` | `list[float]` | `[]` | Vibrational temperatures for method `'T'` |
@@ -753,6 +772,7 @@ px.stick_spectra(
     min_range=0,
     max_range=30000,
     abs_emi='Ab',
+    abundance=1.0,
     device='CPU',
 )
 ```

@@ -191,7 +191,7 @@ def save_exomolhr_cross_section(exomolhr_df, T_list, P_list, Tvib_list, Trot_lis
         ncputrans,
     )
 
-    print('Calculating cross sections ...')
+    print('\nCalculate cross sections.')
     t = Timer()
     t.start()
 

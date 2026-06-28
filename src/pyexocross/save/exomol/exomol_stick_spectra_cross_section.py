@@ -193,7 +193,7 @@ def save_exomol_stick_spectra_cross_section(
         check_predissoc,
         profile,
     ) = get_config()
-    print('Calculate stick spectra and cross sections.\n')
+    print('\nCalculate stick spectra and cross sections.\n')
     # Separate timers for stick spectra and cross sections.
     t_ss = Timer()
     t_xsec = Timer()
@@ -476,7 +476,7 @@ def save_exomol_stick_spectra_cross_section(
     unique_pressures = sorted(list(set(all_pressures)))
     
     # Print cross section information once before processing
-    print('Calculate cross sections.')
+    print('\nCalculate cross sections.')
     print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, 
                     'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)', broad, ratio)
     

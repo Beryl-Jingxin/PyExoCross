@@ -5,6 +5,7 @@ This module provides functions for reading HITRAN parameter files and
 processing HITRAN linelist data.
 """
 import os
+from itertools import islice
 import numpy as np
 import pandas as pd
 from ..base.utils import Timer
@@ -101,12 +102,16 @@ def read_parfile(read_path):
         Complete HITRAN parameter file DataFrame
     """
     par_path = _resolve_hitran_par_path(read_path)
-    # Initialise the iterator object.
-    read_par = pd.read_csv(par_path, chunksize=100_000, iterator=True, header=None, encoding='utf-8')
-    par_df = pd.DataFrame()
-    for chunk in read_par:
-        par_df = pd.concat([par_df, chunk])
-    return par_df
+    chunks = []
+    with open(par_path, 'r', encoding='utf-8') as stream:
+        while True:
+            lines = list(islice(stream, 100_000))
+            if not lines:
+                break
+            records = [line.rstrip('\r\n') for line in lines if line.strip()]
+            if records:
+                chunks.append(pd.DataFrame({0: records}))
+    return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame(columns=[0])
 
 # Process HITRAN linelist data
 def read_hitran_parfile(read_path, parfile_df, minv, maxv, unclimit, Slimit):

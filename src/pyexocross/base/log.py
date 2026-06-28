@@ -126,15 +126,19 @@ def setup_logging(log_file_path):
     log_dir = os.path.dirname(log_file_path)
     log_base = os.path.splitext(os.path.basename(log_file_path))[0]
     log_ext = os.path.splitext(log_file_path)[1] or '.log'
-    date_suffix = datetime.datetime.now().strftime('%Y%m%d')
+    now = datetime.datetime.now()
+    date_suffix = now.strftime('%Y%m%d')
     dated_name = f'{log_base}__{date_suffix}{log_ext}'
     final_log_path = os.path.join(log_dir, dated_name)
     # Always overwrite existing log for this date instead of appending
     _LOG_FILE_HANDLE = open(final_log_path, 'w', buffering=1, encoding='utf-8')
+    _LOG_FILE_HANDLE.write(f'Date and time: {now:%Y-%m-%d %H:%M:%S}\n\n')
+    _LOG_FILE_HANDLE.flush()
     sys.stdout = TeeStream(_ORIGINAL_STDOUT, _LOG_FILE_HANDLE)
     sys.stderr = TeeStream(_ORIGINAL_STDERR, _LOG_FILE_HANDLE)
     atexit.register(_close_log_file)
-    print(f'Logging to file: {final_log_path}')
+    _ORIGINAL_STDOUT.write(f'Logging to file: {final_log_path}\n')
+    _ORIGINAL_STDOUT.flush()
 
 
 def _safe_cpu_model():
@@ -172,7 +176,7 @@ def get_cpu_device_info():
 def print_cpu_device_info(prefix='CPU'):
     """Print CPU/system information for logs."""
     info = get_cpu_device_info()
-    print(f"\n=== {prefix} Device Info ===")
+    print(f"=== {prefix} Device Info ===")
     print("Python:", info['python'])
     print("Platform:", info['platform'])
     print("Machine:", info['machine'])
@@ -746,4 +750,3 @@ def print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, P, abs_emi, NLTEMethod, stick_x
             raise ValueError("Please choose one LTE or non-LTE method from: 'L', 'T', 'D' or 'P'.")
     else:
         raise ValueError("Please choose one from: 'Absorption' or 'Emission'.")
-    

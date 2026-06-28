@@ -23,27 +23,10 @@ COMMON = dict(
     dataset='NIST',
     read_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoAtom/', # '/Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/', 
     save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/',
-    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log', 
+    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log',
+    cache='parquet', 
 )
 
-
-# NLTE parameters (needed by stick_spectra and cross_sections)
-NLTE_PARAMS = dict(
-    nlte_method='P',                # Non-LTE: Population 
-    nlte_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv', # '/home/jingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv',
-)
-
-# Spectral range parameters
-RANGE_PARAMS = dict(
-    temperatures=[1000,2000],       # Temperature in unit of K
-    wn_wl='WN',                     # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
-    wn_wl_unit='cm-1',              # Unit for wavenumber (default: cm⁻¹)
-    min_range=0,                    # Minimum wavenumber in unit of cm⁻¹
-    max_range=115400,               # Maximum wavenumber in unit of cm⁻¹
-    abs_emi='Ab',                   # Absorption or emission (default: 'Absorption')
-    unc_filter=None,                # Uncertainty filter (default: None)
-    threshold=None,                 # Threshold filter (default: None)
-)
 
 # Cores and chunks
 COMPUTE_PARAMS = dict(
@@ -57,6 +40,30 @@ COMPUTE_PARAMS = dict(
 )
 
 
+# Spectral range parameters
+RANGE_PARAMS = dict(
+    wn_wl='WN',                     # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+    wn_wl_unit='cm-1',              # Unit for wavenumber (default: cm⁻¹)
+    min_range=0,                    # Minimum wavenumber in unit of cm⁻¹
+    max_range=115400,               # Maximum wavenumber in unit of cm⁻¹
+    unc_filter=None,                # Uncertainty filter (default: None)
+)
+
+
+# NLTE parameters (needed by stick_spectra and cross_sections)
+NLTE_PARAMS = dict(
+    nlte_method='P',                # Non-LTE: Population 
+    nlte_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv', # '/home/jingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv',
+)
+
+
+data=px.load(
+    **COMMON,
+    **COMPUTE_PARAMS,
+    **RANGE_PARAMS,
+)
+
+
 # ---------------------------------------------------------------------------
 # Test functions
 # ---------------------------------------------------------------------------
@@ -66,8 +73,7 @@ def test_cooling_functions():
     print('TEST: px.cooling_functions()')
     print('='*70)
     px.cooling_functions(
-        **COMMON,
-        **COMPUTE_PARAMS,
+        data=data,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
         tmax=600,                   # Maximum temperature in unit of K (default: 5000)
     )
@@ -80,20 +86,21 @@ def test_stick_spectra():
     print('TEST: px.stick_spectra()')
     print('='*70)
     px.stick_spectra(
-        **COMMON,
-        # **NLTE_PARAMS,        # If Non-LTE is enabled, this parameter is required.
-        **RANGE_PARAMS,
-        **COMPUTE_PARAMS,
+        data=data,
+        # **NLTE_PARAMS,            # If Non-LTE is enabled, this parameter is required.
+        temperatures=[1000,2000],   # Temperature in unit of K
+        abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
+        threshold=None,             # Threshold filter (default: None)
         qns_filter={
             'configuration': [],
             'Multiple': [],
             'parity': [],
         },
-        plot=True,              # Whether to plot results (default: False)
-        plot_method='log',      # Plot in linear (lin) or logarithm (log) (default: 'log')
-        plot_wn_wl='Wn',        # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
-        plot_unit='cm-1',       # Unit for plotting axis (default: cm⁻¹)
-        limit_yaxis=1e-30,      # Lower limit for y-axis (default: 1e-30 cm/molecule)
+        plot=True,                  # Whether to plot results (default: False)
+        plot_method='log',          # Plot in linear (lin) or logarithm (log) (default: 'log')
+        plot_wn_wl='Wn',            # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+        plot_unit='cm-1',           # Unit for plotting axis (default: cm⁻¹)
+        limit_yaxis=1e-30,          # Lower limit for y-axis (default: 1e-30 cm/molecule)
     )
     print('PASSED: stick_spectra()')
 
@@ -104,24 +111,25 @@ def test_cross_sections():
     print('TEST: px.cross_sections()')
     print('='*70)
     px.cross_sections(
-        **COMMON,
-        # **NLTE_PARAMS,        # If Non-LTE is enabled, this parameter is required.
-        **RANGE_PARAMS,
-        **COMPUTE_PARAMS,
-        pressures=[0.5,1.0],    # Pressure in bar (default: [1.0])
-        bin_size=0.1,           # Bin size for wavenumber grid
-        profile='SciPyVoigt',   # Line profile name (default: 'Gaussian')
-        predissociation=False,  # Predissociation (default: False)
-        cutoff=None,            # Cutoff distance in cm⁻¹ (default: None)
-        broadeners=['Default'], # Broadening species (default: ['Default'])
-        ratios=[1.0],           # Broadening ratios (default: [1.0])
-        alpha_hwhm=None,        # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
-        gamma_hwhm=None,        # Constant Lorentzian HWHM (None, will calculate from broadening) or custom value (default: 0.5)
-        plot=True,              # Whether to plot results (default: False)
-        plot_method='log',      # Plot in linear (lin) or logarithm (log)
-        plot_wn_wl='WN',        # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
-        plot_unit='cm-1',       # Unit for plotting axis (default: cm⁻¹)
-        limit_yaxis=1e-30,      # Lower limit for y-axis (default: 1e-30 cm²/molecule)
+        data=data,
+        # **NLTE_PARAMS,            # If Non-LTE is enabled, this parameter is required.
+        temperatures=[1000,2000],   # Temperature in unit of K
+        pressures=[0.5,1.0],        # Pressure in bar (default: [1.0])
+        abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
+        threshold=None,             # Threshold filter (default: None)
+        bin_size=0.1,               # Bin size for wavenumber grid
+        profile='SciPyVoigt',       # Line profile name (default: 'Gaussian')
+        predissociation=False,      # Predissociation (default: False)
+        cutoff=10.0,                # Cutoff distance in cm⁻¹ (default: None)
+        broadeners=['Default'],     # Broadening species (default: ['Default'])
+        ratios=[1.0],               # Broadening ratios (default: [1.0])
+        alpha_hwhm=None,            # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
+        gamma_hwhm=None,            # Constant Lorentzian HWHM (None, will calculate from broadening) or custom value (default: 0.5)
+        plot=True,                  # Whether to plot results (default: False)
+        plot_method='log',          # Plot in linear (lin) or logarithm (log)
+        plot_wn_wl='WN',            # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+        plot_unit='cm-1',           # Unit for plotting axis (default: cm⁻¹)
+        limit_yaxis=1e-30,          # Lower limit for y-axis (default: 1e-30 cm²/molecule)
     )
     print('PASSED: cross_sections()')
 
@@ -132,24 +140,25 @@ def test_stick_spectra_cross_section():
     print('TEST: px.stick_spectra_cross_section()')
     print('='*70)
     px.stick_spectra_cross_section(
-        **COMMON,
-        # **NLTE_PARAMS,        # If Non-LTE is enabled, this parameter is required.
-        **RANGE_PARAMS,
-        **COMPUTE_PARAMS,
-        pressures=[0.5,1.0],    # Pressure in bar (default: [1.0])
-        bin_size=0.1,           # Bin size for wavenumber grid
-        profile='SciPyVoigt',   # Line profile name (default: 'Gaussian')
-        predissociation=False,  # Predissociation (default: False)
-        cutoff=None,            # Cutoff distance in cm⁻¹ (default: None)
-        broadeners=['Default'], # Broadening species (default: ['Default'])
-        ratios=[1.0],           # Broadening ratios (default: [1.0])
-        alpha_hwhm=None,        # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
-        gamma_hwhm=None,        # Constant Lorentzian HWHM (None, will calculate from broadening) or custom value (default: 0.5)
-        plot=True,              # Whether to plot results (default: False)
-        plot_method='log',      # Plot in linear (lin) or logarithm (log)
-        plot_wn_wl='WN',        # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
-        plot_unit='cm-1',       # Unit for plotting axis (default: cm⁻¹)
-        limit_yaxis=1e-30,      # Lower limit for y-axis (default: 1e-30 cm²/molecule)
+        data=data,
+        # **NLTE_PARAMS,            # If Non-LTE is enabled, this parameter is required.
+        temperatures=[1000,2000],   # Temperature in unit of K
+        pressures=[0.5,1.0],        # Pressure in bar (default: [1.0])
+        abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
+        threshold=None,             # Threshold filter (default: None)
+        bin_size=0.1,               # Bin size for wavenumber grid
+        profile='SciPyVoigt',       # Line profile name (default: 'Gaussian')
+        predissociation=False,      # Predissociation (default: False)
+        cutoff=10.0,                # Cutoff distance in cm⁻¹ (default: None)
+        broadeners=['Default'],     # Broadening species (default: ['Default'])
+        ratios=[1.0],               # Broadening ratios (default: [1.0])
+        alpha_hwhm=None,            # Constant Doppler HWHM (None, will calculate from broadening) or custom value (default: 3.0)
+        gamma_hwhm=None,            # Constant Lorentzian HWHM (None, will calculate from broadening) or custom value (default: 0.5)
+        plot=True,                  # Whether to plot results (default: False)
+        plot_method='log',          # Plot in linear (lin) or logarithm (log)
+        plot_wn_wl='WN',            # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+        plot_unit='cm-1',           # Unit for plotting axis (default: cm⁻¹)
+        limit_yaxis=1e-30,          # Lower limit for y-axis (default: 1e-30 cm²/molecule)
     )
     print('PASSED: stick_spectra_cross_section()')
 

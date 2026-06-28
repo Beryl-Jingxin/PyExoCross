@@ -38,7 +38,7 @@ Available functions (snake_case, following PEP 8):
 """
 import os
 from ..config import Config
-from ..core import get_results
+from ..core import get_results, printdatabaseinfo, printdeviceinfo
 from ..base.log import close_logging
 from ..base.utils import Timer
 from ..database.data import LoadedData, loaddata
@@ -103,7 +103,46 @@ def _calculation_config(inp_filepath, data, kwargs, **flags):
     config = data.configfor(**kwargs)
     for name, value in flags.items():
         setattr(config, name, value)
+    validateloadrange(data, config)
     return config
+
+
+def validateloadrange(data, config):
+    """Reject calculation ranges that exceed the interval supplied to px.load."""
+    if config.conversion == 1:
+        requestedmin = config.conversion_min_freq
+        requestedmax = config.conversion_max_freq
+    elif config.stick_spectra == 1 or config.cross_sections == 1:
+        requestedmin = config.min_wn
+        requestedmax = config.max_wn
+    else:
+        return
+
+    loadedmin = data.config.min_wn
+    loadedmax = data.config.max_wn
+    requiredmin = float(requestedmin)
+    requiredmax = float(requestedmax)
+    if requiredmin < loadedmin or requiredmax > loadedmax:
+        recommendedmin = min(float(loadedmin), requiredmin)
+        recommendedmax = max(float(loadedmax), requiredmax)
+        if data.config.wn_wl == 'WL':
+            unitfactor = 1e4 if data.config.wn_wl_unit == 'um' else 1e7
+            loadmin = unitfactor / recommendedmax
+            loadmax = unitfactor / recommendedmin if recommendedmin > 0 else float('inf')
+            recommendation = (
+                f'min_range={loadmin:g}, max_range={loadmax:g} '
+                f'({data.config.wn_wl_unit})'
+            )
+        else:
+            recommendation = (
+                f'min_range={recommendedmin:g}, max_range={recommendedmax:g}'
+            )
+        raise ValueError(
+            f'Requested calculation range {float(requestedmin):g}-{float(requestedmax):g} '
+            f'cm-1 is not covered by px.load range '
+            f'{float(loadedmin):g}-{float(loadedmax):g} cm-1. '
+            f'Call px.load({recommendation}) again.'
+        )
 
 
 def requirealltransitions(data):
@@ -171,12 +210,30 @@ def load(
         by :func:`stick_spectra`. ExoMol, ExoAtom, ExoMolHR, HITRAN, and HITEMP
         are supported.
     """
+    if 'abundance' in kwargs:
+        raise ValueError(
+            'abundance is a calculation parameter. Pass it to stick_spectra, '
+            'cross_section, or stick_spectra_cross_section instead of px.load.'
+        )
+    if 'cutoff' in kwargs:
+        raise ValueError(
+            'cutoff is a calculation parameter. Pass it to cross_section or '
+            'stick_spectra_cross_section instead of px.load.'
+        )
+    suppliedplotkeys = sorted(
+        key
+        for key in kwargs
+        if key == 'plot' or key.startswith('plot_') or key.startswith('limit_yaxis')
+    )
+    if suppliedplotkeys:
+        raise ValueError(
+            ', '.join(suppliedplotkeys)
+            + ' are calculation parameters. Pass them to the corresponding '
+            'calculation function instead of px.load.'
+        )
     _ensure_logging(inp_filepath, kwargs.get('logs_path'))
-    timer = Timer().start()
-    print('Loading reusable line-list data ...')
     config = Config(
         inp_filepath=inp_filepath,
-        stick_spectra=1,
         cache=cache,
         cache_dir=cache_dir,
         max_memory=max_memory,
@@ -184,6 +241,11 @@ def load(
         **kwargs,
     )
     config.to_globals()
+    printdeviceinfo(config)
+    printdatabaseinfo(config)
+    print()
+    timer = Timer().start()
+    print('Loading reusable line-list data ...')
     data = loaddata(
         config,
         cache=cache,
@@ -340,9 +402,15 @@ def partition_functions(inp_filepath=None, **kwargs):
         chunk_size : int, optional
             Chunk size for transitions (default: 100000).
     """
+    data = kwargs.pop('data', None)
     _ensure_logging(inp_filepath, kwargs.get('logs_path'))
-    config = Config(inp_filepath=inp_filepath, partition_functions=1, **kwargs)
-    get_results(config)
+    config = _calculation_config(
+        inp_filepath,
+        data,
+        kwargs,
+        partition_functions=1,
+    )
+    get_results(config, data=data)
 
 
 # Legacy alias
@@ -363,9 +431,15 @@ def specific_heats(inp_filepath=None, **kwargs):
     **kwargs
         Same as :func:`partition_functions`.
     """
+    data = kwargs.pop('data', None)
     _ensure_logging(inp_filepath, kwargs.get('logs_path'))
-    config = Config(inp_filepath=inp_filepath, specific_heats=1, **kwargs)
-    get_results(config)
+    config = _calculation_config(
+        inp_filepath,
+        data,
+        kwargs,
+        specific_heats=1,
+    )
+    get_results(config, data=data)
 
 
 # Legacy alias
@@ -536,13 +610,15 @@ def stick_spectra(inp_filepath=None, **kwargs):
         min_range : float, optional
             Minimum wavenumber/wavelength (default: 0).
         max_range : float, optional
-            Maximum wavenumber/wavelength (default: 1e10).
+            Maximum wavenumber/wavelength (default: 30000).
         wn_wl : str, optional
             'WN' for wavenumber, 'WL' for wavelength (default: 'WN').
         wn_wl_unit : str, optional
             'cm-1', 'um', or 'nm' (default: 'cm-1').
         abs_emi : str, optional
             'Ab' for absorption, 'Em' for emission (default: 'Ab').
+        abundance : float, optional
+            Isotopic abundance multiplier (default: 1.0).
         threshold : float or None, optional
             Intensity threshold. ``None`` disables (default: ``None``).
         unc_filter : float or None, optional

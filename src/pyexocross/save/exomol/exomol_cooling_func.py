@@ -174,7 +174,7 @@ def save_exomol_cooling_func(states_df, Ntemp, Tmax, trans_sources=None):
         Maximum temperature in Kelvin
     """
     # tqdm.write('Calculate cooling functions.') 
-    print('Calculate cooling functions.')  
+    print('\nCalculate cooling functions.')  
     # Import legacy-style configuration variables from core (set via Config.to_globals()).
     from pyexocross.core import read_path, data_info, save_path, ncpufiles, ncputrans  
 

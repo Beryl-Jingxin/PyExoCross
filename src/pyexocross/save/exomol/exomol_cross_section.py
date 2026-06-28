@@ -519,7 +519,7 @@ def save_exomol_cross_section(
         ncpufiles,
         wn_wl,
     )
-    print('Calculate cross sections.')
+    print('\nCalculate cross sections.')
     tot = Timer()
     tot.start()
     broad, ratio, nbroad, broad_dfs = read_broad(read_path)

@@ -26,12 +26,24 @@ def _axis_values_from_wavenumber(wn, values, axis_kind, axis_unit):
         unit_fn = 'cm-1__'
         axis_label = 'Wavenumber, cm⁻¹'
     elif axis_kind == 'WL' and axis_unit == 'um':
+        if np.any(wn <= 0):
+            print(
+                'Warning: Wavenumber values at or below 0 cm⁻¹ cannot be '
+                'converted to a finite wavelength and were omitted. Set '
+                'min_range above 0 when plotting in wavelength.'
+            )
         mask = wn > 0
         x_value = 1e4 / wn[mask]
         value_out = values[mask]
         unit_fn = 'um__'
         axis_label = 'Wavelength, μm'
     elif axis_kind == 'WL' and axis_unit == 'nm':
+        if np.any(wn <= 0):
+            print(
+                'Warning: Wavenumber values at or below 0 cm⁻¹ cannot be '
+                'converted to a finite wavelength and were omitted. Set '
+                'min_range above 0 when plotting in wavelength.'
+            )
         mask = wn > 0
         x_value = 1e7 / wn[mask]
         value_out = values[mask]
@@ -219,7 +231,8 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
                     return
                 else:
                     # Debug: Check data ranges
-                    print(f'Info: Plotting cross sections: {len(v_value)} points, v range: [{np.min(v_value):.2f}, {np.max(v_value):.2f}], xsec range: [{np.min(xsec_plot):.2e}, {np.max(xsec_plot):.2e}] {xsec_y_unit}, non-zero xsec count: {np.sum(xsec_plot > 0)}')
+                    plot_unit = PlotCrossSectionUnit.replace('um', 'μm').replace('cm-1', 'cm⁻¹')
+                    print(f'Info: Plotting cross sections: {len(v_value)} points, x range: [{np.min(v_value):.2f}, {np.max(v_value):.2f}] {plot_unit}, xsec range: [{np.min(xsec_plot):.2e}, {np.max(xsec_plot):.2e}] {xsec_y_unit}, non-zero xsec count: {np.sum(xsec_plot > 0)}')
             else:
                 print(f'Warning: xsec_plot is empty after filtering. Original xsec length: {len(xsec)}, non-zero xsec count: {np.sum(xsec > 0) if len(xsec) > 0 else 0}. Skipping plot.')
                 plt.close()

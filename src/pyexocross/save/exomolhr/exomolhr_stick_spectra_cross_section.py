@@ -88,7 +88,7 @@ def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib
         ncputrans,
     )
 
-    print('Calculate stick spectra and cross sections (read once, calculate both together).\n')
+    print('\nCalculate stick spectra and cross sections (read once, calculate both together).\n')
     t_ss = Timer()
     t_xsec = Timer()
 
@@ -150,7 +150,7 @@ def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib
     broad, ratio, _, _ = read_broad(read_path)
 
     # ---- Print info ----
-    print('Calculate stick spectra and cross sections together.')
+    print('\nCalculate stick spectra and cross sections together.')
     print_stick_info('cm⁻¹', 'cm/molecule')
     print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
                     'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)', broad, ratio)

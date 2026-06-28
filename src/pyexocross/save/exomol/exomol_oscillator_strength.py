@@ -184,7 +184,7 @@ def save_exomol_oscillator_strength(states_df, trans_sources=None):
         PlotOscillatorStrengthYN,
     )
 
-    print('Calculate oscillator strengths.')  
+    print('\nCalculate oscillator strengths.')  
     tot = Timer()
     tot.start()
     print('Reading transitions and calculating oscillator strengths ...')    

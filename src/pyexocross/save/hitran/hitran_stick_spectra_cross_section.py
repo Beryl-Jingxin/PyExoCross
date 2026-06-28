@@ -293,7 +293,7 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
         wn_grid,
         ncputrans,
     )
-    print('Calculate stick spectra and cross sections (read once, calculate both together).\n')
+    print('\nCalculate stick spectra and cross sections (read once, calculate both together).\n')
     # Separate timers for stick spectra and cross sections
     t_ss = Timer()
     t_xsec = Timer()
@@ -362,7 +362,7 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
         xsec_results = {}  # Store as dict: temp_idx -> xsec array
     
     # Print info
-    print('Calculate stick spectra and cross sections together.')
+    print('\nCalculate stick spectra and cross sections together.')
     print_stick_info('cm⁻¹', 'cm/molecule')
     print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl, 
                     'cm⁻¹', 'cm⁻¹/(molecule cm⁻²)', [], [])

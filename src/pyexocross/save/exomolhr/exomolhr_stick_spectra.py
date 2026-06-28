@@ -63,7 +63,7 @@ def save_exomolhr_stick_spectra(exomolhr_df, QNs_col, T_list, Tvib_list, Trot_li
         ncputrans,
     )
 
-    print('Calculate stick spectra.')
+    print('\nCalculate stick spectra.')
     print_stick_info('cm⁻¹', 'cm/molecule')
     tot = Timer()
     tot.start()

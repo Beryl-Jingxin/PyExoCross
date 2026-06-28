@@ -25,12 +25,24 @@ def _axis_values_from_wavenumber(v, values, axis_kind, axis_unit):
         unit_fn = 'cm-1__'
         axis_label = 'Wavenumber, cm⁻¹'
     elif axis_kind == 'WL' and axis_unit == 'um':
+        if np.any(v <= 0):
+            print(
+                'Warning: Wavenumber values at or below 0 cm⁻¹ cannot be '
+                'converted to a finite wavelength and were omitted. Set '
+                'min_range above 0 when plotting in wavelength.'
+            )
         mask = v > 0
         x_value = 1e4 / v[mask]
         value_out = values[mask]
         unit_fn = 'um__'
         axis_label = 'Wavelength, μm'
     elif axis_kind == 'WL' and axis_unit == 'nm':
+        if np.any(v <= 0):
+            print(
+                'Warning: Wavenumber values at or below 0 cm⁻¹ cannot be '
+                'converted to a finite wavelength and were omitted. Set '
+                'min_range above 0 when plotting in wavelength.'
+            )
         mask = v > 0
         x_value = 1e7 / v[mask]
         value_out = values[mask]
@@ -136,7 +148,8 @@ def plot_stick_spectra(stick_spectra_df, T=None, Tvib=None, Trot=None):
 
     # Debug: Check data ranges
     if len(v_value) > 0 and len(S) > 0:
-        print(f'Info: Plotting stick spectra {len(v_value)} points, v range: [{np.min(v_value):.2f}, {np.max(v_value):.2f}] {wn_wl_unit.replace("um", "μm").replace("cm-1", "cm⁻¹")}, S range: [{np.min(S):.2e}, {np.max(S):.2e}] {stick_y_unit}')
+        plot_unit = PlotStickSpectraUnit.replace('um', 'μm').replace('cm-1', 'cm⁻¹')
+        print(f'Info: Plotting stick spectra {len(v_value)} points, x range: [{np.min(v_value):.2f}, {np.max(v_value):.2f}] {plot_unit}, S range: [{np.min(S):.2e}, {np.max(S):.2e}] {stick_y_unit}')
     
     # Recalculate y-axis limits based on filtered S if needed
     if PlotStickSpectraMethod == 'LOG':

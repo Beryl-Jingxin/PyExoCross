@@ -11,6 +11,52 @@ from tabulate import tabulate
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
 
+
+def printdeviceinfo(config):
+    """Print the selected CPU/GPU runtime table."""
+    from pyexocross.gpu.base_gpu import configure_runtime
+
+    configure_runtime(
+        run_mode=getattr(config, 'run_mode', 'CPU'),
+        gpu_backend=getattr(config, 'gpu_backend', 'AUTO'),
+        gpu_batch_lines=getattr(config, 'gpu_batch_lines', 8192),
+        gpu_batch_grid=getattr(config, 'gpu_batch_grid', 256),
+        verbose=True,
+    )
+
+
+def printdatabaseinfo(config):
+    """Print database and species metadata in one table."""
+    database = config.database
+    data_info = config.data_info
+    if database in ('ExoMol', 'ExoMolHR'):
+        headers = ['Database', 'Molecule', 'Isotopologue', 'Dataset']
+        row = [database] + data_info
+    elif database == 'ExoAtom':
+        headers = ['Database', 'Atom', 'Dataset']
+        row = [database] + data_info
+    elif database in ('HITRAN', 'HITEMP'):
+        headers = [
+            'Database',
+            'Molecule',
+            'Molecule ID',
+            'Isotopologue',
+            'Isotopologue ID',
+            'Dataset',
+        ]
+        row = [
+            database,
+            data_info[0],
+            str(config.species_main_id),
+            data_info[1],
+            str(config.species_sub_id),
+            data_info[2],
+        ]
+    else:
+        return
+    print(tabulate([row], headers=headers, tablefmt='fancy_grid'))
+
+
 def get_results(config, data=None):
     """
     Main function to execute PyExoCross calculations.
@@ -20,6 +66,12 @@ def get_results(config, data=None):
     config : Config
         Configuration object containing all parameters.
     """
+    # Print run identity before importing calculation modules or starting timers.
+    config.to_globals()
+    if data is None:
+        printdeviceinfo(config)
+        printdatabaseinfo(config)
+
     # Import modules here to avoid circular import issues
     from pyexocross.base.utils import Timer
     from pyexocross.database.load_exomol import read_all_states, read_part_states, get_transfiles
@@ -52,17 +104,6 @@ def get_results(config, data=None):
     from pyexocross.save.hitran.hitran_stick_spectra import save_hitran_stick_spectra
     from pyexocross.save.hitran.hitran_cross_section import save_hitran_cross_section
     from pyexocross.save.hitran.hitran_stick_spectra_cross_section import save_hitran_stick_spectra_cross_section
-    
-    # Set globals from config (for legacy-style modules)
-    config.to_globals()
-    from pyexocross.gpu.base_gpu import configure_runtime
-    configure_runtime(
-        run_mode=getattr(config, 'run_mode', 'CPU'),
-        gpu_backend=getattr(config, 'gpu_backend', 'AUTO'),
-        gpu_batch_lines=getattr(config, 'gpu_batch_lines', 8192),
-        gpu_batch_grid=getattr(config, 'gpu_batch_grid', 256),
-        verbose=True,
-    )
     
     # Update bin-size–dependent constants used by line profile and
     # cross-section routines so that modules importing from
@@ -120,27 +161,6 @@ def get_results(config, data=None):
     
     t_tot = Timer()
     t_tot.start()
-    
-    # Print database information
-    if database == 'ExoMol':
-        print('ExoMol database')
-        headers = ['Molecule', 'Isotopologue', 'Dataset']
-        print(tabulate([data_info], headers=headers, tablefmt="fancy_grid"))
-    elif database == 'ExoMolHR':
-        print('ExoMolHR database')
-        headers = ['Molecule', 'Isotopologue', 'Dataset']
-        print(tabulate([data_info], headers=headers, tablefmt="fancy_grid"))
-    elif database == 'ExoAtom':
-        print('ExoAtom database')
-        headers = ['Atom', 'Dataset']
-        print(tabulate([data_info], headers=headers, tablefmt="fancy_grid"))
-    elif database == 'HITRAN' or database == 'HITEMP':
-        print(database, 'database')
-        headers = ['Molecule', 'Molecule ID', 'Isotopologue', 'Isotopologue ID', 'Dataset']
-        species_main_id = config.species_main_id
-        species_sub_id = config.species_sub_id
-        print(tabulate([[data_info[0], str(species_main_id), data_info[1], str(species_sub_id), data_info[2]]],
-                       headers=headers, tablefmt="fancy_grid"))
     
     if database == 'ExoMol' or database == 'ExoAtom':
         # Functions
@@ -263,11 +283,10 @@ def get_results(config, data=None):
                 )
                 trans_sources = None
             else:
-                states_part_df = data.preparedstates.copy()
+                states_part_df = data.prepared(config)
                 trans_sources = data.sources(
                     config.min_wn,
                     config.max_wn,
-                    config.cutoff,
                 )
             Q_arr = cal_pf_multiT(
                 T_list,

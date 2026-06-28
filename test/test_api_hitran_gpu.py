@@ -26,42 +26,9 @@ COMMON = dict(
     read_path='/public/home/zhangjingxin/LHD/Program/Databases/HITRAN/', # '/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/',
     save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/',
     logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/NO_HITRAN_gpu_cupy.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/log/NO_HITRAN_gpu.log',
+    cache='parquet',
 )
 
-# Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
-QN_PARAMS = dict(
-    qnslabel_list=['J', 'X', 'Omega', 'v1', 'Sym', 'F'],
-    qnsformat_list=['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s'],
-)
-
-# Conversion QN labels (for HITRAN functions that internally perform conversion)
-CONVERSION_QN = dict(
-    global_qn_label_list=['X', 'Omega', 'v1'],      # Quantum number label for global quantum numbers
-    global_qn_format_list=['%2s', '%3s', '%2d'],    # Quantum number format for global quantum numbers
-    local_qn_label_list=['Br', 'Sym', 'F'],         # Quantum number label for local quantum numbers
-    local_qn_format_list=['%2s', '%1s', '%5s'],     # Quantum number format for local quantum numbers
-)
-
-# NLTE parameters (needed by stick_spectra and cross_sections)
-NLTE_PARAMS = dict(
-    nlte_method='T',                # Non-LTE: 2T NLTE (default: 'T')
-    tvib_list=[1000, 2000],         # Vibrational temperatures in unit of K
-    trot_list=[300, 400],           # Rotational temperatures in unit of K
-    vib_label=['v1', 'X'],          # Vibrational quantum numbers
-    rot_label=['J'],                # Rotational quantum numbers
-)
-
-# Spectral range parameters
-RANGE_PARAMS = dict(
-    temperatures=[1000, 2000],      # Temperature in unit of K
-    wn_wl='WN',                     # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
-    wn_wl_unit='cm-1',              # Unit for wavenumber (default: cm⁻¹)
-    min_range=0,                    # Minimum wavenumber in unit of cm⁻¹
-    max_range=30000,                # Maximum wavenumber in unit of cm⁻¹
-    abs_emi='Ab',                   # Absorption or emission (default: 'Absorption')
-    unc_filter=0.01,                # Uncertainty filter (default: None)
-    threshold=1e-35,                # Threshold filter (default: None)
-)
 
 # Cores and chunks
 COMPUTE_PARAMS = dict(
@@ -75,6 +42,49 @@ COMPUTE_PARAMS = dict(
 )
 
 
+# Spectral range parameters
+RANGE_PARAMS = dict(
+    wn_wl='WN',                     # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+    wn_wl_unit='cm-1',              # Unit for wavenumber (default: cm⁻¹)
+    min_range=0,                    # Minimum wavenumber in unit of cm⁻¹
+    max_range=30000,                # Maximum wavenumber in unit of cm⁻¹
+    unc_filter=0.05,                # Uncertainty filter (default: None)
+)
+
+
+# Quantum number labels/formats (needed by conversion, stick_spectra, cross_sections)
+QN_PARAMS = dict(
+    qnslabel_list=['J', 'X', 'Omega', 'v1', 'Sym', 'F'],
+    qnsformat_list=['%5.1f', '%2s', '%3s', '%2d', '%1s', '%5s'],
+)
+
+
+# Conversion QN labels (for HITRAN functions that internally perform conversion)
+CONVERSION_QN = dict(
+    global_qn_label_list=['X', 'Omega', 'v1'],      # Quantum number label for global quantum numbers
+    global_qn_format_list=['%2s', '%3s', '%2d'],    # Quantum number format for global quantum numbers
+    local_qn_label_list=['Br', 'Sym', 'F'],         # Quantum number label for local quantum numbers
+    local_qn_format_list=['%2s', '%1s', '%5s'],     # Quantum number format for local quantum numbers
+)
+
+
+# NLTE parameters (needed by stick_spectra and cross_sections)
+NLTE_PARAMS = dict(
+    nlte_method='T',                # Non-LTE: 2T NLTE (default: 'T')
+    tvib_list=[1000, 2000],         # Vibrational temperatures in unit of K
+    trot_list=[300, 400],           # Rotational temperatures in unit of K
+    vib_label=['v1', 'X'],          # Vibrational quantum numbers
+    rot_label=['J'],                # Rotational quantum numbers
+)
+
+
+data=px.load(
+    **COMMON,
+    **RANGE_PARAMS,
+    **COMPUTE_PARAMS,
+)
+
+
 # ---------------------------------------------------------------------------
 # Test functions
 # ---------------------------------------------------------------------------
@@ -84,8 +94,7 @@ def test_cooling_functions():
     print('TEST: px.cooling_functions()')
     print('='*70)
     px.cooling_functions(
-        **COMMON,
-        **COMPUTE_PARAMS,
+        data=data,
         ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
         tmax=5000,                   # Maximum temperature in unit of K (default: 5000)
     )
@@ -98,16 +107,17 @@ def test_stick_spectra():
     print('TEST: px.stick_spectra()')
     print('='*70)
     px.stick_spectra(
-        **COMMON,
-        **QN_PARAMS,
+        data=data,
+        # **QN_PARAMS,                  # Required when using QN filter
         # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
-        **RANGE_PARAMS,
-        **COMPUTE_PARAMS,
-        plot=True,                    # Whether to plot results (default: False)
-        plot_method='log',            # Plot in linear (lin) or logarithm (log) (default: 'log')
-        plot_wn_wl='WN',              # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
-        plot_unit='nm',               # Unit for plotting axis (default: nm)
-        limit_yaxis=1e-30,            # Lower limit for y-axis (default: 1e-30 cm/molecule)
+        temperatures=[1000, 2000],      # Temperature in unit of K
+        abs_emi='Ab',                   # Absorption or emission (default: 'Absorption')
+        threshold=1e-35,                # Threshold filter (default: None)
+        plot=True,                      # Whether to plot results (default: False)
+        plot_method='log',              # Plot in linear (lin) or logarithm (log) (default: 'log')
+        plot_wn_wl='WN',                # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+        plot_unit='nm',                 # Unit for plotting axis (default: nm)
+        limit_yaxis=1e-30,              # Lower limit for y-axis (default: 1e-30 cm/molecule)
     )
     print('PASSED: stick_spectra()')
 
@@ -118,12 +128,13 @@ def test_cross_sections():
     print('TEST: px.cross_sections()')
     print('='*70)
     px.cross_sections(
-        **COMMON,
-        **QN_PARAMS,
+        data=data,
+        # **QN_PARAMS,                  # Required when using QN filter
         # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
-        **RANGE_PARAMS,
-        **COMPUTE_PARAMS,
+        temperatures=[1000, 2000],      # Temperature in unit of K
         pressures=[1.0],                # Pressure in unit bar (default: [1.0])
+        abs_emi='Ab',                   # Absorption or emission (default: 'Absorption')
+        threshold=1e-35,                # Threshold filter (default: None)
         bin_size=0.1,                   # Bin size for wavenumber grid 
         profile='Gaussian',             # Line profile name (default: 'Gaussian')
         predissociation=False,          # Predissociation (default: False)
@@ -147,12 +158,13 @@ def test_stick_spectra_cross_section():
     print('TEST: px.stick_spectra_cross_section()')
     print('='*70)
     px.stick_spectra_cross_section(
-        **COMMON,
-        **QN_PARAMS,
+        data=data,
+        # **QN_PARAMS,                  # Required when using QN filter
         # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
-        **RANGE_PARAMS,
-        **COMPUTE_PARAMS,
+        temperatures=[1000, 2000],      # Temperature in unit of K
         pressures=[1.0],                # Pressure in unit bar (default: [1.0])
+        abs_emi='Ab',                   # Absorption or emission (default: 'Absorption')
+        threshold=1e-35,                # Threshold filter (default: None)
         bin_size=0.1,                   # Bin size for wavenumber grid 
         profile='Gaussian',             # Line profile name (default: 'Gaussian')
         predissociation=False,          # Predissociation (default: False)

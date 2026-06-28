@@ -296,7 +296,7 @@ def save_exomol_stick_spectra(
         ncpufiles,
         ncputrans,
     )
-    print('Calculate stick spectra.')  
+    print('\nCalculate stick spectra.')  
     print_stick_info('cm⁻¹', 'cm/molecule')
     tot = Timer()
     tot.start()

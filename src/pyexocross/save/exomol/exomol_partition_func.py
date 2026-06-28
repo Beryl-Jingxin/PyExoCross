@@ -29,7 +29,7 @@ def save_exomol_partition_func(states_df, Ntemp, Tmax):
     # Import legacy-style configuration variables from core (set via Config.to_globals()).
     from pyexocross.core import save_path, data_info  
 
-    print('Calculate partition functions.')  
+    print('\nCalculate partition functions.')  
     t = Timer()
     t.start()
     En = states_df['E'].astype('float').values

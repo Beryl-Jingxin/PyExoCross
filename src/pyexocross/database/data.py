@@ -2,7 +2,6 @@
 
 import bz2
 import copy
-import hashlib
 import json
 import math
 import os
@@ -52,11 +51,41 @@ PREPROCESS_KEYS = {
 }
 
 
-def cachekey(filepath):
-    """Build a cache key from source identity and modification metadata."""
-    stat = os.stat(filepath)
-    identity = f'{os.path.abspath(filepath)}:{stat.st_size}:{stat.st_mtime_ns}'
-    return hashlib.sha256(identity.encode('utf-8')).hexdigest()[:16]
+def uncvalue(value):
+    """Normalize a disabled or numeric uncertainty filter."""
+    if value in (None, 'None'):
+        return None
+    return float(value)
+
+
+def qnconstraints(config):
+    """Return effective state-level QN constraints, excluding wildcard labels."""
+    constraints = {}
+    labels = getattr(config, 'qns_label', [])
+    valueslist = getattr(config, 'qns_value', [])
+    for label, values in zip(labels, valueslist):
+        allowed = []
+        wildcard = False
+        for value in values:
+            parts = [part.strip() for part in str(value).split(',')]
+            if '' in parts:
+                wildcard = True
+                break
+            allowed.extend(parts)
+        if not wildcard and allowed:
+            constraints[label] = set(allowed)
+    return constraints
+
+
+def qnrefines(loadedconfig, requestedconfig):
+    """Return whether requested QN constraints only narrow loaded constraints."""
+    loaded = qnconstraints(loadedconfig)
+    requested = qnconstraints(requestedconfig)
+    for label, loadedvalues in loaded.items():
+        requestedvalues = requested.get(label)
+        if requestedvalues is None or not requestedvalues.issubset(loadedvalues):
+            return False
+    return True
 
 
 def fileidentity(filepath):
@@ -113,10 +142,28 @@ def rangebounds(filepath, minwn, maxwn, cutoff):
     return lower, upper
 
 
-def rangefilename(data_info, lower, upper):
-    """Return an ExoMol-style range cache filename without a fingerprint."""
+def rangefilename(data_info, lower, upper, filepath=None):
+    """Return an ExoMol-style range cache filename."""
     prefix = '__'.join(data_info[-2:])
+    if filepath is not None:
+        stem = os.path.basename(filepath)
+        if stem.endswith('.bz2'):
+            stem = stem[:-4]
+        if stem.endswith('.trans'):
+            stem = stem[:-6]
+        prefix = re.sub(r'__\d+-\d+$', '', stem) or prefix
     return f'{prefix}__{lower:05d}-{upper:05d}.trans.parquet'
+
+
+def fullrangebounds(filepath, states):
+    """Return complete source bounds for an all-transition range cache."""
+    physical = sourcebounds(filepath)
+    if physical is not None:
+        return physical
+    energies = pd.to_numeric(states['E'], errors='coerce').dropna()
+    if energies.empty:
+        raise ValueError('Cannot determine transition cache range from empty states energies.')
+    return 0, math.ceil(float(energies.max() - energies.min()))
 
 
 def textcolumns(filepath):
@@ -159,42 +206,6 @@ def memorysource(filepath, chunksize):
         origin=filepath,
         frame=frame,
         size=int(frame.memory_usage(index=True, deep=True).sum()),
-    )
-
-
-def parquetsource(filepath, cachedir, chunksize, refresh=False):
-    """Convert a transition text file to a reusable Parquet cache."""
-    import pyarrow as pa
-    import pyarrow.parquet as pq
-
-    os.makedirs(cachedir, exist_ok=True)
-    stem = os.path.basename(filepath)
-    if stem.endswith('.bz2'):
-        stem = stem[:-4]
-    parquetpath = os.path.join(cachedir, f'{stem}.{cachekey(filepath)}.parquet')
-    if refresh or not os.path.exists(parquetpath):
-        print('Creating transition Parquet cache:', parquetpath)
-        temppath = parquetpath + '.tmp'
-        writer = None
-        for chunk in transitionchunks(filepath, chunksize):
-            chunk.columns = [f'c{index}' for index in range(chunk.shape[1])]
-            table = pa.Table.from_pandas(chunk, preserve_index=False)
-            if writer is None:
-                writer = pq.ParquetWriter(temppath, table.schema, compression='zstd')
-            writer.write_table(table)
-        if writer is None:
-            raise ValueError(f'Empty transition file: {filepath}')
-        writer.close()
-        os.replace(temppath, parquetpath)
-    else:
-        print('Using transition Parquet cache:', parquetpath)
-    return TransSource(
-        path=parquetpath,
-        origin=filepath,
-        size=max(
-            os.path.getsize(parquetpath),
-            os.path.getsize(filepath) * (10 if filepath.endswith('.bz2') else 2),
-        ),
     )
 
 
@@ -286,7 +297,10 @@ def rangecachesource(
 
     rangesdir = os.path.join(cachedir, 'ranges')
     os.makedirs(rangesdir, exist_ok=True)
-    cachepath = os.path.join(rangesdir, rangefilename(data_info, lower, upper))
+    cachepath = os.path.join(
+        rangesdir,
+        rangefilename(data_info, lower, upper, filepath=filepath),
+    )
     print('Creating range Parquet cache:', cachepath)
     writerangecache(filepath, states, cachepath, chunksize, lower, upper)
 
@@ -393,9 +407,26 @@ def linecacheentry(manifest, database, source):
     """Return a valid canonical line-list cache entry."""
     identity = fileidentity(source)
     for entry in manifest.setdefault('linelists', []):
-        if entry.get('database') == database and entry.get('source') == identity:
+        path = entry.get('path', '')
+        if (
+            entry.get('database') == database
+            and entry.get('source') == identity
+            and entry.get('range') is not None
+            and re.search(r'__\d+-\d+\.linelist\.parquet$', path)
+        ):
             return entry
     return None
+
+
+def linecachefilename(database, source, frame):
+    """Return a range-named normalized line-list cache filename."""
+    wavenumbers = pd.to_numeric(frame['v'], errors='coerce').dropna()
+    if wavenumbers.empty:
+        raise ValueError('Cannot determine line-list cache range from an empty v column.')
+    lower = max(0, math.floor(float(wavenumbers.min())))
+    upper = math.ceil(float(wavenumbers.max()))
+    stem = os.path.splitext(os.path.basename(source))[0]
+    return f'{database}__{stem}__{lower:05d}-{upper:05d}.linelist.parquet', lower, upper
 
 
 def writelinecache(frame, cachepath):
@@ -469,13 +500,17 @@ def loadlinedata(config, cache, cachedir, maxmemory, refresh):
             linepath = os.path.join(cachedir, entry['path'])
             print('Using line-list Parquet cache:', linepath)
         else:
-            stem = os.path.splitext(os.path.basename(source))[0]
+            lineframe = parselinelist(config)
+            filename, lower, upper = linecachefilename(
+                config.database,
+                source,
+                lineframe,
+            )
             linepath = os.path.join(
                 cachedir,
-                f'{config.database}__{stem}.linelist.parquet',
+                filename,
             )
             print('Creating line-list Parquet cache:', linepath)
-            lineframe = parselinelist(config)
             writelinecache(lineframe, linepath)
             relative = os.path.relpath(linepath, cachedir)
             manifest.setdefault('linelists', [])
@@ -489,6 +524,7 @@ def loadlinedata(config, cache, cachedir, maxmemory, refresh):
             manifest['linelists'].append({
                 'database': config.database,
                 'path': relative,
+                'range': [lower, upper],
                 'source': fileidentity(source),
                 'created': int(time.time()),
             })
@@ -514,22 +550,19 @@ def loadlinedata(config, cache, cachedir, maxmemory, refresh):
 
 def parquetsources(config, selected, states, cachedir, alltrans, refresh=False):
     """Create canonical or range-filtered Parquet transition sources."""
-    if alltrans:
-        return tuple(
-            parquetsource(path, cachedir, config.chunk_size, refresh=refresh)
-            for path in selected
-        )
-
     statesfile = get_statesfile(config.read_path, config.data_info)
     manifest = loadmanifest(cachedir)
     sources = []
     for path in selected:
-        lower, upper = rangebounds(
-            path,
-            config.min_wn,
-            config.max_wn,
-            config.cutoff,
-        )
+        if alltrans:
+            lower, upper = fullrangebounds(path, states)
+        else:
+            lower, upper = rangebounds(
+                path,
+                config.min_wn,
+                config.max_wn,
+                config.cutoff,
+            )
         sources.append(rangecachesource(
             path,
             states,
@@ -617,22 +650,48 @@ class LoadedData:
         changed = PREPROCESS_KEYS.intersection(kwargs)
         if self.linedatabase in ('HITRAN', 'HITEMP', 'ExoMolHR'):
             changed -= {
-                'unc_filter',
                 'nlte_method',
                 'nlte_path',
+                'qnsformat_list',
                 'qns_filter',
                 'qns_label',
+                'qnslabel_list',
                 'qns_value',
                 'vib_label',
                 'rot_label',
             }
+        config = copy.deepcopy(self.config)
+        config._load_from_kwargs(**kwargs)
+        if 'unc_filter' in changed:
+            loadedunc = uncvalue(self.config.unc_filter)
+            requestedunc = uncvalue(kwargs['unc_filter'])
+            if (
+                requestedunc is None and loadedunc is None
+            ) or (
+                requestedunc is not None
+                and (loadedunc is None or requestedunc <= loadedunc)
+            ):
+                changed.remove('unc_filter')
+            else:
+                raise ValueError(
+                    f'unc_filter={kwargs["unc_filter"]} includes states excluded by '
+                    f'px.load(unc_filter={self.config.unc_filter}). Call px.load again '
+                    f'with unc_filter={kwargs["unc_filter"]}.'
+                )
+        if 'qns_filter' in changed:
+            if qnrefines(self.config, config):
+                changed.remove('qns_filter')
+            else:
+                raise ValueError(
+                    f'qns_filter={kwargs["qns_filter"]} includes states excluded by '
+                    f'px.load(qns_filter={self.config.qns_filter}). Call px.load '
+                    f'again with qns_filter={kwargs["qns_filter"]}.'
+                )
         if changed:
             names = ', '.join(sorted(changed))
             raise ValueError(
                 f'{names} affect loaded data. Call px.load again instead of overriding them.'
             )
-        config = copy.deepcopy(self.config)
-        config._load_from_kwargs(**kwargs)
         config.conversion = 0
         config.partition_functions = 0
         config.specific_heats = 0
@@ -643,7 +702,33 @@ class LoadedData:
         config.cross_sections = 0
         return config
 
-    def sources(self, min_wn, max_wn, cutoff=None):
+    def prepared(self, config):
+        """Return prepared states with any valid stricter uncertainty filter applied."""
+        if self.preparedstates is None:
+            raise ValueError('Loaded data does not contain prepared states.')
+        states = self.preparedstates.copy()
+        loadedunc = uncvalue(self.config.unc_filter)
+        requestedunc = uncvalue(config.unc_filter)
+        if requestedunc is not None and (
+            loadedunc is None or requestedunc < loadedunc
+        ):
+            if 'unc' not in states.columns:
+                raise ValueError(
+                    'No uncertainties are available in the loaded states. '
+                    'Call px.load again without unc_filter.'
+                )
+            states = states[states['unc'].astype(float) <= requestedunc].copy()
+        for label, allowed in qnconstraints(config).items():
+            if label not in states.columns:
+                raise ValueError(
+                    f'Quantum number {label} is not available in loaded states. '
+                    'Call px.load again with the required QN metadata.'
+                )
+            values = states[label].astype(str).str.strip()
+            states = states[values.isin(allowed)].copy()
+        return states
+
+    def sources(self, min_wn, max_wn):
         """Select already-loaded transition sources for a calculation range."""
         selected = get_part_transfiles(
             self.config.read_path,
@@ -664,12 +749,12 @@ class LoadedData:
         for source in sources:
             if source.minwn is None or source.maxwn is None:
                 continue
-            lower, upper = rangebounds(source.origin, min_wn, max_wn, cutoff)
+            lower, upper = rangebounds(source.origin, min_wn, max_wn, None)
             if source.minwn > lower or source.maxwn < upper:
                 uncovered.append((source.path, lower, upper))
         if uncovered:
             raise ValueError(
-                'The requested range or cutoff is not covered by the loaded range cache. '
+                'The requested range is not covered by the loaded range cache. '
                 'Call px.load again with the wider calculation range.'
             )
         return sources
