@@ -718,8 +718,8 @@ def cross_sections(inp_filepath=None, **kwargs):
         predissociation : bool, optional
             ``True`` to include predissociation (default: ``False``).
         alpha_hwhm : float or None, optional
-            Constant Doppler HWHM value. ``None`` to calculate from
-            broadening parameters (default: 3.0).
+            Constant Doppler HWHM value. ``None`` calculates it from the
+            molecular mass and temperature (default: ``None``).
         gamma_hwhm : float or None, optional
             Constant Lorentzian HWHM value. ``None`` to calculate from
             broadening parameters (default: ``None``).

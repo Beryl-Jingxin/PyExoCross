@@ -182,7 +182,7 @@ https://doi.org/10.1093/rasti/rzae016
 
 ```bash
 @article{pyexocross,
-    author   = {Zhang, Jingxin and Tennyson, Jonathan and Yurchenko, Sergei N},
+    author   = {Jingxin Zhang and Jonathan Tennyson and Sergei N. Yurchenko},
     title    = {{PyExoCross: a Python program for generating spectra and cross-sections from molecular line lists}},
     journal  = {RAS Techniques and Instruments},
     volume   = {3},
@@ -194,6 +194,16 @@ https://doi.org/10.1093/rasti/rzae016
     doi      = {10.1093/rasti/rzae016},
     url      = {https://doi.org/10.1093/rasti/rzae016},
     eprint   = {https://academic.oup.com/rasti/article-pdf/3/1/257/61224370/rzae016.pdf},
+}
+
+@article{pyexocross2,
+    author  = {Jingxin Zhang and Sergei N. Yurchenko and Jonathan Tennyson},
+    title   = {{PyExoCross 2.0: A Python Framework for LTE and non-LTE Spectra, Cross Sections, and Spectroscopic Post-processing of Atomic and Molecular Line Lists}},
+    journal = {RAS Techniques and Instruments},
+    volume  = {to be submitted},
+    pages   = {},
+    year    = {2026},
+    doi     = {}
 }
 ```
 

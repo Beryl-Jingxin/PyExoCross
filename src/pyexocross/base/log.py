@@ -476,6 +476,7 @@ def print_stick_info(unc_unit, threshold_unit):
         T_list,
         Tvib_list,
         Trot_list,
+        abundance,
         wn_wl,
         wn_wl_unit,
         min_wn,
@@ -553,6 +554,7 @@ def print_stick_info(unc_unit, threshold_unit):
         print('{:25s} : {:<6} {}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
     elif NLTEMethod == 'P':
         pass
+    print('{:25s} : {}'.format('Abundance', abundance))
     if wn_wl == 'WN':
         print('{:25s} : {} {} {} {} {}'.format('Wavenumber range selected', min_wn, unc_unit, '-', max_wn, unc_unit))
     elif wn_wl == 'WL' and wn_wl_unit == 'um':
@@ -607,6 +609,7 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
         Tvib_list,
         Trot_list,
         P_list,
+        abundance,
         wn_wl,
         wn_wl_unit,
         min_wn,
@@ -690,6 +693,7 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
     elif NLTEMethod == 'P':
         pass
     print('{:25s} : {:<6} {}'.format('Pressures', str(P_list), 'bar'))
+    print('{:25s} : {}'.format('Abundance', abundance))
     if wn_wl == 'WN':
         print('{:25s} : {} {} {} {} {}'.format('Wavenumber range selected', min_wn, unc_unit, '-', max_wn, unc_unit))
         print('{:25s} : {:<6} {}'.format('Bin size', bin_size, unc_unit))

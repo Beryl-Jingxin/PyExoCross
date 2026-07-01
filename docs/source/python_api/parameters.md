@@ -381,7 +381,7 @@ Used by `px.cross_sections()`.
 |---|---|---|---|
 | `broadeners` | `list[str]` | `['Default']` | Broadening species (e.g. `['H2', 'He']`) |
 | `ratios` | `list[float]` | `[1.0]` | Mixing ratios (must sum to 1.0) |
-| `alpha_hwhm` | `float` or `None` | `3.0` | Constant Doppler HWHM (cm⁻¹); `None` to auto-calculate |
+| `alpha_hwhm` | `float` or `None` | `None` | Constant Doppler HWHM (cm⁻¹); `None` to auto-calculate |
 | `gamma_hwhm` | `float` or `None` | `None` | Constant Lorentzian HWHM (cm⁻¹); `None` to auto-calculate |
 
 :::{tip}

@@ -10,7 +10,7 @@ import pandas as pd
 import dask.dataframe as dd
 from tqdm import tqdm
 from functools import partial
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pyexocross.base.utils import Timer
 from pyexocross.base.log import (
     log_tqdm, 
@@ -129,7 +129,6 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
         QNs_label,
         NLTEMethod,
         abs_emi,
-        abundance,
         predissocYN,
         profile,
         DopplerHWHMYN,
@@ -302,12 +301,12 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
                         gamma_default = float(broad_dfs[i]['gamma_L'][0])
                         n_air_default = float(broad_dfs[i]['n_air'][0])
                         gamma_L[i] = np.full(num, gamma_default, dtype=np.float64) * ratio[i]
-                        n_air[i] = np.full(num, n_air_default, dtype=np.float64) * ratio[i]
+                        n_air[i] = np.full(num, n_air_default, dtype=np.float64)
                     else:
                         (gammaL,nair) = extract_broad(broad_dfs[i], st_df)
                         # extract_broad returns pandas Series, convert to numpy array
                         gamma_L[i] = np.asarray(gammaL, dtype=np.float64) * ratio[i]
-                        n_air[i] = np.asarray(nair, dtype=np.float64) * ratio[i]
+                        n_air[i] = np.asarray(nair, dtype=np.float64)
                         # Ensure correct shape
                         if len(gamma_L[i]) != num:
                             raise ValueError(f"gamma_L[{i}] from extract_broad has length {len(gamma_L[i])}, expected {num}")
@@ -468,7 +467,14 @@ def process_exomol_cross_section(states_part_df,T_list,Tvib_list,Trot_list,P,Q_a
                                           broad,ratio,nbroad,broad_dfs,profile_label,chunk,temp_idx) 
                     for chunk in log_tqdm(trans_chunks, desc=desc)
                 ]
-                xsecs = np.sum([future.result() for future in log_tqdm(futures, desc='Combining '+trans_filename)], axis=0)
+                xsecs = np.zeros_like(wn_grid)
+                completed = as_completed(futures)
+                for future in log_tqdm(
+                    completed,
+                    total=len(futures),
+                    desc='Calculating chunks ' + trans_filename,
+                ):
+                    xsecs += future.result()
     return xsecs
 
 # Cross sections for ExoMol database

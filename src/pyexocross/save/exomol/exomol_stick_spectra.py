@@ -99,7 +99,6 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
         QNs_label,
         abs_emi,
         NLTEMethod,
-        abundance,
         threshold,
     )
     # Optimized: use indexed lookup instead of two merges to reduce memory

@@ -804,7 +804,7 @@ All parameters from [`px.stick_spectra`](#pxstick_spectra), plus:
 | **Broadening** | | | |
 | `broadeners` | `list[str]` | `['Default']` | Broadening species |
 | `ratios` | `list[float]` | `[1.0]` | Broadener mixing ratios (must sum to 1.0) |
-| `alpha_hwhm` | `float` or `None` | `3.0` | Constant Doppler HWHM; `None` to calculate |
+| `alpha_hwhm` | `float` or `None` | `None` | Constant Doppler HWHM; `None` to calculate |
 | `gamma_hwhm` | `float` or `None` | `None` | Constant Lorentzian HWHM; `None` to calculate |
 | **Plotting** | | | |
 | `plot` | `bool` | `False` | Whether to generate a plot |

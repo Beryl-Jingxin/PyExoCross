@@ -400,7 +400,7 @@ class Config:
         # else: use existing self.qns_filter from file
 
         # Doppler HWHM
-        _alpha = kwargs.get('alpha_hwhm', getattr(self, 'alpha_hwhm', 3.0))
+        _alpha = kwargs.get('alpha_hwhm', getattr(self, 'alpha_hwhm', None))
         # Prioritize doppler_hwhm_yn if explicitly passed, else check alpha value
         if kwargs.get('doppler_hwhm_yn') is not None:
             self.doppler_hwhm_yn = kwargs['doppler_hwhm_yn']
@@ -416,7 +416,7 @@ class Config:
             self.alpha_hwhm = float(_alpha)
         
         # Lorentzian HWHM
-        _gamma = kwargs.get('gamma_hwhm', getattr(self, 'gamma_hwhm', 0.5))
+        _gamma = kwargs.get('gamma_hwhm', getattr(self, 'gamma_hwhm', None))
         if kwargs.get('lorentzian_hwhm_yn') is not None:
             self.lorentzian_hwhm_yn = kwargs['lorentzian_hwhm_yn']
             self.gamma_hwhm = float(_gamma) if _gamma is not None else 0.5
