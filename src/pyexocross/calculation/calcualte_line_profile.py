@@ -30,16 +30,9 @@ from ..base.constants import (
 )
 from ..base.config_manager import get_config
 
-# Lazy config: only resolved when line-profile functions run (avoids requiring
-# config in worker processes that only import this module for other symbols).
-_line_profile_config = None
-
-
 def _get_line_profile_config():
-    global _line_profile_config
-    if _line_profile_config is None:
-        _line_profile_config = get_config()
-    return _line_profile_config
+    """Return the active calculation config without retaining stale runs."""
+    return get_config()
 
 def Doppler_HWHM(v, T):
     """
@@ -208,7 +201,7 @@ def LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, gamma_air, gam
         gamma = np.full(num, gamma_HWHM)
     elif LorentzianHWHMYN == 'U':
         gamma = gamma_HWHM
-    elif database == 'ExoMol' or database == 'ExoAtom' and num > 0:
+    elif database in ('ExoMol', 'ExoAtom') and num > 0:
         # gamma_L and n_air are now dictionaries with numpy arrays
         gamma_contributions = []
         for i in range(nbroad):
@@ -232,7 +225,7 @@ def LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, gamma_air, gam
             gamma += lifetime_broadening(tau)
         else:
             pass
-    elif database == 'HITRAN' or database == 'HITEMP' and num > 0:  
+    elif database in ('HITRAN', 'HITEMP') and num > 0:
         gamma_L = gamma_air*0.7 + gamma_self*0.3
         gamma = Lorentzian_HWHM(gamma_L, n_air,T,P) 
     else:
