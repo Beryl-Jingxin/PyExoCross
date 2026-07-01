@@ -73,6 +73,36 @@ def numeric_columns(df, columns):
     return df
 
 
+def crosscachecolumns(broad_dfs):
+    """Return state-derived cache columns needed by the current cross-section run."""
+    from pyexocross.core import (
+        NLTEMethod,
+        QNsFilter,
+        QNs_label,
+        UncFilter,
+        predissocYN,
+        profile,
+    )
+
+    columns = ["E'", 'E"', "g'", 'g"', "J'", 'J"', 'v']
+    if UncFilter != 'None':
+        columns.extend(["unc'", 'unc"'])
+    if predissocYN == 'Y' and 'VOI' in profile:
+        columns.append("tau'")
+    if NLTEMethod == 'T':
+        columns.extend(["Evib'", 'Evib"', "Erot'", 'Erot"'])
+    elif NLTEMethod == 'D':
+        columns.extend(["nvib'", 'nvib"'])
+    elif NLTEMethod == 'P':
+        columns.extend(["pop'", 'pop"'])
+    if QNsFilter != []:
+        for label in QNs_label:
+            columns.extend([label + "'", label + '"'])
+    candidates = columns + ["K'", 'K"', "k'", 'k"', "v'", 'v"']
+    columns.extend(broad_required_line_columns(broad_dfs, candidates))
+    return list(dict.fromkeys(columns))
+
+
 ## Line list for calculating cross sections
 def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list,P,Q_arr,
                                        broad,ratio,nbroad,broad_dfs,profile_label,
@@ -134,6 +164,7 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
         DopplerHWHMYN,
         LorentzianHWHMYN,
         threshold,
+        UncFilter,
         alpha_hwhm_colid,
         gamma_hwhm_colid,
         alpha_HWHM as config_alpha_HWHM,
@@ -152,30 +183,57 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
     if isinstance(trans_part_df, dd.DataFrame):
         trans_part_df = trans_part_df.compute()
     
-    # Set index for fast lookup (more memory efficient than merge)
-    states_indexed = states_part_df.set_index('id')
-    
-    # Filter trans_df to only include transitions where both states exist
-    valid_mask = trans_part_df['uid'].isin(states_indexed.index) & trans_part_df['lid'].isin(states_indexed.index)
-    trans_part_df = trans_part_df[valid_mask]
-    
-    if len(trans_part_df) == 0:
+    required = {"E'", 'E"', "g'", 'g"', "J'", 'J"', 'v'}
+    if UncFilter != 'None':
+        required.update({"unc'", 'unc"'})
+    if predissocYN == 'Y' and 'VOI' in profile:
+        required.add("tau'")
+    if NLTEMethod == 'T':
+        required.update({"Evib'", 'Evib"', "Erot'", 'Erot"'})
+    elif NLTEMethod == 'D':
+        required.update({"nvib'", 'nvib"'})
+    elif NLTEMethod == 'P':
+        required.update({"pop'", 'pop"'})
+    if QNsFilter != []:
+        for label in QNs_label:
+            required.update({label + "'", label + '"'})
+    availablelinecols = list(trans_part_df.columns)
+    if states_part_df is not None:
+        availablelinecols.extend(
+            column + suffix
+            for column in states_part_df.columns
+            if column != 'id'
+            for suffix in ("'", '"')
+        )
+    required.update(broad_required_line_columns(broad_dfs, availablelinecols))
+
+    if required.issubset(trans_part_df.columns):
+        st_df = trans_part_df.copy()
+        if UncFilter != 'None':
+            st_df = st_df[
+                (st_df["unc'"].astype(float) <= UncFilter)
+                & (st_df['unc"'].astype(float) <= UncFilter)
+            ]
+    else:
+        if states_part_df is None:
+            raise ValueError('Range transition cache is missing required state columns.')
+        states_indexed = states_part_df.set_index('id')
+        valid_mask = (
+            trans_part_df['uid'].isin(states_indexed.index)
+            & trans_part_df['lid'].isin(states_indexed.index)
+        )
+        trans_part_df = trans_part_df[valid_mask]
+        u_states = states_indexed.loc[trans_part_df['uid']].reset_index(drop=True)
+        l_states = states_indexed.loc[trans_part_df['lid']].reset_index(drop=True)
+        u_states.columns = [col + "'" for col in u_states.columns]
+        l_states.columns = [col + '"' for col in l_states.columns]
+        st_df = pd.concat([
+            trans_part_df[['A']].reset_index(drop=True),
+            u_states,
+            l_states,
+        ], axis=1)
+    if len(st_df) == 0:
         return np.zeros_like(wn_grid)
-    
-    # Get upper and lower state data using vectorized lookup
-    u_states = states_indexed.loc[trans_part_df['uid']].reset_index(drop=True)
-    l_states = states_indexed.loc[trans_part_df['lid']].reset_index(drop=True)
-    
-    # Rename columns with suffixes (id column is already dropped by reset_index)
-    u_states.columns = [col + "'" for col in u_states.columns]
-    l_states.columns = [col + '"' for col in l_states.columns]
-    
-    # Combine trans and states data
-    st_df = pd.concat([
-        trans_part_df[['A']].reset_index(drop=True),
-        u_states,
-        l_states
-    ], axis=1)
     numeric_columns(
         st_df,
         [
@@ -200,7 +258,8 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
         ],
     )
     
-    st_df['v'] = cal_v(st_df["E'"].values, st_df['E"'].values)
+    if 'v' not in st_df.columns:
+        st_df['v'] = cal_v(st_df["E'"].values, st_df['E"'].values)
     # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
     st_df = st_df[st_df['v'] >= 0]
     if cutoff == 'None':
@@ -445,7 +504,12 @@ def process_exomol_cross_section(states_part_df,T_list,Tvib_list,Trot_list,P,Q_a
         use_cols = [0,1,2]
         use_names = ['uid','lid','A']
     large_file = is_large_trans_file(trans_filepath)
-    trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
+    trans_reader = read_trans_chunks(
+        trans_filepath,
+        use_cols,
+        use_names,
+        extracols=crosscachecolumns(broad_dfs),
+    )
     desc = 'Processing ' + trans_filename + (' (streaming)' if large_file else '')
     if large_file:
         print('Large transition file detected (>1 GB). Streaming chunks sequentially to reduce memory usage.')

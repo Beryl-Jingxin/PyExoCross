@@ -9,7 +9,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import dask.dataframe as dd
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pyexocross.base.utils import Timer, ensure_dir
 from pyexocross.base.log import (
     log_tqdm, 
@@ -44,6 +44,25 @@ from pyexocross.process.stick_xsec_filepath import stick_spectra_filepath
 from pyexocross.database import get_part_transfiles
 from pyexocross.process.filter_qn import QNfilter_linelist
 from pyexocross.plot.plot_stick_spectra import plot_stick_spectra
+
+
+def stickcachecolumns():
+    """Return state-derived cache columns needed by the current stick run."""
+    from pyexocross.core import NLTEMethod, QNsFilter, QNs_label, UncFilter
+
+    columns = ["E'", 'E"', "g'", 'g"', "J'", 'J"', 'v']
+    if UncFilter != 'None':
+        columns.extend(["unc'", 'unc"'])
+    if NLTEMethod == 'T':
+        columns.extend(["Evib'", 'Evib"', "Erot'", 'Erot"'])
+    elif NLTEMethod == 'D':
+        columns.extend(["nvib'", 'nvib"'])
+    elif NLTEMethod == 'P':
+        columns.extend(["pop'", 'pop"'])
+    if QNsFilter != []:
+        for label in QNs_label:
+            columns.extend([label + "'", label + '"'])
+    return list(dict.fromkeys(columns))
 
 def stick_spectra_qn_output_columns(columns, col_main, qns_filter, qns_label):
     """Return only the QN columns requested by the QN filter."""
@@ -100,6 +119,7 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
         abs_emi,
         NLTEMethod,
         threshold,
+        UncFilter,
     )
     # Optimized: use indexed lookup instead of two merges to reduce memory
     # If temp_idx is provided, process only that temperature to save memory
@@ -108,39 +128,57 @@ def process_exomol_stick_spectra_chunk(states_part_df,T_list,Tvib_list,Trot_list
     if isinstance(trans_part_df, dd.DataFrame):
         trans_part_df = trans_part_df.compute()
     
-    # Set index for fast lookup (more memory efficient than merge)
-    states_indexed = states_part_df.set_index('id')
-    
-    # Filter trans_df to only include transitions where both states exist
-    valid_mask = trans_part_df['uid'].isin(states_indexed.index) & trans_part_df['lid'].isin(states_indexed.index)
-    trans_part_df = trans_part_df[valid_mask]
-    
-    if len(trans_part_df) == 0:
-        states_cols = [col for col in states_part_df.columns if col != 'id']
-        u_cols = [col + "'" for col in states_cols]
-        l_cols = [col + '"' for col in states_cols]
-        combined_cols = ['A'] + u_cols + l_cols
+    required = {"E'", 'E"', "g'", 'g"', "J'", 'J"', 'v'}
+    if UncFilter != 'None':
+        required.update({"unc'", 'unc"'})
+    if NLTEMethod == 'T':
+        required.update({"Evib'", 'Evib"', "Erot'", 'Erot"'})
+    elif NLTEMethod == 'D':
+        required.update({"nvib'", 'nvib"'})
+    elif NLTEMethod == 'P':
+        required.update({"pop'", 'pop"'})
+    if QNsFilter != []:
+        for label in QNs_label:
+            required.update({label + "'", label + '"'})
+
+    if required.issubset(trans_part_df.columns):
+        stick_spectra_df = trans_part_df.copy()
+        if UncFilter != 'None':
+            stick_spectra_df = stick_spectra_df[
+                (stick_spectra_df["unc'"].astype(float) <= UncFilter)
+                & (stick_spectra_df['unc"'].astype(float) <= UncFilter)
+            ]
+    else:
+        if states_part_df is None:
+            raise ValueError('Range transition cache is missing required state columns.')
+        states_indexed = states_part_df.set_index('id')
+        valid_mask = (
+            trans_part_df['uid'].isin(states_indexed.index)
+            & trans_part_df['lid'].isin(states_indexed.index)
+        )
+        trans_part_df = trans_part_df[valid_mask]
+        u_states = states_indexed.loc[trans_part_df['uid']].reset_index(drop=True)
+        l_states = states_indexed.loc[trans_part_df['lid']].reset_index(drop=True)
+        u_states.columns = [col + "'" for col in u_states.columns]
+        l_states.columns = [col + '"' for col in l_states.columns]
+        stick_spectra_df = pd.concat([
+            trans_part_df[['A']].reset_index(drop=True),
+            u_states,
+            l_states,
+        ], axis=1)
+        stick_spectra_df['v'] = cal_v(
+            stick_spectra_df["E'"].values,
+            stick_spectra_df['E"'].values,
+        )
+    if len(stick_spectra_df) == 0:
         col_main = ['v','S',"J'","E'",'J"','E"']
-        col_qn = stick_spectra_qn_output_columns(combined_cols, col_main, QNsFilter, QNs_label)
-        col_stick_spectra = col_main + col_qn
-        return pd.DataFrame(columns=col_stick_spectra)
-    
-    # Get upper and lower state data using vectorized lookup
-    u_states = states_indexed.loc[trans_part_df['uid']].reset_index(drop=True)
-    l_states = states_indexed.loc[trans_part_df['lid']].reset_index(drop=True)
-    
-    # Rename columns with suffixes (id column is already dropped by reset_index)
-    u_states.columns = [col + "'" for col in u_states.columns]
-    l_states.columns = [col + '"' for col in l_states.columns]
-    
-    # Combine trans and states data
-    stick_spectra_df = pd.concat([
-        trans_part_df[['A']].reset_index(drop=True),
-        u_states,
-        l_states
-    ], axis=1)
-    
-    stick_spectra_df['v'] = cal_v(stick_spectra_df["E'"].values, stick_spectra_df['E"'].values)
+        col_qn = stick_spectra_qn_output_columns(
+            stick_spectra_df.columns,
+            col_main,
+            QNsFilter,
+            QNs_label,
+        )
+        return pd.DataFrame(columns=col_main + col_qn)
     # Filter out transitions where Ep < Epp (v < 0), skip invalid line list entries
     stick_spectra_df = stick_spectra_df[stick_spectra_df['v'] >= 0]
     stick_spectra_df = stick_spectra_df[stick_spectra_df['v'].between(min_wn, max_wn)]
@@ -208,7 +246,12 @@ def process_exomol_stick_spectra(states_part_df,T_list,Tvib_list,Trot_list,Q_arr
     use_cols = [0,1,2]
     use_names = ['uid','lid','A']
     large_file = is_large_trans_file(trans_filepath)
-    trans_reader = read_trans_chunks(trans_filepath, use_cols, use_names)
+    trans_reader = read_trans_chunks(
+        trans_filepath,
+        use_cols,
+        use_names,
+        extracols=stickcachecolumns(),
+    )
     desc = 'Processing ' + trans_filename + (' (limited streaming)' if large_file else '')
     zero_factory = lambda: pd.DataFrame(columns=['v','S',"J'","E'",'J"','E"'])
     def combine_fn(results):
@@ -238,7 +281,16 @@ def process_exomol_stick_spectra(states_part_df,T_list,Tvib_list,Trot_list,Q_arr
             with ThreadPoolExecutor(max_workers=ncputrans) as trans_executor:
                 futures = [trans_executor.submit(process_exomol_stick_spectra_chunk, states_part_df, T_list, Tvib_list, Trot_list, Q_arr, chunk, temp_idx)
                            for chunk in log_tqdm(trans_chunks, desc=desc)]
-                stick_spectra_df = combine_fn([future.result() for future in log_tqdm(futures, desc='Combining '+trans_filename)])
+                completed = as_completed(futures)
+                results = [
+                    future.result()
+                    for future in log_tqdm(
+                        completed,
+                        total=len(futures),
+                        desc='Calculating chunks ' + trans_filename,
+                    )
+                ]
+                stick_spectra_df = combine_fn(results)
     return stick_spectra_df
 
 # Stick spectra for ExoMol database
@@ -300,15 +352,15 @@ def save_exomol_stick_spectra(
     tot = Timer()
     tot.start()
     # Q = read_exomol_pf(read_path, T)
-    states_part_df_ss = states_part_df.copy()
-    if check_uncertainty == True:
+    states_part_df_ss = None if states_part_df is None else states_part_df.copy()
+    if check_uncertainty == True and states_part_df_ss is not None:
         states_part_df_ss.drop(columns=['unc'], inplace=True)
-    if check_lifetime == True or predissocYN == 'Y':
+    if states_part_df_ss is not None and (check_lifetime == True or predissocYN == 'Y'):
         try:
             states_part_df_ss.drop(columns=['tau'], inplace=True)
         except:
             pass
-    if check_gfactor == True:
+    if check_gfactor == True and states_part_df_ss is not None:
         try:
             states_part_df_ss.drop(columns=['gfac'], inplace=True)
         except:

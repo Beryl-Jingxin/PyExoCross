@@ -213,7 +213,7 @@ def test_cross_sections():
         temperatures=[296, 3000],   # Temperature in unit of K
         pressures=[1.0],            # Pressure in unit bar (default: [1.0])
         abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
-        threshold=None,             # Threshold filter (default: None)
+        threshold=1e-30,            # Threshold filter (default: None)
         bin_size=0.1,               # Bin size for wavenumber grid 
         profile='Gaussian',         # Line profile name (default: 'Gaussian')
         predissociation=False,      # Predissociation (default: False)
@@ -246,7 +246,7 @@ def test_stick_spectra_cross_section():
         min_range=0,                # Minimum wavenumber in unit of cm⁻¹
         max_range=13190,            # Maximum wavenumber in unit of cm⁻¹
         abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
-        threshold=None,             # Threshold filter (default: None)
+        threshold=1e-30,            # Threshold filter (default: None)
         bin_size=0.1,               # Bin size for wavenumber grid 
         profile='SciPyVoigt',       # Line profile name (default: 'Gaussian')
         predissociation=False,      # Predissociation (default: False)

@@ -10,8 +10,10 @@ import time
 from dataclasses import dataclass
 
 import pandas as pd
+from tqdm import tqdm
 
 from pyexocross.base.large_file import TransSource
+from pyexocross.base.qn_metadata import normalized_states_columns
 from pyexocross.database.load_exomol import (
     get_part_transfiles,
     get_statesfile,
@@ -49,6 +51,8 @@ PREPROCESS_KEYS = {
     'refresh',
     'refresh_cache',
 }
+
+RANGE_STATE_COLUMNS = ('E', 'g', 'J', 'unc', 'tau', 'K', 'k', 'v')
 
 
 def uncvalue(value):
@@ -102,12 +106,20 @@ def loadmanifest(cachedir):
     """Read the cache manifest or create an empty manifest structure."""
     manifestpath = os.path.join(cachedir, 'manifest.json')
     if not os.path.exists(manifestpath):
-        return {'version': 1, 'ranges': []}
+        return {'ranges': []}
     with open(manifestpath, 'r', encoding='utf-8') as stream:
-        manifest = json.load(stream)
-    if manifest.get('version') != 1:
-        return {'version': 1, 'ranges': []}
-    manifest.setdefault('ranges', [])
+        saved = json.load(stream)
+    keys = ('created', 'path', 'range', 'source', 'states')
+    manifest = {
+        'ranges': [
+            {key: entry[key] for key in keys if key in entry}
+            for entry in saved.get('ranges', [])
+        ]
+    }
+    if 'states' in saved:
+        manifest['states'] = saved['states']
+    if 'linelists' in saved:
+        manifest['linelists'] = saved['linelists']
     return manifest
 
 
@@ -209,7 +221,7 @@ def memorysource(filepath, chunksize):
     )
 
 
-def rangecandidate(manifest, cachedir, filepath, statesfile, lower, upper):
+def rangecandidate(manifest, cachedir, filepath, statesfile, lower, upper, required):
     """Return the smallest valid range cache covering the requested interval."""
     source = fileidentity(filepath)
     state_source = fileidentity(statesfile)
@@ -221,6 +233,7 @@ def rangecandidate(manifest, cachedir, filepath, statesfile, lower, upper):
             entry.get('source') == source
             and entry.get('states') == state_source
             and os.path.exists(cachepath)
+            and set(required).issubset(parquetcolumns(cachepath))
             and cachedrange[0] <= lower
             and cachedrange[1] >= upper
         ):
@@ -231,33 +244,114 @@ def rangecandidate(manifest, cachedir, filepath, statesfile, lower, upper):
     return cachepath, cachedrange[0], cachedrange[1]
 
 
-def writerangecache(filepath, states, cachepath, chunksize, lower, upper):
-    """Create a transition Parquet file filtered by a wavenumber interval."""
+def parquetcolumns(cachepath):
+    """Return actual columns stored in a Parquet cache."""
+    import pyarrow.parquet as pq
+
+    return set(pq.ParquetFile(cachepath).schema_arrow.names)
+
+
+def rangestatecolumns(states, qnlabels=()):
+    """Return state columns materialized in a range transition cache."""
+    requested = list(RANGE_STATE_COLUMNS) + list(qnlabels)
+    return [
+        column for column in dict.fromkeys(requested)
+        if column in states.columns
+    ]
+
+
+def configstatecolumns(config):
+    """Return cacheable state columns known from dataset metadata."""
+    if not config.states_col:
+        return []
+    available = normalized_states_columns(config.states_col)
+    requested = list(RANGE_STATE_COLUMNS) + list(getattr(config, 'qns_label', ()))
+    return [
+        column for column in dict.fromkeys(requested)
+        if column in available
+    ]
+
+
+def normalizestatesforcache(states, config):
+    """Apply metadata state-column names without filtering state rows."""
+    if not config.states_col:
+        return states
+    columns = normalized_states_columns(config.states_col, states.shape[1])
+    normalized = states.iloc[:, :len(columns)].copy()
+    normalized.columns = columns
+    return normalized
+
+
+def rangecachecolumns(statecolumns):
+    """Return the named state-derived columns required in a range cache."""
+    return [
+        name
+        for column in statecolumns
+        for name in (column + "'", column + '"')
+    ] + ['v']
+
+
+def cachedstatecolumns(cachepath, states):
+    """Return state columns already materialized for both transition levels."""
+    names = parquetcolumns(cachepath)
+    return [
+        column for column in states.columns
+        if column != 'id'
+        and column + "'" in names
+        and column + '"' in names
+    ]
+
+
+def writerangecache(filepath, states, cachepath, chunksize, lower, upper, statecolumns):
+    """Create a range-filtered transition cache with state columns attached."""
     import pyarrow as pa
     import pyarrow.parquet as pq
 
-    energies = states[['id', 'E']].drop_duplicates('id').set_index('id')['E']
+    stateindex = (
+        states[['id'] + statecolumns]
+        .drop_duplicates('id')
+        .set_index('id')
+    )
     temppath = cachepath + '.tmp'
     writer = None
     count = textcolumns(filepath)
-    for chunk in transitionchunks(filepath, chunksize):
-        upper_energy = chunk[0].map(energies)
-        lower_energy = chunk[1].map(energies)
-        wavenumber = upper_energy - lower_energy
-        selected = chunk[wavenumber.between(lower, upper)].copy()
+    chunks = transitionchunks(filepath, chunksize)
+    progress = tqdm(
+        desc='Building cache ' + os.path.basename(cachepath),
+        unit='lines',
+        unit_scale=True,
+    )
+    for chunk in chunks:
+        progress.update(len(chunk))
+        upperstate = stateindex.reindex(chunk[0].to_numpy())
+        lowerstate = stateindex.reindex(chunk[1].to_numpy())
+        wavenumber = upperstate['E'].to_numpy() - lowerstate['E'].to_numpy()
+        selectedmask = (wavenumber >= lower) & (wavenumber <= upper)
+        selected = chunk.loc[selectedmask].copy()
         if selected.empty:
             continue
         selected.columns = [f'c{index}' for index in range(selected.shape[1])]
+        positions = selectedmask.nonzero()[0]
+        for column in statecolumns:
+            selected[column + "'"] = upperstate[column].to_numpy()[positions]
+            selected[column + '"'] = lowerstate[column].to_numpy()[positions]
+        selected['v'] = wavenumber[positions]
         table = pa.Table.from_pandas(selected, preserve_index=False)
         if writer is None:
             writer = pq.ParquetWriter(temppath, table.schema, compression='zstd')
-        writer.write_table(table)
+        writer.write_table(table, row_group_size=100_000)
+    progress.close()
     if writer is None:
         empty = {
             f'c{index}': pd.Series(dtype='int64' if index < 2 else 'float64')
             for index in range(count)
         }
-        table = pa.Table.from_pandas(pd.DataFrame(empty), preserve_index=False)
+        frame = pd.DataFrame(empty)
+        for column in statecolumns:
+            frame[column + "'"] = pd.Series(dtype=states[column].dtype)
+            frame[column + '"'] = pd.Series(dtype=states[column].dtype)
+        frame['v'] = pd.Series(dtype='float64')
+        table = pa.Table.from_pandas(frame, preserve_index=False)
         writer = pq.ParquetWriter(temppath, table.schema, compression='zstd')
     writer.close()
     os.replace(temppath, cachepath)
@@ -273,9 +367,12 @@ def rangecachesource(
     lower,
     upper,
     manifest,
+    qnlabels=(),
     refresh=False,
 ):
     """Reuse or create a range-filtered transition cache."""
+    statecolumns = rangestatecolumns(states, qnlabels)
+    required = rangecachecolumns(statecolumns)
     candidate = None if refresh else rangecandidate(
         manifest,
         cachedir,
@@ -283,6 +380,7 @@ def rangecachesource(
         statesfile,
         lower,
         upper,
+        required,
     )
     if candidate is not None:
         cachepath, cachedlower, cachedupper = candidate
@@ -301,8 +399,20 @@ def rangecachesource(
         rangesdir,
         rangefilename(data_info, lower, upper, filepath=filepath),
     )
+    if os.path.exists(cachepath):
+        statecolumns = list(dict.fromkeys(
+            statecolumns + cachedstatecolumns(cachepath, states)
+        ))
     print('Creating range Parquet cache:', cachepath)
-    writerangecache(filepath, states, cachepath, chunksize, lower, upper)
+    writerangecache(
+        filepath,
+        states,
+        cachepath,
+        chunksize,
+        lower,
+        upper,
+        statecolumns,
+    )
 
     relativepath = os.path.relpath(cachepath, cachedir)
     manifest['ranges'] = [
@@ -323,6 +433,47 @@ def rangecachesource(
         minwn=lower,
         maxwn=upper,
     )
+
+
+def cachedrangesources(config, selected, cachedir, refresh=False):
+    """Return complete reusable range caches without loading states."""
+    if refresh or config.nlte_method != 'L':
+        return None
+    statecolumns = configstatecolumns(config)
+    if not statecolumns:
+        return None
+    required = rangecachecolumns(statecolumns)
+    statesfile = get_statesfile(config.read_path, config.data_info)
+    manifest = loadmanifest(cachedir)
+    sources = []
+    for path in selected:
+        lower, upper = rangebounds(
+            path,
+            config.min_wn,
+            config.max_wn,
+            config.cutoff,
+        )
+        candidate = rangecandidate(
+            manifest,
+            cachedir,
+            path,
+            statesfile,
+            lower,
+            upper,
+            required,
+        )
+        if candidate is None:
+            return None
+        cachepath, cachedlower, cachedupper = candidate
+        print('Using range Parquet cache:', cachepath)
+        sources.append(TransSource(
+            path=cachepath,
+            origin=path,
+            size=os.path.getsize(cachepath),
+            minwn=cachedlower,
+            maxwn=cachedupper,
+        ))
+    return tuple(sources)
 
 
 def printcacheinfo(cachedir, manifest):
@@ -552,6 +703,7 @@ def parquetsources(config, selected, states, cachedir, alltrans, refresh=False):
     """Create canonical or range-filtered Parquet transition sources."""
     statesfile = get_statesfile(config.read_path, config.data_info)
     manifest = loadmanifest(cachedir)
+    cachestates = normalizestatesforcache(states, config)
     sources = []
     for path in selected:
         if alltrans:
@@ -565,7 +717,7 @@ def parquetsources(config, selected, states, cachedir, alltrans, refresh=False):
             )
         sources.append(rangecachesource(
             path,
-            states,
+            cachestates,
             statesfile,
             config.data_info,
             cachedir,
@@ -573,6 +725,7 @@ def parquetsources(config, selected, states, cachedir, alltrans, refresh=False):
             lower,
             upper,
             manifest,
+            qnlabels=getattr(config, 'qns_label', ()),
             refresh=refresh,
         ))
     savemanifest(cachedir, manifest)
@@ -641,6 +794,7 @@ class LoadedData:
     storage: str
     cachedir: str
     alltrans: bool = False
+    integrated: bool = False
     lineframe: object = None
     linepath: object = None
     linedatabase: object = None
@@ -663,23 +817,34 @@ class LoadedData:
         config = copy.deepcopy(self.config)
         config._load_from_kwargs(**kwargs)
         if 'unc_filter' in changed:
-            loadedunc = uncvalue(self.config.unc_filter)
-            requestedunc = uncvalue(kwargs['unc_filter'])
-            if (
-                requestedunc is None and loadedunc is None
-            ) or (
-                requestedunc is not None
-                and (loadedunc is None or requestedunc <= loadedunc)
+            if self.config.check_uncertainty and (
+                self.integrated or self.states is not None
             ):
                 changed.remove('unc_filter')
             else:
-                raise ValueError(
-                    f'unc_filter={kwargs["unc_filter"]} includes states excluded by '
-                    f'px.load(unc_filter={self.config.unc_filter}). Call px.load again '
-                    f'with unc_filter={kwargs["unc_filter"]}.'
-                )
+                loadedunc = uncvalue(self.config.unc_filter)
+                requestedunc = uncvalue(kwargs['unc_filter'])
+                if (
+                    requestedunc is None and loadedunc is None
+                ) or (
+                    requestedunc is not None
+                    and (loadedunc is None or requestedunc <= loadedunc)
+                ):
+                    changed.remove('unc_filter')
+                else:
+                    raise ValueError(
+                        f'unc_filter={kwargs["unc_filter"]} includes states excluded by '
+                        f'px.load(unc_filter={self.config.unc_filter}). Call px.load again '
+                        f'with unc_filter={kwargs["unc_filter"]}.'
+                    )
         if 'qns_filter' in changed:
-            if qnrefines(self.config, config):
+            parquettrans = all(
+                source.path.endswith('.parquet')
+                for source in self.transitions
+            )
+            if self.storage == 'parquet' and parquettrans:
+                changed.remove('qns_filter')
+            elif qnrefines(self.config, config):
                 changed.remove('qns_filter')
             else:
                 raise ValueError(
@@ -705,10 +870,30 @@ class LoadedData:
     def prepared(self, config):
         """Return prepared states with any valid stricter uncertainty filter applied."""
         if self.preparedstates is None:
+            if self.integrated and config.nlte_method == 'L':
+                return None
             raise ValueError('Loaded data does not contain prepared states.')
-        states = self.preparedstates.copy()
         loadedunc = uncvalue(self.config.unc_filter)
         requestedunc = uncvalue(config.unc_filter)
+        if self.states is not None and requestedunc != loadedunc:
+            return read_part_states(
+                self.states,
+                config.unc_filter,
+                config.nlte_method,
+                config.nlte_path,
+                config.check_uncertainty,
+                config.check_lifetime,
+                config.check_gfactor,
+                config.qnslabel_list,
+                config.states_col,
+                config.states_fmt,
+                config.qns_label,
+                config.qns_filter,
+                config.qns_value,
+                config.vib_label,
+                config.rot_label,
+            )
+        states = self.preparedstates.copy()
         if requestedunc is not None and (
             loadedunc is None or requestedunc < loadedunc
         ):
@@ -727,6 +912,71 @@ class LoadedData:
             values = states[label].astype(str).str.strip()
             states = states[values.isin(allowed)].copy()
         return states
+
+    def fullstates(self):
+        """Load complete states only when a calculation actually needs them."""
+        if self.states is None:
+            cache = 'parquet' if self.storage == 'parquet' else 'none'
+            self.states = statesdata(
+                self.config,
+                cache,
+                self.cachedir,
+                refresh=False,
+            )
+        return self.states
+
+    def ensureqns(self, config):
+        """Add newly requested QN columns to range caches in place."""
+        labels = list(dict.fromkeys(getattr(config, 'qns_label', ())))
+        if not labels or self.storage != 'parquet':
+            return
+        required = rangecachecolumns(labels)[:-1]
+        selected = self.sources(config.min_wn, config.max_wn)
+        missing = [
+            source for source in selected
+            if source.path.endswith('.parquet')
+            and not set(required).issubset(parquetcolumns(source.path))
+        ]
+        if not missing:
+            return
+
+        cachestates = normalizestatesforcache(self.fullstates(), config)
+        unavailable = [label for label in labels if label not in cachestates.columns]
+        if unavailable:
+            raise ValueError(
+                'Requested quantum-number columns are missing from states metadata: '
+                + ', '.join(unavailable)
+            )
+
+        missingpaths = {source.path for source in missing}
+        updated = []
+        for source in self.transitions:
+            if source.path not in missingpaths:
+                updated.append(source)
+                continue
+            statecolumns = list(dict.fromkeys(
+                rangestatecolumns(cachestates, labels)
+                + cachedstatecolumns(source.path, cachestates)
+            ))
+            print('Adding QN columns to range Parquet cache:', source.path)
+            writerangecache(
+                source.origin,
+                cachestates,
+                source.path,
+                config.chunk_size,
+                source.minwn,
+                source.maxwn,
+                statecolumns,
+            )
+            updated.append(TransSource(
+                path=source.path,
+                origin=source.origin,
+                size=os.path.getsize(source.path),
+                minwn=source.minwn,
+                maxwn=source.maxwn,
+            ))
+        self.transitions = tuple(updated)
+        self.integrated = True
 
     def sources(self, min_wn, max_wn):
         """Select already-loaded transition sources for a calculation range."""
@@ -827,27 +1077,40 @@ def loaddata(
     if cache == 'auto':
         resolved = 'none' if maxmemory <= 0 else ('memory' if estimate <= memorylimit else 'parquet')
 
-    statescache = 'parquet' if resolved == 'parquet' else 'none'
-    states = statesdata(config, statescache, cachedir, refresh=refresh)
-    prepared = None
-    if preparestates:
-        prepared = read_part_states(
-            states,
-            config.unc_filter,
-            config.nlte_method,
-            config.nlte_path,
-            config.check_uncertainty,
-            config.check_lifetime,
-            config.check_gfactor,
-            config.qnslabel_list,
-            config.states_col,
-            config.states_fmt,
-            config.qns_label,
-            config.qns_filter,
-            config.qns_value,
-            config.vib_label,
-            config.rot_label,
+    sources = None
+    integrated = False
+    if resolved == 'parquet' and not alltrans and preparestates:
+        sources = cachedrangesources(
+            config,
+            selected,
+            cachedir,
+            refresh=refresh,
         )
+        integrated = sources is not None
+
+    states = None
+    prepared = None
+    if not integrated:
+        statescache = 'parquet' if resolved == 'parquet' else 'none'
+        states = statesdata(config, statescache, cachedir, refresh=refresh)
+        if preparestates:
+            prepared = read_part_states(
+                states,
+                config.unc_filter,
+                config.nlte_method,
+                config.nlte_path,
+                config.check_uncertainty,
+                config.check_lifetime,
+                config.check_gfactor,
+                config.qnslabel_list,
+                config.states_col,
+                config.states_fmt,
+                config.qns_label,
+                config.qns_filter,
+                config.qns_value,
+                config.vib_label,
+                config.rot_label,
+            )
 
     if resolved == 'memory':
         memory_sources = []
@@ -873,14 +1136,15 @@ def loaddata(
                 refresh=refresh,
             )
     elif resolved == 'parquet':
-        sources = parquetsources(
-            config,
-            selected,
-            states,
-            cachedir,
-            alltrans,
-            refresh=refresh,
-        )
+        if sources is None:
+            sources = parquetsources(
+                config,
+                selected,
+                states,
+                cachedir,
+                alltrans,
+                refresh=refresh,
+            )
     else:
         sources = tuple(
             TransSource(
@@ -902,4 +1166,5 @@ def loaddata(
         resolved,
         cachedir,
         alltrans,
+        integrated=integrated,
     )

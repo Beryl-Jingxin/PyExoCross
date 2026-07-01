@@ -167,6 +167,8 @@ def get_results(config, data=None):
         Nfunctions = (Conversion + PartitionFunctions + SpecificHeats + Lifetimes
                      + CoolingFunctions + OscillatorStrengths + StickSpectra + CrossSections)
         NeedPartStates = StickSpectra + CrossSections
+        NeedAllStates = (Conversion + PartitionFunctions + SpecificHeats
+                        + Lifetimes + CoolingFunctions + OscillatorStrengths)
         NeedConversionTransitions = int(Conversion == 1 and ConversionFormat == 'HITRAN')
         NeedAllTransitions = Lifetimes + CoolingFunctions + OscillatorStrengths
         if (
@@ -212,14 +214,14 @@ def get_results(config, data=None):
                     config.states_col,
                     config.states_fmt,
                 )
+            elif NeedAllStates > 0:
+                states_df = data.fullstates().copy()
             else:
-                states_df = data.states.copy()
+                states_df = data.states.copy() if data.states is not None else None
         else:
             raise ValueError("Please choose functions which you want to calculate.")
         
         # These functions need whole states
-        NeedAllStates = (Conversion + PartitionFunctions + SpecificHeats
-                        + Lifetimes + CoolingFunctions + OscillatorStrengths)
         all_trans_sources = (
             data.transitions
             if data is not None and data.alltrans
@@ -283,6 +285,7 @@ def get_results(config, data=None):
                 )
                 trans_sources = None
             else:
+                data.ensureqns(config)
                 states_part_df = data.prepared(config)
                 trans_sources = data.sources(
                     config.min_wn,
@@ -297,7 +300,8 @@ def get_results(config, data=None):
                 config.read_path,
                 config.data_info,
             )
-            states_df.index.name = 'index'
+            if states_df is not None:
+                states_df.index.name = 'index'
             # Calculate predissociation spectra and cross sections if lifetimes are not exist in the states file
             if predissocYN == 'Y' and check_predissoc + check_lifetime == 0 and 'VOI' in profile:
                 np.seterr(divide='ignore', invalid='ignore')

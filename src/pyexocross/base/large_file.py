@@ -100,7 +100,7 @@ def command_decompress(trans_filename):
         num = 1
     return(trans_file, num)
 
-def read_trans_chunks(trans_filepath, usecols, names, chunk_sz=None):
+def read_trans_chunks(trans_filepath, usecols, names, chunk_sz=None, extracols=None):
     """
     Read a transition file in chunks for memory-efficient processing.
 
@@ -118,6 +118,8 @@ def read_trans_chunks(trans_filepath, usecols, names, chunk_sz=None):
     chunk_sz : int, optional
         Number of rows per chunk. If None, uses the global chunk_size variable
         or DEFAULT_CHUNK_SIZE as fallback.
+    extracols : list of str, optional
+        Named state-derived columns to project from a Parquet transition cache.
 
     Returns
     -------
@@ -145,9 +147,15 @@ def read_trans_chunks(trans_filepath, usecols, names, chunk_sz=None):
 
         def parquetchunks():
             parquet_file = pq.ParquetFile(path)
-            for batch in parquet_file.iter_batches(batch_size=chunk_sz, columns=columns):
+            available = set(parquet_file.schema_arrow.names)
+            extras = [
+                name for name in (extracols or ())
+                if name in available and name not in columns
+            ]
+            readcolumns = columns + extras
+            for batch in parquet_file.iter_batches(batch_size=chunk_sz, columns=readcolumns):
                 chunk = batch.to_pandas()
-                chunk.columns = names
+                chunk = chunk.rename(columns=dict(zip(columns, names)))
                 yield chunk
 
         return parquetchunks()

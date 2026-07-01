@@ -24,8 +24,14 @@ from pyexocross.base.large_file import (
 from pyexocross.database import read_broad, get_part_transfiles
 from pyexocross.process.T_n_val import get_ntemp, get_temp_vals
 from pyexocross.process.stick_xsec_filepath import stick_spectra_filepath, temperature_string_base
-from pyexocross.save.exomol.exomol_stick_spectra import process_exomol_stick_spectra_chunk
-from pyexocross.save.exomol.exomol_cross_section import process_exomol_cross_section_chunk
+from pyexocross.save.exomol.exomol_stick_spectra import (
+    process_exomol_stick_spectra_chunk,
+    stickcachecolumns,
+)
+from pyexocross.save.exomol.exomol_cross_section import (
+    crosscachecolumns,
+    process_exomol_cross_section_chunk,
+)
 from pyexocross.plot.plot_stick_spectra import plot_stick_spectra
 from pyexocross.plot.plot_cross_section import save_xsec_file_plot
 from pyexocross.calculation.calcualte_line_profile import line_profile
@@ -199,15 +205,15 @@ def save_exomol_stick_spectra_cross_section(
     t_xsec = Timer()
     
     # Prepare states data
-    states_part_df_ss = states_part_df.copy()
-    if check_uncertainty == True:
+    states_part_df_ss = None if states_part_df is None else states_part_df.copy()
+    if check_uncertainty == True and states_part_df_ss is not None:
         states_part_df_ss.drop(columns=['unc'], inplace=True)
-    if check_lifetime == True or predissocYN == 'Y':
+    if states_part_df_ss is not None and (check_lifetime == True or predissocYN == 'Y'):
         try:
             states_part_df_ss.drop(columns=['tau'], inplace=True)
         except:
             pass
-    if check_gfactor == True:
+    if check_gfactor == True and states_part_df_ss is not None:
         try:
             states_part_df_ss.drop(columns=['gfac'], inplace=True)
         except:
@@ -216,6 +222,9 @@ def save_exomol_stick_spectra_cross_section(
     # Read broadening data for cross sections
     broad, ratio, nbroad, broad_dfs = read_broad(read_path)
     profile_label = line_profile(profile)
+    stickcolumns = stickcachecolumns()
+    crosscolumns = crosscachecolumns(broad_dfs)
+    combinedcolumns = list(dict.fromkeys(stickcolumns + crosscolumns))
     
     print('Reading transitions ONCE for all temperatures (will be used for both stick spectra and cross sections) ...')    
     trans_filepaths = (
@@ -299,13 +308,26 @@ def save_exomol_stick_spectra_cross_section(
             # Cache chunks for small files
             use_cols_ss = [0,1,2]
             use_names_ss = ['uid','lid','A']
-            trans_reader_ss = read_trans_chunks(trans_filepath, use_cols_ss, use_names_ss)
+            projectedss = (
+                combinedcolumns if use_cols_ss == use_cols_xsec else stickcolumns
+            )
+            trans_reader_ss = read_trans_chunks(
+                trans_filepath,
+                use_cols_ss,
+                use_names_ss,
+                extracols=projectedss,
+            )
             trans_chunks_cache_ss[trans_filepath] = list(trans_reader_ss)
             num_chunks_ss = len(trans_chunks_cache_ss[trans_filepath])
             
             # Cache cross section chunks if different from stick spectra
             if use_cols_ss != use_cols_xsec:
-                trans_reader_xsec = read_trans_chunks(trans_filepath, use_cols_xsec, use_names_xsec)
+                trans_reader_xsec = read_trans_chunks(
+                    trans_filepath,
+                    use_cols_xsec,
+                    use_names_xsec,
+                    extracols=crosscolumns,
+                )
                 trans_chunks_cache_xsec[trans_filepath] = list(trans_reader_xsec)
             else:
                 trans_chunks_cache_xsec[trans_filepath] = trans_chunks_cache_ss[trans_filepath]
@@ -327,7 +349,12 @@ def save_exomol_stick_spectra_cross_section(
             if large_file:
                 # For large files: stream ONCE, process each chunk for ALL temperatures
                 print(f'Streaming large file: {trans_filename} (processing for all temperatures)')
-                trans_reader = read_trans_chunks(trans_filepath, use_cols_xsec, use_names_xsec)
+                trans_reader = read_trans_chunks(
+                    trans_filepath,
+                    use_cols_xsec,
+                    use_names_xsec,
+                    extracols=combinedcolumns,
+                )
                 chunk_count = 0
                 
                 for trans_df_chunk in trans_reader:
@@ -520,7 +547,12 @@ def save_exomol_stick_spectra_cross_section(
                 
                 if large_file:
                     # Stream large files again for this (T, P) combination
-                    trans_reader = read_trans_chunks(trans_filepath, use_cols_xsec, use_names_xsec)
+                    trans_reader = read_trans_chunks(
+                        trans_filepath,
+                        use_cols_xsec,
+                        use_names_xsec,
+                        extracols=crosscolumns,
+                    )
                     for trans_df_chunk in trans_reader:
                         chunk_xsec = process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list,P,Q_arr,
                                                                broad,ratio,nbroad,broad_dfs,profile_label,trans_df_chunk,temp_idx)
