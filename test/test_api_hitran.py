@@ -293,7 +293,7 @@ if __name__ == '__main__':
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
-        # test_download,
+        test_download,
         test_conversion,
         test_partition_functions,
         test_specific_heats,
