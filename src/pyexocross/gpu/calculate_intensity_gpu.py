@@ -52,16 +52,18 @@ def gpu_cal_abscoefs(T_list, Q_list, Epp, gp, A, v, abundance) -> Optional[np.nd
     return result
 
 
-def gpu_cal_abscoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp, A, v, abundance) -> Optional[np.ndarray]:
-    packed = _backend_arrays(Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp, A, v)
+def gpu_cal_abscoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibp, Erotp, Evibpp, Erotpp, gp, A, v, abundance) -> Optional[np.ndarray]:
+    packed = _backend_arrays(Tvib_list, Trot_list, Qnlte_arr, Evibp, Erotp, Evibpp, Erotpp, gp, A, v)
     if packed is None:
         return None
     provider, mod, arrs = packed
-    Tvib_g, Trot_g, Q_g, Evibpp_g, Erotpp_g, gp_g, A_g, v_g = arrs
+    Tvib_g, Trot_g, Q_g, Evibp_g, Erotp_g, Evibpp_g, Erotpp_g, gp_g, A_g, v_g = arrs
 
     Tvib_g = Tvib_g[:, None]
     Trot_g = Trot_g[:, None]
     Q_g = Q_g[:, None]
+    Evibp_g = Evibp_g[None, :]
+    Erotp_g = Erotp_g[None, :]
     Evibpp_g = Evibpp_g[None, :]
     Erotpp_g = Erotpp_g[None, :]
     gp_g = gp_g[None, :]
@@ -74,22 +76,26 @@ def gpu_cal_abscoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp
     v2_safe = _safe_nonzero(mod, v_g * v_g)
 
     absconst = gp_g * A_g * Inv8Pic / v2_safe * abundance
-    exponent = -c2 * (Evibpp_g / Tvib_safe + Erotpp_g / Trot_safe)
-    out = mod.exp(exponent) * (1 - mod.exp(-c2 * v_g / Tvib_safe)) / Q_safe * absconst
+    lower_exponent = -c2 * (Evibpp_g / Tvib_safe + Erotpp_g / Trot_safe)
+    transition_exponent = -c2 * (
+        (Evibp_g - Evibpp_g) / Tvib_safe
+        + (Erotp_g - Erotpp_g) / Trot_safe
+    )
+    stimulated_correction = -mod.expm1(transition_exponent)
+    out = mod.exp(lower_exponent) * stimulated_correction / Q_safe * absconst
     out = _finite_or_zero(mod, out)
     result = _to_numpy(provider, mod, out)
     free_gpu_memory()
     return result
 
 
-def gpu_cal_abscoefs_nlte_nvib(T_list, Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v, abundance) -> Optional[np.ndarray]:
-    packed = _backend_arrays(T_list, Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v)
+def gpu_cal_abscoefs_nlte_nvib(Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v, abundance) -> Optional[np.ndarray]:
+    packed = _backend_arrays(Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v)
     if packed is None:
         return None
     provider, mod, arrs = packed
-    T_g, Trot_g, Q_g, nvib_g, Erotpp_g, gp_g, A_g, v_g = arrs
+    Trot_g, Q_g, nvib_g, Erotpp_g, gp_g, A_g, v_g = arrs
 
-    T_g = T_g[:, None]
     Trot_g = Trot_g[:, None]
     Q_g = Q_g[:, None]
     nvib_g = nvib_g[None, :]
@@ -98,14 +104,13 @@ def gpu_cal_abscoefs_nlte_nvib(T_list, Trot_list, Qnlte_arr, nvib, Erotpp, gp, A
     A_g = A_g[None, :]
     v_g = v_g[None, :]
 
-    T_safe = _safe_positive(mod, T_g)
     Trot_safe = _safe_positive(mod, Trot_g)
     Q_safe = _safe_nonzero(mod, Q_g)
     v2_safe = _safe_nonzero(mod, v_g * v_g)
 
     absconst = gp_g * A_g * Inv8Pic / v2_safe * nvib_g * abundance
     exponent = -c2 * (Erotpp_g / Trot_safe)
-    out = mod.exp(exponent) * (1 - mod.exp(-c2 * v_g / T_safe)) / Q_safe * absconst
+    out = mod.exp(exponent) * (1 - mod.exp(-c2 * v_g / Trot_safe)) / Q_safe * absconst
     out = _finite_or_zero(mod, out)
     result = _to_numpy(provider, mod, out)
     free_gpu_memory()

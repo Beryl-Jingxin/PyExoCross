@@ -283,7 +283,7 @@ Used by `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross
 |---|---|---|---|
 | `'L'` | LTE | Local thermodynamic equilibrium (default) | `temperatures` |
 | `'T'` | Treanor | Two-temperature model | `temperatures`, `tvib_list`, `trot_list`, `vib_label`, `rot_label` |
-| `'D'` | Density | Number density NLTE | `temperatures`, `trot_list`, `nlte_path` |
+| `'D'` | Density | Number density NLTE | `trot_list`, `nlte_path` |
 | `'P'` | Population | Population NLTE | `temperatures`, `nlte_path` |
 
 ---
@@ -384,13 +384,36 @@ Used by `px.cross_sections()`.
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `broadeners` | `list[str]` | `['Default']` | Broadening species (e.g. `['H2', 'He']`) |
-| `ratios` | `list[float]` | `[1.0]` | Mixing ratios (must sum to 1.0) |
+| `ratios` | `list[float]` | `[1.0]` | Partial-pressure fractions, one per broadener |
+| `gamma_broadening` | `float`, `list[float]`, or `None` | `None` | Custom reference Lorentzian HWHM coefficients (cm⁻¹ bar⁻¹ at 296 K), one per broadener |
+| `n_broadening` | `float`, `list[float]`, or `None` | `None` | Custom dimensionless temperature exponents, one per broadener |
 | `alpha_hwhm` | `float` or `None` | `None` | Constant Doppler HWHM (cm⁻¹); `None` to auto-calculate |
 | `gamma_hwhm` | `float` or `None` | `None` | Constant Lorentzian HWHM (cm⁻¹); `None` to auto-calculate |
 
 Set `alpha_hwhm=None` and `gamma_hwhm=None` to let PyExoCross calculate
 HWHMs from broadening parameters in the database.  Use constant values for
 quick testing or when database broadening files are unavailable.
+
+To replace database broadening parameters for any supported database, provide
+both custom parameters. For multiple broadeners, `broadeners`, `ratios`,
+`gamma_broadening`, and `n_broadening` must have the same length. A single
+broadener may use either scalars or one-element lists. For example:
+
+```python
+broadeners=['H2', 'He'],
+ratios=[0.85, 0.15],
+gamma_broadening=[0.06, 0.03],
+n_broadening=[0.60, 0.30],
+```
+
+Each contribution is evaluated independently as
+`ratio * gamma_broadening * (296 / T)**n_broadening * (P / 1 bar)` and then
+summed. Ratios normally sum to 1.0 when the listed broadeners represent the
+complete gas mixture.
+
+Custom broadening is used only by Lorentzian and Voigt profiles. Keep
+`gamma_hwhm=None`; a non-`None` `gamma_hwhm` supplies the final constant HWHM
+and takes priority over custom and database broadening parameters.
 
 For HITRAN and HITEMP, `Default` uses air broadening (`gamma_air`), consistent with the standard HAPI convention (`GammaL='gamma_air'`). 
 

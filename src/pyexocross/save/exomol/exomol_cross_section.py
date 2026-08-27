@@ -271,10 +271,9 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
     if NLTEMethod == 'L':
         extra_col = []
     elif NLTEMethod == 'T':
-        if abs_emi == 'Ab':
-            extra_col = ['Evib"', 'Erot"']
-        else:
-            extra_col = ["Evib'", "Erot'"]
+        # The two-temperature absorption correction depends on both upper- and
+        # lower-state vibrational/rotational transition-energy components.
+        extra_col = ["Evib'", "Erot'", 'Evib"', 'Erot"']
     elif NLTEMethod == 'D':
         if abs_emi == 'Ab':
             extra_col = ['nvib"']
@@ -347,9 +346,13 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
             if NLTEMethod == 'T':
                 if len(Trot_list) > 0:
                     trot_idx = temp_idx if temp_idx is not None and temp_idx < len(Trot_list) else 0
-                    T = Trot_list[trot_idx]
+                    profile_temperature = Trot_list[trot_idx]
+            elif NLTEMethod == 'D':
+                profile_temperature = Trot
             elif temp_idx is not None and temp_idx >= len(T_list):
-                T = T_list[0] if len(T_list) > 0 else None
+                profile_temperature = T_list[0] if len(T_list) > 0 else None
+            else:
+                profile_temperature = T
             if 'DOP' not in profile and 'GAU' not in profile:
                 # Use dictionaries instead of DataFrames to avoid indexing issues
                 gamma_L = {}
@@ -374,61 +377,61 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
                     tau = st_df["tau'"].values
                 else:
                     tau = np.array([])
-                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, [], [], tau, T, P_val)
+                gamma = LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, [], [], tau, profile_temperature, P_val)
             else:
                 gamma = np.array([])
             coef = st_df['coef'].values
         
             # Line profiles
             if profile_label == 'Doppler':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff)
             elif profile_label == 'Gaussian':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 xsec = cross_section_Doppler(wn_grid, v, alpha, coef, cutoff)
             elif profile_label == 'Lorentzian':
                 xsec = cross_section_Lorentzian(wn_grid, v, gamma, coef, cutoff)
             elif profile_label == 'SciPy Voigt':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 sigma = Gaussian_standard_deviation(alpha)     
                 xsec = cross_section_SciPyVoigt(wn_grid, v, sigma, gamma, coef, cutoff)
             elif profile_label == 'SciPy wofz Voigt':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 sigma = Gaussian_standard_deviation(alpha)     
                 xsec = cross_section_SciPyWofzVoigt(wn_grid, v, sigma, gamma, coef, cutoff)
             elif profile_label == 'Humlicek Voigt':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 xsec = cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff)  
             elif profile_label == 'Thompson pseudo-Voigt':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 hV, eta = PseudoThompsonVoigt(alpha, gamma)
                 xsec = cross_section_PseudoVoigt(wn_grid, v, hV, eta, coef, cutoff)
             elif profile_label == 'Kielkopf pseudo-Voigt':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 hV, eta = PseudoKielkopfVoigt(alpha, gamma)
                 xsec = cross_section_PseudoVoigt(wn_grid, v, hV, eta, coef, cutoff)
             elif profile_label == 'Olivero pseudo-Voigt':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 hV, eta = PseudoOliveroVoigt(alpha, gamma)
                 xsec = cross_section_PseudoVoigt(wn_grid, v, hV, eta, coef, cutoff)
             elif profile_label == 'Liu-Lin pseudo-Voigt':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 hV, eta = PseudoLiuLinVoigt(alpha, gamma)
                 xsec = cross_section_PseudoVoigt(wn_grid, v, hV, eta, coef, cutoff)
             elif profile_label == 'Rocco pseudo-Voigt':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 hV, eta = PseudoRoccoVoigt(alpha, gamma)
                 xsec = cross_section_PseudoVoigt(wn_grid, v, hV, eta, coef, cutoff)
             elif profile_label == 'Binned Doppler':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff)        
             elif profile_label == 'Binned Gaussion':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 xsec = cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff)
             elif profile_label == 'Binned Lorentzian':
                 xsec = cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff)
             elif profile_label == 'Binned Voigt':
-                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, T)
+                alpha = DopplerHWHM_alpha(num, alpha_HWHM, v, profile_temperature)
                 sigma = Gaussian_standard_deviation(alpha)     
                 xsec = cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff)           
             else:

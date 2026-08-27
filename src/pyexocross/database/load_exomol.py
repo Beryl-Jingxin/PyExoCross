@@ -164,7 +164,13 @@ def read_part_states(
         available_cols = set(colname)
     optional_cols = col_unc + col_lifetime + col_gfac
     # Keep only the required columns and avoid SettingWithCopyWarning by working on a copy
-    QNcolumns = [col for col in list(dict.fromkeys(['id','E','g','J'] + optional_cols + QNslabel_list + QNs_label)) if col in available_cols]
+    QNcolumns = [
+        col
+        for col in list(dict.fromkeys(
+            ['id', 'E', 'g', 'J'] + optional_cols + QNslabel_list + QNs_label
+        ))
+        if col in states_parts_df.columns
+    ]
 
     # LTE 
     if NLTEMethod == 'L':
@@ -174,14 +180,18 @@ def read_part_states(
         QNcolumns_2Ts = ['id','E','g','J'] + optional_cols + QNs_label + rot_label + vib_label
         # Remove duplicates while preserving order
         QNcolumns_2T = [col for col in list(dict.fromkeys(QNcolumns_2Ts)) if col in available_cols]
-        states_parts_df = states_parts_df[QNcolumns_2T]
-        min_value_list = states_parts_df.sort_values('E').iloc[0]
-        J_min = min_value_list['J']
-        Evib_df = states_parts_df[states_parts_df[rot_label].isin(list(min_value_list[rot_label])).all(axis=1)][vib_label]
-        Evib_df['Evib'] = states_parts_df['E']
-        states_part_df = dd.merge(states_parts_df, Evib_df, left_on=vib_label, right_on=vib_label, how='left').dropna()
+        states_part_df = states_parts_df[QNcolumns_2T].copy()
+        # Define the vibronic origin independently for every vibrational/
+        # electronic manifold. Different TiO electronic states can have
+        # different minimum J and parity, so using the global ground-state
+        # rotational labels incorrectly removes most manifolds.
+        states_part_df['Evib'] = states_part_df.groupby(
+            vib_label,
+            dropna=False,
+        )['E'].transform('min')
         states_part_df['Erot'] = states_part_df['E'] - states_part_df['Evib']
-        states_part_df = states_part_df[QNcolumns + ['Erot', 'Evib']]
+        output_columns = [col for col in QNcolumns if col in states_part_df.columns]
+        states_part_df = states_part_df[output_columns + ['Erot', 'Evib']]
     # Non-LTE using custom density
     elif NLTEMethod == 'D':
         # Read density file
@@ -549,7 +559,9 @@ def read_broad(read_path):
         - nbroad : int, number of broadeners
         - broad_dfs : list of pd.DataFrame, broadening DataFrames
     """
-    from pyexocross.core import data_info, broadeners, ratios 
+    from pyexocross.core import (
+        data_info, broadeners, ratios, gamma_broadening, n_broadening
+    )
 
     broad_df = pd.DataFrame()
     broad_dfs = []
@@ -557,7 +569,18 @@ def read_broad(read_path):
     ratio = []
     for i in range(len(ratios)):
         if ratios[i] != 0.0:
-            if broadeners[i].upper()[0:3] == 'DEF':
+            if gamma_broadening:
+                broad_df = pd.DataFrame([{
+                    'code': 'Default',
+                    'gamma_L': gamma_broadening[i],
+                    'n_air': n_broadening[i],
+                    'q1': np.nan,
+                    'q2': np.nan,
+                    'Jpp': np.nan,
+                    'Jp': np.nan,
+                }])
+                broad_dfs.append(broad_df)
+            elif broadeners[i].upper()[0:3] == 'DEF':
                 broad_df = pd.DataFrame([{
                     'code': 'Default',
                     'gamma_L': BROAD_DEFAULT_GAMMA_L,

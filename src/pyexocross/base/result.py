@@ -153,7 +153,8 @@ SPECTRUM_PARAMETERS = {
 }
 CROSS_SECTION_PARAMETERS = {
     'P_list', 'N_point', 'bin_size', 'profile', 'cutoff', 'predissoc_yn',
-    'broadeners', 'ratios', 'doppler_hwhm_yn', 'lorentzian_hwhm_yn',
+    'broadeners', 'ratios', 'gamma_broadening', 'n_broadening',
+    'doppler_hwhm_yn', 'lorentzian_hwhm_yn',
     'alpha_hwhm', 'gamma_hwhm',
 }
 PARAMETERS_BY_FUNCTION = {

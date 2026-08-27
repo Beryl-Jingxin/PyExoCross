@@ -805,7 +805,9 @@ All parameters from [`px.stick_spectra`](#pxstick_spectra), plus:
 | `predissociation` | `bool` | `False` | Use predissociation lifetimes for Voigt width |
 | **Broadening** | | | |
 | `broadeners` | `list[str]` | `['Default']` | Broadening species |
-| `ratios` | `list[float]` | `[1.0]` | Broadener mixing ratios (must sum to 1.0) |
+| `ratios` | `list[float]` | `[1.0]` | Partial-pressure fractions, one per broadener |
+| `gamma_broadening` | `float`, `list[float]`, or `None` | `None` | Custom reference Lorentzian HWHM coefficients, one per broadener |
+| `n_broadening` | `float`, `list[float]`, or `None` | `None` | Custom dimensionless temperature exponents, one per broadener |
 | `alpha_hwhm` | `float` or `None` | `None` | Constant Doppler HWHM; `None` to calculate |
 | `gamma_hwhm` | `float` or `None` | `None` | Constant Lorentzian HWHM; `None` to calculate |
 | **Plotting** | | | |
@@ -857,7 +859,7 @@ Line-profile widths and `cutoff` remain in cm⁻¹.
 | `'He'` | Helium broadening |
 | `'CO2'` | CO$_2$ broadening |
 | `'H2O'` | Water broadening |
-| `<molecule>` or `<atom>` | <molecule> or <atom> broadening |
+| `<molecule>` or `<atom>` | `<molecule>` or `<atom>` broadening |
 
 Support all broadening files format from ExoMol database.
 
@@ -876,6 +878,22 @@ To mix air and self broadening, use for example:
 broadeners=['Air', 'Self'],
 ratios=[0.7, 0.3],
 ```
+
+To replace database broadening parameters with fixed reference coefficients:
+
+```python
+broadeners=['H2', 'He'],
+ratios=[0.85, 0.15],
+gamma_broadening=[0.06, 0.03],
+n_broadening=[0.60, 0.30],
+profile='SciPyVoigt',
+gamma_hwhm=None,
+```
+
+All four broadening lists correspond by position. For a single broadener,
+`gamma_broadening` and `n_broadening` may also be scalars. The custom values
+replace database coefficients for ExoMol, ExoAtom, ExoMolHR, HITRAN, and
+HITEMP.
 
 **Legacy Alias**: `px.cross_section`
 

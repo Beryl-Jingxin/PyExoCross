@@ -456,9 +456,17 @@ def inp_para(inp_filepath):
     # Calculate stick spectra or cross sections
     if StickSpectra + CrossSections != 0:
         LTEORNLTE = inp_df[col0.isin(['LTE/Non-LTE'])][1].values[0].upper()[0]
-        # Parse multiple temperature values
-        temp_str = inp_df[col0.isin(['Temperatures'])][1].values[0]
-        T_list = [int(temp) for temp in parse_TP_values(temp_str)]
+        method_rows = inp_df[col0.isin(['NLTEMethod'])]
+        density_nlte = (
+            LTEORNLTE == 'N'
+            and not method_rows.empty
+            and method_rows[1].values[0].upper()[0] == 'D'
+        )
+        if density_nlte:
+            T_list = []
+        else:
+            temp_str = inp_df[col0.isin(['Temperatures'])][1].values[0]
+            T_list = [int(temp) for temp in parse_TP_values(temp_str)]
         wn_wl = inp_df[col0.isin(['WnWlUnit'])][1].values[0].upper()
         wn_wl_unit = inp_df[col0.isin(['WnWlUnit'])][2].values[0].lower()
         min_wnl = float(inp_df[col0.isin(['Range'])][1].iloc[0])
@@ -573,15 +581,7 @@ def inp_para(inp_filepath):
             Tvib_list = []
             Trot_str = inp_df[col0.isin(['Trot'])][1].values[0]
             Trot_list = [int(trot) for trot in parse_TP_values(Trot_str)]
-            # Align T_list length to match Trot_list for NLTE D
-            if len(T_list) == 1 and len(Trot_list) > 1:
-                T_list = T_list * len(Trot_list)
-            elif len(T_list) > 1 and len(Trot_list) == 1:
-                Trot_list = Trot_list * len(T_list)
-            elif len(T_list) > 1 and len(Trot_list) > 1:
-                T_grid, Trot_grid = np.meshgrid(T_list, Trot_list, indexing='ij')
-                T_list = T_grid.ravel().tolist()
-                Trot_list = Trot_grid.ravel().tolist()
+            T_list = []
             LTE_NLTE = '__nvib-nlte'
         elif NLTEMethod == 'P':
             NLTEFile = inp_df[col0.isin(['NLTEMethod'])][2].values[0]
@@ -662,6 +662,16 @@ def inp_para(inp_filepath):
         broadeners = [i for i in broadeners if i is not np.nan]
         ratios = np.array(list(inp_df[col0.isin(['Ratios'])].iloc[0])[1:], dtype=float)
         ratios = ratios[~np.isnan(ratios)]
+        gamma_rows = inp_df[col0.isin(['GammaBroadening'])]
+        n_rows = inp_df[col0.isin(['NBroadening'])]
+        gamma_broadening = (
+            [float(value) for value in gamma_rows.iloc[0, 1:] if pd.notna(value)]
+            if not gamma_rows.empty else []
+        )
+        n_broadening = (
+            [float(value) for value in n_rows.iloc[0, 1:] if pd.notna(value)]
+            if not n_rows.empty else []
+        )
         profile = inp_df[col0.isin(['Profile'])][1].values[0].upper().replace('PRO','')
         # Parse multiple pressure values
         if 'DOP' not in profile and 'GAU' not in profile:
@@ -758,6 +768,8 @@ def inp_para(inp_filepath):
         gamma_hwhm_colid = 0
         broadeners = []
         ratios = np.array([])
+        gamma_broadening = []
+        n_broadening = []
         P_list = []
         wn_grid = np.linspace(0,1,1)
         profile = 'None'
@@ -976,7 +988,8 @@ def inp_para(inp_filepath):
             ncputrans, ncpufiles, chunk_size, run_mode, gpu_backend, gpu_batch_lines, gpu_batch_grid,
             ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
-            Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, T_list, P_list, wn_wl, wn_wl_unit, min_wnl, max_wnl, min_wn, max_wn, N_point, bin_size, wn_grid, 
+            Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, gamma_broadening, n_broadening,
+            T_list, P_list, wn_wl, wn_wl_unit, min_wnl, max_wnl, min_wn, max_wn, N_point, bin_size, wn_grid,
             predissocYN, photo, cutoff, threshold, UncFilter, NLTEMethod, NLTEPath, LTE_NLTE, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, 
             species_id, species_main_id, species_sub_id, abundance, mass, states_col, states_fmt,

@@ -233,12 +233,19 @@ All stick spectra parameters above, plus:
 | `PredissocXsec(Y/N)` | `predissociation` | `Y` or `N` | `True` or `False` |
 | `Broadeners` | `broadeners` | `H2 He` | `['H2', 'He']` |
 | `Ratios` | `ratios` | `0.85 0.15` | `[0.85, 0.15]` |
+| `GammaBroadening` | `gamma_broadening` | `0.06 0.03` | `[0.06, 0.03]` |
+| `NBroadening` | `n_broadening` | `0.60 0.30` | `[0.60, 0.30]` |
 | `DopplerHWHM(Y/N)` | `alpha_hwhm` | `Y 3.0` | `3.0` (or `None` for `N`) |
 | `LorentzianHWHM(Y/N)` | `gamma_hwhm` | `Y 0.5` | `0.5` (or `None` for `N`) |
 | `PlotCrossSection(Y/N)` | `plot` | `Y` | `True` or `False` |
 | `PlotCrossSectionMethod` | `plot_method` | `log` | `'log'` or `'linear'` |
 | `PlotCrossSectionWnWl` | `plot_wn_wl`, `plot_unit` | `wn cm-1` | `'WN'`, `'cm-1'` |
 | `Y-axisLimitXsec` | `limit_yaxis` | `1e-30` | `float` |
+
+`GammaBroadening` and `NBroadening` are optional, but they must be provided
+together. Their values correspond positionally to `Broadeners` and `Ratios`.
+They are used when `LorentzianHWHM(Y/N)` is `N` and the selected profile has a
+Lorentzian component.
 
 `Npoints/BinSize` uses the same unit as `WnWlUnit`. Therefore `BinSize 0.01`
 means 0.01 nm for `wl nm`, 0.01 μm for `wl um`, and 0.01 cm⁻¹ for

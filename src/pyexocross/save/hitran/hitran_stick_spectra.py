@@ -71,7 +71,10 @@ def process_hitran_stick_spectra(A, v, Ep, Epp, gp, T, Q, Tvib=None, Trot=None, 
             coef = cal_abscoefs([T], [Q], Epp, gp, A, v, abundance)[0, :]
         elif NLTEMethod == 'T':
             # Non-LTE absorption using two temperatures (Tvib, Trot)
-            coef = cal_abscoefs_nlte_2T([Tvib], [Trot], [Q], Evibpp, Erotpp, gp, A, v, abundance)[0, :]
+            coef = cal_abscoefs_nlte_2T(
+                [Tvib], [Trot], [Q], Evibp, Erotp, Evibpp, Erotpp,
+                gp, A, v, abundance
+            )[0, :]
         else:
             raise ValueError("Please choose 'LTE' or 'Non-LTE' and 'T' two temperatures (Tvib, Trot) method.")
     elif abs_emi == 'Em':

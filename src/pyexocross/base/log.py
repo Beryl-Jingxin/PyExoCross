@@ -629,7 +629,8 @@ def print_stick_info(unc_unit, threshold_unit):
         print('{:25s} : {}'.format('Non-LTE', 'Custom vibrational density nvib and Trot'))
     elif NLTEMethod == 'P':
         print('{:25s} : {}'.format('Non-LTE', 'Custom rovibrational population'))
-    print('{:25s} : {:<6} {}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
+    if NLTEMethod != 'D':
+        print('{:25s} : {:<6} {}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
     if NLTEMethod == 'T':
         print('{:25s} : {:<6} {}'.format('Vibrational temperatures', str(sorted(list(set(Tvib_list)))), 'K'))
         print('{:25s} : {:<6} {}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
@@ -767,7 +768,8 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
         print('{:25s} : {}'.format('Non-LTE', 'Custom vibrational density nvib and Trot'))
     elif NLTEMethod == 'P':
         print('{:25s} : {}'.format('Non-LTE', 'Custom rovibrational population'))
-    print('{:25s} : {:<6} {}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
+    if NLTEMethod != 'D':
+        print('{:25s} : {:<6} {}'.format('Temperatures', str(sorted(list(set(T_list)))), 'K'))
     if NLTEMethod == 'T':
         print('{:25s} : {:<6} {}'.format('Vibrational temperatures', str(sorted(list(set(Tvib_list)))), 'K'))
         print('{:25s} : {:<6} {}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
@@ -823,7 +825,7 @@ def print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, P, abs_emi, NLTEMethod, stick_x
         elif NLTEMethod == 'T':
             print(f'{stick_xsec_str} {action} for Tvib={Tvib} K, Trot={Trot} K{P_str}{file_path_str}')
         elif NLTEMethod == 'D':
-            print(f'{stick_xsec_str} {action} for T={T} K, Trot={Trot} K{P_str}{file_path_str}')
+            print(f'{stick_xsec_str} {action} for Trot={Trot} K{P_str}{file_path_str}')
         else:
             raise ValueError("Please choose one LTE or non-LTE method from: 'L', 'T', 'D' or 'P'.")
     elif abs_emi == 'Em':

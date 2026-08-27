@@ -198,10 +198,32 @@ def LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, gamma_air, gam
         profile,
     ) = _get_line_profile_config()
     if LorentzianHWHMYN == 'Y' and num > 0:
-        gamma = np.full(num, gamma_HWHM)
+        return np.full(num, gamma_HWHM)
     elif LorentzianHWHMYN == 'U':
-        gamma = gamma_HWHM
-    elif database in ('ExoMol', 'ExoAtom') and num > 0:
+        return gamma_HWHM
+    elif num > 0:
+        from pyexocross.core import gamma_broadening, n_broadening, ratios
+
+        if gamma_broadening:
+            gamma = np.zeros(num, dtype=np.float64)
+            for gamma_ref, exponent, ratio in zip(
+                gamma_broadening, n_broadening, ratios
+            ):
+                gamma += float(ratio) * Lorentzian_HWHM(
+                    np.full(num, gamma_ref, dtype=np.float64),
+                    np.full(num, exponent, dtype=np.float64),
+                    T,
+                    P,
+                )
+            if (
+                database in ('ExoMol', 'ExoAtom')
+                and predissocYN == 'Y'
+                and check_predissoc == 0
+                and 'VOI' in profile
+            ):
+                gamma += lifetime_broadening(tau)
+            return gamma
+    if database in ('ExoMol', 'ExoAtom') and num > 0:
         # gamma_L and n_air are now dictionaries with numpy arrays
         gamma_contributions = []
         for i in range(nbroad):

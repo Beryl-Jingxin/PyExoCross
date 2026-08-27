@@ -210,24 +210,24 @@ def test_cross_sections():
     print('='*70)
     px.cross_sections(
         data=data,
-        # **NLTE_PARAMS,            # If Non-LTE is enabled, this parameter is required.
-        temperatures=[296, 3000],   # Temperature in unit of K
-        pressures=[1.0],            # Pressure in unit bar (default: [1.0])
-        abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
-        threshold=1e-30,            # Threshold filter (default: None)
-        bin_size=0.1,               # Bin size for wavenumber grid 
-        profile='Gaussian',         # Line profile name (default: 'Gaussian')
-        predissociation=False,      # Predissociation (default: False)
-        cutoff=25.0,                # Cutoff distance in cm⁻¹ (default: None)
-        broadeners=['Default'],     # Broadening species (default: ['Default'])
-        ratios=[1.0],               # Broadening ratios (default: [1.0])
-        alpha_hwhm=3,               # Constant Doppler HWHM (None, will calculate from broadening) 
-        gamma_hwhm=None,            # Constant Lorentzian HWHM (None, will calculate from broadening)
-        plot=True,                  # Whether to plot results (default: False)
-        plot_method='log',          # Plot in linear (lin) or logarithm (log) (default: 'log')
-        plot_wn_wl='WN',            # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
-        plot_unit='cm-1',           # Unit for plotting axis (default: cm⁻¹)
-        limit_yaxis=1e-30,          # Lower limit for y-axis (default: 1e-30 cm²/molecule)
+        # **NLTE_PARAMS,                # If Non-LTE is enabled, this parameter is required.
+        temperatures=[296, 3000],       # Temperature in unit of K
+        pressures=[1.0],                # Pressure in unit bar (default: [1.0])
+        abs_emi='Ab',                   # Absorption or emission (default: 'Absorption')
+        threshold=1e-30,                # Threshold filter (default: None)
+        bin_size=0.1,                   # Bin size for wavenumber grid
+        profile='Gaussian',             # Line profile name (default: 'Gaussian')
+        predissociation=False,          # Predissociation (default: False)
+        cutoff=25.0,                    # Cutoff distance in cm⁻¹ (default: None)
+        broadeners=['H2', 'He'],        # Broadening species (default: ['Default'])
+        ratios=[0.85, 0.15],            # Ratios of broadening species (default: [1.0])
+        gamma_broadening=[0.06, 0.03],  # Lorentzian HWHM (default: None)
+        n_broadening=[0.60, 0.30],      # n exponent for temperature-dependent HWHM (default: None)
+        plot=True,                      # Whether to plot results (default: False)
+        plot_method='log',              # Plot in linear (lin) or logarithm (log) (default: 'log')
+        plot_wn_wl='WN',                # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
+        plot_unit='cm-1',               # Unit for plotting axis (default: cm⁻¹)
+        limit_yaxis=1e-30,              # Lower limit for y-axis (default: 1e-30 cm²/molecule)
     )
     print('PASSED: cross_sections()')
     
@@ -274,14 +274,14 @@ if __name__ == '__main__':
     print(f'pyexocross version: {px.__version__}')
 
     tests = [
-        test_download,
-        test_conversion,
-        test_partition_functions,
-        test_specific_heats,
-        test_cooling_functions,
-        test_lifetimes,
-        test_oscillator_strengths,
-        test_stick_spectra,
+        # test_download,
+        # test_conversion,
+        # test_partition_functions,
+        # test_specific_heats,
+        # test_cooling_functions,
+        # test_lifetimes,
+        # test_oscillator_strengths,
+        # test_stick_spectra,
         test_cross_sections,
         test_stick_spectra_cross_section,
     ]

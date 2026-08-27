@@ -62,11 +62,12 @@ def cal_abscoefs(T_list, Q_list, Epp, gp, A, v, abundance):
     return abscoef_arr
 
 # Calculate non-LTE absorption coefficient with two temperatures
-def cal_abscoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp, A, v, abundance):
+def cal_abscoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibp, Erotp, Evibpp, Erotpp, gp, A, v, abundance):
     """
     Calculate the non-LTE absorption intensity for multiple (Tvib, Trot) temperature pairs.
 
-    abscoef_nlte =  ne.evaluate('gp * A * exp(- c2 * Evibpp / Tvib) * exp(- c2 * Erotpp / Trot) * (1 - exp(- c2 * v / Tvib)) / (8 * pi * c * v^2 * Q_nlte) * abundance')  
+    The stimulated-emission correction uses the vibrational and rotational
+    transition-energy contributions at their respective temperatures.
     
 
     Parameters
@@ -77,6 +78,10 @@ def cal_abscoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp, A,
         Rotational temperature list, shape (n_temps,)
     Qnlte_arr : np.ndarray
         Partition function array, shape (n_temps,)
+    Evibp : np.ndarray
+        Upper-state vibrational energy array, shape (n_levels,)
+    Erotp : np.ndarray
+        Upper-state rotational energy array, shape (n_levels,)
     Evibpp : np.ndarray
         Lower state vibrational energy array, shape (n_levels,)
     Erotpp : np.ndarray
@@ -97,7 +102,8 @@ def cal_abscoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp, A,
     """
     if using_gpu():
         gpu_result = gpu_cal_abscoefs_nlte_2T(
-            Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp, A, v, abundance
+            Tvib_list, Trot_list, Qnlte_arr, Evibp, Erotp, Evibpp, Erotpp,
+            gp, A, v, abundance
         )
         if gpu_result is not None:
             return gpu_result
@@ -105,27 +111,34 @@ def cal_abscoefs_nlte_2T(Tvib_list, Trot_list, Qnlte_arr, Evibpp, Erotpp, gp, A,
     # Ensure numpy arrays
     Tvib_arr = np.asarray(Tvib_list)[:, None]  
     Trot_arr = np.asarray(Trot_list)[:, None]  
+    Evibp_arr = np.asarray(Evibp)[None, :]
+    Erotp_arr = np.asarray(Erotp)[None, :]
     Evibpp_arr = np.asarray(Evibpp)[None, :]
     Erotpp_arr = np.asarray(Erotpp)[None, :]
     gp_arr  = np.asarray(gp)[None, :]
     A_arr   = np.asarray(A)[None, :]
     v_arr   = np.asarray(v)[None, :]   
     absconst_nlte = ne.evaluate('gp_arr * A_arr * Inv8Pic / (v_arr ** 2) * abundance') 
-    exponent = ne.evaluate('-c2 * (Evibpp_arr / Tvib_arr + Erotpp_arr / Trot_arr)')
-    abscoef_nlte_arr = ne.evaluate('exp(exponent) * (1 - exp(- c2 * v_arr / Tvib_arr)) / Qnlte_arr * absconst_nlte')
+    lower_exponent = ne.evaluate('-c2 * (Evibpp_arr / Tvib_arr + Erotpp_arr / Trot_arr)')
+    transition_exponent = ne.evaluate(
+        '-c2 * ((Evibp_arr - Evibpp_arr) / Tvib_arr + (Erotp_arr - Erotpp_arr) / Trot_arr)'
+    )
+    stimulated_correction = -np.expm1(transition_exponent)
+    abscoef_nlte_arr = ne.evaluate(
+        'exp(lower_exponent) * stimulated_correction / Qnlte_arr * absconst_nlte'
+    )
     return abscoef_nlte_arr
 
 # Calculate non-LTE absorption coefficient with density
-def cal_abscoefs_nlte_nvib(T_list, Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v, abundance):
+def cal_abscoefs_nlte_nvib(Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v, abundance):
     """
     Calculate the non-LTE absorption intensity with vibrational density for multiple Trot.
 
-    abscoef_nlte = ne.evaluate('gp * A * nvib * exp(- c2 * Erotpp / Trot) * (1 - exp(- c2 * v / T)) / (8 * pi * c * v^2 * Q_nlte) * abundance')
+    Both the rotational population and stimulated-emission correction use
+    ``Trot``. No separate temperature is required.
 
     Parameters
     ----------
-    T_list : sequence of float
-        Temperature list, shape (n_temps,)
     Trot_list : sequence of float
         Rotational temperature list, shape (n_temps,)
     Qnlte_arr : np.ndarray
@@ -150,13 +163,12 @@ def cal_abscoefs_nlte_nvib(T_list, Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v,
     """
     if using_gpu():
         gpu_result = gpu_cal_abscoefs_nlte_nvib(
-            T_list, Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v, abundance
+            Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v, abundance
         )
         if gpu_result is not None:
             return gpu_result
 
     # Ensure numpy arrays
-    T_arr = np.asarray(T_list)[:, None]  
     Trot_arr = np.asarray(Trot_list)[:, None]  
     nvib_arr = np.asarray(nvib)[None, :]
     Erotpp_arr = np.asarray(Erotpp)[None, :]
@@ -165,7 +177,7 @@ def cal_abscoefs_nlte_nvib(T_list, Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v,
     v_arr   = np.asarray(v)[None, :]   
     absconst_nlte = ne.evaluate('gp_arr * A_arr * Inv8Pic / (v_arr ** 2) * nvib_arr * abundance') 
     exponent = ne.evaluate('-c2 * (Erotpp_arr / Trot_arr)')
-    abscoef_nlte_arr = ne.evaluate('exp(exponent) * (1 - exp(- c2 * v_arr / T_arr)) / Qnlte_arr * absconst_nlte')
+    abscoef_nlte_arr = ne.evaluate('exp(exponent) * (1 - exp(- c2 * v_arr / Trot_arr)) / Qnlte_arr * absconst_nlte')
     return abscoef_nlte_arr
 
 ### Using custom population

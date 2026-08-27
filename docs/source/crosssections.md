@@ -75,7 +75,9 @@ $$N_\textrm{Total} = N_T \times N_P$$
 
 If you want to use the default values of the broadeners, please set the `Ratios` of `Broadeners` under `Default` as `1.0`.
 
-The broadening types and ratio values are corresponding, please write them in order.
+`Broadeners` and `Ratios` correspond by position. Ratios are partial-pressure
+fractions used as multiplicative weights. They normally sum to 1.0 when the
+listed broadeners represent the complete gas mixture.
 
 ***Note*** 
 
@@ -105,6 +107,32 @@ Ratios                                  0.7      0.3
 Broadeners                              H2       He   
 Ratios                                  0.9      0.1   
 ```
+
+Custom reference Lorentzian HWHM coefficients and temperature exponents can be
+supplied for any broadener name. These values replace database broadening
+parameters for ExoMol, ExoAtom, ExoMolHR, HITRAN, and HITEMP. All four rows
+must contain the same number of values.
+
+```bash
+Broadeners                              H2       He
+Ratios                                  0.85     0.15
+GammaBroadening                         0.06     0.03
+NBroadening                             0.60     0.30
+```
+
+`GammaBroadening` is $\gamma_0$ in cm$^{-1}$ bar$^{-1}$ at 296 K and 1 bar.
+`NBroadening` is the dimensionless temperature exponent. Each contribution is
+
+$$
+\gamma_i(T,P)=x_i\gamma_{0,i}
+\left(\frac{296\ \mathrm{K}}{T}\right)^{n_i}
+\frac{P}{1\ \mathrm{bar}},
+$$
+
+and the total Lorentzian HWHM is $\sum_i\gamma_i$. Use a Lorentzian or Voigt
+profile and set `LorentzianHWHM(Y/N)` to `N`. A `Y` value supplies a final
+constant HWHM and therefore takes priority over database or custom broadening
+parameters. Doppler and Gaussian profiles do not use pressure broadening.
 
 ## Line profiles
 

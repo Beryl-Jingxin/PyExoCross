@@ -1,12 +1,15 @@
 # Non-LTE
 
-`NLTEMethod`: 
+`NLTEMethod` selects the population model:
 
-`T`: Treanor distribution using two different temperatures `Tvib` and `Trot`. 
+`T`: two-temperature distribution using `Tvib` and `Trot`.
 
-`D`: Vibronic distribution using `Trot` and custom vibrational density $n_{\textrm{vib}}$. After `D`, please give the custom vibrational density file path. Ignore `Tvib`.
+`D`: custom vibrational density $n_{\textrm{vib}}$ with a rotational
+temperature `Trot`. Give the density-file path after `D`. `Temperatures` and
+`Tvib` are not used.
 
-`P`: Using custom rovibrational population. After `P`, please give the custom rovibrational population file path.  Ignore `Tvib` and `Trot`.
+`P`: custom rovibrational populations. Give the population-file path after
+`P`. `Tvib` and `Trot` are not used.
 
 ``QNsVibLabel``: Please provide vibrational quantum number labels seperated by ``,``.
 
@@ -14,11 +17,11 @@
 
 For ExoMol and ExoAtom input, these labels use the metadata-derived short names, for example `Herzberg:n1` should be written as `n1`. The `QNslabel` and `QNsformat` rows in examples are optional overrides for custom or legacy files.
 
-## Temperatures
+## Two-temperature grids
 
-``Tvib``: Please provide vibrational temperatures in unit of K.
+`Tvib`: vibrational temperatures in K.
 
-``Trot``: Please provide rotational temperatures in unit of K.
+`Trot`: rotational temperatures in K.
 
 | `Tvib` and `Trot`  |          | T = ?                                  |
 | :----------------- | -------- | -------------------------------------- |
@@ -53,11 +56,18 @@ $$
 $$
 
 
-The intensity equation is:
+For absorption, define the vibrational and rotational transition energies as
+$\Delta\tilde{E}_{\textrm{vib}}=\tilde{E}'_{\textrm{vib}}-\tilde{E}''_{\textrm{vib}}$
+and
+$\Delta\tilde{E}_{\textrm{rot}}=\tilde{E}'_{\textrm{rot}}-\tilde{E}''_{\textrm{rot}}$.
+The intensity is:
 
 $$
-    I(f \gets i) = \frac{g'{A}_{fi}}{8 \pi c \tilde{v}^2_{fi}} 
-    \frac{e^{-c_2 \tilde{E}_{\textrm{rot}}'' / T_{\textrm{rot}}} e^{-c_2 \tilde{E}_{\textrm{vib}}'' / T_{\textrm{vib}}} (1 - e^{-c_2 \tilde{v}_{fi} / T_{\textrm{vib}} })}{Q(T)}.
+    I(f \gets i) = \frac{g'{A}_{fi}}{8 \pi c \tilde{v}^2_{fi}}
+    \frac{e^{-c_2(\tilde{E}_{\textrm{vib}}''/T_{\textrm{vib}}
+    +\tilde{E}_{\textrm{rot}}''/T_{\textrm{rot}})}}{Q(T)}
+    \left[1-e^{-c_2(\Delta\tilde{E}_{\textrm{vib}}/T_{\textrm{vib}}
+    +\Delta\tilde{E}_{\textrm{rot}}/T_{\textrm{rot}})}\right].
 $$
 
 The emissivity equation is:
@@ -66,6 +76,36 @@ $$
     \varepsilon (i \gets f) = \frac{g'{A}_{fi}hc}{4 \pi} 
     \frac{e^{-c_2 \tilde{E}_{\textrm{rot}}' / T_{\textrm{rot}}} e^{-c_2 \tilde{E}_{\textrm{vib}}' / T_{\textrm{vib}}}}{Q(T)}.
 $$
+
+## Pressure broadening for non-LTE cross sections
+
+The population model and pressure-broadening model are independent. Methods
+`T`, `D`, and `P` use the same broadening inputs as LTE cross sections. For
+example, fixed reference parameters for an H$_2$/He mixture can be supplied as:
+
+```bash
+Broadeners                              H2       He
+Ratios                                  0.85     0.15
+GammaBroadening                         0.06     0.03
+NBroadening                             0.60     0.30
+Profile                                 SciPyVoigt
+LorentzianHWHM(Y/N)                     N          0.5
+```
+
+The four lists correspond by position. `GammaBroadening` is the reference
+Lorentzian HWHM coefficient in cm$^{-1}$ bar$^{-1}$ at 296 K;
+`NBroadening` is dimensionless. For each spectrum condition, PyExoCross uses
+the active profile temperature and pressure to evaluate
+
+$$
+\gamma(T,P)=\sum_i x_i\gamma_{0,i}
+\left(\frac{296\ \mathrm{K}}{T}\right)^{n_i}
+\frac{P}{1\ \mathrm{bar}}.
+$$
+
+For method `T`, the profile temperature is `Trot`. Method `D` also uses
+`Trot`. Custom broadening is ignored by Doppler and Gaussian profiles. Setting
+`LorentzianHWHM(Y/N)` to `Y` supplies a final constant HWHM and takes priority.
 
 *Example*
 
@@ -301,13 +341,13 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 # Calculate cross sections #
 Pressures                               1                         # Pressures in unit bar
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
-Broadeners                              Air        Self 
-Ratios                                  0.7        0.3     
+Broadeners                              Air        Self
+Ratios                                  0.7        0.3
 Profile                                 SciPyVoigt        
 PredissocXsec(Y/N)                      N
 Cutoff(Y/N)                             Y          25             # If Y, default value 25 cm-1
 DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant
-LorentzianHWHM(Y/N)                     Y          0.5            # Set Lorentzian HWHM as a constant
+LorentzianHWHM(Y/N)                     N          0.5            # Calculate pressure-dependent Lorentzian HWHM
 PlotCrossSection(Y/N)                   Y
 PlotCrossSectionMethod                  log                       # Plot in linear (lin) or logarithm (log)
 PlotCrossSectionWnWl                    wn         cm-1           # Wavenumber (wn in unit cm-1) or wavelength (wl in unit[nm or um])
@@ -321,6 +361,17 @@ The sum of the custom vibrational density $n_{\textrm{vib}}$ is normalized to on
 $$
     \sum_i n_i^{\textrm{vib}} = 1
 $$
+
+For absorption, the rotational population and stimulated-emission correction
+both use `Trot`:
+
+$$
+    I(f \gets i) = \frac{g'{A}_{fi}}{8\pi c\tilde{v}_{fi}^{2}}
+    \frac{n_{\textrm{vib}}''e^{-c_2\tilde{E}_{\textrm{rot}}''/T_{\textrm{rot}}}}{Q}
+    \left(1-e^{-c_2\tilde{v}_{fi}/T_{\textrm{rot}}}\right).
+$$
+
+Only `Trot` determines the temperature grid in method `D`.
 
 *Example*
 
@@ -365,7 +416,6 @@ QNsformat                               %50s              %30s         %2s
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # LTE or Non-LTE
-Temperatures                            2000                      # Temperatures in unit of K
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   8000       15500          # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
@@ -376,7 +426,6 @@ QNsFilter(Y/N)                          Y          configuration[]     Multiple[
 
 # Calculate non-LTE #
 NLTEMethod                              D           /home/jingxin/data/NLTE/Ar/NIST/Ar_density.csv     # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
-Tvib                                    2000
 Trot                                    296
 QNsVibLabel                             nan
 QNsRotLabel                             nan       
@@ -406,6 +455,10 @@ Y-axisLimitXsec                         1e-30                     # Default valu
 ```
 
 ## Custom rovibrational population
+
+Method `P` reads the supplied state populations directly. `Temperatures` is
+retained for the requested spectrum conditions, while `Tvib` and `Trot` are
+not used by the population model.
 
 *Example*
 
@@ -461,8 +514,6 @@ QNsFilter(Y/N)                          Y          configuration[]     Multiple[
 
 # Calculate non-LTE #
 NLTEMethod                              P           /home/jingxin/data/NLTE/Ar/NIST/Ar_Ids.csv     # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
-Tvib                                    2000
-Trot                                    296
 QNsVibLabel                             nan
 QNsRotLabel                             nan
 

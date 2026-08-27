@@ -314,7 +314,7 @@ def process_hitran_linelist_Q(hitran_linelist_df, T_list, Tvib_list, Trot_list):
         - Evibpp : np.ndarray or None, lower state vibrational energies
         - Erotpp : np.ndarray or None, lower state rotational energies
     """
-    from pyexocross.core import NLTEMethod, vib_label, rot_label, abs_emi
+    from pyexocross.core import NLTEMethod, vib_label, rot_label
     # Extract line data ONCE
     A, v, Ep, Epp, gp, n_air, gamma_air, gamma_self, delta_air = process_hitran_linelist(hitran_linelist_df)
 
@@ -331,82 +331,40 @@ def process_hitran_linelist_Q(hitran_linelist_df, T_list, Tvib_list, Trot_list):
         if len(vib_label) == 0 or len(rot_label) == 0:
             raise ValueError("vib_label and rot_label must be specified for non-LTE calculations with NLTEMethod='T'")
         
-        # Extract Evib and Erot using ExoMol approach (similar to lines 2536-2547)
-        # For HITRAN, we need to handle both upper and lower states separately
-        
-        # Collect all unique states (both upper and lower) for Qnlte calculation
-        all_states_list = []
-        
-        # Process upper states
-        if all(col in hitran_linelist_df.columns for col in [v + "'" for v in vib_label] + [r + "'" for r in rot_label] + ["E'", "g'"]):
-            vib_cols_p = [v + "'" for v in vib_label]
-            rot_cols_p = [r + "'" for r in rot_label]
-            # Get unique upper states
-            upper_states_df = hitran_linelist_df[vib_cols_p + rot_cols_p + ["E'", "g'"]].drop_duplicates()
-            # Find minimum energy for each vibrational level (ExoMol approach: groupby vib_label, find min E)
-            min_rot_energy_upper = upper_states_df.groupby(vib_cols_p)["E'"].min()
-            # Calculate Evib and Erot for upper states
-            def get_evib_upper(row):
-                key = tuple(row[vib_cols_p].values) if len(vib_cols_p) > 1 else row[vib_cols_p[0]]
-                return min_rot_energy_upper[key]
-            upper_states_df['Evib'] = upper_states_df.apply(get_evib_upper, axis=1)
-            upper_states_df['Erot'] = upper_states_df["E'"] - upper_states_df['Evib']
-            all_states_list.append(upper_states_df[['Evib', 'Erot', "g'"]].rename(columns={"g'": 'g'}))
-            
-            # Map Evib and Erot back to transitions for upper states
-            if abs_emi == 'Em':
-                def get_evib_trans_upper(row):
-                    key = tuple(row[vib_cols_p].values) if len(vib_cols_p) > 1 else row[vib_cols_p[0]]
-                    return min_rot_energy_upper[key]
-                Evibp = hitran_linelist_df.apply(get_evib_trans_upper, axis=1).values
-                Erotp = Ep - Evibp
-            else:
-                Evibp = None
-                Erotp = None
-        else:
-            Evibp = None
-            Erotp = None
-        
-        # Process lower states
-        if all(col in hitran_linelist_df.columns for col in [v + '"' for v in vib_label] + [r + '"' for r in rot_label] + ['E"', 'g"']):
-            vib_cols_pp = [v + '"' for v in vib_label]
-            rot_cols_pp = [r + '"' for r in rot_label]
-            # Get unique lower states
-            lower_states_df = hitran_linelist_df[vib_cols_pp + rot_cols_pp + ['E"', 'g"']].drop_duplicates()
-            # Find minimum energy for each vibrational level (ExoMol approach)
-            min_rot_energy_lower = lower_states_df.groupby(vib_cols_pp)['E"'].min()
-            # Calculate Evib and Erot for lower states
-            def get_evib_lower(row):
-                key = tuple(row[vib_cols_pp].values) if len(vib_cols_pp) > 1 else row[vib_cols_pp[0]]
-                return min_rot_energy_lower[key]
-            lower_states_df['Evib'] = lower_states_df.apply(get_evib_lower, axis=1)
-            lower_states_df['Erot'] = lower_states_df['E"'] - lower_states_df['Evib']
-            all_states_list.append(lower_states_df[['Evib', 'Erot', 'g"']].rename(columns={'g"': 'g'}))
-            
-            # Map Evib and Erot back to transitions for lower states
-            if abs_emi == 'Ab':
-                def get_evib_trans_lower(row):
-                    key = tuple(row[vib_cols_pp].values) if len(vib_cols_pp) > 1 else row[vib_cols_pp[0]]
-                    return min_rot_energy_lower[key]
-                Evibpp = hitran_linelist_df.apply(get_evib_trans_lower, axis=1).values
-                Erotpp = Epp - Evibpp
-            else:
-                Evibpp = None
-                Erotpp = None
-        else:
-            Evibpp = None
-            Erotpp = None
-        
-        # Combine all unique states for Qnlte calculation
-        if len(all_states_list) > 0:
-            all_states_df = pd.concat(all_states_list, ignore_index=True)
-            all_states_Evib = all_states_df['Evib'].values
-            all_states_Erot = all_states_df['Erot'].values
-            all_states_g = all_states_df['g'].values
-            # Calculate NLTE partition function (unified Q_arr)
-            Q_arr = cal_Q_nlte_2T(Tvib_list, Trot_list, all_states_Evib, all_states_Erot, all_states_g)
-        else:
-            raise ValueError("Could not extract unique states for NLTE partition function calculation")
+        vib_cols_p = [label + "'" for label in vib_label]
+        rot_cols_p = [label + "'" for label in rot_label]
+        vib_cols_pp = [label + '"' for label in vib_label]
+        rot_cols_pp = [label + '"' for label in rot_label]
+        required = vib_cols_p + rot_cols_p + ["E'", "g'"] + vib_cols_pp + rot_cols_pp + ['E"', 'g"']
+        missing = [column for column in required if column not in hitran_linelist_df.columns]
+        if missing:
+            raise ValueError(f"Missing HITRAN state columns for two-temperature non-LTE: {missing}")
+
+        upper_states_df = hitran_linelist_df[vib_cols_p + rot_cols_p + ["E'", "g'"]].drop_duplicates()
+        lower_states_df = hitran_linelist_df[vib_cols_pp + rot_cols_pp + ['E"', 'g"']].drop_duplicates()
+        canonical_cols = vib_label + rot_label + ['E', 'g']
+        upper_states_df.columns = canonical_cols
+        lower_states_df.columns = canonical_cols
+        all_states_df = pd.concat([upper_states_df, lower_states_df], ignore_index=True).drop_duplicates()
+        min_vib_energy = all_states_df.groupby(vib_label)['E'].min()
+
+        def get_evib(row, columns):
+            key = tuple(row[columns].values) if len(columns) > 1 else row[columns[0]]
+            return min_vib_energy[key]
+
+        Evibp = hitran_linelist_df.apply(get_evib, columns=vib_cols_p, axis=1).values
+        Erotp = Ep - Evibp
+        Evibpp = hitran_linelist_df.apply(get_evib, columns=vib_cols_pp, axis=1).values
+        Erotpp = Epp - Evibpp
+        all_states_df['Evib'] = all_states_df.apply(get_evib, columns=vib_label, axis=1)
+        all_states_df['Erot'] = all_states_df['E'] - all_states_df['Evib']
+        Q_arr = cal_Q_nlte_2T(
+            Tvib_list,
+            Trot_list,
+            all_states_df['Evib'].values,
+            all_states_df['Erot'].values,
+            all_states_df['g'].values,
+        )
     else:
         raise ValueError("Please choose: 'LTE' or 'Non-LTE' and 'T' two temperatures (Tvib, Trot) method.")
     

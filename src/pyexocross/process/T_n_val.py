@@ -20,7 +20,6 @@ def get_ntemp(NLTEMethod, T_list, Trot_list):
     int
         Number of iterations (temperature indices).
     """
-    from pyexocross.core import abs_emi
     if NLTEMethod == 'L':
         return len(T_list)
     if NLTEMethod in ('T', 'D'):
@@ -54,7 +53,6 @@ def get_temp_vals(temp_idx, NLTEMethod, T_list, Tvib_list, Trot_list):
     tuple of (float or None, float or None, float or None)
         (T, Tvib, Trot). Unused entries are None.
     """
-    from pyexocross.core import abs_emi
     if NLTEMethod == 'L':
         T = T_list[temp_idx] if temp_idx < len(T_list) else None
         return (T, None, None)
@@ -64,9 +62,8 @@ def get_temp_vals(temp_idx, NLTEMethod, T_list, Tvib_list, Trot_list):
         T = Trot
         return (T, Tvib, Trot)
     if NLTEMethod == 'D':
-        T = T_list[temp_idx] if temp_idx < len(T_list) else None
         Trot = Trot_list[temp_idx] if temp_idx < len(Trot_list) else None
-        return (T, None, Trot)
+        return (None, None, Trot)
     if NLTEMethod == 'P':
         T = T_list[temp_idx] if temp_idx < len(T_list) else (T_list[0] if T_list else None)
         return (T, None, None)

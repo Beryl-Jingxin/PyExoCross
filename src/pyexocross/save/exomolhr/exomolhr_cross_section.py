@@ -110,11 +110,11 @@ def process_exomolhr_cross_section_chunk(exomolhr_df, T, P, Q, profile_label,
         for i in range(nbroad):
             if broad[i] == 'Default':
                 gamma_L[i] = np.full(num, float(broad_dfs[i]['gamma_L'][0]), dtype=np.float64) * ratio[i]
-                n_air[i] = np.full(num, float(broad_dfs[i]['n_air'][0]), dtype=np.float64) * ratio[i]
+                n_air[i] = np.full(num, float(broad_dfs[i]['n_air'][0]), dtype=np.float64)
             else:
                 broad_gamma, broad_nair = extract_broad(broad_dfs[i], ll_df)
                 gamma_L[i] = np.asarray(broad_gamma, dtype=np.float64) * ratio[i]
-                n_air[i] = np.asarray(broad_nair, dtype=np.float64) * ratio[i]
+                n_air[i] = np.asarray(broad_nair, dtype=np.float64)
         gamma = LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, [], [], [], T, P)
     else:
         gamma = np.array([])

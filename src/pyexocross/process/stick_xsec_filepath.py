@@ -4,8 +4,8 @@ def temperature_string_base(T, Tvib, Trot, NLTEMethod):
     """
     if NLTEMethod == 'T' and Tvib is not None and Trot is not None:
         return f'Tvib{Tvib}K__Trot{Trot}K'
-    elif NLTEMethod == 'D' and T is not None and Trot is not None:
-        return f'T{T}K__Trot{Trot}K'
+    elif NLTEMethod == 'D' and Trot is not None:
+        return f'Trot{Trot}K'
     else:
         # L or P (or fallback)
         T_val = T if T is not None else 0
@@ -21,7 +21,7 @@ def temperature_pressure_string(T, P, temp_idx, NLTEMethod,
     - Uses the same temperature form as stick spectra:
       * LTE / P:      T{T}K
       * Non-LTE T:    Tvib{Tvib}K__Trot{Trot}K
-      * Non-LTE D:    T{T}K__Trot{Trot}K
+      * Non-LTE D:    Trot{Trot}K
     - Always uses the actual T / P for this file (no ranges).
     """
     # Temperature part
@@ -29,6 +29,9 @@ def temperature_pressure_string(T, P, temp_idx, NLTEMethod,
         Tvib_val = Tvib_list[temp_idx]
         Trot_val = Trot_list[temp_idx]
         T_str = temperature_string_base(T=None, Tvib=Tvib_val, Trot=Trot_val, NLTEMethod='T')
+    elif NLTEMethod == 'D' and temp_idx is not None and Trot_list is not None:
+        Trot_val = Trot_list[temp_idx]
+        T_str = temperature_string_base(T=None, Tvib=None, Trot=Trot_val, NLTEMethod='D')
     else:
         T_str = temperature_string_base(T=T, Tvib=None, Trot=None, NLTEMethod=NLTEMethod)
 

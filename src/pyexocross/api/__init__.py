@@ -729,7 +729,8 @@ def stick_spectra(inp_filepath=None, **kwargs):
         species_id : int, optional
             Required for HITRAN/HITEMP.
         temperatures : list of float, optional
-            Temperature(s) in K (default: [1000]).
+            Temperature(s) in K (default: [1000]). Not used by density NLTE;
+            provide ``trot_list`` instead.
         nlte_method : str, optional
             'L' for LTE (default), 'T' for two-temperature NLTE,
             'D' for density NLTE, 'P' for population NLTE.
@@ -851,6 +852,12 @@ def cross_sections(inp_filepath=None, **kwargs):
             Broadening species (default: ['Default']).
         ratios : list of float, optional
             Broadening ratios (default: [1.0]).
+        gamma_broadening : float or list of float, optional
+            Custom reference Lorentzian HWHM coefficients in cm-1 bar-1,
+            one per broadener. Must be supplied with ``n_broadening``.
+        n_broadening : float or list of float, optional
+            Custom temperature exponents, one per broadener. Must be supplied
+            with ``gamma_broadening``.
         predissociation : bool, optional
             ``True`` to include predissociation (default: ``False``).
         alpha_hwhm : float or None, optional

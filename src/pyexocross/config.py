@@ -250,6 +250,13 @@ class Config:
         # Broadening
         self.broadeners = kwargs.get('broadeners', getattr(self, 'broadeners', ['Default']))
         self.ratios = kwargs.get('ratios', getattr(self, 'ratios', [1.0]))
+        self.gamma_broadening = kwargs.get(
+            'gamma_broadening', getattr(self, 'gamma_broadening', [])
+        )
+        self.n_broadening = kwargs.get(
+            'n_broadening', getattr(self, 'n_broadening', [])
+        )
+        self._validate_broadening()
         
         # Set data_info based on database
         if self.database == 'ExoAtom':
@@ -306,20 +313,13 @@ class Config:
                 self.trot_list = grid_r.ravel().tolist()
             self.lte_nlte = '__2T-nlte'
         elif self.nlte_method == 'D':
-            # Density NLTE: align T_list x Trot_list; requires nlte_path
+            # Density NLTE uses only user-supplied vibrational weights and Trot.
             if not self.nlte_path:
                 raise ValueError("nlte_path is required for NLTE method 'D'")
             self.vib_label = []
             self.rot_label = []
             self.tvib_list = []
-            if len(self.T_list) == 1 and len(self.trot_list) > 1:
-                self.T_list = self.T_list * len(self.trot_list)
-            elif len(self.T_list) > 1 and len(self.trot_list) == 1:
-                self.trot_list = self.trot_list * len(self.T_list)
-            elif len(self.T_list) > 1 and len(self.trot_list) > 1:
-                grid_t, grid_r = np.meshgrid(self.T_list, self.trot_list, indexing='ij')
-                self.T_list = grid_t.ravel().tolist()
-                self.trot_list = grid_r.ravel().tolist()
+            self.T_list = []
             self.lte_nlte = '__nvib-nlte'
         elif self.nlte_method == 'P':
             # Population NLTE: requires nlte_path; no extra temperature lists
@@ -574,6 +574,10 @@ class Config:
             params = list(params)
             params[17:17] = ['AUTO']
             params = tuple(params)
+        if len(params) == 98:
+            params = list(params)
+            params[35:35] = [[], []]
+            params = tuple(params)
 
         # Unpack all parameters (matching inp_para return structure)
         (self.database, self.data_info, self.read_path, self.save_path, self.logs_path,
@@ -586,7 +590,8 @@ class Config:
          self.global_qn_label_list, self.global_qn_format_list,
          self.local_qn_label_list, self.local_qn_format_list,
          self.ntemp, self.tmax, self.compress_yn, self.gf_or_f,
-         self.broadeners, self.ratios, self.T_list, self.P_list,
+         self.broadeners, self.ratios, self.gamma_broadening, self.n_broadening,
+         self.T_list, self.P_list,
          self.wn_wl, self.wn_wl_unit, self.min_wnl, self.max_wnl,
          self.min_wn, self.max_wn, self.N_point, self.bin_size, self.wn_grid,
          self.predissoc_yn, self.photo, self.cutoff, self.threshold, self.unc_filter,
@@ -606,6 +611,7 @@ class Config:
          self.tvib_list, self.trot_list, self.vib_label, self.rot_label,
          self.plot_cross_section_yn, self.plot_cross_section_method,
          self.plot_cross_section_wn_wl, self.plot_cross_section_unit, self.limit_yaxis_xsec) = params
+        self._validate_broadening()
         self.device = self.run_mode
         self.cache = 'auto'
         self.cache_dir = None
@@ -663,6 +669,8 @@ class Config:
             'gf_or_f': 'gfORf',
             'broadeners': 'broadeners',
             'ratios': 'ratios',
+            'gamma_broadening': 'gamma_broadening',
+            'n_broadening': 'n_broadening',
             'T_list': 'T_list',
             'P_list': 'P_list',
             'wn_wl': 'wn_wl',
@@ -810,6 +818,8 @@ class Config:
             'gf_or_f': 'gfORf',
             'broadeners': 'broadeners',
             'ratios': 'ratios',
+            'gamma_broadening': 'gamma_broadening',
+            'n_broadening': 'n_broadening',
             'T_list': 'T_list',
             'P_list': 'P_list',
             'wn_wl': 'wn_wl',
@@ -875,3 +885,31 @@ class Config:
             'limit_yaxis_xsec': 'limitYaxisXsec',
         }
         return name_map.get(key, key)
+
+    def _validate_broadening(self):
+        """Validate custom pressure-broadening parameters."""
+        def as_list(value):
+            if value is None:
+                return []
+            if np.isscalar(value):
+                return [value]
+            return list(value)
+
+        self.broadeners = list(self.broadeners)
+        self.ratios = [float(value) for value in self.ratios]
+        gamma = as_list(self.gamma_broadening)
+        exponent = as_list(self.n_broadening)
+        if bool(gamma) != bool(exponent):
+            raise ValueError(
+                "gamma_broadening and n_broadening must be provided together."
+            )
+        expected = len(self.broadeners)
+        if len(self.ratios) != expected:
+            raise ValueError("broadeners and ratios must have the same length.")
+        if gamma and (len(gamma) != expected or len(exponent) != expected):
+            raise ValueError(
+                "broadeners, ratios, gamma_broadening, and n_broadening "
+                "must have the same length."
+            )
+        self.gamma_broadening = [float(value) for value in gamma]
+        self.n_broadening = [float(value) for value in exponent]
