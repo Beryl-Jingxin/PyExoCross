@@ -89,19 +89,33 @@ class Result:
     def help(self):
         """Print the public fields and selection syntax for this result."""
         print(
-            'Result fields:\n'
-            '  result.data        calculated arrays grouped by condition\n'
-            '  result.coords      coordinate grids\n'
-            '  result.units       units for coordinates and data\n'
+            f'{self.kind} result\n\n'
+            'Inspect:\n'
+            '  result.data        mapping: Condition -> calculated array/table\n'
+            '  result.coords      coordinate arrays; mappings when grids differ\n'
+            '  result.units       coordinate and data units\n'
             '  result.conditions  available T, P, Tvib and Trot combinations\n'
-            '  result.params      resolved parameters for this calculation\n'
+            '  result.params      resolved parameters relevant to this calculation\n'
             '  result.timing      load, prepare, calculate, save and total times\n'
-            '  result.select(...) select an array by conditions\n'
-            '  result.summary()   print a result summary'
+            '  result.summary()   print the complete summary\n\n'
+            'Select:\n'
+            '  result.select(...)              return one matching array/table\n'
+            '  result.select(..., squeeze=False) return all matches as a mapping'
+        )
+        print(
+            '\nParameters:\n'
+            '  print(result.params)             print relevant resolved parameters\n'
+            '  result.params["profile"]         read one parameter\n'
+            '  result.params.to_dict()          copy parameters to a dictionary'
         )
         if self._product == 'combined':
             print(f'\nAvailable products: {list(self.data)}')
-            print('Example: result.select(T=300, P=1.0, product="cross_section")')
+            print(
+                'Examples:\n'
+                '  result.select(T=300, product="stick_spectra")\n'
+                '  result.select(T=300, P=1.0, product="cross_section")\n'
+                'Stick spectra do not use pressure.'
+            )
         else:
             print(f'\nAvailable conditions: {self.conditions}')
             condition = self.conditions[0] if self.conditions else Condition()
@@ -137,11 +151,11 @@ class Result:
 
 COMMON_PARAMETERS = {
     'database', 'molecule', 'isotopologue', 'dataset', 'atom',
-    'read_path', 'save_path', 'logs_path', 'output', 'cache', 'cache_dir',
+    'read_path', 'save_path', 'output', 'cache', 'cache_dir',
     'max_memory', 'refresh_cache',
 }
 COMPUTE_PARAMETERS = {
-    'ncputrans', 'ncpufiles', 'chunk_size', 'run_mode', 'device',
+    'ncputrans', 'ncpufiles', 'chunk_size', 'device',
     'gpu_backend', 'gpu_batch_lines', 'gpu_batch_grid',
 }
 TEMPERATURE_PARAMETERS = {'ntemp', 'tmax'}
@@ -165,21 +179,10 @@ PARAMETERS_BY_FUNCTION = {
     'oscillator_strengths': {
         'gf_or_f', 'wn_wl', 'wn_wl_unit', 'min_wnl', 'max_wnl',
         'unc_filter', 'qns_label', 'qns_value', 'qns_filter',
-        'plot_oscillator_strength_yn', 'plot_oscillator_strength_method',
-        'plot_oscillator_strength_wn_wl', 'plot_oscillator_strength_unit',
-        'limit_yaxis_os',
     } | COMPUTE_PARAMETERS,
-    'stick_spectra': SPECTRUM_PARAMETERS | COMPUTE_PARAMETERS | {
-        'plot_stick_spectra_yn', 'plot_stick_spectra_method',
-        'plot_stick_spectra_wn_wl', 'plot_stick_spectra_unit',
-        'limit_yaxis_stick_spectra',
-    },
+    'stick_spectra': SPECTRUM_PARAMETERS | COMPUTE_PARAMETERS,
     'cross_sections': SPECTRUM_PARAMETERS | CROSS_SECTION_PARAMETERS
-    | COMPUTE_PARAMETERS | {
-        'plot_cross_section_yn', 'plot_cross_section_method',
-        'plot_cross_section_wn_wl', 'plot_cross_section_unit',
-        'limit_yaxis_xsec',
-    },
+    | COMPUTE_PARAMETERS,
 }
 
 
@@ -192,10 +195,45 @@ def relevant_parameters(config):
     keys = set(COMMON_PARAMETERS)
     for name in enabled:
         keys.update(PARAMETERS_BY_FUNCTION[name])
+
+    # Keep mode-specific parameters out of the interactive summary when the
+    # selected calculation cannot use them.
+    nlte = getattr(config, 'nlte_method', 'L')
+    if nlte == 'L':
+        keys.difference_update({'tvib_list', 'trot_list', 'vib_label', 'rot_label', 'nlte_path'})
+    elif nlte == 'T':
+        keys.difference_update({'T_list', 'nlte_path'})
+    elif nlte == 'D':
+        keys.difference_update({'T_list', 'tvib_list', 'vib_label', 'rot_label'})
+    elif nlte == 'P':
+        keys.difference_update({'tvib_list', 'trot_list', 'vib_label', 'rot_label'})
+
+    if getattr(config, 'run_mode', 'CPU') != 'GPU':
+        keys.difference_update({'gpu_backend', 'gpu_batch_lines', 'gpu_batch_grid'})
+    if getattr(config, 'doppler_hwhm_yn', 'N') != 'Y':
+        keys.discard('alpha_hwhm')
+    if getattr(config, 'lorentzian_hwhm_yn', 'N') != 'Y':
+        keys.discard('gamma_hwhm')
+    if getattr(config, 'output', 'files') == 'memory':
+        keys.difference_update({'save_path', 'compress_yn'})
+    if getattr(config, 'database', '') in ('HITRAN', 'HITEMP'):
+        keys.add('species_id')
+
     values = vars(config)
+    def has_value(value):
+        if value is None:
+            return False
+        if isinstance(value, (list, tuple, dict, set)):
+            return len(value) > 0
+        if isinstance(value, np.ndarray):
+            return value.size > 0
+        return True
+
     return {
         name: values[name] for name in keys
-        if name in values and not (
+        if name in values
+        and has_value(values[name])
+        and not (
             name in {'molecule', 'isotopologue', 'dataset', 'atom'}
             and values[name] is None
         )
@@ -219,6 +257,7 @@ def record(kind, values, coords, units=None, condition=None):
     elif result._product != kind and result._product != 'combined':
         previous = result._product
         result.data = {previous: result.data}
+        result.units = {previous: dict(result.units)}
         result.kind = 'Combined'
         result._product = 'combined'
     if result._product == 'combined':
@@ -239,7 +278,10 @@ def record(kind, values, coords, units=None, condition=None):
                 condition: coordinate.copy(),
             }
     if units:
-        result.units.update(units)
+        if result._product == 'combined':
+            result.units.setdefault(kind, {}).update(units)
+        else:
+            result.units.update(units)
 
 
 def saving_enabled():

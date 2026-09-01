@@ -48,7 +48,7 @@ All listed databases support `cache='auto'`, `cache='parquet'`, and
 `cache='none'`. ExoMol/ExoAtom use transition caches; HITRAN/HITEMP cache the
 normalized fixed-width line list; ExoMolHR caches the normalized CSV line list.
 
-## Two Ways to Use PyExoCross Python Package
+## Three Ways to Use PyExoCross Python Package
 
 ### 1. From an `.inp` file (traditional)
 
@@ -109,10 +109,9 @@ automatically expand range-loaded data to all transitions on first use.
 `all_transitions=True` remains available for eager loading. Partition functions
 and specific heats do not use transition-loaded data.
 
-## File and in-memory output
+## Interactive results
 
-Calculation functions accept `output='files'`, `'memory'`, or `'both'`.
-The default remains `files`.
+Use `output='memory'` to keep a calculation result in Python:
 
 ```python
 result = px.cross_sections(
@@ -123,25 +122,19 @@ result = px.cross_sections(
     log='none',
 )
 
-print(result)
-print(result.params)
 xsec = result.select(T=300, P=1.0)
 grid = result.coords['wavenumber']
 ```
 
-Every in-memory result exposes `coords`, `units`, `conditions`, `data`,
-`params`, `timing`, and `select()`. In IPython or Spyder, type `result.` and
-press Tab to inspect these fields. Combined stick-spectrum and cross-section
-calculations require `product='stick_spectra'` or
-`product='cross_section'` in `select()`.
+The default `output='files'` saves files and returns `None`.
+`output='both'` saves files and returns the same `Result` object.
 
-`log='auto'` uses `logs_path` or the `.inp` `LogFilePath` when a valid path is
-available. `log='file'` requires a valid path. `log='none'` disables file
-logging. In `.inp` files, use `LogFilePath None` for the same no-log
-behaviour. `verbose=False` independently hides normal terminal output and
-progress bars. It does not disable an enabled log file. The final terminal
-and log summaries report load, preparation, calculation, saving, and total
-wall times separately.
+See [**Interactive results**](interactive_results.md) for:
+
+- the fields available under `result.`;
+- single-table, spectrum, cross-section, combined, and Non-LTE selection;
+- parameters, units, timing, logging, and help;
+- common mistakes and executable tutorial notebooks.
 
 ## CPU / GPU Compute Mode
 
@@ -209,6 +202,7 @@ px.cross_sections(
 :maxdepth: 2
 
 quickstart
+interactive_results
 functions
 parameters
 examples

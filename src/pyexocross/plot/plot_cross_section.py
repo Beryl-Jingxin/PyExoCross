@@ -121,7 +121,7 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
         xsec,
         {axis: wn},
         {axis: 'cm-1' if wn_wl == 'WN' else wn_wl_unit,
-         'data': 'cm-1/(molecule cm-2)'},
+         'data': 'cm2/molecule'},
         Condition(T, P, Tvib, Trot),
     )
     if not saving_enabled():

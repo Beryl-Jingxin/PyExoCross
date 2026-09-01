@@ -34,7 +34,7 @@ Functions
 - ``px.download_exomol(...)``               -- Download ExoMol line-list files
 """
 
-__version__ = "1.1.14"
+__version__ = "1.1.15"
 
 from pyexocross.api import (
     # Run from .inp file

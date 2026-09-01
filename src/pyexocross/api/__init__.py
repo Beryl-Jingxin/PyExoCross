@@ -50,30 +50,109 @@ from ..database.data import LoadedData, loaddata
 
 
 def help(function=None):
-    """Show PyExoCross calculation help or one function's full docstring."""
+    """Show PyExoCross interactive usage or one function's parameters."""
     functions = {
         name: globals()[name] for name in (
-            'partition_functions', 'specific_heats', 'cooling_functions',
+            'load', 'conversion', 'partition_functions', 'specific_heats', 'cooling_functions',
             'lifetimes', 'oscillator_strengths', 'stick_spectra',
             'cross_sections', 'stick_spectra_cross_section',
         )
     }
+    aliases = {
+        'load_data': 'load',
+        'partition_function': 'partition_functions',
+        'specific_heat': 'specific_heats',
+        'cooling_function': 'cooling_functions',
+        'lifetime': 'lifetimes',
+        'oscillator_strength': 'oscillator_strengths',
+        'cross_section': 'cross_sections',
+    }
     if function is None:
         print(
-            'PyExoCross calculation functions:\n  '
+            'PyExoCross interactive API\n\nFunctions:\n  '
             + '\n  '.join(f'px.{name}(...)' for name in functions)
-            + '\n\nCommon interactive options:\n'
-            '  output="files" | "memory" | "both"\n'
-            '  log="auto" | "file" | "none"\n'
-            '  verbose=True | False\n\n'
-            'Use px.help("cross_sections") for function parameters.\n'
-            'After a memory calculation, use result.help().'
+            + '\n\nOutput:\n'
+            '  output="files"   save files and return None (default)\n'
+            '  output="memory"  return Result without saving result files or plots\n'
+            '  output="both"    save files and return Result\n'
+            '  conversion supports output="files" only\n\n'
+            'Typical workflow:\n'
+            '  data = px.load(...)\n'
+            '  result = px.cross_sections(data=data, temperatures=[300], '\
+            'pressures=[1.0], output="memory")\n'
+            '  xsec = result.select(T=300, P=1.0)\n\n'
+            'Logging and terminal output:\n'
+            '  log="auto"  log when a valid path is configured\n'
+            '  log="file"  require logs_path or .inp LogFilePath\n'
+            '  log="none"  do not create a log file\n'
+            '  verbose=False hides terminal output but does not disable logging\n\n'
+            'Discover more:\n'
+            '  px.help("cross_sections")  function parameters\n'
+            '  px.help("result")          Result fields and selection\n'
+            '  result.help()              help for an actual result'
         )
         return
     name = function.__name__ if callable(function) else str(function)
+    name = aliases.get(name, name)
+    if name == 'result':
+        print(
+            'Result usage\n\n'
+            '  result.data        Condition -> array/table mapping\n'
+            '  result.coords      coordinate grids\n'
+            '  result.units       units\n'
+            '  result.conditions  available conditions\n'
+            '  result.params      parameters relevant to this calculation\n'
+            '  result.timing      CPU/system load/prepare/calculate/save/total times\n'
+            '  result.summary()   complete summary\n'
+            '  result.help()      result-specific examples\n\n'
+            'Parameters:\n'
+            '  print(result.params)\n'
+            '  profile = result.params["profile"]\n'
+            '  parameters = result.params.to_dict()\n\n'
+            'Timing:\n'
+            '  calculate excludes result-file saving and plotting.\n'
+            '  total covers the complete calculation call.\n\n'
+            'Examples:\n'
+            '  xsec = result.select(T=300, P=1.0)\n'
+            '  matches = result.select(T=300, squeeze=False)\n'
+            '  stick = result.select(T=300, product="stick_spectra")\n'
+            '  xsec = result.select(T=300, P=1.0, product="cross_section")'
+            '\n\nCombined results store units by product:\n'
+            '  result.units["stick_spectra"]\n'
+            '  result.units["cross_section"]'
+        )
+        return
     if name not in functions:
-        raise ValueError(f'Unknown calculation function {name!r}. Available: {list(functions)}')
+        raise ValueError(
+            f'Unknown help topic {name!r}. Available: {list(functions) + ["result"]}'
+        )
     print(functions[name].__doc__)
+    if name == 'load':
+        print(
+            'Return value\n'
+            '------------\n'
+            'Returns reusable LoadedData. Pass it as data= to calculation functions.\n'
+            'px.load does not use the files/memory/both Result output modes.'
+        )
+    elif name == 'conversion':
+        print(
+            'Output\n'
+            '------\n'
+            'Conversion is a format transformation and supports output="files" only.\n'
+            'log and verbose control logging and terminal output.'
+        )
+    else:
+        print(
+            'Interactive output\n'
+            '------------------\n'
+            'output : {"files", "memory", "both"}, optional\n'
+            '    Save files, return a Result, or do both. Default is "files".\n'
+            'log : {"auto", "file", "none"}, optional\n'
+            '    Control file logging.\n'
+            'verbose : bool, optional\n'
+            '    Show normal terminal output. Default is True.\n\n'
+            'Use result.help() after output="memory" or output="both".'
+        )
 
 
 def _ensure_logging(inp_filepath=None, logs_path=None, log='auto', verbose=True):
@@ -448,9 +527,9 @@ def conversion(inp_filepath=None, **kwargs):
         ncputrans : int, optional
             CPU cores for transitions (default: 4).
         ncpufiles : int, optional
-            CPU cores for file I/O (default: 1).
+            CPU workers for transition files (default: 1).
         chunk_size : int, optional
-            Chunk size for transitions (default: 100000).
+            Transition chunk size (default: 100000).
         verbose : bool, optional
             Show normal terminal output. Default is True.
     """
@@ -509,17 +588,10 @@ def partition_functions(inp_filepath=None, **kwargs):
         read_path : str
         save_path : str, optional
         logs_path : str, optional
-        species_id : int, optional
         ntemp : int, optional
             Temperature step interval (default: 1).
         tmax : int, optional
             Maximum temperature in K (default: 5000).
-        ncputrans : int, optional
-            CPU cores for transitions (default: 4).
-        ncpufiles : int, optional
-            CPU cores for file I/O (default: 1).
-        chunk_size : int, optional
-            Chunk size for transitions (default: 100000).
         verbose : bool, optional
             Show normal terminal output. Default is True.
     """

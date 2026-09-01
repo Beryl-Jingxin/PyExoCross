@@ -11,6 +11,20 @@ Every function accepts either:
 - Keyword arguments (`**kwargs`), **or**
 - Both (keyword arguments override `.inp` file values).
 
+## Common output kwargs
+
+These options apply to calculation functions. `px.conversion` supports files
+only, and `px.load` returns reusable data rather than a calculation `Result`.
+
+| Kwarg | Default | Description |
+|---|---|---|
+| `output` | `'files'` | `'files'`: save and return `None`; `'memory'`: return `Result`; `'both'`: save and return `Result` |
+| `log` | `'auto'` | `'auto'`, `'file'`, or `'none'` |
+| `verbose` | `True` | Show normal terminal output and progress |
+
+For Result fields and selection, see
+[**Interactive results**](interactive_results.md).
+
 ## Common CPU/GPU Compute Kwargs
 
 PyExoCross uses CPU by default.  You can explicitly select compute mode with:

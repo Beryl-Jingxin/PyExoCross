@@ -15,7 +15,7 @@ pip install pyexocross
 ```python
 import pyexocross as px
 
-print(px.__version__)  # '1.0.0'
+print(px.__version__)
 ```
 
 ## Choose CPU or GPU
@@ -92,6 +92,36 @@ px.cross_sections(
     limit_yaxis=1e-30
 )
 ```
+
+## Keep the result in Python
+
+The default `output='files'` saves files and returns `None`. For interactive
+work, request an in-memory result:
+
+```python
+result = px.cross_sections(
+    database='ExoMol',
+    molecule='MgH',
+    isotopologue='24Mg-1H',
+    dataset='XAB',
+    read_path='/path/to/Databases/ExoMol/',
+    temperatures=[300],
+    pressures=[1.0],
+    min_range=0,
+    max_range=100,
+    bin_size=0.1,
+    profile='Gaussian',
+    output='memory',
+    log='none',
+)
+
+xsec = result.select(T=300, P=1.0)
+grid = result.coords['wavenumber']
+```
+
+Use `output='both'` to return the result and save files. See
+[**Interactive results**](interactive_results.md) for combined calculations,
+Non-LTE selection, units, parameters, timing, and help.
 
 ## Minimal Example: Cross Sections from ExoMolHR
 
@@ -292,6 +322,7 @@ This shows normal terminal output without creating a log file.
 
 ## Next Steps
 
+- [**Interactive results**](interactive_results.md) -- Use calculation results in Jupyter, Spyder, or Python
 - [**Functions Reference**](functions.md) -- Detailed documentation for every function
 - [**Parameters Reference**](parameters.md) -- Complete list of all parameters with types and defaults
 - [**Examples**](examples.md) -- Full working examples for ExoMol, ExoAtom, and HITRAN
