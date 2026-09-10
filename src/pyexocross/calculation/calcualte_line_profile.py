@@ -108,7 +108,7 @@ def lifetime_broadening(tau):
     """
     Calculate the lifetime broadening contribution to linewidth.
 
-    gamma_tau = 1 / (4 * pi * c) * tau
+    gamma_tau = 1 / (4 * pi * c * tau)
 
     Parameters
     ----------
@@ -120,7 +120,7 @@ def lifetime_broadening(tau):
     np.ndarray
         Lifetime broadening (gamma_tau) array, shape (n_levels,)
     """
-    gamma_tau = ne.evaluate('1 / (PI4c) * tau')
+    gamma_tau = ne.evaluate('1 / (PI4c * tau)')
     return gamma_tau
 
 def DopplerHWHM_alpha(num_v, alpha_HWHM, v, T):

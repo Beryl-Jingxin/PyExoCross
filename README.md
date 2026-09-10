@@ -200,7 +200,7 @@ https://doi.org/10.1093/rasti/rzae016
     author  = {Jingxin Zhang and Sergei N. Yurchenko and Jonathan Tennyson},
     title   = {{PyExoCross 2.0: A Python Framework for LTE and non-LTE Spectra, Cross Sections, and Spectroscopic Post-processing of Atomic and Molecular Line Lists}},
     journal = {RAS Techniques and Instruments},
-    volume  = {to be submitted},
+    volume  = {Submitted},
     pages   = {},
     year    = {2026},
     doi     = {}
