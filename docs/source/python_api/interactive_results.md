@@ -170,6 +170,33 @@ result = px.cross_sections(
 xsec = result.select(T=300, P=1.0)
 ```
 
+The calculation range, grid spacing, and returned coordinate use the unit
+selected by `wn_wl` and `wn_wl_unit`. For example:
+
+```python
+result = px.cross_sections(
+    data=data,
+    temperatures=[300],
+    pressures=[1.0],
+    wn_wl='WL',
+    wn_wl_unit='nm',
+    min_range=2470,
+    max_range=2481,
+    bin_size=1,
+    output='memory',
+    log='none',
+)
+
+wavelength_nm = result.coords['wavelength']   # 2470, 2471, ..., 2481
+xsec = result.select(T=300, P=1.0)
+print(result.units['wavelength'])             # nm
+```
+
+No manual conversion from wavenumber is needed. PyExoCross still evaluates
+line profiles internally in cm⁻¹; line-profile widths and `cutoff` remain in
+cm⁻¹.
+
+
 If a selection matches more than one result, PyExoCross asks for more
 conditions. Use `squeeze=False` when all matches are wanted:
 
@@ -258,9 +285,9 @@ show pressure, profile, or broadening settings. LTE results do not show unused
 Non-LTE parameters.
 
 ```python
-print(result.params)                 # readable complete list
-profile = result.params['profile']   # one parameter
-params = result.params.to_dict()     # ordinary dictionary
+print(result.params)                 # Readable complete list
+profile = result.params['profile']   # One parameter
+params = result.params.to_dict()     # Ordinary dictionary
 ```
 
 Values are resolved values used internally. For example, `Gaussian` may be
@@ -288,11 +315,11 @@ the earlier `px.load()` call.
 ## 8. Help and discovery
 
 ```python
-px.help()                         # overview
-px.help('cross_sections')         # one function
-px.help(px.cross_sections)        # equivalent function-object form
+px.help()                         # Overview
+px.help('cross_sections')         # One function
+px.help(px.cross_sections)        # Equivalent function-object form
 px.help('result')                 # Result fields and selection
-result.help()                     # examples for this result
+result.help()                     # Examples for this result
 help(px.cross_sections)           # Python built-in help
 ```
 

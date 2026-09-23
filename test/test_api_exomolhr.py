@@ -22,9 +22,9 @@ COMMON = dict(
     molecule='NO',
     isotopologue='14N-16O',
     species_id=81,
-    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/',
-    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/',
-    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exomolhr.log',
+    read_path='/Users/beryl/Academic/Data/Database/ExoMolHR/',
+    save_path='/Users/beryl/Academic/Data/pyexocross/',
+    logs_path='/Users/beryl/Academic/Data/pyexocross/log/test_api_exomolhr.log',
     cache='parquet',
 )
 
@@ -74,7 +74,7 @@ def test_download():
     print('TEST: px.download()')
     print('='*70)
     px.download(    
-        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/',    # Write that file_path or save_path are the same in download
+        file_path='/Users/beryl/Academic/Data/Database/ExoMolHR/',    # Write that file_path or save_path are the same in download
         database='ExoMolHR',
         species_info={
             'NO': {

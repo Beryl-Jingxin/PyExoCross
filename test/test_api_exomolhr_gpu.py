@@ -21,9 +21,9 @@ COMMON = dict(
     database='ExoMolHR',
     molecule='NO',
     isotopologue='14N-16O',
-    read_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoMolHR/', # '/Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/',
-    save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/',
-    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/NO_ExoMolHR_gpu_cupy.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exomolhr.log',
+    read_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoMolHR/', # '/Users/beryl/Academic/Data/Database/ExoMolHR/',
+    save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/Data/pyexocross/',
+    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/NO_ExoMolHR_gpu_cupy.log', # '/Users/beryl/Academic/Data/pyexocross/log/test_api_exomolhr.log',
     cache='parquet',    
 )
 

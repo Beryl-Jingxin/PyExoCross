@@ -23,7 +23,7 @@ def test_download_exomol():
     print('TEST: px.download()')
     print('='*70)
     px.download(    
-        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMol/',    # Write that file_path or save_path are the same in download
+        file_path='/Users/beryl/Academic/Data/Database/ExoMol/',    # Write that file_path or save_path are the same in download
         database='ExoMol',
         molecule_isotopologues={
             'MgH': {
@@ -45,7 +45,7 @@ def test_download_exomolhr():
     print('TEST: px.download()')
     print('='*70)
     px.download(    
-        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/',    # Write that file_path or save_path are the same in download
+        file_path='/Users/beryl/Academic/Data/Database/ExoMolHR/',    # Write that file_path or save_path are the same in download
         database='ExoMolHR',
         molecule_isotopologues={
             'MgH': {
@@ -67,7 +67,7 @@ def test_download_exoatom():
     print('TEST: px.download()')
     print('='*70)
     px.download(    
-        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/',    # Write that file_path or save_path are the same in download
+        file_path='/Users/beryl/Academic/Data/Database/ExoAtom/',    # Write that file_path or save_path are the same in download
         database='ExoAtom',
         atom_datasets={
             'He': {'dataset': 'NIST'},
@@ -85,7 +85,7 @@ def test_download_hitran():
     print('TEST: px.download()')
     print('='*70)
     px.download(    
-        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/',    # Write that file_path or save_path are the same in download
+        file_path='/Users/beryl/Academic/Data/Database/HITRAN/',    # Write that file_path or save_path are the same in download
         database='HITRAN',
         molecule_isotopologues={
             'NO': {

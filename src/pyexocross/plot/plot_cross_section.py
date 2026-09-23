@@ -116,10 +116,13 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
         if NLTEMethod in ('T', 'D') and Trot_list_param:
             Trot = Trot_list_param[temp_idx]
     axis = 'wavenumber' if wn_wl == 'WN' else 'wavelength'
+    result_axis, result_xsec, _, _ = _axis_values_from_wavenumber(
+        wn, xsec, wn_wl, wn_wl_unit
+    )
     record(
         'cross_section',
-        xsec,
-        {axis: wn},
+        result_xsec,
+        {axis: result_axis},
         {axis: 'cm-1' if wn_wl == 'WN' else wn_wl_unit,
          'data': 'cm2/molecule'},
         Condition(T, P, Tvib, Trot),

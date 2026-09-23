@@ -22,9 +22,9 @@ COMMON = dict(
     atom='Ar',
     dataset='NIST',
     species_id=601,
-    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/', #'/home/jingxin/LHD/Program/Databases/ExoAtom/',
-    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
-    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_exoatom.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_exoatom.log', 
+    read_path='/Users/beryl/Academic/Data/Database/ExoAtom/', #'/home/jingxin/LHD/Program/Databases/ExoAtom/',
+    save_path='/Users/beryl/Academic/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
+    logs_path='/Users/beryl/Academic/Data/pyexocross/log/test_api_exoatom.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_exoatom.log', 
     cache='parquet',
 )
 
@@ -51,7 +51,7 @@ RANGE_PARAMS = dict(
 # NLTE parameters (needed by stick_spectra and cross_sections)
 NLTE_PARAMS = dict(
     nlte_method='P',                # Non-LTE: Population 
-    nlte_path='/home/jingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv',
+    nlte_path='/Users/beryl/Academic/Data/Database/ExoAtom/Ar/NIST/Ar_Ids.csv',
 )
 
 
@@ -71,7 +71,7 @@ def test_download():
     print('TEST: px.download()')
     print('='*70)
     px.download(    
-        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/',    # Write that file_path or save_path are the same in download
+        file_path='/Users/beryl/Academic/Data/Database/ExoAtom/',    # Write that file_path or save_path are the same in download
         database='ExoAtom',
         species_info={
             'Ar': {'dataset': ['NIST', 'Kurucz']},

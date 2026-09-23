@@ -23,9 +23,9 @@ COMMON = dict(
     isotopologue='24Mg-1H',
     dataset='XAB',
     species_id=501,
-    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/ExoMol/', #'/home/jingxin/LHD/Program/Databases/ExoMol/',
-    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
-    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/MgH_ExoMol_parquet.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_exomol.log',
+    read_path='/Users/beryl/Academic/Data/Database/ExoMol/', #'/home/jingxin/LHD/Program/Databases/ExoMol/',
+    save_path='/Users/beryl/Academic/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
+    logs_path='/Users/beryl/Academic/Data/pyexocross/log/MgH_ExoMol_parquet.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_exomol.log',
     cache='parquet',
 )
 

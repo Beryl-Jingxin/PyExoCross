@@ -21,8 +21,8 @@ COMPUTE_GPU_AUTO = dict(
     chunk_size=100000,
     run_mode='GPU',
     gpu_backend='AUTO',      # PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback
-    gpu_batch_lines=8192,    # memory-control knob
-    gpu_batch_grid=256,      # memory-control knob
+    gpu_batch_lines=8192,    # Memory-control knob
+    gpu_batch_grid=256,      # Memory-control knob
 )
 
 # GPU (CUDA policy: PyTorch-CUDA -> CuPy-CUDA -> MPS -> CPU fallback)

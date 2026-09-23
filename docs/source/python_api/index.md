@@ -191,8 +191,8 @@ individual parameters with keyword arguments:
 ```python
 px.cross_sections(
     inp_filepath='/path/to/base_config.inp',
-    temperatures=[3000],          # override .inp value
-    pressures=[0.1, 1.0, 10.0],   # override .inp value
+    temperatures=[3000],          # Override .inp value
+    pressures=[0.1, 1.0, 10.0],   # Override .inp value
 )
 ```
 

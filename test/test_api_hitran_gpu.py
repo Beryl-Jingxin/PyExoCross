@@ -23,9 +23,9 @@ COMMON = dict(
     isotopologue='14N-16O',
     dataset='NO-HITRAN',
     species_id=81,
-    read_path='/public/home/zhangjingxin/LHD/Program/Databases/HITRAN/', # '/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/',
-    save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/',
-    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/NO_HITRAN_gpu_cupy.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/log/NO_HITRAN_gpu.log',
+    read_path='/public/home/zhangjingxin/LHD/Program/Databases/HITRAN/', # '/Users/beryl/Academic/Data/Database/HITRAN/',
+    save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/Data/pyexocross/gpu/',
+    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/NO_HITRAN_gpu_cupy.log', # '/Users/beryl/Academic/Data/pyexocross/gpu/log/NO_HITRAN_gpu.log',
     cache='parquet',
 )
 

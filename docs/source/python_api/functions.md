@@ -765,9 +765,9 @@ labels and values are lists of accepted value patterns.  Use an empty list
 
 ```python
 qns_filter={
-    '+/-': [],                    # accept all parities
-    'v': ['0,', '1,', '2,'],      # only v' = 0, 1, 2
-    'ElecState': [],              # accept all electronic states
+    '+/-': [],                    # Accept all parities
+    'v': ['0,', '1,', '2,'],      # Only v' = 0, 1, 2
+    'ElecState': [],              # Accept all electronic states
 }
 ```
 
@@ -836,9 +836,12 @@ All parameters from [`px.stick_spectra`](#pxstick_spectra), plus:
 The cross-section grid is built in the selected `wn_wl_unit`. \
 For example,
 with `wn_wl='WL', wn_wl_unit='nm'`, `min_range`, `max_range`, `bin_size`, the
-saved file name, and the first column of the saved `.xsec` file all use nm. \
+saved file name, the first column of the saved `.xsec` file, and
+`result.coords['wavelength']` all use nm. The array returned by
+`result.select(...)` is aligned with this coordinate. \
 The plot axis can be changed independently with `plot_wn_wl` and `plot_unit`.
-Line-profile widths and `cutoff` remain in cm⁻¹.
+Line-profile widths and `cutoff` remain in cm⁻¹. No manual coordinate
+conversion is needed for `output='memory'`.
 
 
 ### Available Line Profiles

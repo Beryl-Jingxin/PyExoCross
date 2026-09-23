@@ -23,9 +23,9 @@ COMMON = dict(
     isotopologue='14N-16O',
     dataset='NO-HITRAN',
     species_id=81,
-    read_path='/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/', #'/home/jingxin/LHD/Program/Databases/HITRAN/',
-    save_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
-    logs_path='/Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/test_api_hitran.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_hitran.log',
+    read_path='/Users/beryl/Academic/Data/Database/HITRAN/', #'/home/jingxin/LHD/Program/Databases/HITRAN/',
+    save_path='/Users/beryl/Academic/Data/pyexocross/', #'/home/jingxin/LHD/Program/Data/pyexocross/',
+    logs_path='/Users/beryl/Academic/Data/pyexocross/log/test_api_hitran.log', #'/home/jingxin/LHD/Program/Data/pyexocross/log/test_api_hitran.log',
     cache='parquet',
 )
 
@@ -91,7 +91,7 @@ def test_download():
     print('TEST: px.download()')
     print('='*70)
     px.download(    
-        file_path='/Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/',    # Write that file_path or save_path are the same in download
+        file_path='/Users/beryl/Academic/Data/Database/HITRAN/',    # Write that file_path or save_path are the same in download
         database='HITRAN',
         species_info={
             'NO': {

@@ -21,9 +21,9 @@ COMMON = dict(
     database='ExoAtom',
     atom='Ar',
     dataset='NIST',
-    read_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoAtom/', # '/Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/', 
-    save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/',
-    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log', # '/Users/beryl/Academic/UCL/PhD/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log',
+    read_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoAtom/', # '/Users/beryl/Academic/Data/Database/ExoAtom/', 
+    save_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/', # '/Users/beryl/Academic/Data/pyexocross/gpu/',
+    logs_path='/public/home/zhangjingxin/LHD/Program/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log', # '/Users/beryl/Academic/Data/pyexocross/gpu/log/Ar_ExoAtom_gpu.log',
     cache='parquet', 
 )
 
@@ -53,7 +53,7 @@ RANGE_PARAMS = dict(
 # NLTE parameters (needed by stick_spectra and cross_sections)
 NLTE_PARAMS = dict(
     nlte_method='P',                # Non-LTE: Population 
-    nlte_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv', # '/home/jingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv',
+    nlte_path='/public/home/zhangjingxin/LHD/Program/Databases/ExoAtom/Ar/NIST/Ar_Ids.csv', # '/Users/beryl/Academic/Data/Database/ExoAtom/Ar/NIST/Ar_Ids.csv',
 )
 
 
@@ -74,7 +74,7 @@ def test_cooling_functions():
     print('='*70)
     px.cooling_functions(
         data=data,
-        ntemp=1,                     # Number of temperature steps in unit of K (default: 1)
+        ntemp=1,                    # Number of temperature steps in unit of K (default: 1)
         tmax=600,                   # Maximum temperature in unit of K (default: 5000)
     )
     print('PASSED: cooling_functions()')

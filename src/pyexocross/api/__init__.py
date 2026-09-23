@@ -962,9 +962,12 @@ def cross_sections(inp_filepath=None, **kwargs):
         -----
         ``wn_wl`` and ``wn_wl_unit`` control the calculation range, output file
         naming, cross-section grid unit, and the first column in the saved
-        cross sections. With ``wn_wl='WL'``, ``bin_size`` is a wavelength
-        interval in ``wn_wl_unit``. Line-profile widths and ``cutoff`` remain
-        in cm-1 because profiles are evaluated internally in wavenumber space.
+        cross sections. They also control the coordinate and its unit in an
+        in-memory ``Result``. With ``wn_wl='WL'``, ``min_range``, ``max_range``,
+        and ``bin_size`` are wavelength values in ``wn_wl_unit``, and
+        ``result.coords['wavelength']`` uses the same unit. Line-profile widths
+        and ``cutoff`` remain in cm-1 because profiles are evaluated internally
+        in wavenumber space.
 
     Examples
     --------
