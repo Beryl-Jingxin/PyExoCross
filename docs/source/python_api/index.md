@@ -22,7 +22,7 @@ Find more details of input parameters from [***PyExoCross Documentation Homepage
 | Function | Description |
 |---|---|
 | {func}`px.run <pyexocross.run>` | Run all enabled functions from an `.inp` file |
-| {func}`px.load <pyexocross.load>` | Load and preprocess reusable line-list data |
+| {func}`px.load <pyexocross.load>` | Load and preprocess reusable line list data |
 | {func}`px.conversion <pyexocross.conversion>` | Convert between ExoMol and HITRAN data formats |
 | {func}`px.partition_functions <pyexocross.partition_functions>` | Calculate partition functions $Q(T)$ |
 | {func}`px.specific_heats <pyexocross.specific_heats>` | Calculate specific heats $C_p(T)$ |

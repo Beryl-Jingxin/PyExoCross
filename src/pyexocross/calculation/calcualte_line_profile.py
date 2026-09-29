@@ -223,7 +223,7 @@ def LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, gamma_air, gam
             ):
                 gamma += lifetime_broadening(tau)
             return gamma
-    if database in ('ExoMol', 'ExoAtom') and num > 0:
+    if database in ('ExoMol', 'ExoMolHR', 'ExoAtom') and num > 0:
         # gamma_L and n_air are now dictionaries with numpy arrays
         gamma_contributions = []
         for i in range(nbroad):
@@ -243,7 +243,12 @@ def LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, gamma_air, gam
             
             gamma_contributions.append(Lorentzian_HWHM(gamma_L_i, n_air_i, T, P))
         gamma = sum(gamma_contributions)
-        if predissocYN == 'Y' and check_predissoc == 0 and 'VOI' in profile:
+        if (
+            database in ('ExoMol', 'ExoAtom')
+            and predissocYN == 'Y'
+            and check_predissoc == 0
+            and 'VOI' in profile
+        ):
             gamma += lifetime_broadening(tau)
         else:
             pass

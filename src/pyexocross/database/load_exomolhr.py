@@ -2,7 +2,7 @@
 Load ExoMolHR database files.
 
 This module provides helpers for reading ExoMolHR CSV line lists and
-partition-function files using a line-list workflow similar to HITRAN.
+partition-function files using a line list workflow similar to HITRAN.
 """
 import glob
 import os

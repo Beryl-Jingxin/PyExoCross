@@ -31,10 +31,10 @@ Functions
 - ``px.cross_sections(...)``                -- Cross sections
 - ``px.stick_spectra_cross_section(...)``   -- Stick spectra and Cross section calculation simultaneously
 - ``px.download(...)``                      -- Download database files
-- ``px.download_exomol(...)``               -- Download ExoMol line-list files
+- ``px.download_exomol(...)``               -- Download ExoMol line list files
 """
 
-__version__ = "1.1.17"
+__version__ = "1.1.18"
 
 from pyexocross.api import (
     # Run from .inp file

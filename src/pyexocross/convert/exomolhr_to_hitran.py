@@ -1,7 +1,7 @@
 """
 Convert ExoMolHR format to HITRAN format.
 
-ExoMolHR CSV files already contain precomputed line-list data (nu, unc, A, S,
+ExoMolHR CSV files already contain precomputed line list data (nu, unc, A, S,
 E", g', g", J', J", QNs).  This module maps those columns directly into the
 HITRAN .par fixed-width format.
 """
@@ -53,7 +53,7 @@ def _ensure_conversion_globals():
 
 
 # ------------------------------------------------------------------ #
-# Quantum-number formatting helpers
+# quantum number formatting helpers
 # ------------------------------------------------------------------ #
 
 def _format_qn_column(series, fmt_str):
@@ -120,7 +120,7 @@ def conversion_exomolhr2hitran(exomolhr_df):
     Parameters
     ----------
     exomolhr_df : pd.DataFrame
-        ExoMolHR line-list DataFrame as returned by ``read_exomolhr_df``.
+        ExoMolHR line list DataFrame as returned by ``read_exomolhr_df``.
     """
     from ..base.constants import Tref
     from ..database.load_exomolhr import read_exomolhr_pf

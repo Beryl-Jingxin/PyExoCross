@@ -1,4 +1,4 @@
-"""Helpers for deriving quantum-number metadata from states definitions."""
+"""Helpers for deriving quantum number metadata from states definitions."""
 
 
 def short_states_column_label(label):
@@ -78,7 +78,7 @@ def qn_formats_for_labels(labels, qnslabel_list, qnsformat_list, states_col=None
             formats.append(fmt)
     if missing:
         raise ValueError(
-            'Requested quantum-number labels are missing from states metadata: '
+            'Requested quantum number labels are missing from states metadata: '
             + ', '.join(missing)
         )
     return formats

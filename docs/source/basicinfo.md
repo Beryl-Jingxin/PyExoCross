@@ -492,7 +492,7 @@ For ExoMol and ExoAtom input, *PyExoCross* reads the quantum number labels and f
 For ExoMolHR input, *PyExoCross* reads the quantum number labels and formats from the default metadata automatically.
 
 * Metadata labels with a namespace are shortened before use, for example `Herzberg:n1` is used as `n1` and `qn:configuration` is used as `configuration`.
-* Optional non-quantum-number state columns such as uncertainty, lifetime, and oscillator strength are not added to the automatic quantum number list.
+* Optional non quantum number state columns such as uncertainty, lifetime, and oscillator strength are not added to the automatic quantum number list.
 * `QNslabel` and `QNsformat` are optional overrides for custom or legacy files. Standard ExoMol, ExoMolHR, and ExoAtom runs can usually omit them.
 * `GlobalQNFormat` and `LocalQNFormat` can also be omitted for ExoMol, ExoMolHR, and ExoAtom conversion when the corresponding `GlobalQNLabel` and `LocalQNLabel` entries are present in the metadata. Provide the formats only when you need to override the metadata-derived formats.
 * HITRAN and HITEMP input do not have ExoMol definition metadata, so provide the required quantum number labels and formats explicitly for those conversions or filters.

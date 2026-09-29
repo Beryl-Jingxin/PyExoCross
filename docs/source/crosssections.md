@@ -134,6 +134,10 @@ profile and set `LorentzianHWHM(Y/N)` to `N`. A `Y` value supplies a final
 constant HWHM and therefore takes priority over database or custom broadening
 parameters. Doppler and Gaussian profiles do not use pressure broadening.
 
+For ExoMolHR, native ExoMol `.broad` files use the same temperature and
+pressure scaling when custom parameters are not supplied. Select a Lorentzian
+or Voigt profile and set `LorentzianHWHM(Y/N)` to `N` to use them.
+
 ## Line profiles
 
 Choose line profile from:

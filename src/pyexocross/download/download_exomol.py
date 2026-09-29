@@ -1,4 +1,4 @@
-"""Download recommended ExoMol line-list files through the ExoMol API."""
+"""Download recommended ExoMol line list files through the ExoMol API."""
 
 import os
 import re
@@ -212,7 +212,7 @@ def download_exomol(
     show_progress=True,
 ):
     """
-    Save ExoMol API URLs and optionally download the selected line-list files.
+    Save ExoMol API URLs and optionally download the selected line list files.
 
     Parameters
     ----------

@@ -158,7 +158,7 @@ def read_unc_states(states_df):
         missing_labels = [label for label in requested_labels if label not in states_unc_df.columns]
         if missing_labels:
             raise ValueError(
-                'Requested conversion quantum-number labels are missing from the parsed states columns: '
+                'Requested conversion quantum number labels are missing from the parsed states columns: '
                 + ', '.join(missing_labels)
                 + '. Please use a .def/.def.json file with full states metadata or check the requested Global/Local QN labels.'
             )

@@ -104,7 +104,7 @@ format. Use the result with `data=` in `px.conversion`,
 | `molecule` | `str` | Conditional | Required for molecular databases |
 | `atom` | `str` | Conditional | Required for ExoAtom |
 | `isotopologue` | `str` | Conditional | Required except for ExoAtom |
-| `dataset` | `str` | Yes* | Line-list dataset name |
+| `dataset` | `str` | Yes* | line list dataset name |
 | `species_id` | `int` or `None` | No | Species identifier; needed by conversions that write HITRAN IDs |
 | `read_path` | `str` | Yes* | Database root containing the input line list |
 | `save_path` | `str` | No | Output root retained for later calculations; default `./output/` |
@@ -398,7 +398,7 @@ This will save the URLs to `/path/to/ExoMol/url/exomol__urls.txt` and print them
 px.conversion(inp_filepath=None, **kwargs)
 ```
 
-Convert between ExoMol/ExoMolHR/ExoAtom and HITRAN line-list formats.
+Convert between ExoMol/ExoMolHR/ExoAtom and HITRAN line list formats.
 
 **Parameters**
 

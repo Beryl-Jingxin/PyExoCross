@@ -362,7 +362,7 @@ def load(
     **kwargs,
 ):
     """
-    Read and preprocess reusable line-list data.
+    Read and preprocess reusable line list data.
 
     Parameters
     ----------
@@ -423,7 +423,7 @@ def load(
         printdatabaseinfo(config)
         print()
         timer = Timer().start()
-        print('Loading reusable line-list data ...')
+        print('Loading reusable line list data ...')
         data = loaddata(
             config,
             cache=cache,
@@ -432,7 +432,7 @@ def load(
             refresh=refresh,
             alltrans=all_transitions,
         )
-        print('Finished loading reusable line-list data!')
+        print('Finished loading reusable line list data!')
         timer.end()
         return data
 
@@ -487,7 +487,7 @@ def run(inp_filepath, force_reload=False, verbose=None, log='auto'):
 # ---------------------------------------------------------------------------
 def conversion(inp_filepath=None, **kwargs):
     """
-    Convert between ExoMol and HITRAN line-list formats.
+    Convert between ExoMol and HITRAN line list formats.
 
     Parameters
     ----------

@@ -1,4 +1,4 @@
-"""Reusable database loading and line-list cache support."""
+"""Reusable database loading and line list cache support."""
 
 import bz2
 import copy
@@ -512,7 +512,7 @@ def hitranpath(config):
 
 
 def linesource(config):
-    """Return the primary line-list source for non-ExoMol databases."""
+    """Return the primary line list source for non-ExoMol databases."""
     if config.database in ('HITRAN', 'HITEMP'):
         return hitranpath(config)
     if config.database == 'ExoMolHR':
@@ -524,7 +524,7 @@ def linesource(config):
             config.data_info[1],
         )
         return csvpath
-    raise ValueError(f'Unsupported line-list cache database: {config.database}')
+    raise ValueError(f'Unsupported line list cache database: {config.database}')
 
 
 def parselinelist(config):
@@ -553,7 +553,7 @@ def parselinelist(config):
 
 
 def linecacheentry(manifest, database, source):
-    """Return a valid canonical line-list cache entry."""
+    """Return a valid canonical line list cache entry."""
     identity = fileidentity(source)
     for entry in manifest.setdefault('linelists', []):
         path = entry.get('path', '')
@@ -568,10 +568,10 @@ def linecacheentry(manifest, database, source):
 
 
 def linecachefilename(database, source, frame):
-    """Return a range-named normalized line-list cache filename."""
+    """Return a range-named normalized line list cache filename."""
     wavenumbers = pd.to_numeric(frame['v'], errors='coerce').dropna()
     if wavenumbers.empty:
-        raise ValueError('Cannot determine line-list cache range from an empty v column.')
+        raise ValueError('Cannot determine line list cache range from an empty v column.')
     lower = max(0, math.floor(float(wavenumbers.min())))
     upper = math.ceil(float(wavenumbers.max()))
     stem = os.path.splitext(os.path.basename(source))[0]
@@ -629,7 +629,7 @@ def filterlinelist(frame, database, minwn, maxwn, uncfilter='None', threshold='N
 
 
 def loadlinedata(config, cache, cachedir, maxmemory, refresh):
-    """Load reusable HITRAN/HITEMP or ExoMolHR line-list data."""
+    """Load reusable HITRAN/HITEMP or ExoMolHR line list data."""
     source = linesource(config)
     if cachedir is None:
         cachedir = os.path.join(os.path.dirname(source), '.pyexocross_cache')
@@ -647,7 +647,7 @@ def loadlinedata(config, cache, cachedir, maxmemory, refresh):
         entry = None if refresh else linecacheentry(manifest, config.database, source)
         if entry is not None and os.path.exists(os.path.join(cachedir, entry['path'])):
             linepath = os.path.join(cachedir, entry['path'])
-            print('Using line-list Parquet cache:', linepath)
+            print('Using line list Parquet cache:', linepath)
         else:
             lineframe = parselinelist(config)
             filename, lower, upper = linecachefilename(
@@ -659,7 +659,7 @@ def loadlinedata(config, cache, cachedir, maxmemory, refresh):
                 cachedir,
                 filename,
             )
-            print('Creating line-list Parquet cache:', linepath)
+            print('Creating line list Parquet cache:', linepath)
             writelinecache(lineframe, linepath)
             relative = os.path.relpath(linepath, cachedir)
             manifest.setdefault('linelists', [])
@@ -942,7 +942,7 @@ class LoadedData:
         unavailable = [label for label in labels if label not in cachestates.columns]
         if unavailable:
             raise ValueError(
-                'Requested quantum-number columns are missing from states metadata: '
+                'Requested quantum number columns are missing from states metadata: '
                 + ', '.join(unavailable)
             )
 
@@ -1034,7 +1034,7 @@ def loaddata(
     alltrans=False,
     preparestates=True,
 ):
-    """Create reusable data for a supported line-list database."""
+    """Create reusable data for a supported line list database."""
     if config.database in ('HITRAN', 'HITEMP', 'ExoMolHR'):
         return loadlinedata(config, cache, cachedir, maxmemory, refresh)
     if config.database not in ('ExoMol', 'ExoAtom'):

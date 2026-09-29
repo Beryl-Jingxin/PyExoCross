@@ -452,10 +452,10 @@ def broad_recipe_qn_columns(code):
 
 def broad_required_line_columns(broad_dfs, available_columns):
     """
-    Return only the line-list columns needed by the present broad recipes.
+    Return only the line list columns needed by the present broad recipes.
 
-    This is deliberately narrower than keeping all quantum-number columns:
-    QN filters run before line-list trimming, while broadening only needs the
+    This is deliberately narrower than keeping all quantum number columns:
+    QN filters run before line list trimming, while broadening only needs the
     columns implied by the .broad recipe codes.
     """
     available = set(available_columns)
