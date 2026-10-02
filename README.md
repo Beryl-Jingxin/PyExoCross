@@ -27,7 +27,11 @@
 
 <p align="center">
   <a href="https://doi.org/10.1093/rasti/rzae016"><img src="https://img.shields.io/badge/PyExoCross 1.0-DOI-gold?style=for-the-badge&logo=doi" alt="DOI"></a>
-  <a href="https://arxiv.org/abs/2406.03977"><img src="https://img.shields.io/badge/arXiv-2406.03977-orange?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"></a>
+  <a href="https://doi.org/10.48550/arXiv.2406.03977"><img src="https://img.shields.io/badge/PyExoCross 1.0-arXiv-orange?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"></a>
+</p>
+
+<p align="center">
+  <a href="https://doi.org/10.48550/arXiv.2609.17273"><img src="https://img.shields.io/badge/PyExoCross 2.0-arXiv-orange?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"></a>
 </p>
 
 ## Description
@@ -167,7 +171,10 @@ All information can be written in the input file. Just change the information yo
 
 *PyExoCross* ***Published*** Paper : [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016)
 
-*PyExoCross* ***arXiv*** Preprint : [https://arxiv.org/abs/2406.03977](https://arxiv.org/abs/2406.03977)
+*PyExoCross* ***arXiv*** Preprint : [https://doi.org/10.48550/arXiv.2406.03977](https://doi.org/10.48550/arXiv.2406.03977)
+
+*PyExoCross 2.0* ***arXiv*** Preprint : [https://doi.org/10.48550/arXiv.2609.17273](https://doi.org/10.48550/arXiv.2609.17273)
+
 
 ## <font color=Green>**Please cite PyExoCross paper**</font> &#x1F49A;
 
