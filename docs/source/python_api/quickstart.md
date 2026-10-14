@@ -49,7 +49,11 @@ run_mode='GPU'
 gpu_backend='MPS'
 ```
 
-`gpu_batch_lines` and `gpu_batch_grid` are used to control GPU memory usage.
+`gpu_batch_lines` and `gpu_batch_grid` set the maximum numbers of spectral
+lines and spectral grid points processed in one GPU batch, respectively. GPU
+memory use generally increases with their product. Both may be any positive
+integer; powers of two and multiples of 32 are not required.
+
 If no selected backend is available, PyExoCross falls back to CPU formulas.
 
 GPU acceleration is available for `cooling_functions`, `stick_spectra`,

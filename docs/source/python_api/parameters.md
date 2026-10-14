@@ -108,8 +108,8 @@ For HITRAN/HITEMP:
 | `chunk_size` | `int` | `100000` | Chunk size when reading/calculating transitions |
 | `device` or `run_mode` | `str` | `'CPU'` | Compute backend mode: `'CPU'` or `'GPU'` |
 | `gpu_backend` | `str` | `'AUTO'` | GPU backend policy when `device='GPU'`: `'AUTO'`, `'CUDA'`, `'PyTorch-CUDA'`, `'CuPy-CUDA'`, or `'MPS'` |
-| `gpu_batch_lines` | `int` | `8192` | Max number of lines per GPU batch (memory-control knob) |
-| `gpu_batch_grid` | `int` | `256` | Max number of grid points per GPU batch (memory-control knob) |
+| `gpu_batch_lines` | `int` | `8192` | Maximum number of spectral lines processed in one GPU batch (memory-control knob) |
+| `gpu_batch_grid` | `int` | `256` | Maximum number of spectral grid points processed in one GPU batch (memory-control knob) |
 | `cache` | `str` | `'auto'` | Transition cache: small inputs use memory and large inputs use Parquet; alternatives are `'parquet'` and `'none'` |
 | `cache_dir` | `str` or `None` | `None` | Cache directory; `None` uses a source-adjacent `.pyexocross_cache/` directory |
 | `max_memory` | `int` | `512` | Maximum transition data retained by `cache='auto'`, in MB; internally converted with `1024**2` bytes per MB |

@@ -62,8 +62,23 @@ px.cross_sections(
 | `MPS` | Force Apple Metal backend | `MPS -> CPU` |
 
 ***Notes:***
-- `gpu_batch_lines` and `gpu_batch_grid` are memory-control knobs for GPU calculations.
+
 - If the requested backend is not available, ***PyExoCross*** falls back to CPU.
+
+## GPU batch sizes
+
+- `gpu_batch_lines` is the maximum number of spectral lines processed in one GPU batch.
+- `gpu_batch_grid` is the maximum number of spectral grid points processed in one GPU batch.
+
+The main temporary arrays have an approximate shape of
+`(gpu_batch_grid, gpu_batch_lines)`, so GPU memory use generally increases
+with the product of the two values. Larger batches may reduce launch overhead
+but require more GPU memory. If an out-of-memory error occurs, reduce one value
+at a time, for example by a factor of two.
+
+Both parameters may be any positive integer. They are data-batch dimensions,
+not CUDA thread-block dimensions, and therefore do not need to be powers of two
+or multiples of 32. The final incomplete batch is handled automatically.
 
 ## Functions support GPU
 

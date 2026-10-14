@@ -410,9 +410,14 @@ The program will run on different cores together.
 - GPU acceleration is available for cooling functions, stick spectra, cross sections, and stick spectra + cross sections.
 
 
-`GPUBatchLines`: The number of lines to process in each batch on the GPU. Default value is 8192.
+`GPUBatchLines`: The maximum number of spectral lines processed in one GPU batch. Default value is 8192.
 
-`GPUBatchGrid`: The number of grids to process in each batch on the GPU. Default value is 256.
+`GPUBatchGrid`: The maximum number of spectral grid points processed in one GPU batch. Default value is 256.
+
+GPU memory use generally increases with `GPUBatchLines * GPUBatchGrid`.
+Both values may be any positive integer; powers of two and multiples of 32 are
+not required. Reduce either value if the calculation exceeds available GPU
+memory. The final incomplete batch is handled automatically.
 
 **Note**
 
