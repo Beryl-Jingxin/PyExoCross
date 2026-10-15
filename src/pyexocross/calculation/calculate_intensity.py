@@ -182,16 +182,12 @@ def cal_abscoefs_nlte_nvib(Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v, abundan
 
 ### Using custom population
 # Calculate non-LTE absorption coefficient with population
-def cal_abscoefs_nlte_pop(T_list, pop, gp, gpp, A, v, abundance):
+def cal_abscoefs_nlte_pop(pop, gp, gpp, A, v, abundance):
     """
-    Calculate the non-LTE absorption intensity with non-LTE population for multiple T.
-
-    abscoef_nlte = ne.evaluate('gp / gpp * A * pop * (1 - exp(- c2 * v / T)) / (8 * pi * c * v^2) * abundance')
+    Calculate absorption from prescribed lower-state populations.
 
     Parameters
     ----------
-    T_list : sequence of float
-        Temperature list, shape (n_temps,)
     pop : np.ndarray
         Non-LTE population array, shape (n_levels,)
     gp : np.ndarray
@@ -208,20 +204,12 @@ def cal_abscoefs_nlte_pop(T_list, pop, gp, gpp, A, v, abundance):
     Returns
     -------
     np.ndarray
-        Non-LTE absorption coefficient 2D array, shape (n_temps, n_levels)
+        Non-LTE absorption coefficient 2D array, shape (1, n_levels)
     """
     if using_gpu():
-        gpu_result = gpu_cal_abscoefs_nlte_pop(T_list, pop, gp, gpp, A, v, abundance)
+        gpu_result = gpu_cal_abscoefs_nlte_pop(pop, gp, gpp, A, v, abundance)
         if gpu_result is not None:
             return gpu_result
 
-    # Ensure numpy arrays
-    T_arr = np.asarray(T_list)[:, None]  
-    pop_arr = np.asarray(pop)[None, :]
-    gp_arr  = np.asarray(gp)[None, :]
-    gpp_arr = np.asarray(gpp)[None, :]
-    A_arr   = np.asarray(A)[None, :]
-    v_arr   = np.asarray(v)[None, :]   
-    absconst_nlte = ne.evaluate('gp_arr / gpp_arr * A_arr * Inv8Pic / (v_arr ** 2) * pop_arr * abundance') 
-    abscoef_nlte_arr = ne.evaluate('(1 - exp(- c2 * v_arr / T_arr)) * absconst_nlte')
+    abscoef_nlte_arr = ne.evaluate('gp / gpp * A * Inv8Pic / (v ** 2) * pop * abundance')[None, :]
     return abscoef_nlte_arr

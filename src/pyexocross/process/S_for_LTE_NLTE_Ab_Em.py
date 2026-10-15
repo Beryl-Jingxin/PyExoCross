@@ -63,18 +63,10 @@ def S_for_LTE_NLTE_Ab_Em(ll_df,T_list,Tvib_list,Trot_list,Q_arr,abs_emi,NLTEMeth
                                                ll_df["g'"],
                                                A,v,abundance)
         elif NLTEMethod == 'P':
-            if temp_idx is not None:
-                S_arr = cal_abscoefs_nlte_pop([T],
-                                               ll_df['pop"'],
-                                               ll_df["g'"],
-                                               ll_df['g"'],
-                                               A,v,abundance)
-            else:
-                S_arr = cal_abscoefs_nlte_pop(T_list,
-                                              ll_df['pop"'],
-                                              ll_df["g'"],
-                                              ll_df['g"'],
-                                              A,v,abundance)
+            S_arr = cal_abscoefs_nlte_pop(ll_df['pop"'],
+                                           ll_df["g'"],
+                                           ll_df['g"'],
+                                           A,v,abundance)
         else:
             raise ValueError("Please choose 'LTE' or 'Non-LTE'; if choose 'Non-LTE', please choose one non-LTE method from: 'T', 'D' or 'P'.")
     elif abs_emi == 'Em':   

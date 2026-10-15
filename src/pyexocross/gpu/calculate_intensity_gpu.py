@@ -117,26 +117,18 @@ def gpu_cal_abscoefs_nlte_nvib(Trot_list, Qnlte_arr, nvib, Erotpp, gp, A, v, abu
     return result
 
 
-def gpu_cal_abscoefs_nlte_pop(T_list, pop, gp, gpp, A, v, abundance) -> Optional[np.ndarray]:
-    packed = _backend_arrays(T_list, pop, gp, gpp, A, v)
+def gpu_cal_abscoefs_nlte_pop(pop, gp, gpp, A, v, abundance) -> Optional[np.ndarray]:
+    packed = _backend_arrays(pop, gp, gpp, A, v)
     if packed is None:
         return None
     provider, mod, arrs = packed
-    T_g, pop_g, gp_g, gpp_g, A_g, v_g = arrs
+    pop_g, gp_g, gpp_g, A_g, v_g = arrs
 
-    T_g = T_g[:, None]
-    pop_g = pop_g[None, :]
-    gp_g = gp_g[None, :]
-    gpp_g = gpp_g[None, :]
-    A_g = A_g[None, :]
-    v_g = v_g[None, :]
-
-    T_safe = _safe_positive(mod, T_g)
     gpp_safe = _safe_nonzero(mod, gpp_g)
     v2_safe = _safe_nonzero(mod, v_g * v_g)
 
     absconst = gp_g / gpp_safe * A_g * Inv8Pic / v2_safe * pop_g * abundance
-    out = (1 - mod.exp(-c2 * v_g / T_safe)) * absconst
+    out = absconst[None, :]
     out = _finite_or_zero(mod, out)
     result = _to_numpy(provider, mod, out)
     free_gpu_memory()

@@ -35,7 +35,9 @@ For ExoMol and ExoAtom input, these labels use the metadata-derived short names,
 
 $N_{T_\textrm{vib}}$ and $N_{T_\textrm{rot}}$ and $N_P$ can be different. The total number of result files should be: 
 
-$$N_\textrm{Total} = N_{T_\textrm{vib}} \times N_{T_\textrm{rot}} \times N_P$$ 
+$$
+N_\textrm{Total} = N_{T_\textrm{vib}} \times N_{T_\textrm{rot}} \times N_P
+$$
 
 Here $N_P$ is the number of pressures if required.
 
@@ -51,15 +53,17 @@ $$
 The non-LTE partition function equation is:
 
 $$
-    Q(T) = \sum_n g_n^{\textrm{tot}} e^{-c_2\tilde{E}^{\textrm{vib}}_{\textrm{QN}_{\textrm{vib}}}/T_{\textrm{vib}}} 
-    e^{-c_2\tilde{E}^{\textrm{rot}}_{\textrm{QN}_{\textrm{rot}}}/T_{\textrm{rot}}}. 
+    Q(T) = \sum_n g_n^{\textrm{tot}} e^{-c_2 (\tilde{E}^{\textrm{vib}}_{\textrm{QN}_{\textrm{vib}}}/T_{\textrm{vib}} + 
+    \tilde{E}^{\textrm{rot}}_{\textrm{QN}_{\textrm{rot}}}/T_{\textrm{rot}})}. 
 $$
 
 
 For absorption, define the vibrational and rotational transition energies as
+
 $\Delta\tilde{E}_{\textrm{vib}}=\tilde{E}'_{\textrm{vib}}-\tilde{E}''_{\textrm{vib}}$
 and
 $\Delta\tilde{E}_{\textrm{rot}}=\tilde{E}'_{\textrm{rot}}-\tilde{E}''_{\textrm{rot}}$.
+
 The intensity is:
 
 $$
@@ -70,18 +74,18 @@ $$
     +\Delta\tilde{E}_{\textrm{rot}}/T_{\textrm{rot}})}\right].
 $$
 
-The emissivity equation is:
+The emissivity is:
 
 $$
     \varepsilon (i \gets f) = \frac{g'{A}_{fi}hc}{4 \pi} 
-    \frac{e^{-c_2 \tilde{E}_{\textrm{rot}}' / T_{\textrm{rot}}} e^{-c_2 \tilde{E}_{\textrm{vib}}' / T_{\textrm{vib}}}}{Q(T)}.
+    \frac{e^{-c_2 (\tilde{E}_{\textrm{rot}}' / T_{\textrm{rot}} + \tilde{E}_{\textrm{vib}}' / T_{\textrm{vib}})}}{Q(T)}.
 $$
 
 ## Pressure broadening for non-LTE cross sections
 
 The population model and pressure-broadening model are independent. Methods
 `T`, `D`, and `P` use the same broadening inputs as LTE cross sections. For
-example, fixed reference parameters for an H$_2$/He mixture can be supplied as:
+example, fixed reference parameters for an $\rm{H}_2$/He mixture can be supplied as:
 
 ```bash
 Broadeners                              H2       He
@@ -93,7 +97,7 @@ LorentzianHWHM(Y/N)                     N          0.5
 ```
 
 The four lists correspond by position. `GammaBroadening` is the reference
-Lorentzian HWHM coefficient in cm$^{-1}$ bar$^{-1}$ at 296 K;
+Lorentzian HWHM coefficient in $\rm{cm}^{-1}\rm{bar}^{-1}$ at 296 K;
 `NBroadening` is dimensionless. For each spectrum condition, PyExoCross uses
 the active profile temperature and pressure to evaluate
 
@@ -371,6 +375,13 @@ $$
     \left(1-e^{-c_2\tilde{v}_{fi}/T_{\textrm{rot}}}\right).
 $$
 
+For emission, the upper-state vibrational density and rotational energy are used:
+
+$$
+    \varepsilon(i \gets f) = \frac{hc}{4\pi}g'A_{fi}\tilde{\nu}_{fi}
+    \frac{n_{\textrm{vib}}'e^{-c_2\tilde{E}_{\textrm{rot}}'/T_{\textrm{rot}}}}{Q(T_{\textrm{rot}})}.
+$$
+
 Only `Trot` determines the temperature grid in method `D`.
 
 *Example*
@@ -456,9 +467,26 @@ Y-axisLimitXsec                         1e-30                     # Default valu
 
 ## Custom rovibrational population
 
-Method `P` reads the supplied state populations directly. `Temperatures` is
-retained for the requested spectrum conditions, while `Tvib` and `Trot` are
-not used by the population model.
+Method `P` reads the supplied state populations directly. No temperature is needed to calculate its absorption or emission line intensities. 
+For cross sections, `Temperatures` supplies the gas temperature when the selected line profile depends on temperature. 
+`Tvib` and `Trot` are not used in this method.
+
+For lower state population $F''$ and upper state population $F'$ (each including the state's total degeneracy), the absorption line intensity is
+
+$$
+    I(f \gets i) = \frac{A_{fi}}{8\pi c\tilde\nu_{fi}^{2}}
+    \frac{g'}{g''}F''.
+$$
+
+The emission coefficient uses the upper state population:
+
+$$
+    \varepsilon(i \gets f) = \frac{hc}{4\pi} A_{fi}\tilde\nu_{fi} F'.
+$$
+
+Neither intensity nor emission formula depends on `Temperatures`. 
+Stick intensities are unchanged when only that input changes; broadened cross sections can change
+through a temperature-dependent line profile.
 
 *Example*
 
@@ -503,7 +531,7 @@ QNsformat                               %50s              %30s         %2s
 
 # Calculate stick spectra or cross sections #
 LTE/Non-LTE                             Non-LTE                   # LTE or Non-LTE
-Temperatures                            2000                      # Temperatures in unit of K
+Temperatures                            2000                      # For temperature-dependent line profiles, not P-mode intensities (K)
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   8000       15500          # Same unit as WnWlUnit
 Absorption/Emission                     Emission                  # 'Absorption' or 'Emission'
