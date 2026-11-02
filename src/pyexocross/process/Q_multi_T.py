@@ -5,12 +5,19 @@ This module provides functions for calculating partition functions under
 LTE and various non-LTE conditions.
 """
 import numpy as np
-import pandas as pd
 from ..calculation.calculate_partition_func import cal_Q_nlte_2T, cal_Q_nlte_nvib
 from ..database.load_exomol import read_exomol_pf
-from ..database.load_exomolhr import read_exomolhr_pf
 
-def cal_pf_multiT(T_list, Tvib_list, Trot_list, states_df, NLTEMethod, read_path, data_info):
+def cal_pf_multiT(
+    T_list,
+    Tvib_list,
+    Trot_list,
+    states_df,
+    NLTEMethod,
+    read_path,
+    data_info,
+    partition_states_df=None,
+):
     """
     Calculate partition functions for multiple temperatures using specified method.
 
@@ -28,6 +35,9 @@ def cal_pf_multiT(T_list, Tvib_list, Trot_list, states_df, NLTEMethod, read_path
     states_df : pd.DataFrame
         States DataFrame with energy and degeneracy columns, and optionally
         Evib, Erot, nvib columns depending on method
+    partition_states_df : pd.DataFrame, optional
+        Complete states data used for direct LTE partition-function
+        calculations when a requested temperature is absent from `.pf`.
 
     Returns
     -------
@@ -36,10 +46,8 @@ def cal_pf_multiT(T_list, Tvib_list, Trot_list, states_df, NLTEMethod, read_path
     """
     # LTE
     if NLTEMethod == 'L':
-        try:
-            Q_arr = read_exomol_pf(read_path, data_info, T_list)
-        except ValueError:
-            Q_arr = read_exomolhr_pf(read_path, data_info, T_list)
+        full_states = partition_states_df if partition_states_df is not None else states_df
+        Q_arr = read_exomol_pf(read_path, data_info, T_list, full_states)
     # Non-LTE using two temperatures
     elif NLTEMethod == 'T':
         Q_arr = cal_Q_nlte_2T(Tvib_list, Trot_list, states_df['Evib'], states_df['Erot'], states_df['g'])

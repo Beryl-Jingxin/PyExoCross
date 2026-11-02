@@ -228,13 +228,21 @@ def read_hitran_pf(T_list):
     Q_col_name = ['T', 'Q']
     pf_path = _resolve_hitran_pf_path(read_path)
     pf_df = pd.read_csv(pf_path, sep='\\s+', names=Q_col_name, header=None)
-    try:
-        Q_list = pf_df[pf_df['T'].isin(T_list)]['Q']
-    except:
-        raise ValueError('No specified temperature dependent partition funtion value.', 
-                          'Please change the temperature(s) or calculate the partition function at first.')
-    Q_arr = Q_list.to_numpy(dtype=float)    
-    return Q_arr
+    from ..calculation.calculate_partition_func import partition_values
+    from ..process.hitran_states import hitran_state_arrays
+
+    def load_states():
+        full_line_list = read_hitran_parfile(
+            read_path,
+            read_parfile(read_path),
+            -float('inf'),
+            float('inf'),
+            'None',
+            'None',
+        ).reset_index(drop=True)
+        return hitran_state_arrays(full_line_list)
+
+    return partition_values(pf_df, T_list, load_states)
     
 def process_hitran_linelist(hitran_linelist_df):
     """

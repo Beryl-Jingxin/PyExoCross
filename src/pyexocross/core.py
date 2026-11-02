@@ -4,6 +4,7 @@ Core execution module for PyExoCross.
 Contains the main get_results function that orchestrates all calculations.
 """
 import copy
+from pyexocross.database.data import readbounds
 import glob
 import os
 import numpy as np
@@ -112,9 +113,7 @@ def get_results(config, data=None):
     from pyexocross.save.hitran.hitran_cross_section import save_hitran_cross_section
     from pyexocross.save.hitran.hitran_stick_spectra_cross_section import save_hitran_stick_spectra_cross_section
     
-    # Update bin-size–dependent constants used by line profile and
-    # cross-section routines so that modules importing from
-    # pyexocross.base.constants see consistent values.
+    # Update bin-size constants read by the line-profile and cross-section modules.
     from pyexocross.base import constants as _const_mod
     bin_const_dict = _const_mod.get_bin_size_constants(config.bin_size)
     for _name, _val in bin_const_dict.items():
@@ -299,13 +298,16 @@ def get_results(config, data=None):
                     config.vib_label,
                     config.rot_label,
                 )
-                trans_sources = None
+                if CrossSections:
+                    from pyexocross.database.load_exomol import get_part_transfiles
+                    trans_sources = get_part_transfiles(read_path, data_info, *readbounds(config))
+                else:
+                    trans_sources = None
             else:
                 data.ensureqns(config)
                 states_part_df = data.prepared(config)
                 trans_sources = data.sources(
-                    config.min_wn,
-                    config.max_wn,
+                    *readbounds(config),
                 )
             Q_arr = cal_pf_multiT(
                 T_list,
@@ -315,6 +317,7 @@ def get_results(config, data=None):
                 config.nlte_method,
                 config.read_path,
                 config.data_info,
+                partition_states_df=data.fullstates if data is not None else states_df,
             )
             prepare_timer.end('prepare')
             if states_df is not None:
@@ -444,12 +447,11 @@ def get_results(config, data=None):
                 exomolhr_df = read_exomolhr_df(
                     read_path,
                     data_info,
-                    min_wn,
-                    max_wn,
+                    *readbounds(config),
                     UncFilter,
                 )
             else:
-                exomolhr_df = data.lines(min_wn, max_wn, UncFilter)
+                exomolhr_df = data.lines(*readbounds(config), UncFilter)
             if config.qns_filter != []:
                 exomolhr_df = QNfilter_linelist(exomolhr_df, config.qns_value, config.qns_label)
             QNs_col = [label + "'" for label in config.qnslabel_list] + [label + '"' for label in config.qnslabel_list]
@@ -573,13 +575,12 @@ def get_results(config, data=None):
                 hitran_df = read_hitran_parfile(
                     read_path,
                     parfile_df,
-                    min_wn,
-                    max_wn,
+                    *readbounds(config),
                     UncFilter,
                     threshold,
                 ).reset_index(drop=True)
             else:
-                hitran_df = data.lines(min_wn, max_wn, UncFilter, threshold)
+                hitran_df = data.lines(*readbounds(config), UncFilter, threshold)
             prepare_timer = Timer().start()
             (hitran_linelist_df, QNs_col) = hitran_linelist_QN(hitran_df)
             prepare_timer.end('prepare')

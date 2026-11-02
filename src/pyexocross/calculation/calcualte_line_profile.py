@@ -7,6 +7,7 @@ and other line profiles used in cross-section calculations.
 import numpy as np
 import numexpr as ne
 from scipy.special import voigt_profile, wofz, erf, erfcx, roots_hermite
+from ..base import constants as bin_constants
 from ..base.constants import (
     get_doppler_constants,
     Tref,
@@ -25,7 +26,6 @@ from ..base.constants import (
     InvSqrt2ln2,
     TwoSqrt2ln2,
     Sqrtln2InvPi,
-    binSizeHalf,
     OneminSqrtPIln2
 )
 from ..base.config_manager import get_config
@@ -660,6 +660,7 @@ def BinnedGaussian_profile(dv, alpha):
     np.ndarray
         Binned Gaussian line profile array, shape (n_levels, n_points)
     """
+    binSizeHalf = bin_constants.binSizeHalf
     erfxpos = erf(ne.evaluate('Sqrtln2*(dv+binSizeHalf)/alpha'))
     erfxneg = erf(ne.evaluate('Sqrtln2*(dv-binSizeHalf)/alpha'))
     BinnedGaussianProfile = ne.evaluate('erfxpos-erfxneg')
@@ -683,6 +684,7 @@ def BinnedLorentzian_profile(dv, gamma, bnormBinsize):
     np.ndarray
         Binned Lorentzian line profile array, shape (n_levels, n_points)
     """
+    binSizeHalf = bin_constants.binSizeHalf
     BinnedLorentzianProfile = ne.evaluate('(arctan((dv+binSizeHalf)/gamma)-arctan((dv-binSizeHalf)/gamma))*bnormBinsize')
     return BinnedLorentzianProfile
 
@@ -734,6 +736,7 @@ def BinnedVoigt_lorenz(dv, sigma, gamma, x):
     np.ndarray
         Lorentzian component array, shape (n_levels, n_points, n_quad_points)
     """
+    binSizeHalf = bin_constants.binSizeHalf
     dvxsigma = ne.evaluate('dv-x*sigma*Sqrt2')
     lorenz = ne.evaluate('arctan((dvxsigma+binSizeHalf)/gamma)-arctan((dvxsigma-binSizeHalf)/gamma)')
     return lorenz

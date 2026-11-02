@@ -364,9 +364,7 @@ def get_part_transfiles(read_path, data_info, min_wn, max_wn, prepare=True):
             elif len(split_version[0].split('-')) == 2:
                 lower = int(split_version[0].split('-')[0])
                 upper = int(split_version[0].split('-')[1])
-                if ((lower <= int(min_wn) < upper) or 
-                    (lower >= int(min_wn) and upper <= int(max_wn)) or 
-                    (lower <= int(max_wn) < upper)):
+                if lower <= max_wn and upper >= min_wn:
                     file_size_bytes = os.path.getsize(trans_filepaths_all[i])
                     trans_filepath = trans_filepaths_all[i]
                     if prepare and trans_filepath.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
@@ -402,7 +400,7 @@ def get_part_transfiles(read_path, data_info, min_wn, max_wn, prepare=True):
 #     return Q_list 
 
 # Read partition function with local partition function file
-def read_exomol_pf(read_path, data_info, T_list):
+def read_exomol_pf(read_path, data_info, T_list, states_df=None):
     """
     Read ExoMol partition function file and return Q(T) for specified temperatures.
 
@@ -412,6 +410,9 @@ def read_exomol_pf(read_path, data_info, T_list):
         Base path to ExoMol database directory
     T_list : list of float
         List of temperatures in Kelvin
+    states_df : pandas.DataFrame, optional
+        Complete states data used to calculate Q(T) when the requested
+        temperature is absent from the partition-function file.
 
     Returns
     -------
@@ -425,16 +426,19 @@ def read_exomol_pf(read_path, data_info, T_list):
         pf_df = pd.read_csv(pf_filename, sep=r'\s+', names=pf_col_name, header=None, engine='python')
     except:
         raise ValueError('No partition function file. Please check the file path.')
-    try:
-        Q_list = pf_df[pf_df['T'].isin(T_list)]['Q']
-    except:
-        raise ValueError('No specified temperature dependent partition funtion value.', 
-                          'Please change the temperature(s) or calculate the partition function at first.')
-    if Q_list.empty:
-        raise ValueError('No specified temperature dependent partition funtion value.',
-                         'Please change the temperature(s) or calculate the partition function at first.')
-    Q_arr = Q_list.to_numpy(dtype=float)
-    return Q_arr
+    from ..calculation.calculate_partition_func import partition_values
+
+    def load_states():
+        full_states = states_df() if callable(states_df) else states_df
+        if full_states is None:
+            filename = get_statesfile(read_path, data_info)
+            full_states = pd.read_csv(
+                filename, sep=r'\s+', header=None, usecols=[1, 2],
+                names=['E', 'g'], dtype=float,
+            )
+        return full_states['E'].values, full_states['g'].values
+
+    return partition_values(pf_df, T_list, load_states)
 
 # Read Broadening File
 def broad_recipe_qn_columns(code):

@@ -8,6 +8,54 @@ import numpy as np
 import numexpr as ne
 from ..base.constants import c2
 
+
+def partition_values(pf_df, T_list, state_loader):
+    """Use tabulated integer Q(T) values and calculate all other values."""
+    import warnings
+
+    table = pf_df[['T', 'Q']].copy()
+    table[['T', 'Q']] = table[['T', 'Q']].apply(
+        lambda column: np.asarray(column, dtype=float)
+    )
+    table = table.dropna(subset=['T', 'Q'])
+    if table.empty:
+        raise ValueError('No valid partition function values in the partition function file.')
+
+    temperatures = np.asarray(T_list, dtype=float)
+    if np.any(temperatures <= 0):
+        raise ValueError('Temperatures must be greater than 0 K.')
+
+    values = dict(zip(table['T'], table['Q']))
+    missing = list(dict.fromkeys(
+        T for T in temperatures
+        if not float(T).is_integer() or T not in values
+    ))
+    if missing:
+        Tmin = float(table['T'].min())
+        Tmax = float(table['T'].max())
+        outside = [T for T in missing if T < Tmin or T > Tmax]
+        if outside:
+            requested = ', '.join(f'{T:g}' for T in outside)
+            warnings.warn(
+                f'Requested temperature(s) {requested} K are outside the partition '
+                f'function file range {Tmin:g}-{Tmax:g} K (Tmax={Tmax:g} K). '
+                'Q(T) will be calculated directly from the available states.',
+                RuntimeWarning,
+                stacklevel=2,
+            )
+
+        loaded = state_loader()
+        chunks = [loaded] if isinstance(loaded, tuple) else loaded
+        calculated = dict.fromkeys(missing, 0.0)
+        for energies, degeneracies in chunks:
+            energies = np.asarray(energies, dtype=float)
+            degeneracies = np.asarray(degeneracies, dtype=float)
+            for T in missing:
+                calculated[T] += float(cal_partition_func(energies, degeneracies, T))
+        values.update(calculated)
+
+    return np.asarray([values[T] for T in temperatures], dtype=float)
+
 ## LTE partition function
 # Calculate Parition Function
 def cal_partition_func(En, gn, T):
@@ -101,4 +149,4 @@ def cal_Q_nlte_nvib(Trot_list, nvib, Erot, g):
     exponent = ne.evaluate('-c2 * (Erot_arr / Trot_arr)')
     Qnlte_arr = (g_arr * nvib_arr * np.exp(exponent)).sum(axis=1)   
     return Qnlte_arr
-    
+

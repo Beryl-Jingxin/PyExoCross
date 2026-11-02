@@ -25,9 +25,9 @@ def test_download_exomol():
     px.download(    
         file_path='/Users/beryl/Academic/Data/Database/ExoMol/',    # Write that file_path or save_path are the same in download
         database='ExoMol',
-        molecule_isotopologues={
+        species_info={
             'MgH': {
-                '24Mg-1H': {'wn_range': None},
+                '24Mg-1H': {'dataset': ['XAB'], 'wn_range': None},
                 '25Mg-1H': {'wn_range': None},
             },
             'H2O': {
@@ -47,7 +47,7 @@ def test_download_exomolhr():
     px.download(    
         file_path='/Users/beryl/Academic/Data/Database/ExoMolHR/',    # Write that file_path or save_path are the same in download
         database='ExoMolHR',
-        molecule_isotopologues={
+        species_info={
             'MgH': {
                 '24Mg-1H': None,
                 '25Mg-1H': {'T': 1000, 'wn_range': [0, 500], 'threshold': 1e-30},
@@ -69,7 +69,7 @@ def test_download_exoatom():
     px.download(    
         file_path='/Users/beryl/Academic/Data/Database/ExoAtom/',    # Write that file_path or save_path are the same in download
         database='ExoAtom',
-        atom_datasets={
+        species_info={
             'He': {'dataset': 'NIST'},
             'He_p': {'3He_p': {'dataset': 'NIST'}},
             'Ar': {'dataset': ['NIST', 'Kurucz']},
@@ -87,7 +87,7 @@ def test_download_hitran():
     px.download(    
         file_path='/Users/beryl/Academic/Data/Database/HITRAN/',    # Write that file_path or save_path are the same in download
         database='HITRAN',
-        molecule_isotopologues={
+        species_info={
             'NO': {
                 '14N-16O': {'wn_range': [0,100]},
                 '15N-16O': {'wn_range': [100,150]},

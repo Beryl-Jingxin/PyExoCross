@@ -246,7 +246,7 @@ Used by `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `temperatures` | `list[float]` | `[1000]` | Temperature(s) in K |
+| `temperatures` | `list[float]` | `[1000]` | Positive integer or floating-point temperature(s) in K |
 | `pressures` | `list[float]` | `[1.0]` | Pressure(s) in bar (cross sections only) |
 | `wn_wl` | `str` | `'WN'` | `'WN'` = wavenumber, `'WL'` = wavelength |
 | `wn_wl_unit` | `str` | `'cm-1'` | Unit: `'cm-1'`, `'um'` (micron), or `'nm'` |
@@ -254,6 +254,12 @@ Used by `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross
 | `max_range` | `float` | `30000` | Maximum of range (in `wn_wl_unit`) |
 | `abs_emi` | `str` | `'Ab'` | `'Ab'` = absorption, `'Em'` = emission |
 | `abundance` | `float` | `1.0` | Optional isotopic abundance multiplier |
+
+Integer temperatures available in the partition-function file are read
+directly. For decimal temperatures or temperatures outside the file range,
+PyExoCross calculates $Q(T)$ from the available states without rounding or
+interpolation. A value outside the file range is allowed and produces a warning
+that reports the file `Tmax`.
 
 ***Note***
 

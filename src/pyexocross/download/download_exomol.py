@@ -1,4 +1,4 @@
-"""Download recommended ExoMol line list files through the ExoMol API."""
+"""Download selected ExoMol line list files through the ExoMol API."""
 
 import os
 import re
@@ -42,6 +42,21 @@ def _get_wn_range(isotopologue_config):
     if isotopologue_config is None:
         return None
     return isotopologue_config.get('wn_range')
+
+
+def _get_datasets(isotopologue_config):
+    if isotopologue_config is None:
+        return None
+    datasets = isotopologue_config.get('dataset')
+    if datasets is None:
+        return None
+    if isinstance(datasets, str):
+        datasets = [datasets]
+    if not isinstance(datasets, (list, tuple)) or not datasets or any(
+        not isinstance(dataset, str) or not dataset for dataset in datasets
+    ):
+        raise ValueError('ExoMol dataset must be a nonempty string or list of nonempty strings.')
+    return list(dict.fromkeys(datasets))
 
 
 def _strict_states_filename(isotopologue, dataset):
@@ -95,7 +110,7 @@ def _trans_url_in_wn_range(url, isotopologue, dataset, wn_range):
 
 def get_exomol_urls(species_info, timeout=60, show_progress=True):
     """
-    Get recommended ExoMol file URLs for selected molecules/isotopologues.
+    Get ExoMol file URLs for selected molecules/isotopologues and datasets.
 
     Parameters
     ----------
@@ -104,7 +119,7 @@ def get_exomol_urls(species_info, timeout=60, show_progress=True):
 
             {
                 'MgH': {
-                    '24Mg-1H': {'wn_range': None},
+                    '24Mg-1H': {'dataset': ['XAB'], 'wn_range': None},
                 },
                 'H2O': {
                     '1H2-16O': {'wn_range': [41000, 41200]},
@@ -114,8 +129,8 @@ def get_exomol_urls(species_info, timeout=60, show_progress=True):
         For segmented ``.trans.bz2`` files, ``wn_range`` keeps only files fully
         inside the requested range. Exact ``iso__dataset.trans.bz2`` files are
         kept because they cannot be range-filtered by filename.
-    molecule_isotopologues : dict, optional
-        Alias for ``species_info`` (backward compatibility).
+        ``dataset`` accepts a string or list of dataset names for each
+        isotopologue. If omitted, the API's recommended dataset is selected.
     timeout : int or float, optional
         Timeout in seconds for each ExoMol API request.
     show_progress : bool, optional
@@ -142,15 +157,14 @@ def get_exomol_urls(species_info, timeout=60, show_progress=True):
             continue
 
         json_dict = json.loads(response.text)
-        found_isotopologues = set()
+        found_datasets = set()
         for iso_formula, iso_info in json_dict.items():
             linelist_info = iso_info.get('linelist', {})
             for dataset, files_info in linelist_info.items():
                 if not isinstance(files_info, dict):
                     continue
-                if files_info.get('recommended') is not True:
+                if target_isotopologue_config is None and files_info.get('recommended') is not True:
                     continue
-
                 trans_count = 0
                 trans_urls = []
                 states_url = None
@@ -166,6 +180,16 @@ def get_exomol_urls(species_info, timeout=60, show_progress=True):
                     if target_isotopologue_config is not None and iso_slug not in target_isotopologue_config:
                         continue
 
+                    current_datasets = (
+                        None if target_isotopologue_config is None
+                        else _get_datasets(target_isotopologue_config[iso_slug])
+                    )
+                    if current_datasets is None:
+                        if files_info.get('recommended') is not True:
+                            continue
+                    elif dataset not in current_datasets:
+                        continue
+
                     current_wn_range = (
                         None if target_isotopologue_config is None
                         else _get_wn_range(target_isotopologue_config[iso_slug])
@@ -179,11 +203,16 @@ def get_exomol_urls(species_info, timeout=60, show_progress=True):
                         trans_count += 1
 
                 if states_url is None:
-                    if target_isotopologue_config is None or iso_slug in target_isotopologue_config:
+                    if (target_isotopologue_config is None or iso_slug in target_isotopologue_config) and (
+                        files_info.get('recommended') is True or any(
+                            dataset in (_get_datasets(config) or [])
+                            for config in (target_isotopologue_config or {}).values()
+                        )
+                    ):
                         print(f'{molecule} - {iso_slug or iso_formula} - {dataset}: no strict states file found.')
                     continue
 
-                found_isotopologues.add(iso_slug)
+                found_datasets.add((iso_slug, dataset))
                 start = len(urls)
                 urls.extend([def_url, pf_url, states_url])
                 urls.extend(trans_urls)
@@ -192,12 +221,15 @@ def get_exomol_urls(species_info, timeout=60, show_progress=True):
                     print(entry)
 
         if target_isotopologue_config is not None:
-            missing_isotopologues = [
-                isotopologue for isotopologue in target_isotopologue_config
-                if isotopologue not in found_isotopologues
-            ]
-            for missing_isotopologue in missing_isotopologues:
-                print(f'{molecule} - {missing_isotopologue}: recommended line list not found in ExoMol API response.')
+            for isotopologue, config in target_isotopologue_config.items():
+                datasets = _get_datasets(config)
+                if datasets is None:
+                    if not any(iso == isotopologue for iso, _ in found_datasets):
+                        print(f'{molecule} - {isotopologue}: recommended line list not found in ExoMol API response.')
+                else:
+                    for dataset in datasets:
+                        if (isotopologue, dataset) not in found_datasets:
+                            print(f'{molecule} - {isotopologue} - {dataset}: line list not found in ExoMol API response.')
 
     return urls
 
@@ -217,7 +249,8 @@ def download_exomol(
     Parameters
     ----------
     species_info : dict
-        Molecule/isotopologue configuration in dict mode.
+        Molecule/isotopologue configuration. Each isotopologue may specify
+        ``dataset`` as a string or list; omitted selects the recommended dataset.
     save_path : str
         Folder where downloaded files are saved when ``download=True``.
     file_path : str, optional

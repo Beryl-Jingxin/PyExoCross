@@ -13,6 +13,13 @@ For ExoMol, ExoMolHR, and ExoAtom input, QN labels and formats are derived from 
 3. **Line profiles**: Used for cross section profiles.
 4. **Plotting**: Plots can be generated for both simultaneously using their respective configuration parameters (`PlotStickSpectra(Y/N)` and `PlotCrossSection(Y/N)`).
 
+Temperatures may be any positive integer or floating-point value in K. Integer
+temperatures available in the partition-function file are read directly. For
+decimal temperatures or temperatures outside the file range, $Q(T)$ is
+calculated from the available states without rounding or interpolation. If the
+temperature is outside the file range, PyExoCross reports the file `Tmax` and
+continues the calculation.
+
 ***Note***
 In combined stick-spectra and cross-section runs, `WnWlUnit` is shared by both outputs. \
 With `wn cm-1`, the first column of both saved files is wavenumber in cm⁻¹. \

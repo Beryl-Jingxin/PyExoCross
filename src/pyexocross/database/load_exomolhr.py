@@ -105,8 +105,17 @@ def resolve_exomolhr_filepaths(read_path, molecule, isotopologue):
     Resolve ExoMolHR CSV and PF filepaths using only molecule and isotopologue.
     """
     iso_path = os.path.join(read_path, molecule, isotopologue)
+    pf_match = _match_single_dataset_file(
+        glob.glob(os.path.join(iso_path, '*.pf')),
+        isotopologue, '.pf', 'partition function',
+    )
+    csv_files = glob.glob(os.path.join(iso_path, '*.csv'))
+    canonical = [path for path in csv_files if os.path.basename(path) in (
+        f'{molecule}__{isotopologue}__{pf_match[1]}.csv',
+        f'{isotopologue}__{pf_match[1]}.csv',
+    )]
     csv_match = _match_single_dataset_file(
-        glob.glob(os.path.join(iso_path, '*.csv')),
+        canonical or csv_files,
         isotopologue,
         '.csv',
         'CSV',
@@ -169,15 +178,47 @@ def read_exomolhr_df(read_path, data_info, min_wn, max_wn, unc_filter):
 
 def read_exomolhr_pf(read_path, data_info, T_list):
     """Read ExoMolHR partition-function values for selected temperatures."""
-    _, pf_path, _ = resolve_exomolhr_filepaths(read_path, data_info[0], data_info[1])
+    pf_path, dataset = _match_single_dataset_file(
+        glob.glob(os.path.join(read_path, data_info[0], data_info[1], '*.pf')),
+        data_info[1], '.pf', 'partition function',
+    )
     pf_df = pd.read_csv(pf_path, sep=r'\s+', names=['T', 'Q'], header=None, engine='python')
-    Q_list = pf_df[pf_df['T'].isin(T_list)]['Q']
-    if Q_list.empty:
-        raise ValueError(
-            'No specified temperature dependent partition funtion value.',
-            'Please change the temperature(s) or calculate the partition function at first.',
+    from ..calculation.calculate_partition_func import partition_values
+
+    def load_states():
+        from urllib.request import urlretrieve
+        molecule, isotopologue = data_info[:2]
+        stem = f'{isotopologue}__{dataset}.states'
+        folder = os.path.dirname(pf_path)
+        candidates = [
+            os.path.join(folder, stem),
+            os.path.join(folder, stem + '.bz2'),
+            os.path.join(os.path.dirname(read_path.rstrip('/')), 'ExoMol',
+                         molecule, isotopologue, dataset, stem + '.bz2'),
+            os.path.join(folder, '.pyexocross_cache', stem + '.bz2'),
+        ]
+        state_path = next((path for path in candidates if os.path.isfile(path)), None)
+        if state_path is None:
+            state_path = candidates[-1]
+            os.makedirs(os.path.dirname(state_path), exist_ok=True)
+            url = (f'https://exomol.com/db/{molecule}/{isotopologue}/'
+                   f'{dataset}/{stem}.bz2')
+            print(f'Downloading complete ExoMol states for partition functions: {url}')
+            temporary = state_path + '.download'
+            try:
+                urlretrieve(url, temporary)
+                os.replace(temporary, state_path)
+            finally:
+                if os.path.exists(temporary):
+                    os.remove(temporary)
+        print(f'Calculating partition functions from complete states: {state_path}')
+        chunks = pd.read_csv(
+            state_path, sep=r'\s+', header=None, usecols=[1, 2],
+            names=['E', 'g'], dtype=float, chunksize=500_000,
         )
-    return Q_list.to_numpy(dtype=float)
+        return ((chunk['E'].values, chunk['g'].values) for chunk in chunks)
+
+    return partition_values(pf_df, T_list, load_states)
 
 
 def process_exomolhr_linelist(exomolhr_df):

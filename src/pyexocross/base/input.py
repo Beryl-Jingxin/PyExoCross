@@ -466,7 +466,7 @@ def inp_para(inp_filepath):
             T_list = []
         else:
             temp_str = inp_df[col0.isin(['Temperatures'])][1].values[0]
-            T_list = [int(temp) for temp in parse_TP_values(temp_str)]
+            T_list = [float(temp) for temp in parse_TP_values(temp_str)]
         wn_wl = inp_df[col0.isin(['WnWlUnit'])][1].values[0].upper()
         wn_wl_unit = inp_df[col0.isin(['WnWlUnit'])][2].values[0].lower()
         min_wnl = float(inp_df[col0.isin(['Range'])][1].iloc[0])
@@ -552,9 +552,9 @@ def inp_para(inp_filepath):
             vib_label = inp_df[col0.isin(['QNsVibLabel'])][1].iloc[0].replace(' ','').split(',')
             rot_label = inp_df[col0.isin(['QNsRotLabel'])][1].iloc[0].replace(' ','').split(',')
             Tvib_str = inp_df[col0.isin(['Tvib'])][1].values[0]
-            Tvib_list = [int(tvib) for tvib in parse_TP_values(Tvib_str)]
+            Tvib_list = [float(tvib) for tvib in parse_TP_values(Tvib_str)]
             Trot_str = inp_df[col0.isin(['Trot'])][1].values[0]
-            Trot_list = [int(trot) for trot in parse_TP_values(Trot_str)]
+            Trot_list = [float(trot) for trot in parse_TP_values(Trot_str)]
             # Align Tvib_list and Trot_list lengths for 2T NLTE:
             # - If one list has length 1, broadcast it to match the other.
             # - If both have length > 1, form the Cartesian product so that
@@ -580,7 +580,7 @@ def inp_para(inp_filepath):
             rot_label = []
             Tvib_list = []
             Trot_str = inp_df[col0.isin(['Trot'])][1].values[0]
-            Trot_list = [int(trot) for trot in parse_TP_values(Trot_str)]
+            Trot_list = [float(trot) for trot in parse_TP_values(Trot_str)]
             T_list = []
             LTE_NLTE = '__nvib-nlte'
         elif NLTEMethod == 'P':

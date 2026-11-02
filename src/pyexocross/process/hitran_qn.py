@@ -323,7 +323,7 @@ def separate_QN_hitran(hitran_df,GlobalQNLabels,LocalQNupperLabels,LocalQNlowerL
     QNl_col = [i+'"' for i in list(QNl_df.columns)] 
     return(QNu_df, QNl_df, QNu_col, QNl_col)
 
-def hitran_linelist_QN(hitran_df):
+def hitran_linelist_QN(hitran_df, apply_qn_filter=True):
     """
     Process HITRAN linelist to extract and format quantum numbers.
 
@@ -356,7 +356,7 @@ def hitran_linelist_QN(hitran_df):
     hitran_linelist_colname = hitran_main_colname + QN_col
     hitran_linelist_df.columns = hitran_linelist_colname
     # Do quantum number filter.
-    if QNsFilter !=[]:   
+    if apply_qn_filter and QNsFilter !=[]:
         if 'J' not in QNs_label:
             QNs_col = [i+"'" for i in QNs_label] + ["J'"] + [i+'"' for i in QNs_label] + ['J"']
         else:
@@ -365,5 +365,5 @@ def hitran_linelist_QN(hitran_df):
         hitran_linelist_df = QNfilter_linelist(hitran_linelist_df, QNs_value, QNs_label)
     else:
         QNs_col = []  
-    return(hitran_linelist_df, QNs_col) 
-    
+    return(hitran_linelist_df, QNs_col)
+

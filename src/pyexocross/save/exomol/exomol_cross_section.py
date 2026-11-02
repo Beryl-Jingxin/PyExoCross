@@ -264,7 +264,11 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
     if cutoff == 'None':
         st_df = st_df[st_df['v'].between(min_wn, max_wn)]
     else:
-        st_df = st_df[st_df['v'].between(min_wn - cutoff, max_wn + cutoff)]
+        padding = float(cutoff)
+        if 'BIN' in profile.upper():
+            from pyexocross.base import constants
+            padding += constants.binSizeHalf
+        st_df = st_df[st_df['v'].between(max(0.0, min_wn - padding), max_wn + padding)]
     if len(st_df) != 0 and QNsFilter != []:
         st_df = QNfilter_linelist(st_df, QNs_value, QNs_label)
 

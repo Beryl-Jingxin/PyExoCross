@@ -142,6 +142,23 @@ def sourcebounds(filepath):
     return int(match.group(1)), int(match.group(2))
 
 
+def readpadding(config):
+    """Return the line-centre margin in cm-1, without changing output bounds."""
+    if not getattr(config, 'cross_sections', 0) or config.cutoff in (None, 'None'):
+        return 0.0
+    padding = float(config.cutoff)
+    if 'BIN' in config.profile.upper():
+        # Binned kernels integrate using this same runtime half width.
+        padding += float(config.bin_size) / 2
+    return padding
+
+
+def readbounds(config):
+    """Return the nonnegative line-centre interval needed for this output."""
+    padding = readpadding(config)
+    return max(0.0, config.min_wn - padding), config.max_wn + padding
+
+
 def rangebounds(filepath, minwn, maxwn, cutoff):
     """Return integer cache bounds clipped to the initially selected file."""
     expansion = 0.0 if cutoff in (None, 'None') else float(cutoff)
@@ -449,7 +466,7 @@ def cachedrangesources(config, selected, cachedir, refresh=False):
             path,
             config.min_wn,
             config.max_wn,
-            config.cutoff,
+            readpadding(config),
         )
         candidate = rangecandidate(
             manifest,
@@ -711,7 +728,7 @@ def parquetsources(config, selected, states, cachedir, alltrans, refresh=False):
                 path,
                 config.min_wn,
                 config.max_wn,
-                config.cutoff,
+                readpadding(config),
             )
         sources.append(rangecachesource(
             path,
@@ -929,7 +946,7 @@ class LoadedData:
         if not labels or self.storage != 'parquet':
             return
         required = rangecachecolumns(labels)[:-1]
-        selected = self.sources(config.min_wn, config.max_wn)
+        selected = self.sources(*readbounds(config))
         missing = [
             source for source in selected
             if source.path.endswith('.parquet')
@@ -987,12 +1004,8 @@ class LoadedData:
         )
         source_map = {os.path.abspath(source.origin): source for source in self.transitions}
         missing = [path for path in selected if os.path.abspath(path) not in source_map]
-        if missing:
-            raise ValueError(
-                'The requested range needs transition files not included by px.load. '
-                'Load the wider range before calculating.'
-            )
-        sources = [source_map[os.path.abspath(path)] for path in selected]
+        sources = [source_map[os.path.abspath(path)] for path in selected
+                   if os.path.abspath(path) in source_map]
         uncovered = []
         for source in sources:
             if source.minwn is None or source.maxwn is None:
@@ -1000,11 +1013,22 @@ class LoadedData:
             lower, upper = rangebounds(source.origin, min_wn, max_wn, None)
             if source.minwn > lower or source.maxwn < upper:
                 uncovered.append((source.path, lower, upper))
-        if uncovered:
-            raise ValueError(
-                'The requested range is not covered by the loaded range cache. '
-                'Call px.load again with the wider calculation range.'
+        if missing or uncovered:
+            # Output-range validation happens in the API. Extend input coverage
+            # on demand for neighbouring lines required by broadening.
+            widerconfig = copy.copy(self.config)
+            widerconfig.min_wn, widerconfig.max_wn = min_wn, max_wn
+            widerconfig.cutoff = 'None'
+            widerconfig.cross_sections = 0
+            wider = loaddata(
+                widerconfig, cache='auto' if self.storage == 'memory' else self.storage,
+                cachedir=self.cachedir,
+                maxmemory=self.config.max_memory,
             )
+            source_map.update({os.path.abspath(source.origin): source
+                               for source in wider.transitions})
+            self.transitions = tuple(source_map.values())
+            sources = [source_map[os.path.abspath(path)] for path in selected]
         return sources
 
     def lines(self, min_wn, max_wn, uncfilter='None', threshold='None'):
@@ -1052,8 +1076,7 @@ def loaddata(
         selected = get_part_transfiles(
             config.read_path,
             config.data_info,
-            config.min_wn,
-            config.max_wn,
+            *readbounds(config),
             prepare=False,
         )
     if not selected:

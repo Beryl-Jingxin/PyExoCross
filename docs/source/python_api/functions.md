@@ -131,8 +131,9 @@ format. Use the result with `data=` in `px.conversion`,
 
 Later calculations may provide their own `min_range` and `max_range` as long
 as that interval is covered by the data loaded here. A wider interval requires
-another `px.load`. The `cutoff` value does not expand the range required from
-`px.load`.
+another `px.load`. For cross sections with a finite `cutoff`, neighbouring
+input coverage is extended automatically when needed. Binned profiles also
+include half a bin. The output range is unchanged.
 Range errors report the exact recommended `min_range` and
 `max_range` for the next load.
 
@@ -218,8 +219,9 @@ accelerates supported calculation kernels after the required arrays are loaded.
 
 For range-based spectra and cross sections, Parquet mode stores filtered files
 under `<cache_dir>/ranges/` using names with specified ranges. \
-A finite `cutoff` expands the cached interval only inside the transition files selected by the original
-calculation range; it does not add adjacent source files. Cache validity and
+A finite `cutoff` expands transition-file selection and cache coverage on both
+sides of the output range; binned profiles also include half a bin. Explicit
+Reusable data extend their input coverage on demand. Cache validity and
 source metadata are stored in `<cache_dir>/manifest.json`. When several valid
 caches cover a request, PyExoCross selects the narrowest interval and prints
 the number, intervals, and total size of range cache files. \
@@ -288,7 +290,7 @@ Download database files from external servers. Supported databases are ExoMol, E
 | `wn_range` | `list` | Optional | Filter transitions by wavenumber range (cm⁻¹). |
 | `T` | `int` | Optional | Temperature in Kelvin. |
 | `threshold` | `float` | Optional | Minimum line intensity threshold in cm/molecule. |
-| `dataset` | `str` | Optional | The dataset to use. Can be either `'NIST'` or `'Kurucz'`. |
+| `dataset` | `str` or `list[str]` | Optional | Select ExoMol datasets per isotopologue, or select an ExoAtom dataset. |
 
 ### Species Configuration Options (`species_info`)
 
@@ -296,11 +298,11 @@ Inside `species_info`, you can configure the following optional settings:
 - **`wn_range`** (list/tuple of `[wn_min, wn_max]`): Filter transitions by wavenumber range (cm⁻¹). Supported by ExoMol (downloads only segmented transition files fully within range), ExoMolHR, and HITRAN.
 - **`T`** or **`temperature`** (int): Temperature in Kelvin. Required for ExoMolHR online query downloads.
 - **`threshold`** or **`Smin`** (float): Minimum line intensity threshold in cm/molecule. Required for ExoMolHR online query downloads to filter out weaker lines.
-- **`dataset`** (str): The dataset to use. Required for ExoAtom downloads. Can be either `'NIST'` (critically evaluated and recommended for accuracy) or `'Kurucz'` (recommended for completeness).
+- **`dataset`** (str or list of str): For ExoMol, select one or more datasets for each isotopologue. If omitted, download the dataset marked recommended by the ExoMol API. For ExoAtom, use `'NIST'` or `'Kurucz'`.
 
 | Database | Required Parameters | Optional Parameters |
 | :--- | :--- | :--- |
-| `'ExoMol'` | `database`, `file_path`, `species_info`, `download` | `wn_range` |
+| `'ExoMol'` | `database`, `file_path`, `species_info`, `download` | `dataset`, `wn_range` |
 | `'ExoMolHR'` | `database`, `file_path`, `species_info`, `download` | `T`, `threshold`, `wn_range` |
 | `'ExoAtom'`| `database`, `file_path`, `species_info`, `download` | `dataset` |
 | `'HITRAN'` | `database`, `file_path`, `species_info`, `download` | `wn_range` |
@@ -314,7 +316,7 @@ px.download(
     file_path='/path/to/ExoMol/',
     species_info={
         'MgH': {
-            '24Mg-1H': {'wn_range': None},
+            '24Mg-1H': {'dataset': ['XAB'], 'wn_range': None},
             '25Mg-1H': {'wn_range': None},
         },
         'H2O': {
@@ -796,6 +798,15 @@ px.stick_spectra(
 ---
 
 ## `px.cross_sections`
+
+For finite line-wing `cutoff`, cross-section calculations read neighbouring
+lines beyond the output interval. Binned profiles also include half a bin.
+This applies to ExoMol, ExoAtom, HITRAN/HITEMP, and ExoMolHR. The output
+interval is unchanged. Binned Lorentzian and Voigt profiles normalize each
+line over its own cutoff interval, independently of the output window and
+transition chunks. With no cutoff, they use full-profile normalization.
+Gaussian bin integrals retain their existing full-profile normalization.
+
 
 ```python
 px.cross_sections(inp_filepath=None, **kwargs)

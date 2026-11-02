@@ -7,10 +7,7 @@ Doppler, Lorentzian, Voigt, and other line profiles.
 import numpy as np
 import numexpr as ne
 from scipy.special import roots_hermite
-from ..base.constants import (
-    InvbinSizePIhalf,
-    binSize2,
-)
+from ..base import constants as bin_constants
 from ..gpu.base_gpu import using_gpu
 from ..gpu.calculate_line_profile_gpu import gpu_cross_section
 from ..calculation.calcualte_line_profile import (
@@ -42,8 +39,8 @@ def _cross_section_gpu(kind, wn_grid, v, coef, cutoff, alpha=None, gamma=None, s
         sigma=sigma,
         hV=hV,
         eta=eta,
-        bin_size2=binSize2,
-        inv_bin_size_pi_half=InvbinSizePIhalf,
+        bin_size2=bin_constants.binSize2,
+        inv_bin_size_pi_half=bin_constants.InvbinSizePIhalf,
     )
 
 
@@ -77,8 +74,8 @@ def cross_section_Doppler(wn_grid, v, alpha, coef, cutoff):
 
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
-        start = max(0,wn_grid.searchsorted(min(v))-1)
-        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
+        start = 0
+        end = len(wn_grid)
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
@@ -131,8 +128,8 @@ def cross_section_Lorentzian(wn_grid, v, gamma, coef, cutoff):
 
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
-        start = max(0,wn_grid.searchsorted(min(v))-1)
-        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
+        start = 0
+        end = len(wn_grid)
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
@@ -187,8 +184,8 @@ def cross_section_SciPyVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
         
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
-        start = max(0,wn_grid.searchsorted(min(v))-1)
-        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
+        start = 0
+        end = len(wn_grid)
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
@@ -246,8 +243,8 @@ def cross_section_SciPyWofzVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
         
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
-        start = max(0,wn_grid.searchsorted(min(v))-1)
-        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
+        start = 0
+        end = len(wn_grid)
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
@@ -305,8 +302,8 @@ def cross_section_HumlicekVoigt(wn_grid, v, alpha, gamma, coef, cutoff):
         
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
-        start = max(0,wn_grid.searchsorted(min(v))-1)
-        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
+        start = 0
+        end = len(wn_grid)
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
@@ -373,8 +370,8 @@ def cross_section_PseudoVoigt(wn_grid, v, hV, eta, coef, cutoff):
 
     xsec = np.zeros_like(wn_grid)
     if cutoff == 'None':
-        start = max(0,wn_grid.searchsorted(min(v))-1)
-        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
+        start = 0
+        end = len(wn_grid)
         _xsec = np.zeros(shape=(end-start))
         for i in range(start,end):
             idx = i-start
@@ -399,192 +396,61 @@ def cross_section_PseudoVoigt(wn_grid, v, hV, eta, coef, cutoff):
     xsec[start:end] += _xsec   
     return xsec
 
+def binnedIntegral(wn_grid, v, coef, cutoff, kind, alpha=None, gamma=None, sigma=None):
+    """Average each line over bins, independently of output window and chunks."""
+    from scipy.special import erf
+    width = float(bin_constants.binSize2) / 2
+    half = width / 2
+    limit = None if cutoff in (None, 'None') else float(cutoff)
+    result = np.zeros_like(wn_grid, dtype=float)
+    if kind == 'binned_voigt':
+        roots, weights = roots_hermite(20)
+        shift = np.sqrt(2) * sigma[:, None] * roots[None, :]
+        if limit is None:
+            norm = np.full(len(v), np.pi * np.sqrt(np.pi))
+        else:
+            norm = np.sum(weights * (np.arctan((limit-shift)/gamma[:, None])
+                                     - np.arctan((-limit-shift)/gamma[:, None])), axis=1)
+    elif kind == 'binned_lorentzian':
+        norm = np.pi if limit is None else 2 * np.arctan(limit/gamma)
+    for i, centre in enumerate(wn_grid):
+        dv = centre - v
+        lower, upper = dv-half, dv+half
+        if limit is not None:
+            lower = np.maximum(lower, -limit)
+            upper = np.minimum(upper, limit)
+        valid = upper > lower
+        if not np.any(valid):
+            continue
+        lo, hi = lower[valid], upper[valid]
+        if kind == 'binned_gaussian':
+            integral = (erf(np.sqrt(np.log(2))*hi/alpha[valid])
+                        - erf(np.sqrt(np.log(2))*lo/alpha[valid])) / 2
+        elif kind == 'binned_lorentzian':
+            integral = (np.arctan(hi/gamma[valid])-np.arctan(lo/gamma[valid])) / (norm if np.isscalar(norm) else norm[valid])
+        else:
+            integral = np.sum(weights * (np.arctan((hi[:, None]-shift[valid])/gamma[valid, None])
+                                        - np.arctan((lo[:, None]-shift[valid])/gamma[valid, None])), axis=1) / norm[valid]
+        result[i] = coef[valid] @ integral / width
+    return result
+
+
 def cross_section_BinnedGaussian(wn_grid, v, alpha, coef, cutoff):
-    """
-    Calculate cross sections using binned Gaussian line profile.
+    gpu = _cross_section_gpu('binned_gaussian', wn_grid, v, coef, cutoff, alpha=alpha) if using_gpu() else None
+    if gpu is not None:
+        return gpu
+    return binnedIntegral(wn_grid, v, coef, cutoff, 'binned_gaussian', alpha=alpha)
 
-    Integrates Gaussian profile over bin width for each grid point.
-
-    Parameters
-    ----------
-    wn_grid : np.ndarray
-        Wavenumber grid array (bin centers), shape (n_points,)
-    v : np.ndarray
-        Transition wavenumber centers, shape (n_lines,)
-    alpha : np.ndarray
-        Doppler HWHM array, shape (n_lines,)
-    coef : np.ndarray
-        Line strength coefficients, shape (n_lines,)
-    cutoff : float or str
-        Wing cutoff value in cm^-1 or 'None' for no cutoff
-
-    Returns
-    -------
-    np.ndarray
-        Cross-section array, shape (n_points,)
-    """  
-    if using_gpu():
-        gpu_xsec = _cross_section_gpu('binned_gaussian', wn_grid, v, coef, cutoff, alpha=alpha)
-        if gpu_xsec is not None:
-            return gpu_xsec
-
-    xsec = np.zeros_like(wn_grid)
-    if cutoff == 'None':
-        start = max(0,wn_grid.searchsorted(min(v))-1)
-        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            dv = wn_grid[i] - v
-            BinnedGaussian = BinnedGaussian_profile(dv, alpha)
-            _xsec[idx] = coef @ BinnedGaussian 
-    else:
-        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
-        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            dv = wn_grid[i] - v
-            filter = np.abs(dv) <= cutoff
-            if filter.sum() > 0:
-                _dv = dv[filter]
-                _alpha = alpha[filter]
-                _coef = coef[filter]
-                BinnedGaussian = BinnedGaussian_profile(_dv, _alpha)
-                _xsec[idx] = _coef @ BinnedGaussian 
-    xsec[start:end] += _xsec / binSize2
-    return xsec
 
 def cross_section_BinnedLorentzian(wn_grid, v, gamma, coef, cutoff):
-    """
-    Calculate cross sections using binned Lorentzian line profile.
+    gpu = _cross_section_gpu('binned_lorentzian', wn_grid, v, coef, cutoff, gamma=gamma) if using_gpu() else None
+    if gpu is not None:
+        return gpu
+    return binnedIntegral(wn_grid, v, coef, cutoff, 'binned_lorentzian', gamma=gamma)
 
-    Integrates Lorentzian profile over bin width for each grid point.
-
-    Parameters
-    ----------
-    wn_grid : np.ndarray
-        Wavenumber grid array (bin centers), shape (n_points,)
-    v : np.ndarray
-        Transition wavenumber centers, shape (n_lines,)
-    gamma : np.ndarray
-        Lorentzian HWHM array, shape (n_lines,)
-    coef : np.ndarray
-        Line strength coefficients, shape (n_lines,)
-    cutoff : float or str
-        Wing cutoff value in cm^-1 or 'None' for no cutoff
-
-    Returns
-    -------
-    np.ndarray
-        Cross-section array, shape (n_points,)
-    """ 
-    if using_gpu():
-        gpu_xsec = _cross_section_gpu('binned_lorentzian', wn_grid, v, coef, cutoff, gamma=gamma)
-        if gpu_xsec is not None:
-            return gpu_xsec
-
-    xsec = np.zeros_like(wn_grid)
-    bin_size = float(binSize2) / 2.0
-    if cutoff == 'None':
-        start = max(0,wn_grid.searchsorted(min(v))-1)
-        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
-        wngrid_start = wn_grid[start]
-        wngrid_end = wn_grid[end-1]
-        bnormBinsize = ne.evaluate('1/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            dv = wn_grid[i] - v
-            BinnedLorentzian = BinnedLorentzian_profile(dv, gamma, bnormBinsize)
-            _xsec[idx] = coef @ BinnedLorentzian
-    else:
-        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
-        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
-        wngrid_start = wn_grid[start]
-        wngrid_end = wn_grid[end-1]
-        bnormBinsize = ne.evaluate('1/(arctan((wngrid_end-v)/gamma)-arctan((wngrid_start-v)/gamma))/bin_size')
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            dv = wn_grid[i] - v
-            filter = np.abs(dv) <= cutoff
-            if filter.sum() > 0:
-                _dv = dv[filter]
-                _gamma = gamma[filter]
-                _bnormBinsize = bnormBinsize[filter]
-                _coef = coef[filter]
-                BinnedLorentzian = BinnedLorentzian_profile(_dv, _gamma, _bnormBinsize)
-                _xsec[idx] = _coef @ BinnedLorentzian
-    xsec[start:end] += _xsec  
-    return xsec
 
 def cross_section_BinnedVoigt(wn_grid, v, sigma, gamma, coef, cutoff):
-    """
-    Calculate cross sections using binned Voigt line profile.
-
-    Uses Hermite quadrature to integrate Voigt profile over bin width.
-
-    Parameters
-    ----------
-    wn_grid : np.ndarray
-        Wavenumber grid array (bin centers), shape (n_points,)
-    v : np.ndarray
-        Transition wavenumber centers, shape (n_lines,)
-    sigma : np.ndarray
-        Gaussian standard deviation array, shape (n_lines,)
-    gamma : np.ndarray
-        Lorentzian HWHM array, shape (n_lines,)
-    coef : np.ndarray
-        Line strength coefficients, shape (n_lines,)
-    cutoff : float or str
-        Wing cutoff value in cm^-1 or 'None' for no cutoff
-
-    Returns
-    -------
-    np.ndarray
-        Cross-section array, shape (n_points,)
-    """
-    if using_gpu():
-        gpu_xsec = _cross_section_gpu('binned_voigt', wn_grid, v, coef, cutoff, sigma=sigma, gamma=gamma)
-        if gpu_xsec is not None:
-            return gpu_xsec
-        
-    nquad = 20
-    roots, weights = roots_hermite(nquad, mu=False)
-    xsec = np.zeros_like(wn_grid)
-    if cutoff == 'None':
-        start = max(0,wn_grid.searchsorted(min(v))-1)
-        end = min(wn_grid.searchsorted(max(v)),len(wn_grid))
-        wngrid_start = wn_grid[start]
-        wngrid_end = wn_grid[end-1]
-        bnormqT = np.transpose(np.array([BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, root) for root in roots]))
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            dv = wn_grid[i] - v
-            lorenzT = np.transpose(np.array([BinnedVoigt_lorenz(dv, sigma, gamma, root) for root in roots]))
-            BinnedVoigtProfile = BinnedVoigt_profile(weights,bnormqT,lorenzT)                 
-            _xsec[idx] = ne.evaluate('sum(coef * BinnedVoigtProfile)')
-    else:
-        start = max(0,wn_grid.searchsorted(min(v)-cutoff)-1)
-        end = min(wn_grid.searchsorted(max(v)+cutoff),len(wn_grid))
-        wngrid_start = wn_grid[start]
-        wngrid_end = wn_grid[end-1]
-        bnormq = [BinnedVoigt_bnormq(wngrid_start, wngrid_end, v, sigma, gamma, root) for root in roots]
-        _xsec = np.zeros(shape=(end-start))
-        for i in range(start,end):
-            idx = i-start
-            dv = wn_grid[i] - v
-            filter = np.abs(dv) <= cutoff
-            if filter.sum() > 0:
-                _dv = dv[filter]
-                _sigma = sigma[filter]
-                _gamma = gamma[filter]
-                _coef = coef[filter]
-                bnormqT = np.transpose(np.array([bnormq[i][filter] for i in range(nquad)]))
-                lorenzT = np.transpose(np.array([BinnedVoigt_lorenz(_dv, _sigma, _gamma, root) for root in roots]))
-                BinnedVoigtProfile = BinnedVoigt_profile(weights,bnormqT,lorenzT)    
-                _xsec[idx] = ne.evaluate('sum(_coef * BinnedVoigtProfile)')
-    xsec[start:end] += _xsec * InvbinSizePIhalf
-    return xsec
+    gpu = _cross_section_gpu('binned_voigt', wn_grid, v, coef, cutoff, sigma=sigma, gamma=gamma) if using_gpu() else None
+    if gpu is not None:
+        return gpu
+    return binnedIntegral(wn_grid, v, coef, cutoff, 'binned_voigt', sigma=sigma, gamma=gamma)

@@ -196,6 +196,8 @@ def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib
                 if I is not None and len(I) > 0:
                     stick_spectra_df = base_df.copy()
                     stick_spectra_df['S'] = I
+                    from pyexocross.core import min_wn, max_wn
+                    stick_spectra_df = stick_spectra_df[stick_spectra_df['v'].between(min_wn, max_wn)].copy()
                     stick_spectra_df = stick_spectra_df[['v', 'S', "J'", "E'", 'J"', 'E"'] + QNs_col]
                     
                     if threshold != 'None':

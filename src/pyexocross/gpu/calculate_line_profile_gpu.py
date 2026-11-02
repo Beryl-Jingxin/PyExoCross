@@ -318,7 +318,7 @@ def gpu_cross_section(
         if eta_np is not None:
             eta_np = np.nan_to_num(eta_np[valid], nan=0.5, posinf=0.5, neginf=0.5)
 
-        start, end = _window_bounds(wn_grid_np, v_np, cutoff)
+        start, end = (0, len(wn_grid_np)) if kind.startswith('binned_') or cutoff == 'None' else _window_bounds(wn_grid_np, v_np, cutoff)
         xsec = np.zeros_like(wn_grid_np, dtype=np.float64)
         if start >= end:
             return xsec
@@ -331,7 +331,7 @@ def gpu_cross_section(
         sqrtln2_inv_pi = np.sqrt(np.log(2.0) / np.pi)
         negln2 = -np.log(2.0)
         pi_val = np.pi
-        bin_half = float(bin_size2) / 2.0
+        bin_half = float(bin_size2) / 4.0
 
         # global normalization values for binned line profiles
         bin_size = float(bin_size2) / 2.0
@@ -341,7 +341,7 @@ def gpu_cross_section(
         if kind == 'binned_lorentzian':
             if gamma_np is None:
                 return None
-            denom = np.arctan((wngrid_end - v_np) / gamma_np) - np.arctan((wngrid_start - v_np) / gamma_np)
+            denom = np.full(len(v_np), np.pi) if cutoff_val is None else 2 * np.arctan(cutoff_val / gamma_np)
             safe_denom = np.where(np.abs(denom) > np.finfo(float).eps, denom, np.finfo(float).eps)
             bnorm_np = 1.0 / safe_denom / bin_size
         else:
@@ -352,6 +352,10 @@ def gpu_cross_section(
                 return None
             nquad = 20
             roots, weights = roots_hermite(nquad, mu=False)
+            shift = Sqrt2 * roots[None, :] * sigma_np[:, None]
+            voigt_norm = (np.full(len(v_np), np.pi * np.sqrt(np.pi)) if cutoff_val is None
+                          else np.sum(weights * (np.arctan((cutoff_val-shift)/gamma_np[:, None])
+                                                - np.arctan((-cutoff_val-shift)/gamma_np[:, None])), axis=1))
         else:
             roots, weights = None, None
 
@@ -368,6 +372,11 @@ def gpu_cross_section(
                 v_g = _to_backend_array(provider, mod, v_np[l0:l1])
                 coef_g = _to_backend_array(provider, mod, coef_np[l0:l1])
                 dv = wn_block - v_g[None, :]
+
+                lo, hi = dv - bin_half, dv + bin_half
+                if kind.startswith('binned_') and cutoff_val is not None:
+                    lo = mod.clamp(lo, min=-cutoff_val, max=cutoff_val) if provider == 'torch' else mod.clip(lo, -cutoff_val, cutoff_val)
+                    hi = mod.clamp(hi, min=-cutoff_val, max=cutoff_val) if provider == 'torch' else mod.clip(hi, -cutoff_val, cutoff_val)
 
                 alpha_g = _to_backend_array(provider, mod, alpha_np[l0:l1]) if alpha_np is not None else None
                 gamma_g = _to_backend_array(provider, mod, gamma_np[l0:l1]) if gamma_np is not None else None
@@ -400,23 +409,23 @@ def gpu_cross_section(
                     alpha_safe = _safe_positive(provider, mod, alpha_g)
                     if provider == 'cupy':
                         try:
-                            erfxpos = mod.erf(sqrtln2 * (dv + bin_half) / alpha_safe[None, :])
-                            erfxneg = mod.erf(sqrtln2 * (dv - bin_half) / alpha_safe[None, :])
+                            erfxpos = mod.erf(sqrtln2 * hi / alpha_safe[None, :])
+                            erfxneg = mod.erf(sqrtln2 * lo / alpha_safe[None, :])
                         except Exception:
                             from cupyx.scipy.special import erf as cp_erf  # type: ignore
-                            erfxpos = cp_erf(sqrtln2 * (dv + bin_half) / alpha_safe[None, :])
-                            erfxneg = cp_erf(sqrtln2 * (dv - bin_half) / alpha_safe[None, :])
+                            erfxpos = cp_erf(sqrtln2 * hi / alpha_safe[None, :])
+                            erfxneg = cp_erf(sqrtln2 * lo / alpha_safe[None, :])
                     else:
-                        erfxpos = mod.special.erf(sqrtln2 * (dv + bin_half) / alpha_safe[None, :])
-                        erfxneg = mod.special.erf(sqrtln2 * (dv - bin_half) / alpha_safe[None, :])
+                        erfxpos = mod.special.erf(sqrtln2 * hi / alpha_safe[None, :])
+                        erfxneg = mod.special.erf(sqrtln2 * lo / alpha_safe[None, :])
                     profile = erfxpos - erfxneg
                 elif kind == 'binned_lorentzian':
                     gamma_safe = _safe_positive(provider, mod, gamma_g)
                     bnorm_g = _to_backend_array(provider, mod, bnorm_np[l0:l1])
                     _atan = _backend_atan(mod)
                     profile = (
-                        _atan((dv + bin_half) / gamma_safe[None, :])
-                        - _atan((dv - bin_half) / gamma_safe[None, :])
+                        _atan(hi / gamma_safe[None, :])
+                        - _atan(lo / gamma_safe[None, :])
                     ) * bnorm_g[None, :]
                 elif kind == 'binned_voigt':
                     sigma_safe = _safe_positive(provider, mod, sigma_g)
@@ -426,25 +435,18 @@ def gpu_cross_section(
                     roots_g = _to_backend_array(provider, mod, roots)
                     weights_g = _to_backend_array(provider, mod, weights)
 
-                    # bnormq: [l, q]
-                    vxsigma = v_g[:, None] + Sqrt2 * roots_g[None, :] * sigma_safe[:, None]
-                    bnormq_den = (
-                        _atan((wngrid_end - vxsigma) / gamma_safe[:, None])
-                        - _atan((wngrid_start - vxsigma) / gamma_safe[:, None])
-                    )
-                    bnormq = 1.0 / _safe_nonzero(provider, mod, bnormq_den)
-
-                    dvx = dv[:, :, None] - Sqrt2 * roots_g[None, None, :] * sigma_safe[None, :, None]
+                    shift_g = Sqrt2 * roots_g[None, None, :] * sigma_safe[None, :, None]
                     lorenz = (
-                        _atan((dvx + bin_half) / gamma_safe[None, :, None])
-                        - _atan((dvx - bin_half) / gamma_safe[None, :, None])
+                        _atan((hi[:, :, None] - shift_g) / gamma_safe[None, :, None])
+                        - _atan((lo[:, :, None] - shift_g) / gamma_safe[None, :, None])
                     )
-                    profile = mod.sum(weights_g[None, None, :] * bnormq[None, :, :] * lorenz, axis=2)
+                    norm_g = _to_backend_array(provider, mod, voigt_norm[l0:l1])
+                    profile = mod.sum(weights_g[None, None, :] * lorenz, axis=2) * np.sqrt(np.pi) / norm_g[None, :]
                 else:
                     return None
 
                 profile = _finite_or_zero(provider, mod, profile)
-                if cutoff_val is not None:
+                if cutoff_val is not None and not kind.startswith('binned_'):
                     mask = mod.abs(dv) <= cutoff_val
                     profile = mod.where(mask, profile, 0.0)
                     profile = _finite_or_zero(provider, mod, profile)

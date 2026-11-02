@@ -427,6 +427,8 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
                     # Create stick spectra DataFrame with intensity
                     stick_spectra_df = base_df.copy()
                     stick_spectra_df['S'] = I
+                    from pyexocross.core import min_wn, max_wn
+                    stick_spectra_df = stick_spectra_df[stick_spectra_df['v'].between(min_wn, max_wn)].copy()
                     
                     # Apply threshold filter if needed
                     if threshold != 'None':

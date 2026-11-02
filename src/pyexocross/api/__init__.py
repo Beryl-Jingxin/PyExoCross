@@ -290,8 +290,7 @@ def validateloadrange(data, config):
         requestedmin = config.conversion_min_freq
         requestedmax = config.conversion_max_freq
     elif config.stick_spectra == 1 or config.cross_sections == 1:
-        requestedmin = config.min_wn
-        requestedmax = config.max_wn
+        requestedmin, requestedmax = config.min_wn, config.max_wn
     else:
         return
 

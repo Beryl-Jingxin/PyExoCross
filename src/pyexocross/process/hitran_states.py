@@ -124,7 +124,7 @@ def build_hitran_partition_states(hitran_linelist_df):
 def build_hitran_states(hitran_df):
     from pyexocross.process.hitran_qn import hitran_linelist_QN
 
-    hitran_linelist_df, _ = hitran_linelist_QN(hitran_df)
+    hitran_linelist_df, _ = hitran_linelist_QN(hitran_df, apply_qn_filter=False)
     return build_hitran_partition_states(hitran_linelist_df)
 
 

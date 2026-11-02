@@ -35,11 +35,17 @@ $$
 
 ## Temperatures
 
-`Temperatures`: Please provide temperatures in unit K.
+`Temperatures`: Please provide positive integer or floating-point temperatures
+in K. Integer temperatures available in the partition-function file are read
+directly. For decimal temperatures or temperatures outside the file range,
+$Q(T)$ is calculated from the available states without rounding or
+interpolation. Values outside the file range are supported; PyExoCross reports
+the file `Tmax` and continues the calculation.
 
 | `Temperatures`     |          | T = ?                                  |
 | :----------------- | -------- | -------------------------------------- |
 | 296                | &#x2705; | 296 K                                  |
+| 296.5              | &#x2705; | 296.5 K                                |
 | 300,1000,3000,8000 | &#x2705; | 300 K, 1000 K, 3000 K, 8000 K          |
 | 1000:5000:1000     | &#x2705; | 1000 K, 2000 K, 3000 K, 4000 K, 5000 K |
 | 300, 3000          | &#x274C; |                                        |
