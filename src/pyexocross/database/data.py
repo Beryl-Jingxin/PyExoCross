@@ -1,15 +1,15 @@
 """Reusable database loading and line list cache support."""
 
+import os
+import re
 import bz2
 import copy
 import json
 import math
-import os
-import re
 import time
-from dataclasses import dataclass
-
 import pandas as pd
+import pyarrow.parquet as pq
+from dataclasses import dataclass
 
 from pyexocross.base.log import log_tqdm
 from pyexocross.base.large_file import TransSource
@@ -250,9 +250,9 @@ def rangecandidate(manifest, cachedir, filepath, statesfile, lower, upper, requi
             entry.get('source') == source
             and entry.get('states') == state_source
             and os.path.exists(cachepath)
-            and set(required).issubset(parquetcolumns(cachepath))
             and cachedrange[0] <= lower
             and cachedrange[1] >= upper
+            and set(required).issubset(parquetcolumns(cachepath))
         ):
             candidates.append((cachedrange[1] - cachedrange[0], cachepath, cachedrange))
     if not candidates:
@@ -491,21 +491,37 @@ def cachedrangesources(config, selected, cachedir, refresh=False):
     return tuple(sources)
 
 
-def printcacheinfo(cachedir, manifest):
+def printcacheinfo(cachedir, manifest, sources):
     """Print range cache count, ranges, size, and a cleanup reminder."""
     entries = []
     for entry in manifest['ranges']:
         cachepath = os.path.join(cachedir, entry['path'])
         if os.path.exists(cachepath):
             entries.append((entry, cachepath))
+    print()
     print('{:45s} : {}'.format('Number of range cache files', len(entries)))
+    # Count transitions in the selected sources
+    rows = 0
+    for source in sources:
+        if source.path.endswith('.parquet'):
+            rows += pq.ParquetFile(source.path).metadata.num_rows
+        elif source.frame is not None:
+            rows += len(source.frame)
+        else:
+            rows = None
+            break
+    if rows is not None:
+        print('{:45s} : {}'.format('Number of lines loaded', rows))
     if not entries:
         return
-    ranges = [f"{entry['range'][0]}-{entry['range'][1]} cm-1" for entry, _ in entries]
-    totalsize = sum(os.path.getsize(cachepath) for _, cachepath in entries)
-    print('{:45s} : {}'.format('Range cache intervals', ', '.join(ranges)))
+    ranges = [entry['range'] for entry, _ in entries]
+    minwn = min(r[0] for r in ranges)
+    maxwn = max(r[1] for r in ranges)
+    print('{:45s} : {} cm⁻¹ - {} cm⁻¹'.format('Range cache coverage', minwn, maxwn))
+    intervals = [f'{r[0]}-{r[1]} cm⁻¹' for r in ranges]
+    print('{:45s} : {}'.format('Range cache intervals', ', '.join(intervals)))
+    totalsize = sum(os.path.getsize(path) for _, path in entries)
     print('{:45s} : {:.2f} MB'.format('Total range cache size', totalsize / 1024**2))
-    print('Cache reminder: remove overlapping or unused range caches when they are no longer needed.')
 
 
 def hitranpath(config):
@@ -699,7 +715,7 @@ def loadlinedata(config, cache, cachedir, maxmemory, refresh):
     else:
         lineframe = parselinelist(config)
 
-    print('Loaded data cache mode:', cache, f'({resolved})' if cache == 'auto' else '')
+    print('{:45s} : {}'.format('Loaded data cache mode', cache, f'({resolved})' if cache == 'auto' else ''))
     return LoadedData(
         config=config,
         states=None,
@@ -813,6 +829,28 @@ class LoadedData:
     lineframe: object = None
     linepath: object = None
     linedatabase: object = None
+
+    @property
+    def line_count(self):
+        """Count rows in the selected sources without scanning line data."""
+        def count(path, frame):
+            if frame is not None:
+                return len(frame)
+            if path and path.endswith('.parquet'):
+                import pyarrow.parquet as pq
+
+                return pq.read_metadata(path).num_rows
+            return None
+
+        if self.linedatabase:
+            return count(self.linepath, self.lineframe)
+        total = 0
+        for source in self.transitions:
+            rows = count(source.path, source.frame)
+            if rows is None:
+                return None
+            total += rows
+        return total
 
     def configfor(self, **kwargs):
         """Create a calculation config while protecting preprocessing identity."""
@@ -1176,8 +1214,8 @@ def loaddata(
             for path in selected
         )
 
-    printcacheinfo(cachedir, loadmanifest(cachedir))
-    print('Loaded data cache mode:', cache, f'({resolved})' if cache == 'auto' else '')
+    printcacheinfo(cachedir, loadmanifest(cachedir), sources)
+    print('{:45s} : {}'.format('Loaded data cache mode', cache, f'({resolved})' if cache == 'auto' else ''))
     return LoadedData(
         config,
         states,

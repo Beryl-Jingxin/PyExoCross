@@ -422,7 +422,7 @@ def load(
         printdatabaseinfo(config)
         print()
         timer = Timer().start()
-        print('Loading reusable line list data ...')
+        print('\nLoading reusable line list data ...')
         data = loaddata(
             config,
             cache=cache,
@@ -431,8 +431,10 @@ def load(
             refresh=refresh,
             alltrans=all_transitions,
         )
-        print('Finished loading reusable line list data!')
+        print('Cache reminder: remove overlapping or unused range caches when they are no longer needed.')
+        print('Finished loading reusable line list data!\n')
         timer.end()
+        print()
         return data
 
 

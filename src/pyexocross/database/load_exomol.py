@@ -4,6 +4,7 @@ Load ExoMol database files.
 This module provides functions for reading ExoMol states files, transition files,
 partition function files, and broadening parameter files.
 """
+import re
 import os
 import glob
 import numpy as np
@@ -258,10 +259,9 @@ def get_transfiles(read_path, data_info, prepare=True):
     all_decompress_num = 0
     decompress_num = 0
     for i in range(num_transfiles_all):
-        split_version = trans_filepaths_all[i].split('__')[-1].split('.')[0].split('_')    # Split the filenames.
-        num = len(split_version)
-        # There are four format filenames.
-        # The lastest transitions files named in four formats:
+        split_version = trans_filepaths_all[i].split('__')[-1].split('.')[0]        # Split the filenames.
+        # There are five format filenames.
+        # The lastest transitions files named in five formats:
         # 1. Filenames are named with the name of isotopologue and dataset. 
         #    End with .trans.bz2.
         #    e.g. 14N-16O__XABC.trans.bz2'
@@ -269,17 +269,25 @@ def get_transfiles(read_path, data_info, prepare=True):
         #    Also have the range of wavenumbers xxxxx-yyyyy.
         #    End with .trans.bz2.
         #    e.g. 1H2-16O__POKAZATEL__00000-00100.trans.bz2
-        # 3. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
+        # 3. Filenames are named with the name of isotopologue and dataset. 
+        #    Also have E2, M1, etc after dataset name. 
+        #    e.g. 16O2__SWYT__E2.trans.bz2
+        # 4. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
         #    e.g. 14N-16O__XABC_v2.trans.bz2
-        # 4. The older version transitions files are named with updated date (yyyymmdd).
+        # 5. The older version transitions files are named with updated date (yyyymmdd).
         #    e.g. 1H3_p__MiZATeP__20170330.trans.bz2
         # After split the filenames:
         # The first format filenames only leave the dataset name, e.g. XABC.
         # The second format filenames only leave the range of the wavenumber, e.g. 00000-00100.
-        # The third format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
-        # The fourth format filenames only leave the updated date, e.g. 20170330.
-        # This program only process the lastest data, so extract the filenames named by the first two format.
-        if num == 1:     
+        # The third format filenames leave two parts(dataset name and E2, M1, etc), e.g. SWYT and E2.
+        # The fourth format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
+        # The fifth format filenames only leave the updated date, e.g. 20170330.
+        # This program only process the lastest data, so extract the filenames named by the first three formats.
+        if (
+            split_version == data_info[-1]
+            or re.fullmatch(r'\d{5}-\d{5}', split_version)
+            or re.fullmatch(r'[A-Z]\d+', split_version)
+        ):   
             original_path = trans_filepaths_all[i]
             file_size_bytes = os.path.getsize(original_path)
             trans_filepath = original_path
@@ -287,17 +295,13 @@ def get_transfiles(read_path, data_info, prepare=True):
                 (trans_filepath, num_dec) = command_decompress(original_path)
                 all_decompress_num += 1
                 decompress_num += num_dec
-            if split_version[0] == data_info[-1]:
-                trans_filepaths.append(trans_filepath)
-            elif len(split_version[0].split('-')) == 2:
-                trans_filepaths.append(trans_filepath)
-            else:
-                pass
+            trans_filepaths.append(trans_filepath)
         else:
             pass
     print('{:45s} : {}'.format('Number of all transitions files', num_transfiles_all))
     print('{:45s} : {}'.format('Number of all decompressed transitions files', all_decompress_num))
     print('{:45s} : {}'.format('Number of new decompressed transitions files', decompress_num))
+    print()
     return trans_filepaths  
 
 def get_part_transfiles(read_path, data_info, min_wn, max_wn, prepare=True):
@@ -331,10 +335,9 @@ def get_part_transfiles(read_path, data_info, min_wn, max_wn, prepare=True):
     all_decompress_num = 0
     decompress_num = 0
     for i in range(num_transfiles_all):
-        split_version = trans_filepaths_all[i].split('__')[-1].split('.')[0].split('_')    # Split the filenames.
-        num = len(split_version)
-        # There are four format filenames.
-        # The lastest transitions files named in four formats:
+        split_version = trans_filepaths_all[i].split('__')[-1].split('.')[0]        # Split the filenames.
+        # There are five format filenames.
+        # The lastest transitions files named in five formats:
         # 1. Filenames are named with the name of isotopologue and dataset. 
         #    End with .trans.bz2.
         #    e.g. 14N-16O__XABC.trans.bz2'
@@ -342,44 +345,46 @@ def get_part_transfiles(read_path, data_info, min_wn, max_wn, prepare=True):
         #    Also have the range of wavenumbers xxxxx-yyyyy.
         #    End with .trans.bz2.
         #    e.g. 1H2-16O__POKAZATEL__00000-00100.trans.bz2
-        # 3. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
+        # 3. Filenames are named with the name of isotopologue and dataset. 
+        #    Also have E2, M1, etc after dataset name. 
+        #    e.g. 16O2__SWYT__E2.trans.bz2
+        # 4. The older version transitions files are named with vn(version number) based on the first format of the lastest files.
         #    e.g. 14N-16O__XABC_v2.trans.bz2
-        # 4. The older version transitions files are named with updated date (yyyymmdd).
+        # 5. The older version transitions files are named with updated date (yyyymmdd).
         #    e.g. 1H3_p__MiZATeP__20170330.trans.bz2
         # After split the filenames:
         # The first format filenames only leave the dataset name, e.g. XABC.
         # The second format filenames only leave the range of the wavenumber, e.g. 00000-00100.
-        # The third format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
-        # The fourth format filenames only leave the updated date, e.g. 20170330.
-        # This program only process the lastest data, so extract the filenames named by the first two formats.
-        if num == 1:     
-            if split_version[0] == data_info[-1]:
+        # The third format filenames leave two parts(dataset name and E2, M1, etc), e.g. SWYT and E2.
+        # The fourth format filenames leave two parts(dataset name and version number), e.g. XABC and v2.
+        # The fifth format filenames only leave the updated date, e.g. 20170330.
+        # This program only process the lastest data, so extract the filenames named by the first three formats.  
+        if split_version == data_info[-1] or re.fullmatch(r'[A-Z]\d+', split_version):
+            trans_filepath = trans_filepaths_all[i]
+            file_size_bytes = os.path.getsize(trans_filepath)
+            if prepare and trans_filepath.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
+                (trans_filepath, num_dec) = command_decompress(trans_filepath)
+                all_decompress_num += 1
+                decompress_num += num_dec
+            trans_filepaths.append(trans_filepath)
+        elif re.fullmatch(r'\d{5}-\d{5}', split_version):
+            lower = int(split_version.split('-')[0])
+            upper = int(split_version.split('-')[1])
+            if lower <= max_wn and upper >= min_wn:
+                file_size_bytes = os.path.getsize(trans_filepaths_all[i])
                 trans_filepath = trans_filepaths_all[i]
-                file_size_bytes = os.path.getsize(trans_filepath)
                 if prepare and trans_filepath.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
                     (trans_filepath, num_dec) = command_decompress(trans_filepath)
                     all_decompress_num += 1
                     decompress_num += num_dec
                 trans_filepaths.append(trans_filepath)
-            elif len(split_version[0].split('-')) == 2:
-                lower = int(split_version[0].split('-')[0])
-                upper = int(split_version[0].split('-')[1])
-                if lower <= max_wn and upper >= min_wn:
-                    file_size_bytes = os.path.getsize(trans_filepaths_all[i])
-                    trans_filepath = trans_filepaths_all[i]
-                    if prepare and trans_filepath.endswith('.bz2') and file_size_bytes >= LARGE_TRANS_FILE_BYTES:
-                        (trans_filepath, num_dec) = command_decompress(trans_filepath)
-                        all_decompress_num += 1
-                        decompress_num += num_dec
-                    trans_filepaths.append(trans_filepath)
-            else:
-                pass
         else:
             pass
     print('{:45s} : {}'.format('Number of all transitions files', num_transfiles_all))
     print('{:45s} : {}'.format('Number of selected transitions files', len(trans_filepaths)))
     print('{:45s} : {}'.format('Number of all decompressed transitions files', all_decompress_num))
     print('{:45s} : {}'.format('Number of new decompressed transitions files', decompress_num))
+    print()
     return trans_filepaths
 
 # Read partition function with online webpage

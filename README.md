@@ -31,6 +31,7 @@
 </p>
 
 <p align="center">
+  <a href="https://doi.org/10.1093/rasti/rzag094"><img src="https://img.shields.io/badge/PyExoCross 2.0-DOI-gold?style=for-the-badge&logo=doi" alt="DOI"></a>
   <a href="https://doi.org/10.48550/arXiv.2609.17273"><img src="https://img.shields.io/badge/PyExoCross 2.0-arXiv-orange?style=for-the-badge&logo=arxiv&logoColor=white" alt="arXiv"></a>
 </p>
 
@@ -169,9 +170,15 @@ All information can be written in the input file. Just change the information yo
 
 ## PyExoCross Paper
 
+**PyExoCross (2024)**
+
 *PyExoCross* ***Published*** Paper : [https://doi.org/10.1093/rasti/rzae016](https://doi.org/10.1093/rasti/rzae016)
 
 *PyExoCross* ***arXiv*** Preprint : [https://doi.org/10.48550/arXiv.2406.03977](https://doi.org/10.48550/arXiv.2406.03977)
+
+**PyExoCross 2.0 (2026)**
+
+*PyExoCross 2.0* ***Published*** Paper : [https://doi.org/10.1093/rasti/rzag094](https://doi.org/10.1093/rasti/rzag094)
 
 *PyExoCross 2.0* ***arXiv*** Preprint : [https://doi.org/10.48550/arXiv.2609.17273](https://doi.org/10.48550/arXiv.2609.17273)
 
@@ -180,10 +187,20 @@ All information can be written in the input file. Just change the information yo
 
 <font color=Green>***Cite***</font>
 
+**PyExoCross (2024)**
+
 Jingxin Zhang, Jonathan Tennyson, Sergei N Yurchenko, 
 PyExoCross: a Python program for generating spectra and cross-sections from molecular line lists, 
 *RAS Techniques and Instruments*, Volume 3, Issue 1, January 2024, Pages 257–287, 
 https://doi.org/10.1093/rasti/rzae016
+
+**PyExoCross 2.0 (2026)**
+
+Jingxin Zhang, Sergei N Yurchenko, Jonathan Tennyson, 
+PyExoCross 2.0: A Python Framework for LTE and non-LTE Spectra, Cross Sections, and Spectroscopic Post-processing of Atomic and Molecular Line Lists, 
+*RAS Techniques and Instruments*, 2026, rzag094, 
+https://doi.org/10.1093/rasti/rzag094
+
 
 <font color=Green>***Bibtex***</font>
 
@@ -196,7 +213,7 @@ https://doi.org/10.1093/rasti/rzae016
     number   = {1},
     pages    = {257-287},
     year     = {2024},
-    month    = {04},
+    month    = {01},
     issn     = {2752-8200},
     doi      = {10.1093/rasti/rzae016},
     url      = {https://doi.org/10.1093/rasti/rzae016},
@@ -207,10 +224,13 @@ https://doi.org/10.1093/rasti/rzae016
     author  = {Jingxin Zhang and Sergei N. Yurchenko and Jonathan Tennyson},
     title   = {{PyExoCross 2.0: A Python Framework for LTE and non-LTE Spectra, Cross Sections, and Spectroscopic Post-processing of Atomic and Molecular Line Lists}},
     journal = {RAS Techniques and Instruments},
-    volume  = {Submitted},
-    pages   = {},
+    pages   = {rzag094},
     year    = {2026},
-    doi     = {}
+    month   = {11},
+    issn    = {2752-8200},
+    doi     = {10.1093/rasti/rzag094},
+    url     = {https://doi.org/10.1093/rasti/rzag094},
+    eprint  = {https://academic.oup.com/rasti/advance-article-pdf/doi/10.1093/rasti/rzag094/73037061/rzag094.pdf},
 }
 ```
 
