@@ -209,9 +209,31 @@ With `cache_dir=None`, PyExoCross stores persistent files in
 `<read_path>/<data_info>/.pyexocross_cache/`. Initial conversion takes extra
 time; subsequent runs reuse the cache if the source path, size, and
 modification time are unchanged. Set `refresh=True` to rebuild it.
-`max_memory` is specified in MB. The default `max_memory=512` is converted
-internally to `512 * 1024**2` bytes and only limits transition data retained by
-`cache='auto'`; it is not a limit on total process memory.
+
+**Choosing `max_memory`**
+
+`max_memory` is a non-negative integer in MB (1 MB = `1024**2` bytes). 
+Its default is `512` MB. 
+It applies only when `cache='auto'` and controls whether selected transition data are kept in memory or stored in a Parquet cache. \
+PyExoCross estimates the memory required for the selected transition files. 
+If it exceeds `max_memory` MB, Parquet caching is used. Otherwise, the data are kept in RAM. 
+The actual memory usage of the loaded transition data is also checked, and PyExoCross automatically switches to Parquet if necessary to reduce run time. \
+This parameter does not affect the cache selection when `cache='parquet'` or `cache='none'` is explicitly set.
+It does not cap the total memory used by the process, including states, calculation arrays, and GPU memory.
+
+```python
+px.load(..., cache='auto', max_memory=2048)  # Allow up to 2 GiB for transitions
+px.load(..., cache='auto', max_memory=128)   # Prefer Parquet for large inputs
+px.load(..., cache='auto', max_memory=0)     # Stream original transition files
+```
+
+In auto mode, PyExoCross first estimates memory use from the selected transition files. \
+Inputs estimated above the threshold use Parquet. \
+If an input initially selected for memory exceeds the threshold during loading, PyExoCross switches to Parquet. 
+
+`cache='parquet'` always uses Parquet, and \
+`cache='none'` streams the original files; \
+`max_memory` does not change either mode. Negative values are invalid.
 
 The same Parquet files work in CPU and GPU modes. Current Parquet reading,
 decompression, and preprocessing run on the CPU through PyArrow. GPU mode
