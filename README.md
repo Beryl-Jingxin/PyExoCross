@@ -53,6 +53,23 @@
 pip install pyexocross
 ```
 
+### Update PyExoCross Python package version
+
+```bash
+python3 -m pip install --upgrade pyexocross
+# OR
+python3 -m pip install --upgrade pyexocross==1.1.22
+# OR
+python3 -m pip install --upgrade --index-url https://pypi.org/simple --no-cache-dir pyexocross==1.1.22
+```
+
+Check your PyExoCross Python package version
+
+```bash
+python3 -c "import pyexocross as px; print(px.__version__)"
+```
+
+
 ### Use as a Python package
 
 ```python
