@@ -450,9 +450,9 @@ def rangecachesource(
     )
 
 
-def cachedrangesources(config, selected, cachedir, refresh=False):
-    """Return complete reusable range caches without loading states."""
-    if refresh or config.nlte_method != 'L':
+def cachedrangesources(config, selected, cachedir, refresh=False, allow_nlte=False):
+    """Return range caches covering every selected transition source."""
+    if refresh or (config.nlte_method != 'L' and not allow_nlte):
         return None
     statecolumns = configstatecolumns(config)
     if not statecolumns:
@@ -480,7 +480,6 @@ def cachedrangesources(config, selected, cachedir, refresh=False):
         if candidate is None:
             return None
         cachepath, cachedlower, cachedupper = candidate
-        print('Using range Parquet cache:', cachepath)
         sources.append(TransSource(
             path=cachepath,
             origin=path,
@@ -675,7 +674,12 @@ def loadlinedata(config, cache, cachedir, maxmemory, refresh):
     memorylimit = maxmemory * 1024**2
     resolved = cache
     if cache == 'auto':
-        resolved = 'none' if maxmemory <= 0 else ('memory' if estimate <= memorylimit else 'parquet')
+        manifest = loadmanifest(cachedir)
+        entry = None if refresh else linecacheentry(manifest, config.database, source)
+        existing = entry is not None and os.path.exists(os.path.join(cachedir, entry['path']))
+        resolved = ('parquet' if source.endswith('.parquet') or existing else
+                    'none' if maxmemory <= 0 else
+                    'memory' if estimate <= memorylimit else 'parquet')
 
     lineframe = None
     linepath = None
@@ -1150,19 +1154,26 @@ def loaddata(
     )
     memorylimit = maxmemory * 1024**2
     resolved = cache
+    existing = None
     if cache == 'auto':
-        resolved = 'none' if maxmemory <= 0 else ('memory' if estimate <= memorylimit else 'parquet')
+        if not alltrans:
+            existing = cachedrangesources(
+                config, selected, cachedir, refresh=refresh, allow_nlte=True,
+            )
+        resolved = ('parquet' if existing else
+                    'none' if maxmemory <= 0 else
+                    'memory' if estimate <= memorylimit else 'parquet')
 
     sources = None
     integrated = False
     if resolved == 'parquet' and not alltrans and preparestates:
-        sources = cachedrangesources(
-            config,
-            selected,
-            cachedir,
-            refresh=refresh,
-        )
+        sources = (existing if config.nlte_method == 'L' else None)
+        if sources is None:
+            sources = cachedrangesources(config, selected, cachedir, refresh=refresh)
         integrated = sources is not None
+        if integrated:
+            for source in sources:
+                print('Using range Parquet cache:', source.path)
 
     states = None
     prepared = None

@@ -6,9 +6,9 @@ SpeciesID                               601
 
 
 # File path #
-ReadPath                                /Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/
-SavePath                                /Users/beryl/Academic/UCL/PhD/Data/pyexocross/
-LogFilePath                             /Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/Ar_QDB_nlte.log
+ReadPath                                /Users/beryl/Academic/Data/Database/ExoAtom/
+SavePath                                /Users/beryl/Academic/Data/pyexocross/
+LogFilePath                             /Users/beryl/Academic/Data/pyexocross/log/Ar_QDB_nlte.log
 
 
 # Functions #
@@ -77,7 +77,7 @@ QNsFilter(Y/N)                          Y          configuration[]     Multiple[
 
 
 # Calculate non-LTE #
-NLTEMethod                              P           /Users/beryl/Academic/UCL/PhD/Data/database/ExoAtom/Ar/NIST/Ar_Ids.csv  #/home/jingxin/data/NLTE/Ar/NIST/Ar_Ids.csv     # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
+NLTEMethod                              P           /Users/beryl/Academic/Data/Database/ExoAtom/Ar/NIST/Ar_Ids.csv  #/home/jingxin/data/NLTE/Ar/NIST/Ar_Ids.csv     # 'T'(TvibTrot) or 'D'(Density) or 'P'(Population)
 Tvib                                    2000
 Trot                                    296
 QNsVibLabel                             Multiple
@@ -92,7 +92,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressures                               1                         # Pressure in unit bar
+Pressures                               1                         # Pressure default unit is atm
 Npoints/BinSize                         BinSize    0.01           # Same unit as WnWlUnit
 Broadeners                              Default     
 Ratios                                  1.0        

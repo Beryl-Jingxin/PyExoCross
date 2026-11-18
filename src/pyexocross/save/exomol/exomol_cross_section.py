@@ -16,6 +16,7 @@ from pyexocross.base.log import (
     print_xsec_info, 
     print_T_Tvib_Trot_P_path_info,
     print_file_info,
+    pressure_unit,
 )
 from pyexocross.base.large_file import (
     is_large_trans_file,
@@ -124,7 +125,7 @@ def process_exomol_cross_section_chunk(states_part_df,T_list,Tvib_list,Trot_list
     Trot_list : list of float
         Rotational temperature list for non-LTE methods
     P : float
-        Pressure value in bar
+        Pressure value in the selected input unit
     Q_arr : np.ndarray
         Partition function array, shape (n_temps,)
     broad : list of str
@@ -465,7 +466,7 @@ def process_exomol_cross_section(states_part_df,T_list,Tvib_list,Trot_list,P,Q_a
     Trot_list : list of float
         Rotational temperature list for non-LTE methods
     P : float
-        Pressure value in bar
+        Pressure value in the selected input unit
     Q_arr : np.ndarray
         Partition function array, shape (n_temps,)
     broad : list of str
@@ -652,7 +653,7 @@ def save_exomol_cross_section(
                     xsec = sum([future.result() for future in futures])
                     
                 if len(xsec) == 0 or np.all(xsec == 0):
-                    print(f'Warning: No cross sections found for T={T} K, P={P} bar. Skipping this combination.')
+                    print(f'Warning: No cross sections found for T={T} K, P={P} {pressure_unit()}. Skipping this combination.')
                     continue
                 
                 any_results = True

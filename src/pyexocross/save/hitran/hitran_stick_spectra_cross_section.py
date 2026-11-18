@@ -9,6 +9,7 @@ from pyexocross.base.log import (
     print_xsec_info, 
     print_file_info,
     print_T_Tvib_Trot_P_path_info,
+    pressure_unit,
 )
 from pyexocross.base.config_manager import get_config
 try:
@@ -108,7 +109,7 @@ def process_hitran_stick_spectra_cross_section_singleT(A, v, Ep, Epp, gp, n_air,
     profile_label : str or None
         Line profile label (None to skip cross section calculation)
     P : float, optional
-        Pressure in bar (required for pressure-dependent profiles)
+        Pressure in the selected input unit (required for pressure-dependent profiles)
     Tvib : float, optional
         Vibrational temperature in Kelvin (for non-LTE T mode only)
     Trot : float, optional
@@ -483,7 +484,7 @@ def save_hitran_stick_spectra_cross_section(hitran_linelist_df, QNs_col, T_list,
             except Exception as e:
                 if pressure_dependent:
                     temp_idx, P = futures_xsec[future]
-                    print(f'Error processing cross sections for temp_idx={temp_idx}, P={P}: {e}')
+                    print(f'Error processing cross sections for temp_idx={temp_idx}, P={P} {pressure_unit()}: {e}')
                 else:
                     temp_idx = futures_xsec[future]
                     print(f'Error processing cross sections for temp_idx={temp_idx}: {e}')

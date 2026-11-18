@@ -110,7 +110,7 @@ For HITRAN/HITEMP:
 | `gpu_backend` | `str` | `'AUTO'` | GPU backend policy when `device='GPU'`: `'AUTO'`, `'CUDA'`, `'PyTorch-CUDA'`, `'CuPy-CUDA'`, or `'MPS'` |
 | `gpu_batch_lines` | `int` | `8192` | Maximum number of spectral lines processed in one GPU batch (memory-control knob) |
 | `gpu_batch_grid` | `int` | `256` | Maximum number of spectral grid points processed in one GPU batch (memory-control knob) |
-| `cache` | `str` | `'auto'` | Transition cache: small inputs use memory and large inputs use Parquet; alternatives are `'parquet'` and `'none'` |
+| `cache` | `str` | `'auto'` | Reuse a matching Parquet cache first; otherwise use memory for small inputs and Parquet for large inputs. Alternatives are `'parquet'` and `'none'` |
 | `cache_dir` | `str` or `None` | `None` | Cache directory; `None` uses a source-adjacent `.pyexocross_cache/` directory |
 | `max_memory` | `int` | `512` | Maximum transition data retained by `cache='auto'`, in MB; internally converted with `1024**2` bytes per MB |
 | `refresh` | `bool` | `False` | Rebuild matching Parquet cache files |
@@ -247,7 +247,8 @@ Used by `px.stick_spectra()`, `px.cross_sections()`, and `px.stick_spectra_cross
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `temperatures` | `list[float]` | `[1000]` | Positive integer or floating-point temperature(s) in K |
-| `pressures` | `list[float]` | `[1.0]` | Pressure(s) in bar (cross sections only) |
+| `pressures` | `list[float]` | `[1.0]` | Pressure(s) in `pressure_unit` (cross sections only) |
+| `pressure_unit` | `str` | `'atm'` | Input pressure unit: `'atm'` or `'bar'` |
 | `wn_wl` | `str` | `'WN'` | `'WN'` = wavenumber, `'WL'` = wavelength |
 | `wn_wl_unit` | `str` | `'cm-1'` | Unit: `'cm-1'`, `'um'` (micron), or `'nm'` |
 | `min_range` | `float` | `0` | Minimum of range (in `wn_wl_unit`) |
@@ -260,6 +261,8 @@ directly. For decimal temperatures or temperatures outside the file range,
 PyExoCross calculates $Q(T)$ from the available states without rounding or
 interpolation. A value outside the file range is allowed and produces a warning
 that reports the file `Tmax`.
+
+If do not provide `pressure_unit`, PyExoCross uses default pressure unit `atm`. 
 
 ***Note***
 
@@ -391,7 +394,7 @@ Used by `px.cross_sections()`.
 |---|---|---|---|
 | `broadeners` | `list[str]` | `['Default']` | Broadening species (e.g. `['H2', 'He']`) |
 | `ratios` | `list[float]` | `[1.0]` | Partial-pressure fractions, one per broadener |
-| `gamma_broadening` | `float`, `list[float]`, or `None` | `None` | Custom reference Lorentzian HWHM coefficients (cm⁻¹ bar⁻¹ at 296 K), one per broadener |
+| `gamma_broadening` | `float`, `list[float]`, or `None` | `None` | Custom reference Lorentzian HWHM coefficients (cm⁻¹ atm⁻¹ at 296 K), one per broadener |
 | `n_broadening` | `float`, `list[float]`, or `None` | `None` | Custom dimensionless temperature exponents, one per broadener |
 | `alpha_hwhm` | `float` or `None` | `None` | Constant Doppler HWHM (cm⁻¹); `None` to auto-calculate |
 | `gamma_hwhm` | `float` or `None` | `None` | Constant Lorentzian HWHM (cm⁻¹); `None` to auto-calculate |
@@ -413,7 +416,7 @@ n_broadening=[0.60, 0.30],
 ```
 
 Each contribution is evaluated independently as
-`ratio * gamma_broadening * (296 / T)**n_broadening * (P / 1 bar)` and then
+`ratio * gamma_broadening * (296 / T)**n_broadening * (P_atm / 1 atm)` and then
 summed. Ratios normally sum to 1.0 when the listed broadeners represent the
 complete gas mixture.
 

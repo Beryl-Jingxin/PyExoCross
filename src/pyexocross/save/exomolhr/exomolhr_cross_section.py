@@ -9,6 +9,7 @@ from pyexocross.base.log import (
     print_T_Tvib_Trot_P_path_info, 
     print_xsec_info,
     print_file_info,
+    pressure_unit,
 )
 from pyexocross.base.utils import Timer
 from pyexocross.calculation.calculate_cross_section import (
@@ -262,7 +263,7 @@ def save_exomolhr_cross_section(exomolhr_df, T_list, P_list, Tvib_list, Trot_lis
                     print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, P if pressure_dependent else None, abs_emi, NLTEMethod, 'Cross sections', None)
                     del xsec
             except Exception as e:
-                print(f'Warning: Error processing cross sections for T={T} K, P={P} bar: {e}')
+                print(f'Warning: Error processing cross sections for T={T} K, P={P} {pressure_unit()}: {e}')
 
     print('\nTotal running time for cross sections:')
     from pyexocross.base.result import end_calculation

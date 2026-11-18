@@ -228,6 +228,12 @@ def inp_para(inp_filepath):
     read_path = (inp_df[col0.isin(['ReadPath'])][1].values[0] + '/').replace('//','/')
     save_path = (inp_df[col0.isin(['SavePath'])][1].values[0] + '/').replace('//','/')
     logs_path = parse_logging_info(inp_filepath)
+    cache_rows = inp_df[col0.isin(['Cache'])]
+    cache = 'auto' if cache_rows.empty else str(cache_rows[1].iloc[0]).strip().lower()
+    if cache == 'nan':  # pandas treats the literal "None" as a missing value
+        cache = 'none'
+    if cache not in ('auto', 'parquet', 'none'):
+        raise ValueError("Cache must be Auto, Parquet, or None.")
     ensure_dir(save_path)
     if database == 'ExoMolHR':
         dataset = _resolve_exomolhr_filepaths(read_path, molecule, isotopologue)
@@ -637,8 +643,14 @@ def inp_para(inp_filepath):
         )
         profile = inp_df[col0.isin(['Profile'])][1].values[0].upper().replace('PRO','')
         # Parse multiple pressure values
+        pressure_rows = inp_df[col0.isin(['Pressures'])]
+        unit_token = pressure_rows[2].iloc[0] if not pressure_rows.empty else None
+        P_unit = (str(unit_token).lower() if pd.notna(unit_token)
+                  and not str(unit_token).startswith('#') else 'atm')
+        if P_unit not in ('atm', 'bar'):
+            raise ValueError("Pressure unit must be 'atm' or 'bar'.")
         if 'DOP' not in profile and 'GAU' not in profile:
-            press_str = inp_df[col0.isin(['Pressures'])][1].values[0]
+            press_str = pressure_rows[1].values[0]
             P_list = [float(press) for press in parse_TP_values(press_str)]
         else:
             P_list = []
@@ -734,6 +746,7 @@ def inp_para(inp_filepath):
         gamma_broadening = []
         n_broadening = []
         P_list = []
+        P_unit = 'atm'
         wn_grid = np.linspace(0,1,1)
         profile = 'None'
         PlotCrossSectionYN = 'None'
@@ -946,13 +959,13 @@ def inp_para(inp_filepath):
             states_fmt,
         )
             
-    return (database, data_info, read_path, save_path, logs_path,
+    return (database, data_info, read_path, save_path, logs_path, cache,
             Conversion, PartitionFunctions, SpecificHeats, CoolingFunctions, Lifetimes, OscillatorStrengths, StickSpectra, CrossSections,
             ncputrans, ncpufiles, chunk_size, run_mode, gpu_backend, gpu_batch_lines, gpu_batch_grid,
             ConversionFormat, ConversionMinFreq, ConversionMaxFreq, ConversionUnc, ConversionThreshold, 
             GlobalQNLabel_list, GlobalQNFormat_list, LocalQNLabel_list, LocalQNFormat_list,
             Ntemp, Tmax, CompressYN, gfORf, broadeners, ratios, gamma_broadening, n_broadening,
-            T_list, P_list, wn_wl, wn_wl_unit, min_wnl, max_wnl, min_wn, max_wn, N_point, bin_size, wn_grid,
+            T_list, P_list, P_unit, wn_wl, wn_wl_unit, min_wnl, max_wnl, min_wn, max_wn, N_point, bin_size, wn_grid,
             predissocYN, photo, cutoff, threshold, UncFilter, NLTEMethod, NLTEPath, LTE_NLTE, QNslabel_list, QNsformat_list, QNs_label, QNs_value, QNs_format, QNsFilter, 
             DopplerHWHMYN, LorentzianHWHMYN, alpha_HWHM, gamma_HWHM, alpha_hwhm_colid, gamma_hwhm_colid, abs_emi, profile, 
             species_id, species_main_id, species_sub_id, abundance, mass, states_col, states_fmt,

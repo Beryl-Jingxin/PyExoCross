@@ -909,7 +909,10 @@ def cross_sections(inp_filepath=None, **kwargs):
         All parameters from :func:`stick_spectra`, plus:
 
         pressures : list of float, optional
-            Pressure(s) in bar (default: [1.0]).
+            Pressure(s) in ``pressure_unit`` (default: [1.0]).
+        pressure_unit : {'atm', 'bar'}, optional
+            Unit shared by all pressures (default: 'atm'). Bar inputs are
+            converted to atm for pressure broadening.
         profile : str, optional
             Line profile name (default: 'Gaussian').
             Choices include 'Gaussian', 'Doppler', 'Lorentzian',
@@ -926,7 +929,7 @@ def cross_sections(inp_filepath=None, **kwargs):
         ratios : list of float, optional
             Broadening ratios (default: [1.0]).
         gamma_broadening : float or list of float, optional
-            Custom reference Lorentzian HWHM coefficients in cm-1 bar-1,
+            Custom reference Lorentzian HWHM coefficients in cm-1 atm-1,
             one per broadener. Must be supplied with ``n_broadening``.
         n_broadening : float or list of float, optional
             Custom temperature exponents, one per broadener. Must be supplied

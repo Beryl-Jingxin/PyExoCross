@@ -111,6 +111,33 @@ File path section records the file path for both reading and saving.
 
 &#x2705; /aaa/bbb/ccc/ddd.log
 
+`Verbose` optionally controls normal terminal output. Use `True` to keep the
+current display behaviour or `False` to keep the terminal quiet. When
+`Verbose` is `False`, configured log-file output is still written.
+
+The two settings are independent:
+
+| `LogFilePath` | `Verbose` | Behaviour |
+|---|---:|---|
+| Valid path | `True` | Show normal terminal output and write the log |
+| Valid path | `False` | Keep the terminal quiet and write the log |
+| `None` | `True` | Show normal terminal output without a log file |
+| `None` | `False` | Keep the terminal quiet without a log file |
+
+`Cache` is optional and accepts `Auto`, `Parquet`, or `None` (case-insensitive).\
+The default is `Auto`. It reuses a valid Parquet cache covering the requested
+wavenumber range when one is available. Otherwise, it uses memory for small
+inputs and creates a Parquet cache for larger inputs, using the default
+512 MB threshold. \
+`Parquet` always uses an existing valid cache or creates one. \
+`None` reads the source files without a cache. \
+Caches are stored beside the source files in `.pyexocross_cache`; keep the source
+files because PyExoCross uses them to validate cached data.
+
+```text
+Cache                                   Auto
+```
+
 **For ExoMol database**
 
 `ReadPath` is the folder path of input files when the input line list files path is stored in the following format.
@@ -155,19 +182,6 @@ File path section records the file path for both reading and saving.
 `LogFilePath` controls log-file output. Give a valid file path to record the
 run, or use `None` to disable logging.
 
-`Verbose` optionally controls normal terminal output. Use `True` to keep the
-current display behaviour or `False` to keep the terminal quiet. When
-`Verbose` is `False`, configured log-file output is still written.
-
-The two settings are independent:
-
-| `LogFilePath` | `Verbose` | Behaviour |
-|---|---:|---|
-| Valid path | `True` | Show normal terminal output and write the log |
-| Valid path | `False` | Keep the terminal quiet and write the log |
-| `None` | `True` | Show normal terminal output without a log file |
-| `None` | `False` | Keep the terminal quiet without a log file |
-
 *Example*
 
 ```bash
@@ -175,8 +189,8 @@ The two settings are independent:
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/MgH_ExoMol.log    # Use None to disable log-file output
-
 Verbose                                 True
+Cache                                   Parquet
 ```
 
 **For ExoMolHR database**
@@ -243,7 +257,8 @@ However, users can also rename the CSV filenames in any formats as long as `Isot
 ReadPath                                /mnt/data/exomolhr/exomolhr_results/
 SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/NO_ExoMolHR.log    # Use None to disable log-file output
-
+Verbose                                 True
+Cache                                   Parquet
 ```
 
 **For ExoAtom database**
@@ -295,7 +310,8 @@ LogFilePath                             /home/jingxin/data/pyexocross/log/NO_Exo
 ReadPath                                /mnt/data/exoatom/exoatom_data/
 SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/Li_NIST.log    # Use None to disable log-file output
-
+Verbose                                 True
+Cache                                   Auto
 ```
 
 **For HITRAN and HITEMP databases**
@@ -339,7 +355,8 @@ LogFilePath                             /home/jingxin/data/pyexocross/log/Li_NIS
 ReadPath                                /home/jingxin/data/HITRAN/
 SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/CO2_HITRAN.log    # Use None to disable log-file output
-
+Verbose                                 True
+Cache                                   Parquet
 ```
 
 ## Functions

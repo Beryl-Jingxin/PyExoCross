@@ -12,6 +12,7 @@ from ..base.constants import (
     get_doppler_constants,
     Tref,
     Pref,
+    ATM_IN_BAR,
     c,
     PI,
     PI4c,
@@ -91,7 +92,7 @@ def Lorentzian_HWHM(gamma_L, n_air,T,P):
     T : float or np.ndarray
         Temperature in Kelvin
     P : float or np.ndarray
-        Pressure in bar
+        Pressure in the active input unit (atm by default)
 
     Returns
     -------
@@ -100,7 +101,9 @@ def Lorentzian_HWHM(gamma_L, n_air,T,P):
     """
     # Ensure T and P are numpy arrays/scalars that can broadcast correctly
     T_arr = np.asarray(T)
-    P_arr = np.asarray(P)
+    from pyexocross.base.config_manager import ConfigManager
+    config = ConfigManager._last_config
+    P_arr = np.asarray(P) / (ATM_IN_BAR if getattr(config, 'pressure_unit', 'atm') == 'bar' else 1.0)
     gamma = ne.evaluate('gamma_L * (Tref / T_arr)**n_air * (P_arr / Pref)')
     return gamma
 
@@ -177,7 +180,7 @@ def LorentzianHWHM_gamma(num, gamma_HWHM, nbroad, gamma_L, n_air, gamma_air, gam
     T : float or np.ndarray
         Temperature in Kelvin
     P : float or np.ndarray
-        Pressure in bar
+        Pressure in the active input unit (atm by default)
 
     Returns
     -------

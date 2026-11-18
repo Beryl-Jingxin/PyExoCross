@@ -10,6 +10,8 @@ SpeciesID                               131
 ReadPath                                /mnt/data/exomol/exomol3_data/
 SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/OH_ExoMol.log
+Verbose                                 True
+Cache                                   Parquet
 
 
 # Functions #
@@ -93,7 +95,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressures                               1                         # Pressure in unit bar
+Pressures                               1                         # Pressure default unit is atm
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        

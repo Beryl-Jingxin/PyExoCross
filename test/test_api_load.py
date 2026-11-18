@@ -182,7 +182,8 @@ def test_cross_sections():
     px.cross_sections(
         data=data,
         temperatures=[296, 3000],   # Temperature in unit of K
-        pressures=[1.0],            # Pressure in unit bar (default: [1.0])
+        pressures=[1.0],            # Pressure (default: [1.0])
+        pressure_unit='atm',        # Pressure unit (default: 'atm')
         abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
         threshold=1e-30,            # Threshold filter (default: None)
         wn_wl='WN',                 # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
@@ -215,7 +216,8 @@ def test_stick_spectra_cross_section():
     px.stick_spectra_cross_section(
         data=data,
         temperatures=[296, 3000],   # Temperature in unit of K
-        pressures=[1.0],            # Pressure in unit bar (default: [1.0])
+        pressures=[1.0],            # Pressure (default: [1.0])
+        pressure_unit='bar',        # Pressure unit (default: 'atm')
         abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
         threshold=1e-30,            # Threshold filter (default: None)
         wn_wl='WN',                 # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')

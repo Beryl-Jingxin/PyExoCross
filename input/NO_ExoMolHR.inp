@@ -6,9 +6,11 @@ SpeciesID                               81
 
 
 # File path #
-ReadPath                                /Users/beryl/Academic/UCL/PhD/Data/database/ExoMolHR/
-SavePath                                /Users/beryl/Academic/UCL/PhD/Data/pyexocross/
-LogFilePath                             /Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/NO_ExoMolHR.log
+ReadPath                                /Users/beryl/Academic/Data/Database/ExoMolHR/
+SavePath                                /Users/beryl/Academic/Data/pyexocross/
+LogFilePath                             /Users/beryl/Academic/Data/pyexocross/log/NO_ExoMolHR.log
+Verbose                                 True
+Cache                                   Parquet
 
 
 # Functions #
@@ -70,7 +72,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressures                               1                         # Pressure in unit bar
+Pressures                               1                         # Pressure default unit is atm
 Npoints/BinSize                         BinSize    1              # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  0.1        

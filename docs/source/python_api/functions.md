@@ -843,7 +843,8 @@ All parameters from [`px.stick_spectra`](#pxstick_spectra), plus:
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | **Grid** | | | |
-| `pressures` | `list[float]` | `[1.0]` | Pressure(s) in bar |
+| `pressures` | `list[float]` | `[1.0]` | Pressure(s) in `pressure_unit` |
+| `pressure_unit` | `str` | `'atm'` | Input pressure unit: `'atm'` or `'bar'` |
 | `bin_size` | `float` | `0.1` | Bin size (in `wn_wl_unit`); mutually exclusive with `n_point` |
 | `n_point` | `int` | `None` | Number of grid points; mutually exclusive with `bin_size` |
 | **Line profile** | | | |

@@ -269,7 +269,8 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
             # Add pressure to label if profile is pressure-dependent
             P_label = ''
             if pressure_dependent and P is not None:
-                P_label = f', P = {P} bar'
+                from pyexocross.base.config_manager import ConfigManager
+                P_label = f", P = {P} {getattr(ConfigManager._last_config, 'pressure_unit', 'atm')}"
             
             if NLTEMethod == 'L' or NLTEMethod == 'P':
                 label_str = f'T = {T} K{P_label}, {profile_label}' if T is not None else f'T = {min(T_list)}-{max(T_list)} K{P_label}, {profile_label}'
@@ -419,7 +420,8 @@ def save_xsec_file_plot(wn, xsec, database, profile_label, T=None, P=None, temp_
 
             P_label = ''
             if pressure_dependent and P is not None:
-                P_label = f', P = {P} bar'
+                from pyexocross.base.config_manager import ConfigManager
+                P_label = f", P = {P} {getattr(ConfigManager._last_config, 'pressure_unit', 'atm')}"
 
             if NLTEMethod == 'L' or NLTEMethod == 'P':
                 label_str = f'T = {T} K{P_label}, {profile_label}' if T is not None else f'T = {min(T_list)}-{max(T_list)} K{P_label}, {profile_label}'

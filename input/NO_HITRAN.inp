@@ -7,9 +7,11 @@ SpeciesID                               81
 
 
 # File path #
-ReadPath                                /Users/beryl/Academic/UCL/PhD/Data/database/HITRAN/
-SavePath                                /Users/beryl/Academic/UCL/PhD/Data/pyexocross/
-LogFilePath                             /Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/NO_HITRAN.log
+ReadPath                                /Users/beryl/Academic/Data/Database/HITRAN/
+SavePath                                /Users/beryl/Academic/Data/pyexocross/
+LogFilePath                             /Users/beryl/Academic/Data/pyexocross/log/NO_HITRAN.log
+Verbose                                 True
+Cache                                   Parquet
 
 
 # Functions #
@@ -93,7 +95,7 @@ Y-axisLimitStickSpectra                 1e-35                     # Default valu
 
 
 # Calculate cross sections #
-Pressures                               0.5,1                     # Pressure in unit bar
+Pressures                               0.5,1                     # Pressure default unit is atm
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Air        Self 
 Ratios                                  0.7        0.3     

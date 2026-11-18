@@ -8,6 +8,8 @@ and bin size parameters.
 import numpy as np
 import multiprocessing as mp
 import astropy.constants as ac
+import astropy.units as au
+from astropy.units import cds
 
 # File processing constants
 DEFAULT_CHUNK_SIZE = 100_000  # fallback before user input is parsed
@@ -19,7 +21,8 @@ num_cpus = mp.cpu_count()
 
 # Physical constants
 Tref = 296.0                        # Reference temperature is 296 K
-Pref = 1.0                          # Reference pressure is 1 bar
+Pref = 1.0                          # Reference pressure is 1 atm
+ATM_IN_BAR = cds.atm.to(au.bar)
 N_A = ac.N_A.value                  # Avogadro number (1/mol)
 h = ac.h.to('erg s').value          # Planck's const (erg s)
 c = ac.c.to('cm/s').value           # Velocity of light (cm/s)

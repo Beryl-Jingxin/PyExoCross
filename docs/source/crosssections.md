@@ -52,20 +52,46 @@ In `.inp` file, temperatures can be provided as follows:
 | [300,3000]         | &#x274C; |                                        |
 | [300, 3000]        | &#x274C; |                                        |
 
-`Pressures`: Please provide pressures in unit bar.
+`Cache`: In a `.inp` file, use `Cache Auto`, `Cache Parquet`, or `Cache None`. The default is `Auto`. It reuses a matching Parquet cache before applying the 512 MB memory threshold. `Parquet` always uses or creates a Parquet cache; `None` reads the source without caching.
+
+`Pressures`: Provide pressure values followed by an optional unit, `atm` or `bar`.
+The default unit is `atm`.
 
 In `.inp` file, pressures can be provided as follows:
 
-| `Pressures`      |          | P = ?                               |
-| :--------------- | -------- | ----------------------------------- |
-| 1                | &#x2705; | 1 bar                               |
-| 1.0              | &#x2705; | 1.0 bar                             |
-| 0.5,1.0,5.0,10.0 | &#x2705; | 0.5 bar, 1.0 bar, 5.0 bar, 10.0 bar |
-| 1:5:1            | &#x2705; | 1 bar, 2 bar, 3 bar, 4 bar, 5 bar   |
-| 1, 10            | &#x274C; |                                     |
-| 1: 5: 1          | &#x274C; |                                     |
-| [1,10]           | &#x274C; |                                     |
-| [1, 10]          | &#x274C; |                                     |
+| `Pressures`              |          | P = ?                               |
+| :----------------------- | -------- | ----------------------------------- |
+| 1                        | &#x2705; | 1 atm                               |
+| 1.0                      | &#x2705; | 1.0 atm                             |
+| 0.5,1.0,5.0,10.0         | &#x2705; | 0.5 atm, 1.0 atm, 5.0 atm, 10.0 atm |
+| 1:5:1                    | &#x2705; | 1 atm, 2 atm, 3 atm, 4 atm, 5 atm   |
+| 1                    atm | &#x2705; | 1 atm                               |
+| 1.0                  atm | &#x2705; | 1.0 atm                             |
+| 0.5,1.0,5.0,10.0     atm | &#x2705; | 0.5 atm, 1.0 atm, 5.0 atm, 10.0 atm |
+| 1:5:1                atm | &#x2705; | 1 atm, 2 atm, 3 atm, 4 atm, 5 atm   |
+| 1                    bar | &#x2705; | 1 bar                               |
+| 1.0                  bar | &#x2705; | 1.0 bar                             |
+| 0.5,1.0,5.0,10.0     bar | &#x2705; | 0.5 bar, 1.0 bar, 5.0 bar, 10.0 bar |
+| 1:5:1                bar | &#x2705; | 1 bar, 2 bar, 3 bar, 4 bar, 5 bar   |
+| 1, 10                    | &#x274C; |                                     |
+| 1: 5: 1                  | &#x274C; |                                     |
+| [1,10]                   | &#x274C; |                                     |
+| [1, 10]                  | &#x274C; |                                     |
+
+```bash  
+Temperatures                            300
+Pressure                                1      
+```
+
+```bash  
+Temperatures                            300,1000,2000,3000
+Pressure                                1,5.5         bar     
+```
+
+```bash  
+Temperatures                            296.5
+Pressure                                0.1,1,10      atm     
+```
 
 $N_T$ and $N_P$ can be different. The total number of result files should be:
 
@@ -129,7 +155,7 @@ GammaBroadening                         0.06     0.03
 NBroadening                             0.60     0.30
 ```
 
-`GammaBroadening` is $\gamma_0$ in cm$^{-1}$ bar$^{-1}$ at 296 K and 1 bar.
+`GammaBroadening` is $\gamma_0$ (cm$^{-1}$ atm$^{-1}$) at 296 K and 1 atm.
 `NBroadening` is the dimensionless temperature exponent. Each contribution is
 
 $$

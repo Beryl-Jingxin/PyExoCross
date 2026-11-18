@@ -37,10 +37,12 @@ def temperature_pressure_string(T, P, temp_idx, NLTEMethod,
 
     # Optional pressure part (single value, no range)
     if pressure_dependent and P is not None:
+        from pyexocross.base.config_manager import ConfigManager
+        unit = getattr(ConfigManager._last_config, 'pressure_unit', 'atm')
         if P < 0.001 or P >= 1000:
-            P_str = f'__P{P:.2e}bar'
+            P_str = f'__P{P:.2e}{unit}'
         else:
-            P_str = f'__P{P}bar'
+            P_str = f'__P{P}{unit}'
         T_str = T_str + P_str
 
     return T_str

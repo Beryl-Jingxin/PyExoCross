@@ -157,6 +157,9 @@ class Config:
             self.P_list = parse_TP_values(str(P_input[0])) if isinstance(P_input, (list, np.ndarray)) and len(P_input) == 1 else P_input
         elif not hasattr(self, 'P_list'):
             self.P_list = [1.0]
+        self.pressure_unit = str(kwargs.get('pressure_unit', getattr(self, 'pressure_unit', 'atm'))).lower()
+        if self.pressure_unit not in ('atm', 'bar'):
+            raise ValueError("pressure_unit must be 'atm' or 'bar'.")
         
         # Wavenumber/wavelength settings
         self.wn_wl = kwargs.get('wn_wl', getattr(self, 'wn_wl', 'WN')).upper()
@@ -580,7 +583,7 @@ class Config:
             params = tuple(params)
 
         # Unpack all parameters (matching inp_para return structure)
-        (self.database, self.data_info, self.read_path, self.save_path, self.logs_path,
+        (self.database, self.data_info, self.read_path, self.save_path, self.logs_path, self.cache,
          self.conversion, self.partition_functions, self.specific_heats, self.cooling_functions,
          self.lifetimes, self.oscillator_strengths, self.stick_spectra, self.cross_sections,
          self.ncputrans, self.ncpufiles, self.chunk_size,
@@ -591,7 +594,7 @@ class Config:
          self.local_qn_label_list, self.local_qn_format_list,
          self.ntemp, self.tmax, self.compress_yn, self.gf_or_f,
          self.broadeners, self.ratios, self.gamma_broadening, self.n_broadening,
-         self.T_list, self.P_list,
+         self.T_list, self.P_list, self.pressure_unit,
          self.wn_wl, self.wn_wl_unit, self.min_wnl, self.max_wnl,
          self.min_wn, self.max_wn, self.N_point, self.bin_size, self.wn_grid,
          self.predissoc_yn, self.photo, self.cutoff, self.threshold, self.unc_filter,
@@ -613,7 +616,6 @@ class Config:
          self.plot_cross_section_wn_wl, self.plot_cross_section_unit, self.limit_yaxis_xsec) = params
         self._validate_broadening()
         self.device = self.run_mode
-        self.cache = 'auto'
         self.cache_dir = None
         self.max_memory = 512
         self.refresh_cache = False
@@ -673,6 +675,7 @@ class Config:
             'n_broadening': 'n_broadening',
             'T_list': 'T_list',
             'P_list': 'P_list',
+            'pressure_unit': 'pressure_unit',
             'wn_wl': 'wn_wl',
             'wn_wl_unit': 'wn_wl_unit',
             'min_wnl': 'min_wnl',

@@ -14,6 +14,7 @@ from pyexocross.base.log import (
     print_xsec_info,
     print_file_info,
     print_T_Tvib_Trot_P_path_info,
+    pressure_unit,
 )
 from pyexocross.base.utils import Timer, ensure_dir
 from pyexocross.database.load_exomolhr import process_exomolhr_linelist_Q
@@ -306,7 +307,7 @@ def save_exomolhr_stick_spectra_cross_section(exomolhr_df, QNs_col, T_list, Tvib
                                                   abs_emi, NLTEMethod, 'Cross sections', None)
                     del xsec
             except Exception as e:
-                print(f'Error processing cross sections for T={T} K, P={P} bar: {e}')
+                print(f'Error processing cross sections for T={T} K, P={P} {pressure_unit()}: {e}')
 
     if any_results_xsec:
         print('\nTotal running time for cross sections:')

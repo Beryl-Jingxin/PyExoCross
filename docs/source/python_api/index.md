@@ -72,9 +72,12 @@ px.cross_sections(
     save_path='/path/to/output/',
     temperatures=[1000, 2000],
     pressures=[1.0],
+    pressure_unit='atm',
     profile='SciPyVoigt',
 )
 ```
+
+If do not provide `pressure_unit`, PyExoCross uses default pressure unit `atm`. 
 
 ### 3. Reuse loaded data
 
@@ -99,15 +102,16 @@ px.cross_sections(data=data, temperatures=[1000], pressures=[0.1, 1.0])
 px.stick_spectra_cross_section(data=data, temperatures=[1000], pressures=[0.1, 1.0])
 ```
 
-`cache` accepts `auto`, `parquet`, or `none`. Range changes reuse loaded data
-while they remain covered by the transition files selected by `px.load`.
-These options can also be passed directly to transition-based calculation
-functions without calling `px.load` first. By default, persistent caches are
-stored in `<read_path>/<data_info>/.pyexocross_cache/`.
-For ExoMol/ExoAtom, lifetimes, cooling functions, and oscillator strengths
+`cache` accepts `auto`, `parquet`, or `none`. \
+Range changes reuse loaded data while they remain covered by the transition files selected by `px.load`. 
+These options can also be passed directly to transition-based calculation functions without calling `px.load` first. \
+By default, persistent caches are stored in `<read_path>/<data_info>/.pyexocross_cache/`.
+
+For ExoMol/ExoAtom, lifetimes, cooling functions, and oscillator strengths 
 automatically expand range-loaded data to all transitions on first use.
-`all_transitions=True` remains available for eager loading. Partition functions
-and specific heats do not use transition-loaded data.
+`all_transitions=True` remains available for eager loading. 
+Partition functions and specific heats do not use transition-loaded data.
+
 
 ## Interactive results
 
@@ -118,6 +122,7 @@ result = px.cross_sections(
     data=data,
     temperatures=[300, 500],
     pressures=[0.1, 1.0],
+    pressure_unit='atm',
     output='memory',
     log='none',
 )

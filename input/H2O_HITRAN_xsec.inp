@@ -10,6 +10,8 @@ SpeciesID                               11
 ReadPath                                /home/jingxin/data/HITRAN/
 SavePath                                /home/jingxin/data/pyexocross/
 LogFilePath                             /home/jingxin/data/pyexocross/log/H2O_HITRAN_xsec.log
+Verbose                                 True
+Cache                                   Parquet
 
 
 # Functions #
@@ -93,7 +95,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressures                               1                         # Pressure in unit bar
+Pressures                               1          bar            # Pressure default unit is atm
 Npoints/BinSize                         Npoints    10001          # Same unit as WnWlUnit
 Broadeners                              Air        Self 
 Ratios                                  0.7        0.3     

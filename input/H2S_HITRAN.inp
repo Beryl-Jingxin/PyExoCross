@@ -85,7 +85,7 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressures                               1                         # Pressure in unit bar
+Pressures                               1                         # Pressure default unit is atm
 Npoints/BinSize                         Npoints    10001          # Same unit as WnWlUnit
 Broadeners                              Default
 Ratios                                  1.0

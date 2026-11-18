@@ -7,10 +7,11 @@ SpeciesID                               501
 
 
 # File path #
-ReadPath                                /Users/beryl/Academic/UCL/PhD/Data/database/ExoMol/
-SavePath                                /Users/beryl/Academic/UCL/PhD/Data/pyexocross/
-LogFilePath                             /Users/beryl/Academic/UCL/PhD/Data/pyexocross/log/MgH_ExoMol.log
+ReadPath                                /Users/beryl/Academic/Data/Database/ExoMol/
+SavePath                                /Users/beryl/Academic/Data/pyexocross/
+LogFilePath                             /Users/beryl/Academic/Data/pyexocross/log/MgH_ExoMol.log
 Verbose                                 True
+Cache                                   Parquet
 
 
 # Functions #
@@ -73,8 +74,8 @@ Temperatures                            1000:5000:2000            # Temperature 
 WnWlUnit                                wn         cm-1           # Wavenumber (wn in unit of cm-1) or wavelength (wl in unit of um or nm)
 Range                                   0          30000          # Same unit as WnWlUnit
 Absorption/Emission                     Absorption                # 'Absorption' or 'Emission'
-UncFilter(Y/N)                          N          0.01           # If Y, default value 0.01 cm-1
-Threshold(Y/N)                          N          1e-30          # If Y, default value 1e-30 cm/molecule
+UncFilter(Y/N)                          Y          0.5            # If Y, default value 0.01 cm-1
+Threshold(Y/N)                          Y          1e-30          # If Y, default value 1e-30 cm/molecule
 QNsFilter(Y/N)                          N          +/-[]  e/f  ElecState[]  v[0,;1,;2,;3,;4,;,0;,1;,2;,3;,4] 
 
 
@@ -94,11 +95,11 @@ Y-axisLimitStickSpectra                 1e-30                     # Default valu
 
 
 # Calculate cross sections #
-Pressures                               1                         # Pressure in unit bar
+Pressures                               1,0.1      bar            # Pressure default unit is atm
 Npoints/BinSize                         BinSize    0.1            # Same unit as WnWlUnit
 Broadeners                              Default    
 Ratios                                  1.0        
-Profile                                 Gaussian      
+Profile                                 SciPyVoigt      
 PredissocXsec(Y/N)                      N
 Cutoff(Y/N)                             Y          25             # If Y, default value 25 cm-1
 DopplerHWHM(Y/N)                        Y          3              # Set Doppler HWHM as a constant 

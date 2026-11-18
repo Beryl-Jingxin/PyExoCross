@@ -15,6 +15,10 @@ _ORIGINAL_STDERR = sys.stderr
 _LOG_FILE_HANDLE = None
 _VERBOSE = True
 
+def pressure_unit():
+    from pyexocross.base.config_manager import ConfigManager
+    return getattr(ConfigManager._last_config, 'pressure_unit', 'atm')
+
 # Ensure print writes are flushed immediately for real-time nohup logs
 try:
     sys.stdout.reconfigure(line_buffering=True)
@@ -777,7 +781,7 @@ def print_xsec_info(profile_label, cutoff, UncFilter, min_wnl, max_wnl,
         print('{:25s} : {:<6} {}'.format('Rotational temperatures', str(sorted(list(set(Trot_list)))), 'K'))
     elif NLTEMethod == 'P':
         pass
-    print('{:25s} : {:<6} {}'.format('Pressures', str(P_list), 'bar'))
+    print('{:25s} : {:<6} {}'.format('Pressures', str(P_list), pressure_unit()))
     print('{:25s} : {}'.format('Abundance', abundance))
     if wn_wl == 'WN':
         print('{:25s} : {} {} {} {} {}'.format('Wavenumber range selected', min_wn, unc_unit, '-', max_wn, unc_unit))
@@ -815,7 +819,7 @@ def print_T_Tvib_Trot_P_path_info(T, Tvib, Trot, P, abs_emi, NLTEMethod, stick_x
     Trot : float
         Rotational temperature in unit of K
     """
-    P_str = f', P={P} bar' if P is not None else ''
+    P_str = f', P={P} {pressure_unit()}' if P is not None else ''
     file_path_str = f': {file_path}' if file_path is not None else ''
     from pyexocross.core import output
     action = 'retained in memory' if output == 'memory' else 'file saved'

@@ -8,6 +8,7 @@ from pyexocross.base.log import (
     print_xsec_info, 
     print_T_Tvib_Trot_P_path_info,
     print_file_info,
+    pressure_unit,
 )
 from pyexocross.base.config_manager import get_config
 try:
@@ -71,7 +72,7 @@ def process_hitran_cross_section_chunk(hitran_linelist_df, T, P, Q, profile_labe
     T : float
         Temperature in Kelvin
     P : float
-        Pressure in bar
+        Pressure in the selected input unit
     Q : float
         Partition function value
     profile_label : str
@@ -302,7 +303,7 @@ def save_hitran_cross_section(hitran_linelist_df, T_list, P_list, Tvib_list, Tro
                     xsec = future.result()
                     
                     if len(xsec) == 0 or np.all(xsec == 0):
-                        print(f'Warning: No cross sections found for T={T} K, P={P} bar. Skipping this combination.')
+                        print(f'Warning: No cross sections found for T={T} K, P={P} {pressure_unit()}. Skipping this combination.')
                         continue
                     
                     any_results = True
@@ -315,7 +316,7 @@ def save_hitran_cross_section(hitran_linelist_df, T_list, P_list, Tvib_list, Tro
                     # Clear memory
                     del xsec
                 except Exception as e:
-                    print(f'Error processing T={T} K, P={P} bar: {e}')
+                    print(f'Error processing T={T} K, P={P} {pressure_unit()}: {e}')
     else:
         # For non-pressure-dependent profiles: process only first pressure (pressure doesn't matter)
         # This gives num_T files (one per temperature)

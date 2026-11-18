@@ -121,7 +121,8 @@ def test_cross_sections():
         data=data,
         # **NLTE_PARAMS,            # If Non-LTE is enabled, this parameter is required.
         temperatures=[296, 3000],   # Temperature in unit of K
-        pressures=[1.0],            # Pressure in unit bar (default: [1.0])
+        pressures=[1.0],            # Pressure (default: [1.0])
+        pressure_unit='atm',        # Pressure unit (default: 'atm')
         abs_emi='Ab',               # Absorption or emission (default: 'Absorption')
         threshold=None,             # Threshold filter (default: None)
         bin_size=0.1,               # Bin size for wavenumber grid 
@@ -150,7 +151,8 @@ def test_stick_spectra_cross_section():
         data=data,
         # **NLTE_PARAMS,            # If Non-LTE is enabled, this parameter is required.
         temperatures=[296, 3000],   # Temperature in unit of K
-        pressures=[1.0],            # Pressure in unit bar (default: [1.0])
+        pressures=[1.0],            # Pressure (default: [1.0])
+        pressure_unit='bar',        # Pressure unit (default: 'atm')
         wn_wl='WN',                 # Wavenumber (wn in unit cm⁻¹) or wavelength (wl in unit[nm or um]) (default: 'WN')
         wn_wl_unit='cm-1',          # Unit for wavenumber (default: cm⁻¹)
         min_range=0,                # Minimum wavenumber in unit of cm⁻¹
