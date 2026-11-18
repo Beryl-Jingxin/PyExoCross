@@ -235,7 +235,7 @@ def _exomolhr_meta_filepath():
         '..',
         'database',
         'meta',
-        'ExoMolHR_list.csv',
+        'ExoMolHR_list_px.csv',
     )
 
 
@@ -260,12 +260,9 @@ def _resolve_exomolhr_files(read_path, molecule, isotopologue):
     pf_name = os.path.basename(pf_files[0])
     dataset = pf_name[len(f'{isotopologue}__'):-3]
     
-    # 2. Check for a .csv file.
-    csv_files = sorted([
-        path for path in glob.glob(os.path.join(iso_path, '*.csv'))
-    ])
-    if not csv_files:
-        raise ValueError(f"No ExoMolHR .csv file found in {iso_path}")
+    # A line list may be supplied as CSV or Parquet.
+    from pyexocross.database.load_exomolhr import resolve_exomolhr_filepaths
+    resolve_exomolhr_filepaths(read_path, molecule, isotopologue)
     
     return dataset
     

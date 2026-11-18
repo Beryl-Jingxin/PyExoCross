@@ -22,8 +22,10 @@ from pyexocross.base.large_file import (
     read_trans_chunks,
     sourcename,
 )
-from pyexocross.database import read_broad, get_part_transfiles
-from pyexocross.database.load_exomol import broad_required_line_columns, extract_broad
+from pyexocross.database import get_part_transfiles
+from pyexocross.process.exomol_exomolhr_broad import (
+    broad_required_line_columns, extract_broad, read_broad,
+)
 from pyexocross.calculation.calculate_para import cal_v
 from pyexocross.calculation.calculate_intensity import (
     cal_abscoefs,
@@ -97,8 +99,7 @@ def crosscachecolumns(broad_dfs):
     if QNsFilter != []:
         for label in QNs_label:
             columns.extend([label + "'", label + '"'])
-    candidates = columns + ["K'", 'K"', "k'", 'k"', "v'", 'v"']
-    columns.extend(broad_required_line_columns(broad_dfs, candidates))
+    columns.extend(broad_required_line_columns(broad_dfs))
     return list(dict.fromkeys(columns))
 
 
@@ -598,12 +599,11 @@ def save_exomol_cross_section(
     print('\nCalculate cross sections.')
     tot = Timer()
     tot.start()
-    broad, ratio, nbroad, broad_dfs = read_broad(read_path)
-    # Q = read_exomol_pf(read_path, T)
     profile_label = line_profile(profile)
     
     # Check if profile is pressure-dependent
     pressure_dependent = profile_label not in ['Gaussian', 'Doppler', 'Binned Doppler', 'Binned Gaussion']
+    broad, ratio, nbroad, broad_dfs = read_broad(read_path) if pressure_dependent else ([], [], 0, [])
     
     # ntemp: L=len(T_list), T/D=len(Trot_list), P=1 (no temperature dimension)
     ntemp = get_ntemp(NLTEMethod, T_list, Trot_list)

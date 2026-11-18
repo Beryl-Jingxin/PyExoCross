@@ -1,8 +1,8 @@
 """
 Convert ExoMolHR format to HITRAN format.
 
-ExoMolHR CSV files already contain precomputed line list data (nu, unc, A, S,
-E", g', g", J', J", QNs).  This module maps those columns directly into the
+ExoMolHR CSV files already contain precomputed line list data (nu, S, unc, R,
+A, E", g', g", J', J", QNs).  This module maps those columns directly into the
 HITRAN .par fixed-width format.
 """
 import numpy as np

@@ -33,8 +33,9 @@ from pyexocross.calculation.calcualte_line_profile import (
     PseudoThompsonVoigt,
     line_profile,
 )
-from pyexocross.database import extract_broad, read_broad
-from pyexocross.database.load_exomol import broad_required_line_columns
+from pyexocross.process.exomol_exomolhr_broad import (
+    broad_required_line_columns, extract_broad, read_broad,
+)
 from pyexocross.database.load_exomolhr import process_exomolhr_linelist_Q
 from pyexocross.plot.plot_cross_section import save_xsec_file_plot
 from pyexocross.process.T_n_val import get_ntemp, get_temp_vals

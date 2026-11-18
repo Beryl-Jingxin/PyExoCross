@@ -40,7 +40,7 @@ def _exomolhr_meta_filepath():
         '..',
         'database',
         'meta',
-        'ExoMolHR_list.csv',
+        'ExoMolHR_list_px.csv',
     )
 
 
@@ -52,46 +52,9 @@ def _split_exomolhr_meta_list(value):
 
 
 def _resolve_exomolhr_filepaths(read_path, molecule, isotopologue):
-    """Resolve ExoMolHR CSV and PF filepaths from molecule and isotopologue."""
-    iso_path = os.path.join(read_path, molecule, isotopologue)
-    csv_files = sorted([
-        path for path in glob.glob(os.path.join(iso_path, '*.csv'))
-        if isotopologue in os.path.basename(path)
-    ])
-    pf_files = sorted([
-        path for path in glob.glob(os.path.join(iso_path, '*.pf'))
-        if isotopologue in os.path.basename(path)
-    ])
-    if len(csv_files) != 1 or len(pf_files) != 1:
-        # Fallback to ANY csv/pf if strict isotopologue match fails but exactly one exists
-        if len(csv_files) == 0:
-            csv_files = glob.glob(os.path.join(iso_path, '*.csv'))
-        if len(pf_files) == 0:
-            pf_files = glob.glob(os.path.join(iso_path, '*.pf'))
-            
-    if len(csv_files) != 1 or len(pf_files) != 1:
-        raise ValueError(
-            f"ExoMolHR expects exactly one CSV and one PF file under {iso_path}. "
-            f"Found {len(csv_files)} CSV and {len(pf_files)} PF."
-        )
-    
-    csv_name = os.path.basename(csv_files[0])
-    pf_name = os.path.basename(pf_files[0])
-    
-    # Try to extract dataset name by splitting by '__'
-    # Standard format: Molecule__Isotopologue__Dataset.csv and Isotopologue__Dataset.pf
-    def get_dataset(name, ext):
-        parts = name.replace(ext, '').split('__')
-        if len(parts) >= 1:
-            return parts[-1]
-        return 'default'
-
-    csv_dataset = get_dataset(csv_name, '.csv')
-    pf_dataset = get_dataset(pf_name, '.pf')
-    
-    # If they both exist and we have a preferred one from metadata, we'd use it.
-    # For now, if either works, we return it. PF dataset is usually more reliable.
-    return pf_dataset
+    """Resolve the ExoMolHR dataset from its line list and PF file."""
+    from pyexocross.database.load_exomolhr import resolve_exomolhr_filepaths
+    return resolve_exomolhr_filepaths(read_path, molecule, isotopologue)[2]
 
 
 def _exomolhr_metadata(molecule, isotopologue):

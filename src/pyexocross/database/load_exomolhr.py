@@ -21,7 +21,7 @@ def _exomolhr_meta_filepath():
     return os.path.join(
         os.path.dirname(__file__),
         'meta',
-        'ExoMolHR_list.csv',
+        'ExoMolHR_list_px.csv',
     )
 
 
@@ -101,37 +101,24 @@ def _match_single_dataset_file(filepaths, prefix, suffix, label, molecule=None):
 
 
 def resolve_exomolhr_filepaths(read_path, molecule, isotopologue):
-    """
-    Resolve ExoMolHR CSV and PF filepaths using only molecule and isotopologue.
-    """
+    """Resolve the ExoMolHR CSV or Parquet line list and its PF file."""
     iso_path = os.path.join(read_path, molecule, isotopologue)
     pf_match = _match_single_dataset_file(
         glob.glob(os.path.join(iso_path, '*.pf')),
         isotopologue, '.pf', 'partition function',
     )
-    csv_files = glob.glob(os.path.join(iso_path, '*.csv'))
-    canonical = [path for path in csv_files if os.path.basename(path) in (
-        f'{molecule}__{isotopologue}__{pf_match[1]}.csv',
-        f'{isotopologue}__{pf_match[1]}.csv',
-    )]
-    csv_match = _match_single_dataset_file(
-        canonical or csv_files,
-        isotopologue,
-        '.csv',
-        'CSV',
-        molecule=molecule,
-    )
-    pf_match = _match_single_dataset_file(
-        glob.glob(os.path.join(iso_path, '*.pf')),
-        isotopologue,
-        '.pf',
-        'partition function',
-    )
-    if csv_match[1] != pf_match[1]:
-        # If they don't match, we still allow it but prefer the PF dataset name
-        # as it usually follows the official XABC/YNAT naming.
-        pass
-    return csv_match[0], pf_match[0], pf_match[1]
+    for extension, label in (('.csv', 'CSV'), ('.parquet', 'Parquet')):
+        files = glob.glob(os.path.join(iso_path, '*' + extension))
+        canonical = [path for path in files if os.path.basename(path) in (
+            f'{molecule}__{isotopologue}__{pf_match[1]}{extension}',
+            f'{isotopologue}__{pf_match[1]}{extension}',
+        )]
+        if canonical or files:
+            match = _match_single_dataset_file(
+                canonical or files, isotopologue, extension, label, molecule=molecule,
+            )
+            return match[0], pf_match[0], pf_match[1]
+    raise FileNotFoundError(f'No ExoMolHR CSV or Parquet line list found in {iso_path}.')
 
 
 def resolve_exomolhr_data_info(read_path, molecule, isotopologue):
@@ -151,12 +138,13 @@ def read_exomolhr_df(read_path, data_info, min_wn, max_wn, unc_filter):
     t.start()
     print('Reading line list ...')
 
-    csv_path, _, _ = resolve_exomolhr_filepaths(read_path, data_info[0], data_info[1])
+    line_path, _, _ = resolve_exomolhr_filepaths(read_path, data_info[0], data_info[1])
     meta = exomolhr_metadata(data_info[0], data_info[1])
-    exomolhr_df = pd.read_csv(csv_path, header=0, low_memory=False)
+    exomolhr_df = (pd.read_parquet(line_path) if line_path.endswith('.parquet')
+                    else pd.read_csv(line_path, header=0, low_memory=False))
     exomolhr_df = exomolhr_df.rename(columns={'nu': 'v'})
 
-    numeric_cols = ['v', 'unc', 'A', 'S', 'E"', "g'", 'g"', "J'", 'J"']
+    numeric_cols = ['v', 'S', 'unc', 'R', 'A', 'E"', "g'", 'g"', "J'", 'J"']
     for col in numeric_cols:
         if col in exomolhr_df.columns:
             exomolhr_df[col] = pd.to_numeric(exomolhr_df[col], errors='coerce')

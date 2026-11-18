@@ -5,14 +5,13 @@ This package provides functions for loading data from:
 - ExoMol database files
 - HITRAN database files
 """
+from ..process.exomol_exomolhr_broad import read_broad, extract_broad
 from .load_exomol import (
     read_all_states,
     read_part_states,
     get_transfiles,
     get_part_transfiles,
     read_exomol_pf,
-    read_broad,
-    extract_broad,
 )
 from .load_exomolhr import (
     resolve_exomolhr_data_info,

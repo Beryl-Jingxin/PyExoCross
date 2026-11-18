@@ -31,7 +31,8 @@ from ..base.large_file import (
 from ..base.qn_metadata import normalized_states_columns
 from ..calculation.calculate_para import cal_v, cal_uncertainty
 from ..calculation.calculate_intensity import cal_abscoefs
-from ..database.load_exomol import get_part_transfiles, read_exomol_pf, extract_broad, read_broad_file
+from ..database.load_exomol import get_part_transfiles, read_exomol_pf
+from ..process.exomol_exomolhr_broad import extract_broad, read_broad_file
 
 _USE_THREAD_POOL = True
 

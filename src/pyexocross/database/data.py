@@ -631,7 +631,8 @@ def readlinecache(cachepath, minwn, maxwn):
 
     parquet = pq.ParquetFile(cachepath)
     names = parquet.schema_arrow.names
-    vindex = names.index('v')
+    wavenumber = 'v' if 'v' in names else 'nu'
+    vindex = names.index(wavenumber)
     frames = []
     for index in range(parquet.num_row_groups):
         column = parquet.metadata.row_group(index).column(vindex)
@@ -639,10 +640,14 @@ def readlinecache(cachepath, minwn, maxwn):
         if stats is not None and (stats.max < minwn or stats.min > maxwn):
             continue
         frame = parquet.read_row_group(index).to_pandas()
-        frames.append(frame[frame['v'].between(minwn, maxwn)])
+        frame = frame.rename(columns={'nu': 'v'})
+        frame = frame[frame['v'].between(minwn, maxwn)]
+        if "E'" not in frame and 'E"' in frame:
+            frame["E'"] = frame['E"'] + frame['v']
+        frames.append(frame)
     if frames:
         return pd.concat(frames, ignore_index=True)
-    return parquet.schema_arrow.empty_table().to_pandas()
+    return parquet.schema_arrow.empty_table().to_pandas().rename(columns={'nu': 'v'})
 
 
 def filterlinelist(frame, database, minwn, maxwn, uncfilter='None', threshold='None'):
@@ -674,7 +679,10 @@ def loadlinedata(config, cache, cachedir, maxmemory, refresh):
 
     lineframe = None
     linepath = None
-    if resolved == 'parquet':
+    if config.database == 'ExoMolHR' and source.endswith('.parquet') and resolved == 'parquet':
+        linepath = source
+        print('Using ExoMolHR Parquet line list:', linepath)
+    elif resolved == 'parquet':
         os.makedirs(cachedir, exist_ok=True)
         manifest = loadmanifest(cachedir)
         entry = None if refresh else linecacheentry(manifest, config.database, source)
@@ -1033,12 +1041,17 @@ class LoadedData:
 
     def sources(self, min_wn, max_wn):
         """Select already-loaded transition sources for a calculation range."""
-        selected = get_part_transfiles(
-            self.config.read_path,
-            self.config.data_info,
-            min_wn,
-            max_wn,
-            prepare=False,
+        loaded_min, loaded_max = readbounds(self.config)
+        reuse = bool(self.transitions) and min_wn >= loaded_min and max_wn <= loaded_max
+        if not reuse and len(self.transitions) == 1:
+            bounds = sourcebounds(self.transitions[0].origin)
+            reuse = bounds is None or min_wn >= bounds[0] and max_wn <= bounds[1]
+        selected = (
+            [source.origin for source in self.transitions]
+            if reuse else get_part_transfiles(
+                self.config.read_path, self.config.data_info,
+                min_wn, max_wn, prepare=False,
+            )
         )
         source_map = {os.path.abspath(source.origin): source for source in self.transitions}
         missing = [path for path in selected if os.path.abspath(path) not in source_map]
@@ -1062,6 +1075,7 @@ class LoadedData:
                 widerconfig, cache='auto' if self.storage == 'memory' else self.storage,
                 cachedir=self.cachedir,
                 maxmemory=self.config.max_memory,
+                selected=selected,
             )
             source_map.update({os.path.abspath(source.origin): source
                                for source in wider.transitions})
@@ -1095,6 +1109,7 @@ def loaddata(
     refresh=False,
     alltrans=False,
     preparestates=True,
+    selected=None,
 ):
     """Create reusable data for a supported line list database."""
     if config.database in ('HITRAN', 'HITEMP', 'ExoMolHR'):
@@ -1104,7 +1119,9 @@ def loaddata(
     if cache not in ('auto', 'parquet', 'none'):
         raise ValueError("cache must be 'auto', 'parquet', or 'none'.")
 
-    if alltrans:
+    if selected is not None:
+        selected = list(selected)
+    elif alltrans:
         selected = get_transfiles(
             config.read_path,
             config.data_info,
