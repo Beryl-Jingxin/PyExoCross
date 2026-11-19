@@ -6,10 +6,6 @@ There are some issues to solve the problems which you may meet when the program 
 
 You need to enter `Y`, `YES`, `Yes`, `y`, `yes` or `N`, `NO`, `No`, `n`, `no` in the input file.
 
-###### Please type the correct grid choice 'Npoints' or 'BinSize' into the input file.
-
-You need to enter `Npoints` or `BinSize`  and corresponding value in the input file.
-
 ###### Gaussian line profile requires a HWHM. Please choose 'Y' and give a value for Doppler HWHM in the input file. Otherwise, please choose Doppler line profile (with calculated temperature-dependent Doppler HWHM).
 
 Gaussian line profile uses users provided Doppler HWHM, so you need to enter `Y`, `YES`, `Yes`, `y` or `yes` here and give a Doppler HWHM value.
@@ -18,15 +14,11 @@ Doppler line profile uses program calculated temperature-dependent Doppler HWHM.
 
 ###### Please type the correct Doppler HWHM choice 'Y' or 'N' into the input file.
 
-When you choose Voigt profiles for calculating cross sections, you can provide a Doppler HWHM value (you need to enter `Y`, `YES`, `Yes`, `y` or `yes` here and give a Doppler HWHM value) or just let prgram to calculate temperature-dependent Doppler HWHM (you need to enter `N`, `NO`, `No`, `n`, `no` here).
+When you choose Voigt profiles for calculating cross sections, you can provide a Doppler HWHM value (you need to enter `Y`, `YES`, `Yes`, `y` or `yes` here and give a Doppler HWHM value) or just let program to calculate temperature-dependent Doppler HWHM (you need to enter `N`, `NO`, `No`, `n`, `no` here).
 
 ###### Please type the correct Lorentzian HWHM choice 'Y' or 'N' into the input file.
 
-When you choose Lorentzian or Voigt profiles for calculating cross sections, you can provide a Lorentzian HWHM value (you need to enter `Y`, `YES`, `Yes`, `y` or `yes` here and give a Lorentzian HWHM value) or just let prgram to calculate temperature and pressure dependent Lorentzian HWHM (you need to enter `N`, `NO`, `No`, `n`, `no` here).
-
-###### Please add the name of the database 'ExoMol' or 'HITRAN' into the input file.
-
-Make sure you have written the database name `ExoMol` or `HITRAN` in the input file.
+When you choose Lorentzian or Voigt profiles for calculating cross sections, you can provide a Lorentzian HWHM value (you need to enter `Y`, `YES`, `Yes`, `y` or `yes` here and give a Lorentzian HWHM value) or just let program to calculate temperature and pressure dependent Lorentzian HWHM (you need to enter `N`, `NO`, `No`, `n`, `no` here).
 
 ###### The xxx boradening file does not exist.
 
@@ -43,14 +35,6 @@ If you use HITRAN database to do the calculations, please check your HITRAN data
 ###### Please choose functions which you want to calculate.
 
 Please write `1` after the function names which you want to calculate.
-
-###### Please choose one from: 'Absoption' or 'Emission'.
-
-Please enter `Absorption` or `Emission` in the input file.
-
-###### Please choose wavenumber or wavelength and type in correct format: wn or wl.
-
-Please enter `wn` (wavenumber) or `wl` (wavelength) in the input file.
 
 ###### Please choose line profile from the list.
 
